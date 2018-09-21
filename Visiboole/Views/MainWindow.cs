@@ -302,5 +302,10 @@ namespace VisiBoole.Views
         {
             ChangeTheme("dark");
         }
+
+        private void runModeToggle_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
