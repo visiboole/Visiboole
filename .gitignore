@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/ParsingEngine/obj/Debug
+/ParsingEngine/obj/Release
+/Visiboole/.vs/VisiBoole/v15
