@@ -2,7 +2,7 @@
 
 namespace VisiBoole.Views
 {
-	partial class DisplaySingleOutput
+	partial class DisplayRun
 	{
 		/// <summary> 
 		/// Required designer variable.

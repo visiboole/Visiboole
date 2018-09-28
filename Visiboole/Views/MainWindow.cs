@@ -228,36 +228,6 @@ namespace VisiBoole.Views
 		}
 
 		/// <summary>
-		/// Handles the event that occurs when Standard button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void standardToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			controller.LoadDisplay(Globals.DisplayType.SINGLE);
-		}
-
-		/// <summary>
-		/// Handles the event that occurs when Horizontal button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void horizontalToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			controller.LoadDisplay(Globals.DisplayType.HORIZONTAL);
-		}
-
-		/// <summary>
-		/// Handles the event that occurs when Vertical button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void verticalToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			controller.LoadDisplay(Globals.DisplayType.VERTICAL);
-		}
-
-		/// <summary>
 		/// Handles the event that occurs when the link-label is clicked
 		/// </summary>
 		/// <param name="sender"></param>

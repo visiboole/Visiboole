@@ -108,29 +108,17 @@
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
-    <Compile Include="Views\DisplayHorizontal.cs">
+    <Compile Include="Views\DisplayEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Views\DisplayHorizontal.Designer.cs">
-      <DependentUpon>DisplayHorizontal.cs</DependentUpon>
+    <Compile Include="Views\DisplayEdit.Designer.cs">
+      <DependentUpon>DisplayEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="Views\DisplaySingle.cs">
+    <Compile Include="Views\DisplayRun.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Views\DisplaySingle.Designer.cs">
-      <DependentUpon>DisplaySingle.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Views\DisplaySingleOutput.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Views\DisplaySingleOutput.Designer.cs">
-      <DependentUpon>DisplaySingleOutput.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Views\DisplayVertical.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Views\DisplayVertical.Designer.cs">
-      <DependentUpon>DisplayVertical.cs</DependentUpon>
+    <Compile Include="Views\DisplayRun.Designer.cs">
+      <DependentUpon>DisplayRun.cs</DependentUpon>
     </Compile>
     <Compile Include="Views\IDisplay.cs" />
     <Compile Include="Views\IMainWindow.cs" />
@@ -152,17 +140,11 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="Views\DisplayHorizontal.resx">
-      <DependentUpon>DisplayHorizontal.cs</DependentUpon>
+    <EmbeddedResource Include="Views\DisplayEdit.resx">
+      <DependentUpon>DisplayEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Views\DisplaySingle.resx">
-      <DependentUpon>DisplaySingle.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Views\DisplaySingleOutput.resx">
-      <DependentUpon>DisplaySingleOutput.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Views\DisplayVertical.resx">
-      <DependentUpon>DisplayVertical.cs</DependentUpon>
+    <EmbeddedResource Include="Views\DisplayRun.resx">
+      <DependentUpon>DisplayRun.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Views\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>

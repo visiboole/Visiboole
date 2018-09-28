@@ -38,9 +38,9 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void checkSingleViewChange()
         {
-            if (displayController.CurrentDisplay is DisplaySingleOutput)
+            if (displayController.CurrentDisplay is DisplayRun)
             {
-                LoadDisplay(Globals.DisplayType.SINGLE);
+                LoadDisplay(Globals.DisplayType.EDIT);
             }
         }
 

@@ -20,10 +20,8 @@ namespace VisiBoole
 		/// </summary>
 		public enum DisplayType
 		{
-			SINGLE,
-			HORIZONTAL,
-			VERTICAL,
-			OUTPUT
+			EDIT,
+			RUN
 		}
 
 		/// <summary>

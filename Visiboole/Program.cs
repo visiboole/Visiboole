@@ -19,16 +19,12 @@ namespace VisiBoole
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			DisplaySingle single = new DisplaySingle();
-			DisplaySingleOutput singleOutput = new DisplaySingleOutput();
-			DisplayHorizontal horizontal = new DisplayHorizontal();
-			DisplayVertical vertical = new DisplayVertical();
-			DisplayController dc = new DisplayController(single, horizontal, vertical, singleOutput);
+			DisplayEdit edit = new DisplayEdit();
+			DisplayRun run = new DisplayRun();
+			DisplayController dc = new DisplayController(edit, run);
 
-			single.AttachController(dc);
-			singleOutput.AttachController(dc);
-			horizontal.AttachController(dc);
-			vertical.AttachController(dc);
+            edit.AttachController(dc);
+			run.AttachController(dc);
 
 			MainWindow mw = new MainWindow();
 			MainWindowController mwc = new MainWindowController(mw, dc);
