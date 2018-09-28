@@ -7,7 +7,7 @@ namespace VisiBoole.Views
 	/// <summary>
 	/// The no-split input display that is hosted by the MainWindow
 	/// </summary>
-	public partial class DisplaySingle : UserControl, IDisplay
+	public partial class DisplayEdit : UserControl, IDisplay
 	{
 		/// <summary>
 		/// Handle to the controller for this display
@@ -21,14 +21,14 @@ namespace VisiBoole.Views
 		{
 			get
 			{
-				return Globals.DisplayType.SINGLE;
+				return Globals.DisplayType.EDIT;
 			}
 		}
 
 		/// <summary>
 		/// Constructs an instance of DisplaySingle
 		/// </summary>
-		public DisplaySingle()
+		public DisplayEdit()
 		{
 			InitializeComponent();
 		}

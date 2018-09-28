@@ -20,22 +20,12 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// No-split input view that is hosted by the MainWindow
 		/// </summary>
-		private IDisplay single;
+		private IDisplay edit;
 
 		/// <summary>
 		/// Horizontal-split view that is hosted by the MainWindow
 		/// </summary>
-		private IDisplay horizontal;
-
-		/// <summary>
-		/// Vertical-split view that is hosted by the MainWindow
-		/// </summary>
-		private IDisplay vertical;
-
-		/// <summary>
-		/// No-split output view that is hosted by the MainWindow
-		/// </summary>
-		private IDisplay singleOutput;
+		private IDisplay run;
 
 		/// <summary>
 		/// No-split view that is hosted by the MainWindow
@@ -100,24 +90,20 @@ namespace VisiBoole.Controllers
 		/// <param name="horizontal">Handle to the horizontally-split view hosted by the MainWindow</param>
 		/// <param name="vertical">Handle to the vertically-split view hosted by the MainWindow</param>
 		/// <param name="singleOutput">Handle to the no-split output view hosted by the MainWindow</param>
-		public DisplayController(IDisplay single, IDisplay horizontal, IDisplay vertical, IDisplay singleOutput)
+		public DisplayController(IDisplay edit, IDisplay run)
 		{
 			tabControl = new TabControl();
 			browser = new WebBrowser();
 			parseOut = new OutputParser();
 
-			this.single = single;
-			this.horizontal = horizontal;
-			this.vertical = vertical;
-			this.singleOutput = singleOutput;
+			this.edit = edit;
+			this.run = run;
 
 			allDisplays = new Dictionary<Globals.DisplayType, IDisplay>();
-			allDisplays.Add(Globals.DisplayType.SINGLE, single);
-			allDisplays.Add(Globals.DisplayType.HORIZONTAL, horizontal);
-			allDisplays.Add(Globals.DisplayType.VERTICAL, vertical);
-			allDisplays.Add(Globals.DisplayType.OUTPUT, singleOutput);
+			allDisplays.Add(Globals.DisplayType.EDIT, edit);
+			allDisplays.Add(Globals.DisplayType.RUN, run);
 
-			CurrentDisplay = single;
+			CurrentDisplay = edit;
             Globals.tabControl = tabControl;
         }
 
@@ -225,16 +211,11 @@ namespace VisiBoole.Controllers
 		{
 			switch (dType)
 			{
-				case Globals.DisplayType.SINGLE:
-					return single;
-				case Globals.DisplayType.OUTPUT:
-					return singleOutput;
-				case Globals.DisplayType.HORIZONTAL:
-					return horizontal;
-				case Globals.DisplayType.VERTICAL:
-					return vertical;
-				default:
-					return null;
+                case Globals.DisplayType.EDIT:
+					return edit;
+				case Globals.DisplayType.RUN:
+					return run;
+                default:  return null;
 			}
 		}
 
@@ -262,9 +243,9 @@ namespace VisiBoole.Controllers
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
 
-            if(CurrentDisplay is DisplaySingle)
+            if(CurrentDisplay is DisplayEdit)
             {
-                mwController.LoadDisplay(Globals.DisplayType.OUTPUT);
+                mwController.LoadDisplay(Globals.DisplayType.RUN);
             }
 		}
 
@@ -292,9 +273,9 @@ namespace VisiBoole.Controllers
 			browser.ObjectForScripting = this;
 			html.DisplayHtml(htmlOutput, browser);
 
-			if (CurrentDisplay is DisplaySingle)
+			if (CurrentDisplay is DisplayEdit)
 			{
-				mwController.LoadDisplay(Globals.DisplayType.OUTPUT);
+				mwController.LoadDisplay(Globals.DisplayType.RUN);
 			}
 		}
 
@@ -309,9 +290,9 @@ namespace VisiBoole.Controllers
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
 
-            if (CurrentDisplay is DisplaySingle)
+            if (CurrentDisplay is DisplayEdit)
             {
-                mwController.LoadDisplay(Globals.DisplayType.OUTPUT);
+                mwController.LoadDisplay(Globals.DisplayType.RUN);
             }
         }
 

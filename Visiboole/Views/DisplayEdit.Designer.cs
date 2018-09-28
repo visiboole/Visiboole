@@ -1,6 +1,6 @@
 ﻿namespace VisiBoole.Views
 {
-	partial class DisplaySingle
+	partial class DisplayEdit
 	{
 		/// <summary> 
 		/// Required designer variable.

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using VisiBoole.Controllers;
 
 namespace VisiBoole.Views
@@ -7,7 +6,7 @@ namespace VisiBoole.Views
 	/// <summary>
 	/// The horizontally-split display that is hosted by the MainWindow
 	/// </summary>
-	public partial class DisplayHorizontal : UserControl, IDisplay
+	public partial class DisplayRun : UserControl, IDisplay
 	{
 		/// <summary>
 		/// Handle to the controller for this display
@@ -21,18 +20,18 @@ namespace VisiBoole.Views
 		{
 			get
 			{
-				return Globals.DisplayType.HORIZONTAL;
+                return Globals.DisplayType.RUN;
 			}
 		}
 
 		/// <summary>
-		/// Constucts an instance of DisplayHorizontal
+		/// Constucts an instance of DisplaySingleOutput
 		/// </summary>
-		public DisplayHorizontal()
+		public DisplayRun()
 		{
 			InitializeComponent();
 		}
-		
+
 		/// <summary>
 		/// Saves the handle to the controller for this display
 		/// </summary>
@@ -43,16 +42,12 @@ namespace VisiBoole.Views
 		}
 
 		/// <summary>
-		/// Loads the given tabcontrol into this display
+		/// This method is not implemented because this display contains no tabcontrol
 		/// </summary>
-		/// <param name="tc">The tabcontrol that will be loaded by this display</param>
+		/// <param name="tc"></param>
 		public void LoadTabControl(TabControl tc)
 		{
-			if (!(tc == null))
-			{
-				this.pnlMain.Controls.Add(tc, 0, 0);
-				tc.Dock = DockStyle.Fill;
-			}
+			return;
 		}
 
 		/// <summary>
@@ -63,19 +58,14 @@ namespace VisiBoole.Views
 		{
 			if (!(browser == null))
 			{
-				this.pnlMain.Controls.Add(browser, 0, 2);
+				this.pnlMain.Controls.Add(browser, 0, 0);
 				browser.Dock = DockStyle.Fill;
 			}
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when run button is clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void btnRun_Click(object sender, EventArgs e)
-		{
-			controller.Run();
-		}
-	}
+        private void btnTick_Click(object sender, System.EventArgs e)
+        {
+            controller.Tick();
+        }
+    }
 }
