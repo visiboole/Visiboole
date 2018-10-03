@@ -180,5 +180,10 @@ namespace VisiBoole.Controllers
 				Globals.DisplayException(ex);
 			}
 		}
+
+        public void Run()
+        {
+            displayController.Run();
+        }
 	}
 }

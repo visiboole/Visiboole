@@ -101,7 +101,39 @@ namespace VisiBoole.Views
                 this.MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
             }
 
-			Control c = (Control)current;
+            if (current.TypeOfDisplay == Globals.DisplayType.EDIT)
+            {
+                openIcon.Enabled = true;
+                openToolStripMenuItem.Enabled = true;
+                newIcon.Enabled = true;
+                newToolStripMenuItem.Enabled = true;
+                saveIcon.Enabled = true;
+                saveAllIcon.Enabled = true;
+                saveToolStripMenuItem.Enabled = true;
+                saveAsToolStripMenuItem.Enabled = true;
+                printToolStripMenuItem.Enabled = true;
+                printPreviewToolStripMenuItem.Enabled = true;
+                runModeToggle.Enabled = true;
+                editModeToggle.Enabled = false;
+            }
+
+            else if (current.TypeOfDisplay == Globals.DisplayType.RUN)
+            {
+                openIcon.Enabled = false;
+                openToolStripMenuItem.Enabled = false;
+                newIcon.Enabled = false;
+                newToolStripMenuItem.Enabled = false;
+                saveIcon.Enabled = false;
+                saveAllIcon.Enabled = false;
+                saveToolStripMenuItem.Enabled = false;
+                saveAsToolStripMenuItem.Enabled = false;
+                printToolStripMenuItem.Enabled = false;
+                printPreviewToolStripMenuItem.Enabled = false;
+                editModeToggle.Enabled = true;
+                runModeToggle.Enabled = false;
+            }
+
+            Control c = (Control)current;
 			c.Dock = DockStyle.Fill;
 			this.MainLayoutPanel.Controls.Add(c);
 		}
@@ -275,7 +307,12 @@ namespace VisiBoole.Views
 
         private void runModeToggle_Click(object sender, EventArgs e)
         {
+            controller.Run();
+        }
 
+        private void editModeToggle_Click(object sender, EventArgs e)
+        {
+            controller.checkSingleViewChange();
         }
     }
 }

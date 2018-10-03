@@ -45,5 +45,10 @@
         /// </summary>
         void checkSingleViewChange();
 
+        /// <summary>
+        /// Run call to other controller
+        /// </summary>
+        void Run();
+
     }
 }

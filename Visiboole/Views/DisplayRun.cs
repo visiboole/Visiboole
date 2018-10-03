@@ -56,9 +56,13 @@ namespace VisiBoole.Views
 		/// <param name="browser">The browser that will be loaded by this display</param>
 		public void LoadWebBrowser(WebBrowser browser)
 		{
-			if (!(browser == null))
+            this.pnlMain.Controls.Add(pnlOutputControls, 0, 0);
+            //pnlOutputControls.Dock = DockStyle.Fill;
+
+
+            if (!(browser == null))
 			{
-				this.pnlMain.Controls.Add(browser, 0, 0);
+				this.pnlMain.Controls.Add(browser, 0, 1);
 				browser.Dock = DockStyle.Fill;
 			}
 		}
