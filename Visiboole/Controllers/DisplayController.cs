@@ -116,9 +116,27 @@ namespace VisiBoole.Controllers
 			this.mwController = mwController;
 		}
 
-		#endregion
+        #endregion
 
-		#region "TabControl Interaction"
+        #region "TabControl Interaction"
+
+        /// <summary>
+		/// Closes the file that is associated with the currently selected tabpage
+		/// </summary>
+		/// <returns>Indicates whether the file was closed</returns>
+        public bool CloseActiveTab()
+        {
+            SubDesign sd = tabControl.SelectedTab.SubDesign();
+
+            if (sd == null) return false;
+            else
+            {
+                Globals.SubDesigns.Remove(sd.Name); // Remove SubDesign from global list
+                tabControl.TabPages.Remove(tabControl.SelectedTab); // Remove tab page
+                if (tabControl.TabPages.Count > 0) tabControl.SelectedIndex = 0; // Change index
+                return true;
+            }
+        }
 
 		/// <summary>
 		/// Saves the file that is associated with the currently selected tabpage

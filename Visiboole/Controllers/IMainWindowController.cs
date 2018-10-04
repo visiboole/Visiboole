@@ -34,6 +34,12 @@
 		/// </summary>
 		void ExitApplication();
 
+        /// <summary>
+        /// Closes the selected open file
+        /// </summary>
+        /// <returns>The name of the file closed</returns>
+        string CloseFile();
+
 		/// <summary>
 		/// Selects the tabpage in the tabcontrol with name matching the given string
 		/// </summary>

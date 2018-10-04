@@ -41,8 +41,14 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// Saves the file that is associated with the currently selected tabpage
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>Indicates whether the file was saved</returns>
 		bool SaveActiveTab();
+
+        /// <summary>
+		/// Closes the file that is associated with the currently selected tabpage
+		/// </summary>
+		/// <returns>Indicates whether the file was closed</returns>
+        bool CloseActiveTab();
 
 		/// <summary>
 		/// Returns the TabPage that is currently selected

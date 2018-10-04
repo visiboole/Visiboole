@@ -33,9 +33,30 @@ namespace VisiBoole.Views
 			this.controller = controller;
 		}
 
-		#endregion
+        #endregion
 
-		#region "Utility Methods"
+        #region "Utility Methods"
+
+        /// <summary>
+        /// Change buttons and icons based on the new display
+        /// </summary>
+        /// <param name="current"></param>
+        private void ChangeControls(IDisplay display)
+        {
+            openIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            openToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            newIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            newToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            saveIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            saveAllIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            printToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            printPreviewToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
+            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+        }
 
 		/// <summary>
 		/// Adds a new node in the TreeView
@@ -57,11 +78,20 @@ namespace VisiBoole.Views
 			NavTree.ExpandAll();
 		}
 
-		/// <summary>
-		/// Confirms exit with the user if the application is dirty
+        /// <summary>
+		/// Removes a node in the TreeView
 		/// </summary>
-		/// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
-		public void ConfirmExit(bool isDirty)
+		/// <param name="name">The name of the node to be removed</param>
+		public void RemoveNavTreeNode(string name)
+        {
+            NavTree.Nodes[0].Nodes.RemoveByKey(name);
+        }
+
+        /// <summary>
+        /// Confirms exit with the user if the application is dirty
+        /// </summary>
+        /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
+        public void ConfirmExit(bool isDirty)
 		{
 			if (isDirty == true)
 			{
@@ -79,63 +109,59 @@ namespace VisiBoole.Views
 			}
 		}
 
-		/// <summary>
-		/// Loads the given IDisplay
-		/// </summary>
-		/// <param name="previous">The display to replace</param>
-		/// <param name="current">The display to be loaded</param>
-		public void LoadDisplay(IDisplay previous, IDisplay current)
+        /// <summary>
+        /// Confrims whether the user wants to close the selected SubDesign
+        /// </summary>
+        /// <param name="isDirty">True if the SubDesign being closed has been modified since last save</param>
+        /// <returns>Whether the selected SubDesign will be closed</returns>
+		public bool ConfirmClose(bool isDirty)
+        {
+            if (isDirty == true)
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+                DialogResult response = MessageBox.Show("You have made changes to the file you are trying to close - do you wish to continue?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+                if (response == DialogResult.Yes) return true;
+                else return false;
+            }
+            else return true;
+        }
+
+        /// <summary>
+        /// Loads the given IDisplay
+        /// </summary>
+        /// <param name="previous">The display to replace</param>
+        /// <param name="current">The display to be loaded</param>
+        public void LoadDisplay(IDisplay previous, IDisplay current)
 		{
             if (current == null)
             {
                 Globals.DisplayException(new ArgumentNullException("Unable to load given display - the given display is null."));
             }
 
-            if (this.MainLayoutPanel.Controls.Contains((Control)previous))
+            if (!this.MainLayoutPanel.Controls.Contains((Control)previous))
             {
-                this.MainLayoutPanel.Controls.Remove((Control)previous);
-            }
-
-            if (this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
-            {
+                // No files have been opened
                 this.MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
             }
-
-            if (current.TypeOfDisplay == Globals.DisplayType.EDIT)
+            else
             {
-                openIcon.Enabled = true;
-                openToolStripMenuItem.Enabled = true;
-                newIcon.Enabled = true;
-                newToolStripMenuItem.Enabled = true;
-                saveIcon.Enabled = true;
-                saveAllIcon.Enabled = true;
-                saveToolStripMenuItem.Enabled = true;
-                saveAsToolStripMenuItem.Enabled = true;
-                printToolStripMenuItem.Enabled = true;
-                printPreviewToolStripMenuItem.Enabled = true;
-                runModeToggle.Enabled = true;
-                editModeToggle.Enabled = false;
+                this.MainLayoutPanel.Controls.Remove((Control)previous);
+
+                /*
+                if (previous.TypeOfDisplay == current.TypeOfDisplay)
+                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel);     
+                    */
             }
 
-            else if (current.TypeOfDisplay == Globals.DisplayType.RUN)
-            {
-                openIcon.Enabled = false;
-                openToolStripMenuItem.Enabled = false;
-                newIcon.Enabled = false;
-                newToolStripMenuItem.Enabled = false;
-                saveIcon.Enabled = false;
-                saveAllIcon.Enabled = false;
-                saveToolStripMenuItem.Enabled = false;
-                saveAsToolStripMenuItem.Enabled = false;
-                printToolStripMenuItem.Enabled = false;
-                printPreviewToolStripMenuItem.Enabled = false;
-                editModeToggle.Enabled = true;
-                runModeToggle.Enabled = false;
-            }
+            ChangeControls(current); // Change controls to match the new display
 
-            Control c = (Control)current;
-			c.Dock = DockStyle.Fill;
-			this.MainLayoutPanel.Controls.Add(c);
+            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
+            {
+                Control c = (Control)current;
+                c.Dock = DockStyle.Fill;
+                this.MainLayoutPanel.Controls.Add(c);
+            }
 		}
 
 		/// <summary>
@@ -154,16 +180,16 @@ namespace VisiBoole.Views
 			}
 		}
 
-		#endregion
+        #endregion
 
-		#region "Click Events"
+        #region "Click Events"
 
-		/// <summary>
-		/// Handles the event that occurs when a node on the treeview was double-clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        /// <summary>
+        /// Handles the event that occurs when a node on the treeview was double-clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
 			controller.SelectTabPage(e.Node.Name);
             controller.checkSingleViewChange();
@@ -313,6 +339,16 @@ namespace VisiBoole.Views
         private void editModeToggle_Click(object sender, EventArgs e)
         {
             controller.checkSingleViewChange();
+        }
+
+        private void closeDesignToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string name = controller.CloseFile();
+            if (name != null)
+            {
+                RemoveNavTreeNode(name);
+                if (NavTree.Nodes.Count == 1) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+            }
         }
     }
 }
