@@ -30,7 +30,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("My SubDesigns");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("My SubDesigns");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -43,6 +43,7 @@ namespace VisiBoole.Views
             this.printToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.printPreviewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.closeDesignToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,13 +66,12 @@ namespace VisiBoole.Views
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip2 = new System.Windows.Forms.MenuStrip();
-            this.openIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.newIcon = new System.Windows.Forms.ToolStripMenuItem();
+            this.openIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.saveIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAllIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.editModeToggle = new System.Windows.Forms.ToolStripMenuItem();
-            this.closeDesignToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -113,7 +113,7 @@ namespace VisiBoole.Views
             this.newToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
             this.newToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.newToolStripMenuItem.Text = "&New";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.newToolStripMenuItem_Click);
             // 
@@ -122,14 +122,14 @@ namespace VisiBoole.Views
             this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "&Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // toolStripSeparator
             // 
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(143, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(177, 6);
             // 
             // saveToolStripMenuItem
             // 
@@ -137,7 +137,7 @@ namespace VisiBoole.Views
             this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
@@ -145,14 +145,14 @@ namespace VisiBoole.Views
             // 
             this.saveAsToolStripMenuItem.Enabled = false;
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.saveAsToolStripMenuItem.Text = "Save &As";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(143, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // printToolStripMenuItem
             // 
@@ -160,7 +160,7 @@ namespace VisiBoole.Views
             this.printToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.printToolStripMenuItem.Name = "printToolStripMenuItem";
             this.printToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-            this.printToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.printToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.printToolStripMenuItem.Text = "&Print";
             this.printToolStripMenuItem.Click += new System.EventHandler(this.printToolStripMenuItem_Click);
             // 
@@ -169,19 +169,27 @@ namespace VisiBoole.Views
             this.printPreviewToolStripMenuItem.Enabled = false;
             this.printPreviewToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.printPreviewToolStripMenuItem.Name = "printPreviewToolStripMenuItem";
-            this.printPreviewToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.printPreviewToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.printPreviewToolStripMenuItem.Text = "Print Pre&view";
             this.printPreviewToolStripMenuItem.Click += new System.EventHandler(this.printPreviewToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(143, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            // 
+            // closeDesignToolStripMenuItem
+            // 
+            this.closeDesignToolStripMenuItem.Enabled = false;
+            this.closeDesignToolStripMenuItem.Name = "closeDesignToolStripMenuItem";
+            this.closeDesignToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.closeDesignToolStripMenuItem.Text = "Close";
+            this.closeDesignToolStripMenuItem.Click += new System.EventHandler(this.closeDesignToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -347,10 +355,10 @@ namespace VisiBoole.Views
             this.NavTree.Location = new System.Drawing.Point(1, 1);
             this.NavTree.Margin = new System.Windows.Forms.Padding(1);
             this.NavTree.Name = "NavTree";
-            treeNode3.Name = "Node0";
-            treeNode3.Text = "My SubDesigns";
+            treeNode2.Name = "Node0";
+            treeNode2.Text = "My SubDesigns";
             this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode3});
+            treeNode2});
             this.NavTree.ShowLines = false;
             this.NavTree.Size = new System.Drawing.Size(194, 609);
             this.NavTree.TabIndex = 0;
@@ -370,8 +378,8 @@ namespace VisiBoole.Views
             this.menuStrip2.BackColor = System.Drawing.Color.DarkGray;
             this.menuStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible;
             this.menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openIcon,
             this.newIcon,
+            this.openIcon,
             this.saveIcon,
             this.saveAllIcon,
             this.runModeToggle,
@@ -382,19 +390,19 @@ namespace VisiBoole.Views
             this.menuStrip2.TabIndex = 3;
             this.menuStrip2.Text = "menuStrip2";
             // 
-            // openIcon
-            // 
-            this.openIcon.Image = ((System.Drawing.Image)(resources.GetObject("openIcon.Image")));
-            this.openIcon.Name = "openIcon";
-            this.openIcon.Size = new System.Drawing.Size(28, 20);
-            this.openIcon.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
-            // 
             // newIcon
             // 
             this.newIcon.Image = ((System.Drawing.Image)(resources.GetObject("newIcon.Image")));
             this.newIcon.Name = "newIcon";
             this.newIcon.Size = new System.Drawing.Size(28, 20);
             this.newIcon.Click += new System.EventHandler(this.newToolStripMenuItem_Click);
+            // 
+            // openIcon
+            // 
+            this.openIcon.Image = ((System.Drawing.Image)(resources.GetObject("openIcon.Image")));
+            this.openIcon.Name = "openIcon";
+            this.openIcon.Size = new System.Drawing.Size(28, 20);
+            this.openIcon.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // saveIcon
             // 
@@ -430,14 +438,6 @@ namespace VisiBoole.Views
             this.editModeToggle.Size = new System.Drawing.Size(55, 20);
             this.editModeToggle.Text = "Edit";
             this.editModeToggle.Click += new System.EventHandler(this.editModeToggle_Click);
-            // 
-            // closeDesignToolStripMenuItem
-            // 
-            this.closeDesignToolStripMenuItem.Enabled = false;
-            this.closeDesignToolStripMenuItem.Name = "closeDesignToolStripMenuItem";
-            this.closeDesignToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.closeDesignToolStripMenuItem.Text = "Close Design";
-            this.closeDesignToolStripMenuItem.Click += new System.EventHandler(this.closeDesignToolStripMenuItem_Click);
             // 
             // MainWindow
             // 

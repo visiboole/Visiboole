@@ -47,15 +47,15 @@ namespace VisiBoole.Views
             openToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
             newIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
             newToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            saveIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            saveAllIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            printToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            printPreviewToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            saveIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAllIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            printToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            printPreviewToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT) && NavTree.Nodes[0].Nodes.Count > 0;
+            runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
-            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
         }
 
 		/// <summary>
@@ -148,10 +148,11 @@ namespace VisiBoole.Views
             {
                 this.MainLayoutPanel.Controls.Remove((Control)previous);
 
-                /*
-                if (previous.TypeOfDisplay == current.TypeOfDisplay)
-                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel);     
-                    */
+                if (NavTree.Nodes[0].Nodes.Count == 0)
+                { 
+                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
+                }
+                    
             }
 
             ChangeControls(current); // Change controls to match the new display
@@ -310,14 +311,19 @@ namespace VisiBoole.Views
             foreach( var sub in Globals.SubDesigns)
             {
                 sub.Value.IncreaseFont();
+                // Change browser font
             }
         }
 
         private void decreaseFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (var sub in Globals.SubDesigns)
+            if (Globals.FontSize > 5)
             {
-                sub.Value.DecreaseFont();
+                foreach (var sub in Globals.SubDesigns)
+                {
+                    sub.Value.DecreaseFont();
+                    // Change browser font
+                }
             }
         }
 
@@ -347,7 +353,7 @@ namespace VisiBoole.Views
             if (name != null)
             {
                 RemoveNavTreeNode(name);
-                if (NavTree.Nodes.Count == 1) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+                if (NavTree.Nodes[0].Nodes.Count == 0) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
             }
         }
     }

@@ -114,18 +114,12 @@ namespace VisiBoole.Models
         public void IncreaseFont()
         {
             Globals.FontSize += 5;
-
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 
         public void DecreaseFont()
         {
-            if (Globals.FontSize > 5)
-            {
-                Globals.FontSize -= 5;
-
-            }
-
+            Globals.FontSize -= 5;
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 

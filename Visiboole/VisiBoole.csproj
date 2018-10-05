@@ -108,12 +108,6 @@
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
-    <Compile Include="Views\DisplayDefault.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Views\DisplayDefault.Designer.cs">
-      <DependentUpon>DisplayDefault.cs</DependentUpon>
-    </Compile>
     <Compile Include="Views\DisplayEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -146,9 +140,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="Views\DisplayDefault.resx">
-      <DependentUpon>DisplayDefault.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Views\DisplayEdit.resx">
       <DependentUpon>DisplayEdit.cs</DependentUpon>
     </EmbeddedResource>

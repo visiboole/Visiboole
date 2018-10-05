@@ -132,8 +132,15 @@ namespace VisiBoole.Controllers
             else
             {
                 Globals.SubDesigns.Remove(sd.Name); // Remove SubDesign from global list
-                tabControl.TabPages.Remove(tabControl.SelectedTab); // Remove tab page
-                if (tabControl.TabPages.Count > 0) tabControl.SelectedIndex = 0; // Change index
+                TabPage tab = tabControl.SelectedTab;
+                if (tabControl.TabPages.Count > 1)
+                {
+                    tabControl.SelectedIndex = tabControl.SelectedIndex > 0 ?
+                        (tabControl.SelectedIndex - 1)
+                        : 0; // Change index
+                }
+                tabControl.TabPages.Remove(tab); // Remove tab page
+                
                 return true;
             }
         }
@@ -260,7 +267,7 @@ namespace VisiBoole.Controllers
 
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
-
+            
             if(CurrentDisplay is DisplayEdit)
             {
                 mwController.LoadDisplay(Globals.DisplayType.RUN);
