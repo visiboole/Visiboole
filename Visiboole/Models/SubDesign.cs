@@ -64,9 +64,9 @@ namespace VisiBoole.Models
                 FileSource.Create().Close();
             }
 
-            SaveFileToText();
+            this.Text = GetFileText();
 
-			this.TextChanged += SubDesign_TextChanged;
+            
 
             this.Variables = new Dictionary<string, int>();
             this.Expressions = new Dictionary<string, string>();
@@ -85,6 +85,7 @@ namespace VisiBoole.Models
             }
 
             isDirty = false;
+            this.TextChanged += SubDesign_TextChanged;
         }
 
         public void Change_Theme(string theme)
@@ -108,8 +109,14 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         private void SubDesign_TextChanged(object sender, EventArgs e)
 		{
-			isDirty = true;
-		}
+            // Opening files calls this
+            if (this.Text != GetFileText() && !isDirty)
+            {
+                isDirty = true;
+                if (Globals.tabControl.SelectedTab.Text == FileSourceName)
+                    Globals.tabControl.SelectedTab.Text = "*" + Globals.tabControl.SelectedTab.Text;
+            }
+        }
 
         public void IncreaseFont()
         {
@@ -123,10 +130,11 @@ namespace VisiBoole.Models
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 
-		/// <summary>
-		/// Copies the file contents of this subdesign filesource to this Text property
-		/// </summary>
-		private void SaveFileToText()
+        /// <summary>
+        /// Gets the text of the file source
+        /// </summary>
+        /// <returns>Text of the file source</returns>
+        private string GetFileText()
         {
             string text = string.Empty;
 
@@ -139,7 +147,7 @@ namespace VisiBoole.Models
                     text += nextLine + Environment.NewLine;
                 }
             }
-            this.Text = text;
+            return text;
         }
 
         /// <summary>
@@ -149,6 +157,7 @@ namespace VisiBoole.Models
         {
             File.WriteAllText(this.FileSource.FullName, this.Text);
 			isDirty = false;
+            Globals.tabControl.SelectedTab.Text = FileSourceName;
         }
     }
 }

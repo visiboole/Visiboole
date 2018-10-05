@@ -30,7 +30,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("My SubDesigns");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("My SubDesigns");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -276,6 +276,7 @@ namespace VisiBoole.Views
             // 
             // increaseFontToolStripMenuItem
             // 
+            this.increaseFontToolStripMenuItem.Enabled = false;
             this.increaseFontToolStripMenuItem.Name = "increaseFontToolStripMenuItem";
             this.increaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+";
             this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
@@ -284,6 +285,7 @@ namespace VisiBoole.Views
             // 
             // decreaseFontToolStripMenuItem
             // 
+            this.decreaseFontToolStripMenuItem.Enabled = false;
             this.decreaseFontToolStripMenuItem.Name = "decreaseFontToolStripMenuItem";
             this.decreaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl-";
             this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
@@ -313,8 +315,8 @@ namespace VisiBoole.Views
             // 
             this.MainLayoutPanel.BackColor = System.Drawing.Color.Transparent;
             this.MainLayoutPanel.ColumnCount = 2;
-            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 196F));
-            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 17.5F));
+            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 82.5F));
             this.MainLayoutPanel.Controls.Add(this.OpenFileLinkLabel, 0, 0);
             this.MainLayoutPanel.Controls.Add(this.NavTree, 0, 0);
             this.MainLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -324,8 +326,6 @@ namespace VisiBoole.Views
             this.MainLayoutPanel.Name = "MainLayoutPanel";
             this.MainLayoutPanel.RowCount = 1;
             this.MainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.MainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 611F));
-            this.MainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 611F));
             this.MainLayoutPanel.Size = new System.Drawing.Size(1120, 611);
             this.MainLayoutPanel.TabIndex = 2;
             // 
@@ -355,10 +355,10 @@ namespace VisiBoole.Views
             this.NavTree.Location = new System.Drawing.Point(1, 1);
             this.NavTree.Margin = new System.Windows.Forms.Padding(1);
             this.NavTree.Name = "NavTree";
-            treeNode2.Name = "Node0";
-            treeNode2.Text = "My SubDesigns";
+            treeNode4.Name = "Node0";
+            treeNode4.Text = "My SubDesigns";
             this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode2});
+            treeNode4});
             this.NavTree.ShowLines = false;
             this.NavTree.Size = new System.Drawing.Size(194, 609);
             this.NavTree.TabIndex = 0;

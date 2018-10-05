@@ -120,7 +120,7 @@ namespace VisiBoole.Controllers
                     view.AddNavTreeNode(sd.FileSourceName);
                 }
 
-                LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
+                LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay); // Changes isDirty to true
             }
 			catch (Exception ex)
 			{
