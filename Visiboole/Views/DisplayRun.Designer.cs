@@ -32,9 +32,9 @@ namespace VisiBoole.Views
 		{
             this.pnlMain = new System.Windows.Forms.TableLayoutPanel();
             this.pnlOutputControls = new System.Windows.Forms.Panel();
-            this.btnTick = new System.Windows.Forms.Button();
-            this.btnMultiTick = new System.Windows.Forms.Button();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.btnMultiTick = new System.Windows.Forms.Button();
+            this.btnTick = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.pnlOutputControls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -61,31 +61,10 @@ namespace VisiBoole.Views
             this.pnlOutputControls.Controls.Add(this.btnMultiTick);
             this.pnlOutputControls.Controls.Add(this.btnTick);
             this.pnlOutputControls.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlOutputControls.Location = new System.Drawing.Point(3, 3);
+            this.pnlOutputControls.Location = new System.Drawing.Point(3, 39);
             this.pnlOutputControls.Name = "pnlOutputControls";
-            this.pnlOutputControls.Size = new System.Drawing.Size(794, 30);
+            this.pnlOutputControls.Size = new System.Drawing.Size(794, 558);
             this.pnlOutputControls.TabIndex = 0;
-            // 
-            // btnTick
-            // 
-            this.btnTick.Dock = System.Windows.Forms.DockStyle.Left;
-            this.btnTick.Location = new System.Drawing.Point(0, 0);
-            this.btnTick.Name = "btnTick";
-            this.btnTick.Size = new System.Drawing.Size(75, 30);
-            this.btnTick.TabIndex = 0;
-            this.btnTick.Text = "Tick";
-            this.btnTick.UseVisualStyleBackColor = true;
-            this.btnTick.Click += new System.EventHandler(this.btnTick_Click);
-            // 
-            // btnMultiTick
-            // 
-            this.btnMultiTick.Dock = System.Windows.Forms.DockStyle.Left;
-            this.btnMultiTick.Location = new System.Drawing.Point(75, 0);
-            this.btnMultiTick.Name = "btnMultiTick";
-            this.btnMultiTick.Size = new System.Drawing.Size(75, 30);
-            this.btnMultiTick.TabIndex = 1;
-            this.btnMultiTick.Text = "X Ticks";
-            this.btnMultiTick.UseVisualStyleBackColor = true;
             // 
             // numericUpDown1
             // 
@@ -109,6 +88,28 @@ namespace VisiBoole.Views
             0,
             0,
             0});
+            // 
+            // btnMultiTick
+            // 
+            this.btnMultiTick.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnMultiTick.Location = new System.Drawing.Point(75, 0);
+            this.btnMultiTick.Name = "btnMultiTick";
+            this.btnMultiTick.Size = new System.Drawing.Size(75, 558);
+            this.btnMultiTick.TabIndex = 1;
+            this.btnMultiTick.Text = "X Ticks";
+            this.btnMultiTick.UseVisualStyleBackColor = true;
+            this.btnMultiTick.Click += new System.EventHandler(this.btnMultiTick_Click);
+            // 
+            // btnTick
+            // 
+            this.btnTick.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnTick.Location = new System.Drawing.Point(0, 0);
+            this.btnTick.Name = "btnTick";
+            this.btnTick.Size = new System.Drawing.Size(75, 558);
+            this.btnTick.TabIndex = 0;
+            this.btnTick.Text = "Tick";
+            this.btnTick.UseVisualStyleBackColor = true;
+            this.btnTick.Click += new System.EventHandler(this.btnTick_Click);
             // 
             // DisplayRun
             // 

@@ -26,6 +26,12 @@ namespace VisiBoole.ParsingEngine.Statements
         public static Regex Pattern2 { get; } = new Regex(@"^%[ubhd]{([a-zA-Z0-9_]{1,20} ?)+};$");
 
         /// <summary>
+        /// The identifying pattern that can be used to identify and extract this statement from raw text
+        /// This pattern is the third identifying pattern and is of a form similar to: A[m.step.n] = {};
+        /// </summary>
+        public static Regex Pattern3 { get; } = new Regex(@"^[a-zA-z]\[\d\.\.\d\]\s|\=|\s\{[a-zA-z]+\,|\s\}\;$"); // E[3..0] = {F, G, H, I};
+
+        /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
@@ -56,12 +62,12 @@ namespace VisiBoole.ParsingEngine.Statements
 
 		        // obtain the variables within the content. First search for pattern A[N..n]
 		        regex = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
-		        string match = regex.Match(content).Value;
+		        string match = regex.Match(content).Value; // E[3..0]
 		        if (!string.IsNullOrEmpty(match))
 		        {
 		            // first pattern found. Expand the expression to extract the variables
 		            regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
-		            string var = regex.Match(match).Value;
+		            string var = regex.Match(match).Value; // E
 		            regex = new Regex(@"\d");
 		            MatchCollection matches = regex.Matches(match);
 		            int beg = Convert.ToInt32(matches[0].Value);
@@ -84,8 +90,23 @@ namespace VisiBoole.ParsingEngine.Statements
                         }
                     }
 
-		            // add each variable to our output list of object code
-                    foreach(int i in order)
+                    /*
+                    List<char> chars = new List<char>();
+                    if (content.Contains("="))
+                    {
+                        regex = new Regex(@"\=|\s[a-zA-z]+\,|\s", RegexOptions.None);
+                        string rhs = regex.Match(content.Substring(content.IndexOf('='))).Value; // Gets the operator and right hand side of the content string
+                        rhs = rhs.Replace(" ", "");
+                        string[] parts = rhs.Split(',');
+                        if (parts.Length != (beg - end)) throw;
+                        foreach (string s in parts) chars.Insert(parts);
+                    }
+                    */
+                    
+                    
+
+                    // add each variable to our output list of object code and assign values if needed
+                    foreach (int i in order)
 		            {
 		                string key = string.Concat(var, i);
 		                IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(key) as IndependentVariable;

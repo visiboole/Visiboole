@@ -71,5 +71,10 @@ namespace VisiBoole.Views
         {
             controller.Tick();
         }
+
+        private void btnMultiTick_Click(object sender, System.EventArgs e)
+        {
+            for (int i = 0; i < numericUpDown1.Value; i++) controller.Tick();
+        }
     }
 }
