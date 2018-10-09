@@ -173,12 +173,6 @@
         DCDJyegAZADeUCYESHYyAwMDAPyUEeveLlZ5AAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="editModeToggle.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAClJREFUOE9j
-        GGbg27dv/4nBUOWYACTJKteEF48aMDIMIAZDlQ8PwMAAAKIa9KW37z8nAAAAAElFTkSuQmCC
-</value>
-  </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>25</value>
   </metadata>

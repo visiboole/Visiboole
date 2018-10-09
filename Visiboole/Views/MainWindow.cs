@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using VisiBoole.Controllers;
 
@@ -22,7 +23,8 @@ namespace VisiBoole.Views
 		public MainWindow()
 		{
 			InitializeComponent();
-		}
+            Globals.tabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
+        }
 
 		/// <summary>
 		/// Saves the handle to the controller for this view
@@ -70,6 +72,10 @@ namespace VisiBoole.Views
 			TreeNode node = new TreeNode(filename);
 
 			node.Name = filename;
+            ContextMenu cm = new ContextMenu();
+            cm.MenuItems.Add("Save Design", new EventHandler(SaveFileEvent));
+            cm.MenuItems.Add("Close Design", new EventHandler(CloseFileEvent));
+            node.ContextMenu = cm;
 
             if (NavTree.Nodes.ContainsKey(filename))
             {
@@ -86,7 +92,7 @@ namespace VisiBoole.Views
 		/// <param name="name">The name of the node to be removed</param>
 		public void RemoveNavTreeNode(string name)
         {
-            NavTree.Nodes[0].Nodes.RemoveByKey(name);
+           NavTree.Nodes[0].Nodes.RemoveByKey(name);
         }
 
         /// <summary>
@@ -185,7 +191,7 @@ namespace VisiBoole.Views
 
         #endregion
 
-        #region "Click Events"
+        #region "Event Handlers"
 
         /// <summary>
         /// Handles the event that occurs when a node on the treeview was double-clicked
@@ -198,12 +204,30 @@ namespace VisiBoole.Views
             controller.checkSingleViewChange();
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when New button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void newToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Checks whether the user is trying to close a tab
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TabMouseDownEvent(object sender, MouseEventArgs e)
+        {
+            if (Globals.tabControl.SelectedIndex != -1)
+            {
+                Rectangle current = Globals.tabControl.GetTabRect(Globals.tabControl.SelectedIndex);
+                Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
+                if (close.Contains(e.Location))
+                {
+                    CloseFileEvent(sender, e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when New button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NewFileEvent(object sender, EventArgs e)
 		{
 			DialogResult response = saveFileDialog1.ShowDialog();
 
@@ -213,23 +237,41 @@ namespace VisiBoole.Views
             }
 
 			controller.ProcessNewFile(saveFileDialog1.FileName, true);
-			saveFileDialog1.FileName = "newFile1.vbi";
-		}
+            saveFileDialog1.FileName = "newFile1.vbi";
+        }
 
-		/// <summary>
-		/// Handles the event that occurs when Open button (on menustrip) was clicked
+        /// <summary>
+		/// Handles the event that occurs when the link-label is clicked
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void openToolStripMenuItem_Click(object sender, EventArgs e)
+		private void OpenFileLinkEvent(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            DialogResult response = openFileDialog1.ShowDialog();
+
+            if (response != DialogResult.OK)
+            {
+                return;
+            }
+
+            controller.ProcessNewFile(openFileDialog1.FileName);
+            openFileDialog1.FileName = string.Empty;
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when Open button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenFileEvent(object sender, EventArgs e)
 		{
 			DialogResult response = openFileDialog1.ShowDialog();
 
 			if (response == DialogResult.OK)
 			{
 				controller.ProcessNewFile(openFileDialog1.FileName);
-				openFileDialog1.FileName = string.Empty;
-			}
+                openFileDialog1.FileName = string.Empty;
+            }
 		}
 
 		/// <summary>
@@ -237,7 +279,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+		private void SaveFileEvent(object sender, EventArgs e)
 		{
 			controller.SaveFile();
 		}
@@ -247,7 +289,7 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void saveAllIcon_Click(object sender, EventArgs e)
+        private void SaveAllFileEvent(object sender, EventArgs e)
         {
             controller.SaveAll();
         }
@@ -257,7 +299,7 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveAsFileEvent(object sender, EventArgs e)
 		{
 			DialogResult response = saveFileDialog1.ShowDialog();
 
@@ -268,12 +310,22 @@ namespace VisiBoole.Views
 			}
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when Print button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void printToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CloseFileEvent(object sender, EventArgs e)
+        {
+            string name = controller.CloseFile();
+            if (name != null)
+            {
+                RemoveNavTreeNode(name);
+                if (NavTree.Nodes[0].Nodes.Count == 0) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when Print button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PrintFileEvent(object sender, EventArgs e)
 		{
 
 		}
@@ -283,7 +335,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void printPreviewToolStripMenuItem_Click(object sender, EventArgs e)
+		private void PrintPreviewFileEvent(object sender, EventArgs e)
 		{
 
 		}
@@ -293,32 +345,12 @@ namespace VisiBoole.Views
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+		private void ExitApplicationEvent(object sender, EventArgs e)
 		{
 			controller.ExitApplication();
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when the link-label is clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void OpenFileLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-		{
-			DialogResult response = openFileDialog1.ShowDialog();
-
-            if (response != DialogResult.OK)
-            {
-                return;
-            }
-
-			controller.ProcessNewFile(openFileDialog1.FileName);
-			openFileDialog1.FileName = string.Empty;
-		}
-
-		#endregion
-
-        private void increaseFontToolStripMenuItem_Click(object sender, EventArgs e)
+        private void IncreaseFontEvent(object sender, EventArgs e)
         {
             foreach( var sub in Globals.SubDesigns)
             {
@@ -327,7 +359,7 @@ namespace VisiBoole.Views
             }
         }
 
-        private void decreaseFontToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DecreaseFontEvent(object sender, EventArgs e)
         {
             if (Globals.FontSize > 5)
             {
@@ -339,34 +371,26 @@ namespace VisiBoole.Views
             }
         }
 
-        private void lightThemeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LightThemeEvent(object sender, EventArgs e)
         {
             ChangeTheme("light");
         }
 
-        private void darkThemeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DarkThemeEvent(object sender, EventArgs e)
         {
             ChangeTheme("dark");
         }
 
-        private void runModeToggle_Click(object sender, EventArgs e)
+        private void RunToggleEvent(object sender, EventArgs e)
         {
             controller.Run();
         }
 
-        private void editModeToggle_Click(object sender, EventArgs e)
+        private void EditToggleEvent(object sender, EventArgs e)
         {
             controller.checkSingleViewChange();
         }
 
-        private void closeDesignToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            string name = controller.CloseFile();
-            if (name != null)
-            {
-                RemoveNavTreeNode(name);
-                if (NavTree.Nodes[0].Nodes.Count == 0) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
-            }
-        }
+        #endregion
     }
 }

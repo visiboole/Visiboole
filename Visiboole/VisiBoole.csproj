@@ -166,6 +166,13 @@
   <ItemGroup>
     <None Include="Resources\VisiBooleIcon.ico" />
     <None Include="Resources\Letter V blue.ico" />
+    <Content Include="Resources\Close.png" />
+    <Content Include="Resources\NewFile.png" />
+    <Content Include="Resources\OpenFile.png" />
+    <Content Include="Resources\Run.png" />
+    <Content Include="Resources\Save.png" />
+    <Content Include="Resources\SaveAll.png" />
+    <Content Include="Resources\Stop.png" />
     <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>

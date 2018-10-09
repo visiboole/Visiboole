@@ -5,6 +5,7 @@ using VisiBoole.Models;
 using VisiBoole.ParsingEngine;
 using VisiBoole.Views;
 using VisiBoole.ParsingEngine.ObjectCode;
+using System.Drawing;
 
 namespace VisiBoole.Controllers
 {
@@ -96,6 +97,10 @@ namespace VisiBoole.Controllers
 			browser = new WebBrowser();
 			parseOut = new OutputParser();
 
+            ImageList il = new ImageList();
+            il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
+            tabControl.ImageList = il;
+
 			this.edit = edit;
 			this.run = run;
 
@@ -135,9 +140,15 @@ namespace VisiBoole.Controllers
                 TabPage tab = tabControl.SelectedTab;
                 if (tabControl.TabPages.Count > 1)
                 {
-                    tabControl.SelectedIndex = tabControl.SelectedIndex > 0 ?
-                        (tabControl.SelectedIndex - 1)
-                        : 0; // Change index
+                    if (tabControl.SelectedIndex != 0)
+                    {
+                        tabControl.SelectedIndex -= 1;
+                    }
+                    else
+                    {
+                        tabControl.SelectedIndex += 1;
+                    }
+                    
                 }
                 tabControl.TabPages.Remove(tab); // Remove tab page
                 
@@ -214,6 +225,8 @@ namespace VisiBoole.Controllers
 			TabPage tab = new TabPage(sd.FileSourceName);
 
             tab.Name = sd.FileSourceName;
+            tab.ImageKey = "Close";
+            tab.ImageIndex = 0;
 			tab.Controls.Add(sd);
 			sd.Dock = DockStyle.Fill;
 

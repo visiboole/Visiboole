@@ -66,7 +66,8 @@ namespace VisiBoole.Models
 
             this.Text = GetFileText();
 
-            
+            isDirty = false;
+            this.TextChanged += SubDesign_TextChanged;
 
             this.Variables = new Dictionary<string, int>();
             this.Expressions = new Dictionary<string, string>();
@@ -83,9 +84,6 @@ namespace VisiBoole.Models
                 this.BackColor = Color.FromArgb(75, 77, 81);
                 this.ForeColor = Color.FromArgb(34, 226, 85);
             }
-
-            isDirty = false;
-            this.TextChanged += SubDesign_TextChanged;
         }
 
         public void Change_Theme(string theme)
@@ -109,8 +107,7 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         private void SubDesign_TextChanged(object sender, EventArgs e)
 		{
-            // Opening files calls this
-            if (this.Text != GetFileText() && !isDirty)
+            if (!this.Text.Equals(GetFileText()) && !isDirty)
             {
                 isDirty = true;
                 if (Globals.tabControl.SelectedTab.Text == FileSourceName)
@@ -144,7 +141,7 @@ namespace VisiBoole.Models
 
                 while ((nextLine = reader.ReadLine()) != null)
                 {
-                    text += nextLine + Environment.NewLine;
+                    text += nextLine + "\n";
                 }
             }
             return text;
