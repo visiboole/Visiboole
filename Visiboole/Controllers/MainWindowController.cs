@@ -82,16 +82,17 @@ namespace VisiBoole.Controllers
 				if (sd.isDirty)
 				{
 					isDirty = true;
+                    break;
 				}
 			}
 			view.ConfirmExit(isDirty);
 		}
 
-		/// <summary>
-		/// Loads into the MainWindow the display of the given type
-		/// </summary>
-		/// <param name="dType">The type of display that should be loaded</param>
-		public void LoadDisplay(Globals.DisplayType dType)
+        /// <summary>
+        /// Loads into the MainWindow the display of the given type
+        /// </summary>
+        /// <param name="dType">The type of display that should be loaded</param>
+        public void LoadDisplay(Globals.DisplayType dType)
 		{
 			displayController.PreviousDisplay = displayController.CurrentDisplay;
 			displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
@@ -119,8 +120,8 @@ namespace VisiBoole.Controllers
                     view.AddNavTreeNode(sd.FileSourceName);
                 }
 
-				LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
-			}
+                LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
+            }
 			catch (Exception ex)
 			{
 				Globals.DisplayException(ex);
@@ -165,11 +166,26 @@ namespace VisiBoole.Controllers
 			}
 		}
 
-		/// <summary>
-		/// Selects the tabpage in the tabcontrol with name matching the given string
-		/// </summary>
-		/// <param name="fileName">The name of the tabpage to select</param>
-		public void SelectTabPage(string fileName)
+        /// <summary>
+        /// Saves all files opened
+        /// </summary>
+        public void SaveAll()
+        {
+            try
+            {
+                view.SaveFileSuccess(displayController.SaveAllTabs());
+            }
+            catch (Exception ex)
+            {
+                Globals.DisplayException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Selects the tabpage in the tabcontrol with name matching the given string
+        /// </summary>
+        /// <param name="fileName">The name of the tabpage to select</param>
+        public void SelectTabPage(string fileName)
 		{
 			try
 			{
@@ -180,5 +196,32 @@ namespace VisiBoole.Controllers
 				Globals.DisplayException(ex);
 			}
 		}
+
+        public string CloseFile()
+        {
+            SubDesign sd;
+            Globals.SubDesigns.TryGetValue(displayController.GetActiveTabPage().SubDesign().FileSourceName, out sd);
+
+            try
+            {
+                if (view.ConfirmClose(sd.isDirty))
+                {
+                    if (displayController.CloseActiveTab())
+                        return sd.FileSourceName;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Globals.DisplayException(ex);
+                return null;
+            }
+        }
+
+        public void Run()
+        {
+            displayController.Run();
+        }
 	}
 }

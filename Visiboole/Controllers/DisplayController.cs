@@ -5,6 +5,7 @@ using VisiBoole.Models;
 using VisiBoole.ParsingEngine;
 using VisiBoole.Views;
 using VisiBoole.ParsingEngine.ObjectCode;
+using System.Drawing;
 
 namespace VisiBoole.Controllers
 {
@@ -96,6 +97,10 @@ namespace VisiBoole.Controllers
 			browser = new WebBrowser();
 			parseOut = new OutputParser();
 
+            ImageList il = new ImageList();
+            il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
+            tabControl.ImageList = il;
+
 			this.edit = edit;
 			this.run = run;
 
@@ -116,9 +121,40 @@ namespace VisiBoole.Controllers
 			this.mwController = mwController;
 		}
 
-		#endregion
+        #endregion
 
-		#region "TabControl Interaction"
+        #region "TabControl Interaction"
+
+        /// <summary>
+		/// Closes the file that is associated with the currently selected tabpage
+		/// </summary>
+		/// <returns>Indicates whether the file was closed</returns>
+        public bool CloseActiveTab()
+        {
+            SubDesign sd = tabControl.SelectedTab.SubDesign();
+
+            if (sd == null) return false;
+            else
+            {
+                Globals.SubDesigns.Remove(sd.Name); // Remove SubDesign from global list
+                TabPage tab = tabControl.SelectedTab;
+                if (tabControl.TabPages.Count > 1)
+                {
+                    if (tabControl.SelectedIndex != 0)
+                    {
+                        tabControl.SelectedIndex -= 1;
+                    }
+                    else
+                    {
+                        tabControl.SelectedIndex += 1;
+                    }
+                    
+                }
+                tabControl.TabPages.Remove(tab); // Remove tab page
+                
+                return true;
+            }
+        }
 
 		/// <summary>
 		/// Saves the file that is associated with the currently selected tabpage
@@ -126,18 +162,40 @@ namespace VisiBoole.Controllers
 		/// <returns></returns>
 		public bool SaveActiveTab()
 		{
-			SubDesign sd = tabControl.SelectedTab.SubDesign();
-
-			if (sd == null)
-			{
-				return false;
-			}
-			else
-			{
-				sd.SaveTextToFile();
-				return true;
-			}
+            bool saved = SaveSubDesign(tabControl.SelectedTab.SubDesign());
+            return saved;
 		}
+
+        public bool SaveAllTabs()
+        {
+            foreach (TabPage tab in tabControl.TabPages)
+            {
+                SubDesign sd = tab.SubDesign();
+                bool saved = SaveSubDesign(sd);
+
+                if (!saved) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Saves a particular SubDesign
+        /// </summary>
+        /// <param name="sd">The SubDesign to save</param>
+        /// <returns>Indicates whether the save was successful</returns>
+        private bool SaveSubDesign(SubDesign sd)
+        {
+            if (sd == null)
+            {
+                return false;
+            }
+            else
+            {
+                sd.SaveTextToFile();
+                return true;
+            }
+        }
 
 		/// <summary>
 		/// Selects the tabpage with matching name
@@ -167,6 +225,8 @@ namespace VisiBoole.Controllers
 			TabPage tab = new TabPage(sd.FileSourceName);
 
             tab.Name = sd.FileSourceName;
+            tab.ImageKey = "Close";
+            tab.ImageIndex = 0;
 			tab.Controls.Add(sd);
 			sd.Dock = DockStyle.Fill;
 
@@ -242,7 +302,7 @@ namespace VisiBoole.Controllers
 
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
-
+            
             if(CurrentDisplay is DisplayEdit)
             {
                 mwController.LoadDisplay(Globals.DisplayType.RUN);

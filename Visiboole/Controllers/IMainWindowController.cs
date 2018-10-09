@@ -29,10 +29,21 @@
 		/// <param name="path">The new file path to save the active file to</param>
 		void SaveFileAs(string filePath);
 
-		/// <summary>
-		/// Performs a dirty check and confirms application exit with the user
+        /// <summary>
+		/// Saves all files opened
 		/// </summary>
-		void ExitApplication();
+		void SaveAll();
+
+        /// <summary>
+        /// Performs a dirty check and confirms application exit with the user
+        /// </summary>
+        void ExitApplication();
+
+        /// <summary>
+        /// Closes the selected open file
+        /// </summary>
+        /// <returns>The name of the file closed</returns>
+        string CloseFile();
 
 		/// <summary>
 		/// Selects the tabpage in the tabcontrol with name matching the given string
@@ -44,6 +55,11 @@
         /// Used to check if the display is the output, if it is, change it to editor.
         /// </summary>
         void checkSingleViewChange();
+
+        /// <summary>
+        /// Run call to other controller
+        /// </summary>
+        void Run();
 
     }
 }

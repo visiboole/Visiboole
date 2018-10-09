@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using VisiBoole.Controllers;
 
@@ -22,7 +23,8 @@ namespace VisiBoole.Views
 		public MainWindow()
 		{
 			InitializeComponent();
-		}
+            Globals.tabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
+        }
 
 		/// <summary>
 		/// Saves the handle to the controller for this view
@@ -33,9 +35,32 @@ namespace VisiBoole.Views
 			this.controller = controller;
 		}
 
-		#endregion
+        #endregion
 
-		#region "Utility Methods"
+        #region "Utility Methods"
+
+        /// <summary>
+        /// Change buttons and icons based on the new display
+        /// </summary>
+        /// <param name="current"></param>
+        private void ChangeControls(IDisplay display)
+        {
+            openIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            openToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            newIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            newToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
+            saveIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAllIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            printToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            printPreviewToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT) && NavTree.Nodes[0].Nodes.Count > 0;
+            runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
+            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            increaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            decreaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+        }
 
 		/// <summary>
 		/// Adds a new node in the TreeView
@@ -47,6 +72,10 @@ namespace VisiBoole.Views
 			TreeNode node = new TreeNode(filename);
 
 			node.Name = filename;
+            ContextMenu cm = new ContextMenu();
+            cm.MenuItems.Add("Save Design", new EventHandler(SaveFileEvent));
+            cm.MenuItems.Add("Close Design", new EventHandler(CloseFileEvent));
+            node.ContextMenu = cm;
 
             if (NavTree.Nodes.ContainsKey(filename))
             {
@@ -57,11 +86,20 @@ namespace VisiBoole.Views
 			NavTree.ExpandAll();
 		}
 
-		/// <summary>
-		/// Confirms exit with the user if the application is dirty
+        /// <summary>
+		/// Removes a node in the TreeView
 		/// </summary>
-		/// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
-		public void ConfirmExit(bool isDirty)
+		/// <param name="name">The name of the node to be removed</param>
+		public void RemoveNavTreeNode(string name)
+        {
+           NavTree.Nodes[0].Nodes.RemoveByKey(name);
+        }
+
+        /// <summary>
+        /// Confirms exit with the user if the application is dirty
+        /// </summary>
+        /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
+        public void ConfirmExit(bool isDirty)
 		{
 			if (isDirty == true)
 			{
@@ -79,31 +117,60 @@ namespace VisiBoole.Views
 			}
 		}
 
-		/// <summary>
-		/// Loads the given IDisplay
-		/// </summary>
-		/// <param name="previous">The display to replace</param>
-		/// <param name="current">The display to be loaded</param>
-		public void LoadDisplay(IDisplay previous, IDisplay current)
+        /// <summary>
+        /// Confrims whether the user wants to close the selected SubDesign
+        /// </summary>
+        /// <param name="isDirty">True if the SubDesign being closed has been modified since last save</param>
+        /// <returns>Whether the selected SubDesign will be closed</returns>
+		public bool ConfirmClose(bool isDirty)
+        {
+            if (isDirty == true)
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+                DialogResult response = MessageBox.Show("You have made changes to the file you are trying to close - do you wish to continue?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+                if (response == DialogResult.Yes) return true;
+                else return false;
+            }
+            else return true;
+        }
+
+        /// <summary>
+        /// Loads the given IDisplay
+        /// </summary>
+        /// <param name="previous">The display to replace</param>
+        /// <param name="current">The display to be loaded</param>
+        public void LoadDisplay(IDisplay previous, IDisplay current)
 		{
             if (current == null)
             {
                 Globals.DisplayException(new ArgumentNullException("Unable to load given display - the given display is null."));
             }
 
-            if (this.MainLayoutPanel.Controls.Contains((Control)previous))
+            if (!this.MainLayoutPanel.Controls.Contains((Control)previous))
             {
-                this.MainLayoutPanel.Controls.Remove((Control)previous);
-            }
-
-            if (this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
-            {
+                // No files have been opened
                 this.MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
             }
+            else
+            {
+                this.MainLayoutPanel.Controls.Remove((Control)previous);
 
-			Control c = (Control)current;
-			c.Dock = DockStyle.Fill;
-			this.MainLayoutPanel.Controls.Add(c);
+                if (NavTree.Nodes[0].Nodes.Count == 0)
+                { 
+                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
+                }
+                    
+            }
+
+            ChangeControls(current); // Change controls to match the new display
+
+            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
+            {
+                Control c = (Control)current;
+                c.Dock = DockStyle.Fill;
+                this.MainLayoutPanel.Controls.Add(c);
+            }
 		}
 
 		/// <summary>
@@ -122,27 +189,45 @@ namespace VisiBoole.Views
 			}
 		}
 
-		#endregion
+        #endregion
 
-		#region "Click Events"
+        #region "Event Handlers"
 
-		/// <summary>
-		/// Handles the event that occurs when a node on the treeview was double-clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        /// <summary>
+        /// Handles the event that occurs when a node on the treeview was double-clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
 			controller.SelectTabPage(e.Node.Name);
             controller.checkSingleViewChange();
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when New button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void newToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Checks whether the user is trying to close a tab
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TabMouseDownEvent(object sender, MouseEventArgs e)
+        {
+            if (Globals.tabControl.SelectedIndex != -1)
+            {
+                Rectangle current = Globals.tabControl.GetTabRect(Globals.tabControl.SelectedIndex);
+                Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
+                if (close.Contains(e.Location))
+                {
+                    CloseFileEvent(sender, e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when New button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NewFileEvent(object sender, EventArgs e)
 		{
 			DialogResult response = saveFileDialog1.ShowDialog();
 
@@ -152,23 +237,41 @@ namespace VisiBoole.Views
             }
 
 			controller.ProcessNewFile(saveFileDialog1.FileName, true);
-			saveFileDialog1.FileName = "newFile1.vbi";
-		}
+            saveFileDialog1.FileName = "newFile1.vbi";
+        }
 
-		/// <summary>
-		/// Handles the event that occurs when Open button (on menustrip) was clicked
+        /// <summary>
+		/// Handles the event that occurs when the link-label is clicked
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void openToolStripMenuItem_Click(object sender, EventArgs e)
+		private void OpenFileLinkEvent(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            DialogResult response = openFileDialog1.ShowDialog();
+
+            if (response != DialogResult.OK)
+            {
+                return;
+            }
+
+            controller.ProcessNewFile(openFileDialog1.FileName);
+            openFileDialog1.FileName = string.Empty;
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when Open button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenFileEvent(object sender, EventArgs e)
 		{
 			DialogResult response = openFileDialog1.ShowDialog();
 
 			if (response == DialogResult.OK)
 			{
 				controller.ProcessNewFile(openFileDialog1.FileName);
-				openFileDialog1.FileName = string.Empty;
-			}
+                openFileDialog1.FileName = string.Empty;
+            }
 		}
 
 		/// <summary>
@@ -176,17 +279,27 @@ namespace VisiBoole.Views
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+		private void SaveFileEvent(object sender, EventArgs e)
 		{
 			controller.SaveFile();
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when SaveAs button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Handles the event that ocrrus when SaveAll Icon (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SaveAllFileEvent(object sender, EventArgs e)
+        {
+            controller.SaveAll();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when SaveAs button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SaveAsFileEvent(object sender, EventArgs e)
 		{
 			DialogResult response = saveFileDialog1.ShowDialog();
 
@@ -197,12 +310,22 @@ namespace VisiBoole.Views
 			}
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when Print button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void printToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CloseFileEvent(object sender, EventArgs e)
+        {
+            string name = controller.CloseFile();
+            if (name != null)
+            {
+                RemoveNavTreeNode(name);
+                if (NavTree.Nodes[0].Nodes.Count == 0) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when Print button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PrintFileEvent(object sender, EventArgs e)
 		{
 
 		}
@@ -212,7 +335,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void printPreviewToolStripMenuItem_Click(object sender, EventArgs e)
+		private void PrintPreviewFileEvent(object sender, EventArgs e)
 		{
 
 		}
@@ -222,60 +345,52 @@ namespace VisiBoole.Views
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+		private void ExitApplicationEvent(object sender, EventArgs e)
 		{
 			controller.ExitApplication();
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when the link-label is clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void OpenFileLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-		{
-			DialogResult response = openFileDialog1.ShowDialog();
-
-            if (response != DialogResult.OK)
-            {
-                return;
-            }
-
-			controller.ProcessNewFile(openFileDialog1.FileName);
-			openFileDialog1.FileName = string.Empty;
-		}
-
-		#endregion
-
-        private void increaseFontToolStripMenuItem_Click(object sender, EventArgs e)
+        private void IncreaseFontEvent(object sender, EventArgs e)
         {
             foreach( var sub in Globals.SubDesigns)
             {
                 sub.Value.IncreaseFont();
+                // Change browser font
             }
         }
 
-        private void decreaseFontToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DecreaseFontEvent(object sender, EventArgs e)
         {
-            foreach (var sub in Globals.SubDesigns)
+            if (Globals.FontSize > 5)
             {
-                sub.Value.DecreaseFont();
+                foreach (var sub in Globals.SubDesigns)
+                {
+                    sub.Value.DecreaseFont();
+                    // Change browser font
+                }
             }
         }
 
-        private void lightThemeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LightThemeEvent(object sender, EventArgs e)
         {
             ChangeTheme("light");
         }
 
-        private void darkThemeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DarkThemeEvent(object sender, EventArgs e)
         {
             ChangeTheme("dark");
         }
 
-        private void runModeToggle_Click(object sender, EventArgs e)
+        private void RunToggleEvent(object sender, EventArgs e)
         {
-
+            controller.Run();
         }
+
+        private void EditToggleEvent(object sender, EventArgs e)
+        {
+            controller.checkSingleViewChange();
+        }
+
+        #endregion
     }
 }

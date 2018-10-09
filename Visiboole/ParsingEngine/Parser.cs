@@ -186,7 +186,7 @@ namespace VisiBoole.ParsingEngine
 					}
 
                     // check for a format specifier statement
-                    bool success = FormatSpecifierStmt.Pattern1.Match(nextLine).Success || FormatSpecifierStmt.Pattern2.Match(nextLine).Success;
+                    bool success = FormatSpecifierStmt.Pattern1.Match(nextLine).Success || FormatSpecifierStmt.Pattern2.Match(nextLine).Success || FormatSpecifierStmt.Pattern3.Match(nextLine).Success;
                     if (success)
                     {
                         stmtList.Add(new FormatSpecifierStmt(postLnNum, nextLine));

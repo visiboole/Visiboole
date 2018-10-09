@@ -64,9 +64,10 @@ namespace VisiBoole.Models
                 FileSource.Create().Close();
             }
 
-            SaveFileToText();
+            this.Text = GetFileText();
 
-			this.TextChanged += SubDesign_TextChanged;
+            isDirty = false;
+            this.TextChanged += SubDesign_TextChanged;
 
             this.Variables = new Dictionary<string, int>();
             this.Expressions = new Dictionary<string, string>();
@@ -83,8 +84,6 @@ namespace VisiBoole.Models
                 this.BackColor = Color.FromArgb(75, 77, 81);
                 this.ForeColor = Color.FromArgb(34, 226, 85);
             }
-
-            isDirty = false;
         }
 
         public void Change_Theme(string theme)
@@ -108,31 +107,31 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         private void SubDesign_TextChanged(object sender, EventArgs e)
 		{
-			isDirty = true;
-		}
+            if (!this.Text.Equals(GetFileText()) && !isDirty)
+            {
+                isDirty = true;
+                if (Globals.tabControl.SelectedTab.Text == FileSourceName)
+                    Globals.tabControl.SelectedTab.Text = "*" + Globals.tabControl.SelectedTab.Text;
+            }
+        }
 
         public void IncreaseFont()
         {
             Globals.FontSize += 5;
-
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 
         public void DecreaseFont()
         {
-            if (Globals.FontSize > 5)
-            {
-                Globals.FontSize -= 5;
-
-            }
-
+            Globals.FontSize -= 5;
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 
-		/// <summary>
-		/// Copies the file contents of this subdesign filesource to this Text property
-		/// </summary>
-		private void SaveFileToText()
+        /// <summary>
+        /// Gets the text of the file source
+        /// </summary>
+        /// <returns>Text of the file source</returns>
+        private string GetFileText()
         {
             string text = string.Empty;
 
@@ -142,10 +141,10 @@ namespace VisiBoole.Models
 
                 while ((nextLine = reader.ReadLine()) != null)
                 {
-                    text += nextLine + Environment.NewLine;
+                    text += nextLine + "\n";
                 }
             }
-            this.Text = text;
+            return text;
         }
 
         /// <summary>
@@ -155,6 +154,7 @@ namespace VisiBoole.Models
         {
             File.WriteAllText(this.FileSource.FullName, this.Text);
 			isDirty = false;
+            Globals.tabControl.SelectedTab.Text = FileSourceName;
         }
     }
 }
