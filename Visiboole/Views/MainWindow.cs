@@ -242,12 +242,22 @@ namespace VisiBoole.Views
 			controller.SaveFile();
 		}
 
-		/// <summary>
-		/// Handles the event that occurs when SaveAs button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Handles the event that ocrrus when SaveAll Icon (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void saveAllIcon_Click(object sender, EventArgs e)
+        {
+            controller.SaveAll();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when SaveAs button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			DialogResult response = saveFileDialog1.ShowDialog();
 

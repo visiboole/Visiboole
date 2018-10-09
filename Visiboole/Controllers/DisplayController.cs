@@ -151,18 +151,40 @@ namespace VisiBoole.Controllers
 		/// <returns></returns>
 		public bool SaveActiveTab()
 		{
-			SubDesign sd = tabControl.SelectedTab.SubDesign();
-
-			if (sd == null)
-			{
-				return false;
-			}
-			else
-			{
-				sd.SaveTextToFile();
-				return true;
-			}
+            bool saved = SaveSubDesign(tabControl.SelectedTab.SubDesign());
+            return saved;
 		}
+
+        public bool SaveAllTabs()
+        {
+            foreach (TabPage tab in tabControl.TabPages)
+            {
+                SubDesign sd = tab.SubDesign();
+                bool saved = SaveSubDesign(sd);
+
+                if (!saved) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Saves a particular SubDesign
+        /// </summary>
+        /// <param name="sd">The SubDesign to save</param>
+        /// <returns>Indicates whether the save was successful</returns>
+        private bool SaveSubDesign(SubDesign sd)
+        {
+            if (sd == null)
+            {
+                return false;
+            }
+            else
+            {
+                sd.SaveTextToFile();
+                return true;
+            }
+        }
 
 		/// <summary>
 		/// Selects the tabpage with matching name

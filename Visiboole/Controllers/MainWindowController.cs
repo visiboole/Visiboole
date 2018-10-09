@@ -166,11 +166,26 @@ namespace VisiBoole.Controllers
 			}
 		}
 
-		/// <summary>
-		/// Selects the tabpage in the tabcontrol with name matching the given string
-		/// </summary>
-		/// <param name="fileName">The name of the tabpage to select</param>
-		public void SelectTabPage(string fileName)
+        /// <summary>
+        /// Saves all files opened
+        /// </summary>
+        public void SaveAll()
+        {
+            try
+            {
+                view.SaveFileSuccess(displayController.SaveAllTabs());
+            }
+            catch (Exception ex)
+            {
+                Globals.DisplayException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Selects the tabpage in the tabcontrol with name matching the given string
+        /// </summary>
+        /// <param name="fileName">The name of the tabpage to select</param>
+        public void SelectTabPage(string fileName)
 		{
 			try
 			{

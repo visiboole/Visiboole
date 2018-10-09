@@ -29,10 +29,15 @@
 		/// <param name="path">The new file path to save the active file to</param>
 		void SaveFileAs(string filePath);
 
-		/// <summary>
-		/// Performs a dirty check and confirms application exit with the user
+        /// <summary>
+		/// Saves all files opened
 		/// </summary>
-		void ExitApplication();
+		void SaveAll();
+
+        /// <summary>
+        /// Performs a dirty check and confirms application exit with the user
+        /// </summary>
+        void ExitApplication();
 
         /// <summary>
         /// Closes the selected open file
