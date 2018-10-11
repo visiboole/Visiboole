@@ -350,22 +350,34 @@ namespace VisiBoole.Views
 			controller.ExitApplication();
 		}
 
+        /// <summary>
+        /// Increases the font size of all SubDesigns
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void IncreaseFontEvent(object sender, EventArgs e)
         {
-            foreach( var sub in Globals.SubDesigns)
+            Globals.FontSize += 5;
+            foreach ( var sub in Globals.SubDesigns)
             {
-                sub.Value.IncreaseFont();
+                sub.Value.ChangeFontSize();
                 // Change browser font
             }
         }
 
+        /// <summary>
+        /// Decreases the font size of all SubDesigns
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DecreaseFontEvent(object sender, EventArgs e)
         {
-            if (Globals.FontSize > 5)
+            if (Globals.FontSize > 10)
             {
+                Globals.FontSize -= 5;
                 foreach (var sub in Globals.SubDesigns)
                 {
-                    sub.Value.DecreaseFont();
+                    sub.Value.ChangeFontSize();
                     // Change browser font
                 }
             }

@@ -34,7 +34,7 @@ namespace VisiBoole
 			MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 
-        public static float FontSize = 20;
+        public static float FontSize = 11;
 
         public static TabControl tabControl = null;
 

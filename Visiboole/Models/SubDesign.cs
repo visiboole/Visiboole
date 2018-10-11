@@ -45,6 +45,12 @@ namespace VisiBoole.Models
 		/// </summary>
 		public bool isDirty { get; set; }
 
+        /*
+        private Stack<string> undoList = new Stack<string>();
+
+        private Stack<string> redoList = new Stack<string>();
+        */
+
         /// <summary>
         /// Constructs a new SubDesign object
         /// </summary>
@@ -84,6 +90,8 @@ namespace VisiBoole.Models
                 this.BackColor = Color.FromArgb(75, 77, 81);
                 this.ForeColor = Color.FromArgb(34, 226, 85);
             }
+
+            this.ChangeFontSize(); // Open with correct font size
         }
 
         public void Change_Theme(string theme)
@@ -107,23 +115,24 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         private void SubDesign_TextChanged(object sender, EventArgs e)
 		{
-            if (!this.Text.Equals(GetFileText()) && !isDirty)
+            if (!this.Text.Equals(GetFileText()))
             {
-                isDirty = true;
-                if (Globals.tabControl.SelectedTab.Text == FileSourceName)
-                    Globals.tabControl.SelectedTab.Text = "*" + Globals.tabControl.SelectedTab.Text;
+                if (!isDirty)
+                {
+                    isDirty = true;
+                    if (Globals.tabControl.TabPages[TabPageIndex].Text == FileSourceName)
+                        Globals.tabControl.TabPages[TabPageIndex].Text = "*" + FileSourceName;
+                }
+
+                // Redo & Undo https://stackoverflow.com/questions/15772602/how-to-undo-and-redo-in-c-sharp-rich-text-box
             }
         }
 
-        public void IncreaseFont()
+        /// <summary>
+        /// Changes the font size of the Sub Design to the global font size
+        /// </summary>
+        public void ChangeFontSize()
         {
-            Globals.FontSize += 5;
-            this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
-        }
-
-        public void DecreaseFont()
-        {
-            Globals.FontSize -= 5;
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 
@@ -154,7 +163,7 @@ namespace VisiBoole.Models
         {
             File.WriteAllText(this.FileSource.FullName, this.Text);
 			isDirty = false;
-            Globals.tabControl.SelectedTab.Text = FileSourceName;
+            Globals.tabControl.TabPages[TabPageIndex].Text = FileSourceName;
         }
     }
 }

@@ -90,38 +90,131 @@ namespace VisiBoole.ParsingEngine.Statements
                         }
                     }
 
-                    /*
-                    List<char> chars = new List<char>();
+                    List<string> chars = new List<string>();
                     if (content.Contains("="))
                     {
-                        regex = new Regex(@"\=|\s[a-zA-z]+\,|\s", RegexOptions.None);
-                        string rhs = regex.Match(content.Substring(content.IndexOf('='))).Value; // Gets the operator and right hand side of the content string
+                        string rhs = content.Substring(content.IndexOf("=") + 1);
                         rhs = rhs.Replace(" ", "");
-                        string[] parts = rhs.Split(',');
-                        if (parts.Length != (beg - end)) throw;
-                        foreach (string s in parts) chars.Insert(parts);
+                        regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
+                        MatchCollection vars = regex.Matches(rhs); // Gets the operator and right hand side of the content string
+                        string[] parts = new string[vars.Count];
+                        for (int i = 0; i < vars.Count; i++) parts[i] = vars[i].Value;
+                        if (parts.Length != ((beg - end) + 1)) throw new FormatSpecifierSyntaxException();
+                        foreach (string s in parts) chars.Add(s);
                     }
-                    */
-                    
-                    
 
                     // add each variable to our output list of object code and assign values if needed
                     foreach (int i in order)
 		            {
 		                string key = string.Concat(var, i);
+                        int value = Database.TryGetValue(key);
+                        /*
 		                IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(key) as IndependentVariable;
                         DependentVariable depVar = Database.TryGetVariable<DependentVariable>(key) as DependentVariable;
-		                if (indVar != null)
-		                {
-                            if(indVar.Value)
+                        */
+                        if (value != -1)
+                        {
+                            if (chars.Count == 0) valueList.Add(value);
+                            else
                             {
-                                valueList.Add(1);
+                                // Set value
+                                value = Database.TryGetValue(chars[chars.Count - i - 1]);
+
+                                if (value != 1)
+                                {
+                                    Database.SetValue(key, (value == 1));
+                                    valueList.Add(value);
+                                }
+                                else
+                                {
+                                    // Create new variable
+                                    IndependentVariable indVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    Database.AddVariable<IndependentVariable>(indVar);
+                                    Database.SetValue(key, false);
+                                    valueList.Add(0);
+                                }
+
+                                //Database.AddExpression(key, Text);
+                                Database.CreateDependenciesList(key);
+                                Database.AddDependencies(key, chars[chars.Count - i - 1]);
+                            }
+                        }
+                        else
+                        {
+                            // Create new variable
+                            if (chars.Count == 0)
+                            {
+                                IndependentVariable indVar = new IndependentVariable(key, false);
+                                Database.AddVariable<IndependentVariable>(indVar);
+                                valueList.Add(0);
                             }
                             else
                             {
-                                valueList.Add(0);
+                                value = Database.TryGetValue(chars[chars.Count - i - 1]);
+
+                                if (value != 1)
+                                {
+                                    DependentVariable depVar = new DependentVariable(key, (value == 1));
+                                    Database.AddVariable<DependentVariable>(depVar);
+                                    valueList.Add(value);
+                                }
+                                else
+                                {
+                                    // Create new variables
+                                    IndependentVariable indVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    DependentVariable depVar = new DependentVariable(key, false);
+                                    Database.AddVariable<IndependentVariable>(indVar);
+                                    Database.AddVariable<DependentVariable>(depVar);
+                                    valueList.Add(0);
+                                }
+
+                                //Database.AddExpression(key, Text);
+                                Database.CreateDependenciesList(key);
+                                Database.AddDependencies(key, chars[chars.Count - i - 1]);
                             }
-		                    //Output.Add(indVar);
+                        }
+
+                        /*
+		                if (indVar != null)
+		                {
+                            if (chars.Count == 0)
+                            {
+                                if (indVar.Value)
+                                {
+                                    valueList.Add(1);
+                                }
+                                else
+                                {
+                                    valueList.Add(0);
+                                }
+                            }
+                            else
+                            {
+                                IndependentVariable newVar;
+                                DependentVariable newVar2;
+                                IndependentVariable indapVar = Database.TryGetVariable<IndependentVariable>(chars[chars.Count - i - 1]) as IndependentVariable;
+                                DependentVariable depeVar = Database.TryGetVariable<DependentVariable>(chars[chars.Count - i - 1]) as DependentVariable;
+
+                                if (indapVar != null)
+                                {
+                                    newVar = new IndependentVariable(key, indapVar.Value);
+                                    Database.AddVariable<IndependentVariable>(newVar);
+                                    if (indapVar.Value) valueList.Add(1);
+                                    else valueList.Add(0);
+                                }
+                                else if (depeVar != null)
+                                {
+                                    newVar2 = new DependentVariable(key, depeVar.Value);
+                                    Database.AddVariable<DependentVariable>(newVar2);
+                                    if (depeVar.Value) valueList.Add(1);
+                                    else valueList.Add(0);
+                                }
+                                else
+                                {
+                                    IndependentVariable independentVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    valueList.Add(0);
+                                }
+                            }
 		                }
                         else if (depVar != null)
                         {
@@ -133,14 +226,78 @@ namespace VisiBoole.ParsingEngine.Statements
                             {
                                 valueList.Add(0);
                             }
-                            //Output.Add(depVar);
+
+                            if (chars.Count == 0)
+                            {
+                                if (depVar.Value)
+                                {
+                                    valueList.Add(1);
+                                }
+                                else
+                                {
+                                    valueList.Add(0);
+                                }
+                            }
+                            else
+                            {
+                                IndependentVariable newVar;
+                                DependentVariable newVar2;
+                                IndependentVariable indapVar = Database.TryGetVariable<IndependentVariable>(chars[chars.Count - i - 1]) as IndependentVariable;
+                                DependentVariable depeVar = Database.TryGetVariable<DependentVariable>(chars[chars.Count - i - 1]) as DependentVariable;
+
+                                if (indapVar != null)
+                                {
+                                    newVar = new IndependentVariable(key, indapVar.Value);
+                                    Database.AddVariable<IndependentVariable>(newVar);
+                                    if (indapVar.Value) valueList.Add(1);
+                                    else valueList.Add(0);
+                                }
+                                else if (depeVar != null)
+                                {
+                                    newVar2 = new DependentVariable(key, depeVar.Value);
+                                    Database.AddVariable<DependentVariable>(newVar2);
+                                    if (depeVar.Value) valueList.Add(1);
+                                    else valueList.Add(0);
+                                }
+                                else
+                                {
+                                    IndependentVariable independentVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    valueList.Add(0);
+                                }
+                            }
                         }
 		                else
 		                {
-                            IndependentVariable newVar = new IndependentVariable(key, false);
-                            Database.AddVariable<IndependentVariable>(newVar);
-                            valueList.Add(0);
+                            IndependentVariable newVar;
+                            DependentVariable newVar2;
+                            if (chars.Count == 0) newVar = new IndependentVariable(key, false);
+                            else
+                            {
+                                IndependentVariable indapVar = Database.TryGetVariable<IndependentVariable>(chars[chars.Count - i - 1]) as IndependentVariable;
+                                DependentVariable depeVar = Database.TryGetVariable<DependentVariable>(chars[chars.Count - i - 1]) as DependentVariable;
+                                if (indapVar != null)
+                                {
+                                    newVar = new IndependentVariable(key, indapVar.Value);
+                                    Database.AddVariable<IndependentVariable>(newVar);
+                                    if (indapVar.Value) valueList.Add(1);
+                                    else valueList.Add(0);
+                                }
+                                else if (depeVar != null)
+                                {
+                                    newVar2 = new DependentVariable(key, depeVar.Value);
+                                    Database.AddVariable<DependentVariable>(newVar2);
+                                    if (depeVar.Value) valueList.Add(1);
+                                    else valueList.Add(0);
+                                }
+                                else
+                                {
+                                    IndependentVariable independentVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    valueList.Add(0);
+                                }
+                                
+                            }
                         }
+                        */
 		            }
                     string final = Calculate(format, valueList);
                     Operator val = new Operator(final);
