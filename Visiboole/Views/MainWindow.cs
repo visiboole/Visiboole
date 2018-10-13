@@ -60,6 +60,25 @@ namespace VisiBoole.Views
             closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             increaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             decreaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+
+
+            if (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0)
+            {
+                undoToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().editHistory.Count > 0;
+                redoToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().undoHistory.Count > 0;
+                cutToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().SelectedText.Length > 0;
+                copyToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().SelectedText.Length > 0;
+                pasteToolStripMenuItem.Enabled = Clipboard.ContainsText();
+            }
+            else
+            {
+                undoToolStripMenuItem.Enabled = false;
+                redoToolStripMenuItem.Enabled = false;
+                copyToolStripMenuItem.Enabled = false;
+                cutToolStripMenuItem.Enabled = false;
+                pasteToolStripMenuItem.Enabled = false;
+            }
         }
 
 		/// <summary>
@@ -357,7 +376,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void IncreaseFontEvent(object sender, EventArgs e)
         {
-            Globals.FontSize += 5;
+            Globals.FontSize += 3;
             foreach ( var sub in Globals.SubDesigns)
             {
                 sub.Value.ChangeFontSize();
@@ -372,9 +391,9 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void DecreaseFontEvent(object sender, EventArgs e)
         {
-            if (Globals.FontSize > 10)
+            if (Globals.FontSize > 6)
             {
-                Globals.FontSize -= 5;
+                Globals.FontSize -= 3;
                 foreach (var sub in Globals.SubDesigns)
                 {
                     sub.Value.ChangeFontSize();
@@ -401,6 +420,66 @@ namespace VisiBoole.Views
         private void EditToggleEvent(object sender, EventArgs e)
         {
             controller.checkSingleViewChange();
+        }
+
+        /// <summary>
+        /// Undo text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void UndoTextEvent(object sender, EventArgs e)
+        {
+            Globals.tabControl.SelectedTab.SubDesign().UndoTextEvent(sender, e);
+        }
+
+        /// <summary>
+        /// Undo text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void RedoTextEvent(object sender, EventArgs e)
+        {
+            Globals.tabControl.SelectedTab.SubDesign().RedoTextEvent(sender, e);
+        }
+
+        /// <summary>
+        /// Cut text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CutTextEvent(object sender, EventArgs e)
+        {
+            Globals.tabControl.SelectedTab.SubDesign().CutTextEvent(sender, e);
+        }
+
+        /// <summary>
+        /// Cut text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CopyTextEvent(object sender, EventArgs e)
+        {
+            Globals.tabControl.SelectedTab.SubDesign().CopyTextEvent(sender, e);
+        }
+
+        /// <summary>
+        /// Cut text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PasteTextEvent(object sender, EventArgs e)
+        {
+            Globals.tabControl.SelectedTab.SubDesign().PasteTextEvent(sender, e);
+        }
+
+        /// <summary>
+        /// Select all text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SelectAllTextEvent(object sender, EventArgs e)
+        {
+            Globals.tabControl.SelectedTab.SubDesign().SelectAllTextEvent(sender, e);
         }
 
         #endregion

@@ -29,7 +29,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// The identifying pattern that can be used to identify and extract this statement from raw text
         /// This pattern is the third identifying pattern and is of a form similar to: A[m.step.n] = {};
         /// </summary>
-        public static Regex Pattern3 { get; } = new Regex(@"^[a-zA-z]\[\d\.\.\d\]\s|\=|\s\{[a-zA-z]+\,|\s\}\;$"); // E[3..0] = {F, G, H, I};
+        public static Regex Pattern3 { get; } = new Regex(@"^[a-zA-z]\[\d\.\.\d\]\=\{[a-zA-z]+\d+(\,[a-zA-z]\d)*\}\;$"); // E[3..0]={F,G,H,I};
 
         /// <summary>
         /// Constructs an instance of FormatSpecifierStmt

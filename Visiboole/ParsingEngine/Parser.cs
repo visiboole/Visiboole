@@ -186,7 +186,9 @@ namespace VisiBoole.ParsingEngine
 					}
 
                     // check for a format specifier statement
-                    bool success = FormatSpecifierStmt.Pattern1.Match(nextLine).Success || FormatSpecifierStmt.Pattern2.Match(nextLine).Success || FormatSpecifierStmt.Pattern3.Match(nextLine).Success;
+                    // || FormatSpecifierStmt.Pattern3.Match(nextLine
+                    string trim = nextLine.Replace(" ", "");
+                    bool success = FormatSpecifierStmt.Pattern1.Match(trim).Success || FormatSpecifierStmt.Pattern2.Match(trim).Success || FormatSpecifierStmt.Pattern3.Match(trim).Success;
                     if (success)
                     {
                         stmtList.Add(new FormatSpecifierStmt(postLnNum, nextLine));
