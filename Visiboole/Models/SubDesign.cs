@@ -159,6 +159,7 @@ namespace VisiBoole.Models
                 item.Click += new EventHandler(RedoTextEvent);
                 item.Enabled = undoHistory.Count > 0;
                 cm.MenuItems.Add(item);
+                cm.MenuItems.Add("-");
                 item = new MenuItem("Cut");
                 item.Click += new EventHandler(CutTextEvent);
                 item.Enabled = this.SelectedText.Length > 0;
@@ -171,6 +172,7 @@ namespace VisiBoole.Models
                 item.Click += new EventHandler(PasteTextEvent);
                 item.Enabled = Clipboard.ContainsText();
                 cm.MenuItems.Add(item);
+                cm.MenuItems.Add("-");
                 item = new MenuItem("Select All");
                 item.Click += new EventHandler(SelectAllTextEvent);
                 item.Enabled = true;

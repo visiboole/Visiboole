@@ -108,10 +108,6 @@ namespace VisiBoole.ParsingEngine.Statements
 		            {
 		                string key = string.Concat(var, i);
                         int value = Database.TryGetValue(key);
-                        /*
-		                IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(key) as IndependentVariable;
-                        DependentVariable depVar = Database.TryGetVariable<DependentVariable>(key) as DependentVariable;
-                        */
                         if (value != -1)
                         {
                             if (chars.Count == 0) valueList.Add(value);
@@ -173,131 +169,6 @@ namespace VisiBoole.ParsingEngine.Statements
                                 Database.AddDependencies(key, chars[chars.Count - i - 1]);
                             }
                         }
-
-                        /*
-		                if (indVar != null)
-		                {
-                            if (chars.Count == 0)
-                            {
-                                if (indVar.Value)
-                                {
-                                    valueList.Add(1);
-                                }
-                                else
-                                {
-                                    valueList.Add(0);
-                                }
-                            }
-                            else
-                            {
-                                IndependentVariable newVar;
-                                DependentVariable newVar2;
-                                IndependentVariable indapVar = Database.TryGetVariable<IndependentVariable>(chars[chars.Count - i - 1]) as IndependentVariable;
-                                DependentVariable depeVar = Database.TryGetVariable<DependentVariable>(chars[chars.Count - i - 1]) as DependentVariable;
-
-                                if (indapVar != null)
-                                {
-                                    newVar = new IndependentVariable(key, indapVar.Value);
-                                    Database.AddVariable<IndependentVariable>(newVar);
-                                    if (indapVar.Value) valueList.Add(1);
-                                    else valueList.Add(0);
-                                }
-                                else if (depeVar != null)
-                                {
-                                    newVar2 = new DependentVariable(key, depeVar.Value);
-                                    Database.AddVariable<DependentVariable>(newVar2);
-                                    if (depeVar.Value) valueList.Add(1);
-                                    else valueList.Add(0);
-                                }
-                                else
-                                {
-                                    IndependentVariable independentVar = new IndependentVariable(chars[chars.Count - i - 1], false);
-                                    valueList.Add(0);
-                                }
-                            }
-		                }
-                        else if (depVar != null)
-                        {
-                            if (depVar.Value)
-                            {
-                                valueList.Add(1);
-                            }
-                            else
-                            {
-                                valueList.Add(0);
-                            }
-
-                            if (chars.Count == 0)
-                            {
-                                if (depVar.Value)
-                                {
-                                    valueList.Add(1);
-                                }
-                                else
-                                {
-                                    valueList.Add(0);
-                                }
-                            }
-                            else
-                            {
-                                IndependentVariable newVar;
-                                DependentVariable newVar2;
-                                IndependentVariable indapVar = Database.TryGetVariable<IndependentVariable>(chars[chars.Count - i - 1]) as IndependentVariable;
-                                DependentVariable depeVar = Database.TryGetVariable<DependentVariable>(chars[chars.Count - i - 1]) as DependentVariable;
-
-                                if (indapVar != null)
-                                {
-                                    newVar = new IndependentVariable(key, indapVar.Value);
-                                    Database.AddVariable<IndependentVariable>(newVar);
-                                    if (indapVar.Value) valueList.Add(1);
-                                    else valueList.Add(0);
-                                }
-                                else if (depeVar != null)
-                                {
-                                    newVar2 = new DependentVariable(key, depeVar.Value);
-                                    Database.AddVariable<DependentVariable>(newVar2);
-                                    if (depeVar.Value) valueList.Add(1);
-                                    else valueList.Add(0);
-                                }
-                                else
-                                {
-                                    IndependentVariable independentVar = new IndependentVariable(chars[chars.Count - i - 1], false);
-                                    valueList.Add(0);
-                                }
-                            }
-                        }
-		                else
-		                {
-                            IndependentVariable newVar;
-                            DependentVariable newVar2;
-                            if (chars.Count == 0) newVar = new IndependentVariable(key, false);
-                            else
-                            {
-                                IndependentVariable indapVar = Database.TryGetVariable<IndependentVariable>(chars[chars.Count - i - 1]) as IndependentVariable;
-                                DependentVariable depeVar = Database.TryGetVariable<DependentVariable>(chars[chars.Count - i - 1]) as DependentVariable;
-                                if (indapVar != null)
-                                {
-                                    newVar = new IndependentVariable(key, indapVar.Value);
-                                    Database.AddVariable<IndependentVariable>(newVar);
-                                    if (indapVar.Value) valueList.Add(1);
-                                    else valueList.Add(0);
-                                }
-                                else if (depeVar != null)
-                                {
-                                    newVar2 = new DependentVariable(key, depeVar.Value);
-                                    Database.AddVariable<DependentVariable>(newVar2);
-                                    if (depeVar.Value) valueList.Add(1);
-                                    else valueList.Add(0);
-                                }
-                                else
-                                {
-                                    IndependentVariable independentVar = new IndependentVariable(chars[chars.Count - i - 1], false);
-                                    valueList.Add(0);
-                                }
-                                
-                            }
-                        }
-                        */
 		            }
                     string final = Calculate(format, valueList);
                     Operator val = new Operator(final);
@@ -378,7 +249,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="specifier">Format that the values should be converted to; binary, hex, signed, or unsigned.</param>
         /// <param name="values">The list of boolean (binary) values for this statement</param>
         /// <returns></returns>
-        public string Calculate(string specifier, List<int> values)
+        private string Calculate(string specifier, List<int> values)
         {
             switch (specifier.ToUpper())
             {
