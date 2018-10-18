@@ -47,11 +47,20 @@ namespace VisiBoole.Models
 		/// </summary>
 		public bool isDirty { get; set; }
 
+        /// <summary>
+        /// Previous text of the SubDesign
+        /// </summary>
+        private string lastText = "";
+
+        /// <summary>
+        /// Edit history of the SubDesign
+        /// </summary>
         public Stack editHistory = new Stack();
 
+        /// <summary>
+        /// Undo history of the SubDesign
+        /// </summary>
         public Stack undoHistory = new Stack();
-
-        private string lastText = "";
 
         /// <summary>
         /// Constructs a new SubDesign object
@@ -88,8 +97,8 @@ namespace VisiBoole.Models
             this.Dependencies = new Dictionary<string, List<string>>();
 
 	        this.ShowLineNumbers = true;
-            SetFontSize();
             SetTheme();
+            SetFontSize();
         }
 
         /// <summary>
@@ -110,6 +119,34 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
+        /// Sets the font size of the Sub Design to the global font size
+        /// </summary>
+        public void SetFontSize()
+        {
+            this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
+        }
+
+        /// <summary>
+        /// Gets the text of the file source
+        /// </summary>
+        /// <returns>Text of the file source</returns>
+        private string GetFileText()
+        {
+            string text = string.Empty;
+
+            using (StreamReader reader = this.FileSource.OpenText())
+            {
+                string nextLine = string.Empty;
+
+                while ((nextLine = reader.ReadLine()) != null)
+                {
+                    text += nextLine + "\n";
+                }
+            }
+            return text;
+        }
+
+        /// <summary>
         /// Updates dirty and changes file name to indicate unsaved changes
         /// </summary>
         private void UpdateDirty()
@@ -118,6 +155,46 @@ namespace VisiBoole.Models
 
             if (Globals.tabControl.TabPages[TabPageIndex].Text == FileSourceName)
                 Globals.tabControl.TabPages[TabPageIndex].Text = "*" + FileSourceName;
+        }
+
+        /// <summary>
+        /// Records edits for undos
+        /// </summary>
+        private void RecordEdit()
+        {
+            bool isDel = this.Text.Length < lastText.Length; // Indicates whether the edit was a deletion
+            int len = Math.Abs(this.Text.Length - lastText.Length); // The length of the string inserted or deleted
+            int loc = isDel ? this.SelectionStart : (this.SelectionStart - len); // The location of the edit
+            string edit = isDel ? lastText.Substring(loc, len) : this.Text.Substring(loc, len); // Gets the edit string
+            editHistory.Push(isDel);
+            editHistory.Push(loc);
+            editHistory.Push(edit);
+            undoHistory.Clear();
+            lastText = this.Text;
+        }
+
+        /// <summary>
+        /// Does a undo or redo operation
+        /// </summary>
+        /// <param name="isDel"></param>
+        /// <param name="loc"></param>
+        /// <param name="edit"></param>
+        private void DoEdit(bool isDel, int loc, string edit)
+        {
+            if (isDel)
+            {
+                lastText = this.Text.Remove(loc, edit.Length);
+                this.Text = lastText;
+                this.SelectionStart = loc;
+            }
+            else
+            {
+                lastText = this.Text.Insert(loc, edit);
+                this.Text = lastText;
+                this.SelectionStart = loc + edit.Length;
+            }
+
+            if (!isDirty) UpdateDirty();
         }
 
         /// <summary>
@@ -196,6 +273,38 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
+        /// Undo text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void UndoTextEvent(object sender, EventArgs e)
+        {
+            string edit = (string)editHistory.Pop(); // Edit string
+            int loc = (int)editHistory.Pop(); // Location of edit
+            bool isDel = (bool)editHistory.Pop(); // Indicates whether the edit is a deletion
+            undoHistory.Push(isDel);
+            undoHistory.Push(loc);
+            undoHistory.Push(edit);
+            DoEdit(!isDel, loc, edit);
+        }
+
+        /// <summary>
+        /// Redo text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void RedoTextEvent(object sender, EventArgs e)
+        {
+            string edit = (string)undoHistory.Pop(); // Edit string
+            int loc = (int)undoHistory.Pop(); // Location of edit
+            bool isDel = (bool)undoHistory.Pop(); // Indicates whether the edit is a deletion
+            editHistory.Push(isDel);
+            editHistory.Push(loc);
+            editHistory.Push(edit);
+            DoEdit(isDel, loc, edit);
+        }
+
+        /// <summary>
         /// Cut text event
         /// </summary>
         /// <param name="sender"></param>
@@ -236,106 +345,6 @@ namespace VisiBoole.Models
         public void SelectAllTextEvent(object sender, EventArgs e)
         {
             this.SelectAll();
-        }
-
-        /// <summary>
-        /// Undo text event
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void UndoTextEvent(object sender, EventArgs e)
-        {
-            string edit = (string)editHistory.Pop(); // Edit string
-            int loc = (int)editHistory.Pop(); // Location of edit
-            bool isDel = (bool)editHistory.Pop(); // Indicates whether the edit is a deletion
-            undoHistory.Push(isDel);
-            undoHistory.Push(loc);
-            undoHistory.Push(edit);
-            DoEdit(!isDel, loc, edit);
-        }
-
-        /// <summary>
-        /// Redo text event
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void RedoTextEvent(object sender, EventArgs e)
-        {
-            string edit = (string)undoHistory.Pop(); // Edit string
-            int loc = (int)undoHistory.Pop(); // Location of edit
-            bool isDel = (bool)undoHistory.Pop(); // Indicates whether the edit is a deletion
-            editHistory.Push(isDel);
-            editHistory.Push(loc);
-            editHistory.Push(edit);
-            DoEdit(isDel, loc, edit);
-        }
-
-        /// <summary>
-        /// Records edits for undos
-        /// </summary>
-        private void RecordEdit()
-        {
-            bool isDel = this.Text.Length < lastText.Length; // Indicates whether the edit was a deletion
-            int len = Math.Abs(this.Text.Length - lastText.Length); // The length of the string inserted or deleted
-            int loc = isDel ? this.SelectionStart : (this.SelectionStart - len); // The location of the edit
-            string edit = isDel ? lastText.Substring(loc, len) : this.Text.Substring(loc, len); // Gets the edit string
-            editHistory.Push(isDel);
-            editHistory.Push(loc);
-            editHistory.Push(edit);
-            undoHistory.Clear();
-            lastText = this.Text;
-        }
-
-        /// <summary>
-        /// Does a undo or redo operation
-        /// </summary>
-        /// <param name="isDel"></param>
-        /// <param name="loc"></param>
-        /// <param name="edit"></param>
-        private void DoEdit(bool isDel, int loc, string edit)
-        {
-            if (isDel)
-            {
-                lastText = this.Text.Remove(loc, edit.Length);
-                this.Text = lastText;
-                this.SelectionStart = loc;
-            }
-            else
-            {
-                lastText = this.Text.Insert(loc, edit);
-                this.Text = lastText;
-                this.SelectionStart = loc + edit.Length;
-            }
-
-            if (!isDirty) UpdateDirty();
-        }
-
-        /// <summary>
-        /// Sets the font size of the Sub Design to the global font size
-        /// </summary>
-        public void SetFontSize()
-        {
-            this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
-        }
-
-        /// <summary>
-        /// Gets the text of the file source
-        /// </summary>
-        /// <returns>Text of the file source</returns>
-        private string GetFileText()
-        {
-            string text = string.Empty;
-
-            using (StreamReader reader = this.FileSource.OpenText())
-            {
-                string nextLine = string.Empty;
-
-                while ((nextLine = reader.ReadLine()) != null)
-                {
-                    text += nextLine + "\n";
-                }
-            }
-            return text;
         }
 
         /// <summary>

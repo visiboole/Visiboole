@@ -40,10 +40,10 @@ namespace VisiBoole.Views
         #region "Utility Methods"
 
         /// <summary>
-        /// Change buttons and icons based on the new display
+        /// Update buttons and icons based on the display
         /// </summary>
         /// <param name="current"></param>
-        private void ChangeControls(IDisplay display)
+        private void UpdateControls(IDisplay display)
         {
             openIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
             openToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
@@ -58,8 +58,8 @@ namespace VisiBoole.Views
             runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
             closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            increaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            decreaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            increaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
+            decreaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
             selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
 
             if (NavTree.Nodes[0].Nodes.Count > 0)
@@ -181,7 +181,7 @@ namespace VisiBoole.Views
                 }
             }
 
-            ChangeControls(current); // Change controls to match the new display
+            UpdateControls(current); // Change controls to match the new display
 
             if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
             {
@@ -252,50 +252,50 @@ namespace VisiBoole.Views
         #region "Event Handlers"
 
         /// <summary>
-        /// Handles the event that occurs when a node on the treeview was double-clicked
+        /// Handles the event that occurs when the light theme is selected
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
-		{
-			controller.SelectTabPage(e.Node.Name);
-            controller.SwitchDisplay();
-		}
-
-        /// <summary>
-        /// Checks whether the user is trying to close a tab
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TabMouseDownEvent(object sender, MouseEventArgs e)
+        private void LightThemeEvent(object sender, EventArgs e)
         {
-            if (Globals.tabControl.SelectedIndex != -1)
-            {
-                Rectangle current = Globals.tabControl.GetTabRect(Globals.tabControl.SelectedIndex);
-                Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
-                if (close.Contains(e.Location))
-                {
-                    CloseFileEvent(sender, e);
-                }
-            }
+            SetTheme("light");
         }
 
         /// <summary>
-        /// Handles the event that occurs when New button (on menustrip) was clicked
+        /// Handles the event that occurs when the light theme is selected
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void NewFileEvent(object sender, EventArgs e)
-		{
-			DialogResult response = saveFileDialog1.ShowDialog();
+        private void DarkThemeEvent(object sender, EventArgs e)
+        {
+            SetTheme("dark");
+        }
 
-            if (response != DialogResult.OK)
+        /// <summary>
+        /// Increases the font size of all SubDesigns
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void IncreaseFontEvent(object sender, EventArgs e)
+        {
+            Globals.FontSize += 3;
+            controller.SetFontSize();
+            if (editModeToggle.Enabled) controller.Run();
+        }
+
+        /// <summary>
+        /// Decreases the font size of all SubDesigns
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DecreaseFontEvent(object sender, EventArgs e)
+        {
+            if (Globals.FontSize > 6)
             {
-                return;
+                Globals.FontSize -= 3;
+                controller.SetFontSize();
+                if (editModeToggle.Enabled) controller.Run();
             }
-
-			controller.ProcessNewFile(saveFileDialog1.FileName, true);
-            saveFileDialog1.FileName = "newFile1.vbi";
         }
 
         /// <summary>
@@ -314,6 +314,24 @@ namespace VisiBoole.Views
 
             controller.ProcessNewFile(openFileDialog1.FileName);
             openFileDialog1.FileName = string.Empty;
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when New button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NewFileEvent(object sender, EventArgs e)
+		{
+			DialogResult response = saveFileDialog1.ShowDialog();
+
+            if (response != DialogResult.OK)
+            {
+                return;
+            }
+
+			controller.ProcessNewFile(saveFileDialog1.FileName, true);
+            saveFileDialog1.FileName = "newFile1.vbi";
         }
 
         /// <summary>
@@ -343,6 +361,22 @@ namespace VisiBoole.Views
 		}
 
         /// <summary>
+        /// Handles the event that occurs when SaveAs button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SaveAsFileEvent(object sender, EventArgs e)
+        {
+            DialogResult response = saveFileDialog1.ShowDialog();
+
+            if (response == DialogResult.OK)
+            {
+                controller.SaveFileAs(saveFileDialog1.FileName);
+                saveFileDialog1.FileName = "newFile1.vbi";
+            }
+        }
+
+        /// <summary>
         /// Handles the event that ocrrus when SaveAll Icon (on menustrip) was clicked
         /// </summary>
         /// <param name="sender"></param>
@@ -353,116 +387,31 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
-        /// Handles the event that occurs when SaveAs button (on menustrip) was clicked
+        /// Handles the event that occurs when a node on the treeview was double-clicked
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SaveAsFileEvent(object sender, EventArgs e)
-		{
-			DialogResult response = saveFileDialog1.ShowDialog();
-
-			if (response == DialogResult.OK)
-			{
-				controller.SaveFileAs(saveFileDialog1.FileName);
-				saveFileDialog1.FileName = "newFile1.vbi";
-			}
-		}
-
-        /// <summary>
-        /// Handles the event that occurs when a file is closing
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CloseFileEvent(object sender, EventArgs e)
+        private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            string name = controller.CloseFile();
-            if (name != null)
-            {
-                RemoveNavTreeNode(name);
-                if (NavTree.Nodes[0].Nodes.Count == 0) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
-            }
+            controller.SelectTabPage(e.Node.Name);
+            controller.SwitchDisplay();
         }
 
         /// <summary>
-        /// Handles the event that occurs when Print button (on menustrip) was clicked
+        /// Handles the event that occurs when the run mode is toggled
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PrintFileEvent(object sender, EventArgs e)
-		{
-
-		}
-
-		/// <summary>
-		/// Handles the event that occurs when Print-Preview button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void PrintPreviewFileEvent(object sender, EventArgs e)
-		{
-
-		}
-
-		/// <summary>
-		/// Handles the event that occurs when Exit button (on menustrip) was clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void ExitApplicationEvent(object sender, EventArgs e)
-		{
-			controller.ExitApplication();
-		}
-
-        /// <summary>
-        /// Increases the font size of all SubDesigns
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void IncreaseFontEvent(object sender, EventArgs e)
-        {
-            Globals.FontSize += 3;
-            controller.SetFontSize();
-        }
-
-        /// <summary>
-        /// Decreases the font size of all SubDesigns
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DecreaseFontEvent(object sender, EventArgs e)
-        {
-            if (Globals.FontSize > 6)
-            {
-                Globals.FontSize -= 3;
-                controller.SetFontSize();
-            }
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the light theme is selected
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void LightThemeEvent(object sender, EventArgs e)
-        {
-            SetTheme("light");
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the light theme is selected
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DarkThemeEvent(object sender, EventArgs e)
-        {
-            SetTheme("dark");
-        }
-
         private void RunToggleEvent(object sender, EventArgs e)
         {
             controller.Run();
         }
 
+        /// <summary>
+        /// Handles the event that occurs when the edit mode is toggled
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void EditToggleEvent(object sender, EventArgs e)
         {
             controller.SwitchDisplay();
@@ -529,21 +478,67 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
-        /// Key down event
+        /// Handles the event that occurs when Print button (on menustrip) was clicked
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        private void PrintFileEvent(object sender, EventArgs e)
         {
-            if (e.KeyCode == Keys.Oemplus && e.Control)
+
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when Print-Preview button (on menustrip) was clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PrintPreviewFileEvent(object sender, EventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// Checks whether the user is trying to close a tab
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TabMouseDownEvent(object sender, MouseEventArgs e)
+        {
+            if (Globals.tabControl.SelectedIndex != -1)
             {
-                IncreaseFontEvent(sender, e);
-            }
-            else if (e.KeyCode == Keys.OemMinus && e.Control)
-            {
-                DecreaseFontEvent(sender, e);
+                Rectangle current = Globals.tabControl.GetTabRect(Globals.tabControl.SelectedIndex);
+                Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
+                if (close.Contains(e.Location))
+                {
+                    CloseFileEvent(sender, e);
+                }
             }
         }
+
+        /// <summary>
+        /// Handles the event that occurs when a file is closing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CloseFileEvent(object sender, EventArgs e)
+        {
+            string name = controller.CloseFile();
+            if (name != null)
+            {
+                RemoveNavTreeNode(name);
+                if (NavTree.Nodes[0].Nodes.Count == 0) controller.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+            }
+        }
+
+		/// <summary>
+		/// Handles the event that occurs when Exit button (on menustrip) was clicked
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void ExitApplicationEvent(object sender, EventArgs e)
+		{
+			controller.ExitApplication();
+		}
 
         #endregion
     }

@@ -251,7 +251,6 @@ namespace VisiBoole.Controllers
                 return;
             }
 
-
             HtmlBuilder html = new HtmlBuilder(output);
             if (html.HtmlText == null)
             {
