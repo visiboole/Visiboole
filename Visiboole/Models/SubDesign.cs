@@ -88,28 +88,21 @@ namespace VisiBoole.Models
             this.Dependencies = new Dictionary<string, List<string>>();
 
 	        this.ShowLineNumbers = true;
+            SetFontSize();
+            SetTheme();
+        }
+
+        /// <summary>
+        /// Sets the theme of the SubDesign
+        /// </summary>
+        public void SetTheme()
+        {
             if (Globals.Theme == "light")
             {
                 this.BackColor = Color.White;
                 this.ForeColor = Color.Black;
             }
             else if (Globals.Theme == "dark")
-            {
-                this.BackColor = Color.FromArgb(75, 77, 81);
-                this.ForeColor = Color.FromArgb(34, 226, 85);
-            }
-
-            this.ChangeFontSize(); // Open with correct font size
-        }
-
-        public void Change_Theme(string theme)
-        {
-            if (theme == "light")
-            {
-                this.BackColor = Color.White;
-                this.ForeColor = Color.Black;
-            }
-            else if (theme == "dark")
             {
                 this.BackColor = Color.FromArgb(75, 77, 81);
                 this.ForeColor = Color.FromArgb(34, 226, 85);
@@ -318,9 +311,9 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
-        /// Changes the font size of the Sub Design to the global font size
+        /// Sets the font size of the Sub Design to the global font size
         /// </summary>
-        public void ChangeFontSize()
+        public void SetFontSize()
         {
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }

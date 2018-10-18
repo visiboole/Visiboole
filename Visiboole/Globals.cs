@@ -11,11 +11,6 @@ namespace VisiBoole
 	public static class Globals
 	{
 		/// <summary>
-		/// All open SubDesigns currently loaded by this application
-		/// </summary>
-		public static Dictionary<string, SubDesign> SubDesigns = new Dictionary<string, SubDesign>();
-
-		/// <summary>
 		/// The different display types for the UserControl displays that are hosted by the MainWindow
 		/// </summary>
 		public enum DisplayType
@@ -34,10 +29,10 @@ namespace VisiBoole
 			MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 
-        public static float FontSize = 12;
-
         public static TabControl tabControl = null;
 
         public static string Theme = "dark";
+
+        public static float FontSize = 12;
     }
 }

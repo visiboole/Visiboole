@@ -15,12 +15,12 @@ namespace VisiBoole.Views
 		/// </summary>
 		private IMainWindowController controller;
 
-		#region "Class Initialization"
+        #region "Class Initialization"
 
-		/// <summary>
-		/// Constructs an instance of MainWindow
-		/// </summary>
-		public MainWindow()
+        /// <summary>
+        /// Constructs an instance of MainWindow
+        /// </summary>
+        public MainWindow()
 		{
 			InitializeComponent();
             Globals.tabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
@@ -62,6 +62,10 @@ namespace VisiBoole.Views
             decreaseFontToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
 
+            if (NavTree.Nodes[0].Nodes.Count > 0)
+            {
+                controller.SetFontSize();
+            }
 
             if (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0)
             {
@@ -81,11 +85,47 @@ namespace VisiBoole.Views
             }
         }
 
-		/// <summary>
-		/// Adds a new node in the TreeView
-		/// </summary>
-		/// <param name="path">The filepath string that will be parsed to obtain the name of this treenode</param>
-		public void AddNavTreeNode(string path)
+        /// <summary>
+        /// Sets the theme of the application
+        /// </summary>
+        /// <param name="theme">Theme to set</param>
+        private void SetTheme(string theme)
+        {
+            if (theme == "light")
+            {
+                Globals.Theme = "light";
+                this.menuStrip1.BackColor = System.Drawing.Color.LightGray;
+                this.menuStrip2.BackColor = System.Drawing.Color.LightGray;
+                this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(242)))), ((int)(((byte)(243)))));
+                this.NavTree.ForeColor = System.Drawing.Color.Black;
+                this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(242)))), ((int)(((byte)(243)))));
+                this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.Blue;
+
+                this.controller.SetTheme();
+                Globals.tabControl.TabPages.Add("!@#$FillTab!@#$");
+                Globals.tabControl.TabPages.Remove(Globals.tabControl.TabPages[Globals.tabControl.TabPages.Count - 1]);
+            }
+            else if (theme == "dark")
+            {
+                Globals.Theme = "dark";
+                this.menuStrip1.BackColor = System.Drawing.Color.DarkGray;
+                this.menuStrip2.BackColor = System.Drawing.Color.DarkGray;
+                this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
+                this.NavTree.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
+                this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
+                this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
+
+                this.controller.SetTheme();
+                Globals.tabControl.TabPages.Add("!@#$FillTab!@#$");
+                Globals.tabControl.TabPages.Remove(Globals.tabControl.TabPages[Globals.tabControl.TabPages.Count - 1]);
+            }
+        }
+
+        /// <summary>
+        /// Adds a new node in the TreeView
+        /// </summary>
+        /// <param name="path">The filepath string that will be parsed to obtain the name of this treenode</param>
+        public void AddNavTreeNode(string path)
 		{
 			string filename = path.Substring(path.LastIndexOf("\\") + 1);
 			TreeNode node = new TreeNode(filename);
@@ -115,6 +155,77 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
+        /// Loads the given IDisplay
+        /// </summary>
+        /// <param name="previous">The display to replace</param>
+        /// <param name="current">The display to be loaded</param>
+        public void LoadDisplay(IDisplay previous, IDisplay current)
+        {
+            if (current == null)
+            {
+                Globals.DisplayException(new ArgumentNullException("Unable to load given display - the given display is null."));
+            }
+
+            if (!this.MainLayoutPanel.Controls.Contains((Control)previous))
+            {
+                // No files have been opened
+                this.MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
+            }
+            else
+            {
+                this.MainLayoutPanel.Controls.Remove((Control)previous);
+
+                if (NavTree.Nodes[0].Nodes.Count == 0)
+                {
+                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
+                }
+            }
+
+            ChangeControls(current); // Change controls to match the new display
+
+            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
+            {
+                Control c = (Control)current;
+                c.Dock = DockStyle.Fill;
+                this.MainLayoutPanel.Controls.Add(c);
+            }
+        }
+
+        /// <summary>
+		/// Displays file-save success message to the user
+		/// </summary>
+		/// <param name="fileSaved">True if the file was saved successfully</param>
+		public void SaveFileSuccess(bool fileSaved)
+        {
+            if (fileSaved == true)
+            {
+                MessageBox.Show("File save successful.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+            else
+            {
+                MessageBox.Show("File save failed.", "Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Confrims whether the user wants to close the selected SubDesign
+        /// </summary>
+        /// <param name="isDirty">True if the SubDesign being closed has been modified since last save</param>
+        /// <returns>Whether the selected SubDesign will be closed</returns>
+		public bool ConfirmClose(bool isDirty)
+        {
+            if (isDirty == true)
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+                DialogResult response = MessageBox.Show("You have made changes to the file you are trying to close - do you wish to continue?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+                if (response == DialogResult.Yes) return true;
+                else return false;
+            }
+            else return true;
+        }
+
+        /// <summary>
         /// Confirms exit with the user if the application is dirty
         /// </summary>
         /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
@@ -136,78 +247,6 @@ namespace VisiBoole.Views
 			}
 		}
 
-        /// <summary>
-        /// Confrims whether the user wants to close the selected SubDesign
-        /// </summary>
-        /// <param name="isDirty">True if the SubDesign being closed has been modified since last save</param>
-        /// <returns>Whether the selected SubDesign will be closed</returns>
-		public bool ConfirmClose(bool isDirty)
-        {
-            if (isDirty == true)
-            {
-                System.Media.SystemSounds.Asterisk.Play();
-                DialogResult response = MessageBox.Show("You have made changes to the file you are trying to close - do you wish to continue?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
-
-                if (response == DialogResult.Yes) return true;
-                else return false;
-            }
-            else return true;
-        }
-
-        /// <summary>
-        /// Loads the given IDisplay
-        /// </summary>
-        /// <param name="previous">The display to replace</param>
-        /// <param name="current">The display to be loaded</param>
-        public void LoadDisplay(IDisplay previous, IDisplay current)
-		{
-            if (current == null)
-            {
-                Globals.DisplayException(new ArgumentNullException("Unable to load given display - the given display is null."));
-            }
-
-            if (!this.MainLayoutPanel.Controls.Contains((Control)previous))
-            {
-                // No files have been opened
-                this.MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
-            }
-            else
-            {
-                this.MainLayoutPanel.Controls.Remove((Control)previous);
-
-                if (NavTree.Nodes[0].Nodes.Count == 0)
-                { 
-                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
-                }
-                    
-            }
-
-            ChangeControls(current); // Change controls to match the new display
-
-            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
-            {
-                Control c = (Control)current;
-                c.Dock = DockStyle.Fill;
-                this.MainLayoutPanel.Controls.Add(c);
-            }
-		}
-
-		/// <summary>
-		/// Displays file-save success message to the user
-		/// </summary>
-		/// <param name="fileSaved">True if the file was saved successfully</param>
-		public void SaveFileSuccess(bool fileSaved)
-		{
-			if (fileSaved == true)
-			{
-				MessageBox.Show("File save successful.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-			}
-			else
-			{
-				MessageBox.Show("File save failed.", "Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
-		}
-
         #endregion
 
         #region "Event Handlers"
@@ -220,7 +259,7 @@ namespace VisiBoole.Views
         private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
 			controller.SelectTabPage(e.Node.Name);
-            controller.checkSingleViewChange();
+            controller.SwitchDisplay();
 		}
 
         /// <summary>
@@ -329,6 +368,11 @@ namespace VisiBoole.Views
 			}
 		}
 
+        /// <summary>
+        /// Handles the event that occurs when a file is closing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CloseFileEvent(object sender, EventArgs e)
         {
             string name = controller.CloseFile();
@@ -377,11 +421,7 @@ namespace VisiBoole.Views
         private void IncreaseFontEvent(object sender, EventArgs e)
         {
             Globals.FontSize += 3;
-            foreach ( var sub in Globals.SubDesigns)
-            {
-                sub.Value.ChangeFontSize();
-                // Change browser font
-            }
+            controller.SetFontSize();
         }
 
         /// <summary>
@@ -394,22 +434,28 @@ namespace VisiBoole.Views
             if (Globals.FontSize > 6)
             {
                 Globals.FontSize -= 3;
-                foreach (var sub in Globals.SubDesigns)
-                {
-                    sub.Value.ChangeFontSize();
-                    // Change browser font
-                }
+                controller.SetFontSize();
             }
         }
 
+        /// <summary>
+        /// Handles the event that occurs when the light theme is selected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LightThemeEvent(object sender, EventArgs e)
         {
-            ChangeTheme("light");
+            SetTheme("light");
         }
 
+        /// <summary>
+        /// Handles the event that occurs when the light theme is selected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DarkThemeEvent(object sender, EventArgs e)
         {
-            ChangeTheme("dark");
+            SetTheme("dark");
         }
 
         private void RunToggleEvent(object sender, EventArgs e)
@@ -419,7 +465,7 @@ namespace VisiBoole.Views
 
         private void EditToggleEvent(object sender, EventArgs e)
         {
-            controller.checkSingleViewChange();
+            controller.SwitchDisplay();
         }
 
         /// <summary>
@@ -480,6 +526,23 @@ namespace VisiBoole.Views
         private void SelectAllTextEvent(object sender, EventArgs e)
         {
             Globals.tabControl.SelectedTab.SubDesign().SelectAllTextEvent(sender, e);
+        }
+
+        /// <summary>
+        /// Key down event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Oemplus && e.Control)
+            {
+                IncreaseFontEvent(sender, e);
+            }
+            else if (e.KeyCode == Keys.OemMinus && e.Control)
+            {
+                DecreaseFontEvent(sender, e);
+            }
         }
 
         #endregion

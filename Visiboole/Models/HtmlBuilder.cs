@@ -10,11 +10,6 @@ namespace VisiBoole.Models
 {
 	public class HtmlBuilder
 	{
-		//string s = "<p>This is a paragraph.H<font color= 'red' > E </ font > LLO.</ p >";
-
-		//color font = <font color='red'>string</font>
-		//line should be contained in <p> line </p>
-		//List<string> HtmlText = new List<string>();
 		public string HtmlText = "";
 		public string currentLine = "";
 
@@ -25,7 +20,7 @@ namespace VisiBoole.Models
             foreach (List<IObjectCodeElement> line in newOutput)
             {
                 lineNumber++;
-                currentLine = "<p>";
+                currentLine = "<p style=\"font-size:" + (Globals.FontSize + 6) + "px\">";
                 Dictionary<int, int> parenIndexes = new Dictionary<int, int>();
 
                 string fullLine = "";
@@ -282,9 +277,10 @@ namespace VisiBoole.Models
 			{
 				browser.Document.Write(string.Empty);
 			}
+            
             string styles = "<html><head><style type=\"text/css\"> p { margin: 0;} </style ></head >";
             html = styles + html;
             browser.DocumentText = html;
-		}
+        }
 	}
 }

@@ -51,29 +51,32 @@ namespace VisiBoole.Controllers
 		bool SaveAllTabs();
 
         /// <summary>
-		/// Closes the file that is associated with the currently selected tabpage
-		/// </summary>
-		/// <returns>Indicates whether the file was closed</returns>
-        bool CloseActiveTab();
+        /// Returns the TabPage that is currently selected
+        /// </summary>
+        /// <returns>Returns the TabPage that is currently selected</returns>
+        TabPage GetActiveTabPage();
 
-		/// <summary>
-		/// Returns the TabPage that is currently selected
-		/// </summary>
-		/// <returns>Returns the TabPage that is currently selected</returns>
-		TabPage GetActiveTabPage();
-
-		/// <summary>
+        /// <summary>
 		/// Selects the tabpage with matching name
 		/// </summary>
 		/// <param name="fileName">The name of the tabpage to select</param>
 		/// <returns>Returns the tabpage that matches the given string</returns>
 		bool SelectTabPage(string fileName);
 
-		/// <summary>
-		/// Handles the event that occurs when the user runs the parser
-		/// </summary>
-		void Run();
+        /// <summary>
+        /// Handles the event that occurs when the user runs the parser
+        /// </summary>
+        void Run();
 
+        /// <summary>
+        /// Handles the event that occurs when the user ticks
+        /// </summary>
         void Tick();
+
+        /// <summary>
+		/// Closes the current tab
+		/// </summary>
+		/// <returns>Indicates whether the tab was closed</returns>
+        bool CloseActiveTab();
 	}
 }

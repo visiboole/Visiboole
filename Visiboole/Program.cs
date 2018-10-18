@@ -19,17 +19,18 @@ namespace VisiBoole
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			DisplayEdit edit = new DisplayEdit();
+            DesignController designController = new DesignController();
+            DisplayEdit edit = new DisplayEdit();
 			DisplayRun run = new DisplayRun();
-			DisplayController dc = new DisplayController(edit, run);
+			DisplayController displayController = new DisplayController(edit, run);
 
-            edit.AttachController(dc);
-			run.AttachController(dc);
+            edit.AttachController(displayController);
+			run.AttachController(displayController);
 
 			MainWindow mw = new MainWindow();
-			MainWindowController mwc = new MainWindowController(mw, dc);
+			MainWindowController mwc = new MainWindowController(mw, displayController, designController);
 
-			dc.AttachMainWindowController(mwc);
+            displayController.AttachMainWindowController(mwc);
 			
 			Application.Run(mw);
 		}
