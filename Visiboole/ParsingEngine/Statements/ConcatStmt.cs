@@ -37,13 +37,14 @@ namespace VisiBoole.ParsingEngine.Statements
                 string leftSide = regex.Match(Text).Value; // Left side of equal sign
                 List<string> leftVars = Expand(leftSide); // Expand left side to get all left variables
 
-                regex = new Regex(@"\{ (.*?)\}", RegexOptions.None); // Get everything inside braces
+                regex = new Regex(@"\{(([a-zA-Z]+)|([a-zA-Z]+[0-9]+)|([a-zA-Z]+\[[0-9]+\.\.[0-9]+\])|([a-zA-Z]+\[[0-9]+\.[0-9]+\.[0-9]+\]))(\,\s*(([a-zA-Z]+)|([a-zA-Z]+[0-9]+)|([a-zA-Z]+\[[0-9]+\.\.[0-9]+\])|([a-zA-Z]+\[[0-9]+\.[0-9]+\.[0-9]+\])))*\}", RegexOptions.None); // Get everything inside braces
                 string rightSide = regex.Match(Text).Value; // Right side of equal sign
 
                 regex = new Regex(@"[{\s*}]", RegexOptions.None); // Remove whitespace and braces
                 rightSide = regex.Replace(rightSide, string.Empty);
 
                 string[] parts = rightSide.Split(','); // Split variables by commas
+                if (!rightSide.Contains(",")) parts[0] = rightSide;
 
                 List<string> rightVars = new List<string>();
                 foreach (string s in parts)
@@ -59,18 +60,25 @@ namespace VisiBoole.ParsingEngine.Statements
 
                 if (leftVars.Count != rightVars.Count) Globals.DisplayException(new Exception());
 
+                /* Creates new variables and assings values */
                 foreach (string var in leftVars)
                 {
                     int value = Database.TryGetValue(var);
                     if (value != -1)
                     {
-                        // Set value
-                        value = Database.TryGetValue(rightVars[leftVars.IndexOf(var)]);
+                        Output.Add((DependentVariable)Database.TryGetVariable<DependentVariable>(var)); // Output left side variable
+                        Operator sign = new Operator("=");
+                        Output.Add(sign); // Output =
 
+                        value = Database.TryGetValue(rightVars[leftVars.IndexOf(var)]);
                         if (value != 1)
                         {
                             Database.SetValue(var, (value == 1));
-                            //valueList.Add(value);
+                            IndependentVariable indVar = (IndependentVariable)Database.TryGetVariable<IndependentVariable>(rightVars[leftVars.IndexOf(var)]);
+                            DependentVariable depVar = (DependentVariable)Database.TryGetVariable<DependentVariable>(rightVars[leftVars.IndexOf(var)]);
+
+                            if (indVar != null) Output.Add(indVar); // Output right side variable
+                            else Output.Add(depVar); // Output right side variable
                         }
                         else
                         {
@@ -78,41 +86,44 @@ namespace VisiBoole.ParsingEngine.Statements
                             IndependentVariable indVar = new IndependentVariable(rightVars[leftVars.IndexOf(var)], false);
                             Database.AddVariable<IndependentVariable>(indVar);
                             Database.SetValue(var, false);
-                            //valueList.Add(0);
+                            Output.Add(indVar); // Output right side variable
                         }
-
-                        //Database.AddExpression(key, Text);
-                        Database.CreateDependenciesList(var);
-                        Database.AddDependencies(var, rightVars[leftVars.IndexOf(var)]);
                     }
                     else
                     {
-                        // Create new variable
                         value = Database.TryGetValue(rightVars[leftVars.IndexOf(var)]);
-
-                        if (value != 1)
+                        if (value != -1)
                         {
-                            DependentVariable depVar = new DependentVariable(var, (value == 1));
-                            Database.AddVariable<DependentVariable>(depVar);
-                            //valueList.Add(value);
+                            /* Create left side variable and output it */
+                            DependentVariable newVar = new DependentVariable(var, (value == 1));
+                            Database.AddVariable<DependentVariable>(newVar);
+                            Output.Add(newVar); // Output left side variable
+                            Operator sign = new Operator("=");
+                            Output.Add(sign); // Output =
+
+                            /* Get right side variable and output it */
+                            IndependentVariable indVar = (IndependentVariable)Database.TryGetVariable<IndependentVariable>(rightVars[leftVars.IndexOf(var)]);
+                            DependentVariable depVar = (DependentVariable)Database.TryGetVariable<DependentVariable>(rightVars[leftVars.IndexOf(var)]);
+                            if (indVar != null) Output.Add(indVar); // Output right side variable
+                            else Output.Add(depVar); // Output right side variable
                         }
                         else
                         {
-                            // Create new variables
+                            /* Create left and ride side variables and output them */
                             IndependentVariable indVar = new IndependentVariable(rightVars[leftVars.IndexOf(var)], false);
                             DependentVariable depVar = new DependentVariable(var, false);
                             Database.AddVariable<IndependentVariable>(indVar);
                             Database.AddVariable<DependentVariable>(depVar);
-                            //valueList.Add(0);
+                            Output.Add(depVar); // Output left side variable
+                            Operator sign = new Operator("=");
+                            Output.Add(sign); // Output =
+                            Output.Add(indVar); // Output right side variable
                         }
-
-                        //Database.AddExpression(key, Text);
-                        Database.CreateDependenciesList(var);
-                        Database.AddDependencies(var, rightVars[leftVars.IndexOf(var)]);
                     }
+
+                    LineFeed lf = new LineFeed();
+                    Output.Add(lf);
                 }
-
-
             }
             catch (Exception ex)
             {

@@ -196,6 +196,16 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
+                    match = ConcatStmt.Pattern.Match(nextLine);
+                    if (match.Success)
+                    {
+                        stmtList.Add(new ConcatStmt(postLnNum, nextLine));
+                        flag = true;
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
+
                     // check for a variable list statement
                     match = VariableListStmt.Pattern.Match(nextLine);
                     Match match2 = VariableListStmt.Pattern2.Match(nextLine);
@@ -223,16 +233,6 @@ namespace VisiBoole.ParsingEngine
                     if (!nextLine.Contains("<") || nextLine.Contains("^"))
                     {
                         stmtList.Add(new BooleanAssignmentStmt(postLnNum, nextLine));
-                        flag = true;
-                        preLnNum++;
-                        postLnNum++;
-                        continue;
-                    }
-
-                    match = ConcatStmt.Pattern.Match(nextLine);
-                    if (match.Success)
-                    {
-                        stmtList.Add(new ConcatStmt(postLnNum, nextLine));
                         flag = true;
                         preLnNum++;
                         postLnNum++;
