@@ -26,12 +26,6 @@ namespace VisiBoole.ParsingEngine.Statements
         public static Regex Pattern2 { get; } = new Regex(@"^%[ubhd]{([a-zA-Z0-9_]{1,20} ?)+};$");
 
         /// <summary>
-        /// The identifying pattern that can be used to identify and extract this statement from raw text
-        /// This pattern is the third identifying pattern and is of a form similar to: A[m.step.n] = {};
-        /// </summary>
-        public static Regex Pattern3 { get; } = new Regex(@"^[a-zA-z]\[\d\.\.\d\]\=\{[a-zA-z]+\d+(\,[a-zA-z]\d)*\}\;$"); // E[3..0]={F,G,H,I};
-
-        /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>

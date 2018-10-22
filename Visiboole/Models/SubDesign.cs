@@ -154,7 +154,7 @@ namespace VisiBoole.Models
             isDirty = true;
 
             if (Globals.tabControl.TabPages[TabPageIndex].Text == FileSourceName)
-                Globals.tabControl.TabPages[TabPageIndex].Text = "*" + FileSourceName;
+                Globals.tabControl.TabPages[TabPageIndex].Text = "* " + FileSourceName;
         }
 
         /// <summary>
