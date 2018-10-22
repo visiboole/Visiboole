@@ -21,99 +21,56 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		private IDisplayController displayController;
 
-		/// <summary>
-		/// Constructs an instance of MainWindowController with handles to its view and the display controller
-		/// </summary>
-		/// <param name="view">Handle to the MainWindow which is the view for this controller</param>
-		/// <param name="displayController">Handle to the controller for the displays that are hosted by the MainWindow</param>
-		public MainWindowController(IMainWindow view, IDisplayController displayController)
+        /// <summary>
+        /// Handle to the controller for the designs that are viewed by the MainWindow
+        /// </summary>
+        private IDesignController designController;
+
+        /// <summary>
+        /// Constructs an instance of MainWindowController with handles to its view and the display controller
+        /// </summary>
+        /// <param name="view">Handle to the MainWindow which is the view for this controller</param>
+        /// <param name="displayController">Handle to the controller for the displays that are hosted by the MainWindow</param>
+        /// <param name="designController">Handle to the controller for the designs that are viewed by the MainWindow</param>
+        public MainWindowController(IMainWindow view, IDisplayController displayController, IDesignController designController)
 		{
 			this.view = view;
 			view.AttachController(this);
-			this.displayController = displayController;			
+			this.displayController = displayController;
+            this.designController = designController;
 		}
 
         /// <summary>
-        /// Used to check if the display is the output, if it is, change it to editor.
+        /// Set theme of SubDesigns
         /// </summary>
-        public void checkSingleViewChange()
+        public void SetTheme()
         {
-            if (displayController.CurrentDisplay is DisplayRun)
-            {
-                LoadDisplay(Globals.DisplayType.EDIT);
-            }
+            designController.SetThemes();
         }
 
         /// <summary>
-        /// Creates a new SubDesign with a file created from the given filename
+        /// Update font sizes
         /// </summary>
-        /// <param name="filename">The filename of the file to create the new SubDesign with</param>
-        /// <returns>Returns the SubDesign created from the given filename</returns>
-        private SubDesign CreateNewSubDesign(string filename)
-		{
-			try
-			{
-				SubDesign newSubDesign = new SubDesign(filename);
-                if (!Globals.SubDesigns.ContainsKey(newSubDesign.FileSourceName))
-                {
-                    Globals.SubDesigns.Add(newSubDesign.FileSourceName, newSubDesign);
-                }
-
-				return newSubDesign;
-			}
-			catch (Exception ex)
-			{
-				Globals.DisplayException(ex);
-				return null;
-			}
-		}
-
-		/// <summary>
-		/// Performs a dirty check and confirms application exit with the user
-		/// </summary>
-		public void ExitApplication()
-		{
-			bool isDirty = false;
-
-			foreach (KeyValuePair<string, SubDesign> kvp in Globals.SubDesigns)
-			{
-				SubDesign sd = kvp.Value;
-
-				if (sd.isDirty)
-				{
-					isDirty = true;
-                    break;
-				}
-			}
-			view.ConfirmExit(isDirty);
-		}
+        public void SetFontSize()
+        {
+            designController.SetSubDesignFontSizes();
+        }
 
         /// <summary>
-        /// Loads into the MainWindow the display of the given type
-        /// </summary>
-        /// <param name="dType">The type of display that should be loaded</param>
-        public void LoadDisplay(Globals.DisplayType dType)
-		{
-			displayController.PreviousDisplay = displayController.CurrentDisplay;
-			displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
-			view.LoadDisplay(displayController.PreviousDisplay, displayController.CurrentDisplay);
-		}
-
-		/// <summary>
 		/// Processes a new file that is created or opened by the user
 		/// </summary>
 		/// <param name="path">The path of the file that was created or opened by the user</param>
 		/// <param name="overwriteExisting">True if the file at the given path should be overwritten</param>
 		public void ProcessNewFile(string path, bool overwriteExisting = false)
-		{
-			try
-			{
+        {
+            try
+            {
                 if (overwriteExisting == true && File.Exists(path))
                 {
                     File.Delete(path);
                 }
 
-				SubDesign sd = CreateNewSubDesign(path);
+                SubDesign sd = designController.CreateSubDesign(path);
 
                 if (displayController.CreateNewTab(sd) == true)
                 {
@@ -122,49 +79,87 @@ namespace VisiBoole.Controllers
 
                 LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
             }
-			catch (Exception ex)
-			{
-				Globals.DisplayException(ex);
-			}
-		}
+            catch (Exception ex)
+            {
+                Globals.DisplayException(ex);
+            }
+        }
 
-		/// <summary>
-		/// Saves the file that is currently active in the selected tabpage
-		/// </summary>
-		public void SaveFile()
-		{
-			try
-			{
-				view.SaveFileSuccess(displayController.SaveActiveTab());
-			}
-			catch (Exception ex)
-			{
-				Globals.DisplayException(ex);
-			}
-		}
+        /// <summary>
+        /// Loads into the MainWindow the display of the given type
+        /// </summary>
+        /// <param name="dType">The type of display that should be loaded</param>
+        public void LoadDisplay(Globals.DisplayType dType)
+        {
+            displayController.PreviousDisplay = displayController.CurrentDisplay;
+            displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
+            view.LoadDisplay(displayController.PreviousDisplay, displayController.CurrentDisplay);
+        }
 
-		/// <summary>
+        /// <summary>
+        /// Used to check if the display is the output, if it is, change it to editor.
+        /// </summary>
+        public void SwitchDisplay()
+        {
+            if (displayController.CurrentDisplay is DisplayRun)
+            {
+                LoadDisplay(Globals.DisplayType.EDIT);
+            }
+        }
+
+        /// <summary>
+        /// Selects the tabpage in the tabcontrol with name matching the given string
+        /// </summary>
+        /// <param name="fileName">The name of the tabpage to select</param>
+        public void SelectTabPage(string fileName)
+        {
+            try
+            {
+                displayController.SelectTabPage(fileName);
+            }
+            catch (Exception ex)
+            {
+                Globals.DisplayException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Saves the file that is currently active in the selected tabpage
+        /// </summary>
+        public void SaveFile()
+        {
+            try
+            {
+                view.SaveFileSuccess(displayController.SaveActiveTab());
+            }
+            catch (Exception ex)
+            {
+                Globals.DisplayException(ex);
+            }
+        }
+
+        /// <summary>
 		/// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
 		/// </summary>
 		/// <param name="path">The new file path to save the active file to</param>
 		public void SaveFileAs(string path)
-		{
-			try
-			{
-				// Write the contents of the active tab in a new file at location of the selected path
-				string content = displayController.GetActiveTabPage().SubDesign().Text;
-				File.WriteAllText(Path.ChangeExtension(path, ".vbi"), content);
+        {
+            try
+            {
+                // Write the contents of the active tab in a new file at location of the selected path
+                string content = displayController.GetActiveTabPage().SubDesign().Text;
+                File.WriteAllText(Path.ChangeExtension(path, ".vbi"), content);
 
-				// Process the new file as usual
-				ProcessNewFile(path);
-				view.SaveFileSuccess(true);
-			}
-			catch (Exception ex)
-			{
-				view.SaveFileSuccess(false);
-				Globals.DisplayException(ex);
-			}
-		}
+                // Process the new file as usual
+                ProcessNewFile(path);
+                view.SaveFileSuccess(true);
+            }
+            catch (Exception ex)
+            {
+                view.SaveFileSuccess(false);
+                Globals.DisplayException(ex);
+            }
+        }
 
         /// <summary>
         /// Saves all files opened
@@ -182,32 +177,30 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Selects the tabpage in the tabcontrol with name matching the given string
+        /// Run mode.
         /// </summary>
-        /// <param name="fileName">The name of the tabpage to select</param>
-        public void SelectTabPage(string fileName)
-		{
-			try
-			{
-				displayController.SelectTabPage(fileName);
-			}
-			catch (Exception ex)
-			{
-				Globals.DisplayException(ex);
-			}
-		}
+        public void Run()
+        {
+            displayController.Run();
+        }
 
+        /// <summary>
+        /// Closes the selected open file
+        /// </summary>
+        /// <returns>The name of the file closed</returns>
         public string CloseFile()
         {
-            SubDesign sd;
-            Globals.SubDesigns.TryGetValue(displayController.GetActiveTabPage().SubDesign().FileSourceName, out sd);
+            SubDesign sd = displayController.GetActiveTabPage().SubDesign();
 
             try
             {
                 if (view.ConfirmClose(sd.isDirty))
                 {
                     if (displayController.CloseActiveTab())
+                    {
+                        designController.CloseSubDesign(sd.FileSourceName);
                         return sd.FileSourceName;
+                    }
                 }
 
                 return null;
@@ -219,9 +212,12 @@ namespace VisiBoole.Controllers
             }
         }
 
-        public void Run()
-        {
-            displayController.Run();
-        }
+        /// <summary>
+        /// Performs a dirty check and confirms application exit with the user
+        /// </summary>
+        public void ExitApplication()
+		{
+			view.ConfirmExit(designController.CheckUnsavedChanges());
+		}
 	}
 }

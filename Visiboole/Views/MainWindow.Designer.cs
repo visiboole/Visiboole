@@ -211,57 +211,70 @@ namespace VisiBoole.Views
             // 
             // undoToolStripMenuItem
             // 
+            this.undoToolStripMenuItem.Enabled = false;
             this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
-            this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.undoToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+Z";
+            this.undoToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.undoToolStripMenuItem.Text = "&Undo";
+            this.undoToolStripMenuItem.Click += new System.EventHandler(this.UndoTextEvent);
             // 
             // redoToolStripMenuItem
             // 
+            this.redoToolStripMenuItem.Enabled = false;
             this.redoToolStripMenuItem.Name = "redoToolStripMenuItem";
-            this.redoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
-            this.redoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.redoToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+Y";
+            this.redoToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.redoToolStripMenuItem.Text = "&Redo";
+            this.redoToolStripMenuItem.Click += new System.EventHandler(this.RedoTextEvent);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(141, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(161, 6);
             // 
             // cutToolStripMenuItem
             // 
+            this.cutToolStripMenuItem.Enabled = false;
             this.cutToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.cutToolStripMenuItem.Name = "cutToolStripMenuItem";
-            this.cutToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-            this.cutToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.cutToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+X";
+            this.cutToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.cutToolStripMenuItem.Text = "Cu&t";
+            this.cutToolStripMenuItem.Click += new System.EventHandler(this.CutTextEvent);
             // 
             // copyToolStripMenuItem
             // 
+            this.copyToolStripMenuItem.Enabled = false;
             this.copyToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.copyToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.copyToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+C";
+            this.copyToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.copyToolStripMenuItem.Text = "&Copy";
+            this.copyToolStripMenuItem.Click += new System.EventHandler(this.CopyTextEvent);
             // 
             // pasteToolStripMenuItem
             // 
+            this.pasteToolStripMenuItem.Enabled = false;
             this.pasteToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.pasteToolStripMenuItem.Name = "pasteToolStripMenuItem";
-            this.pasteToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
-            this.pasteToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.pasteToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+V";
+            this.pasteToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.pasteToolStripMenuItem.Text = "&Paste";
+            this.pasteToolStripMenuItem.Click += new System.EventHandler(this.PasteTextEvent);
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(141, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(161, 6);
             // 
             // selectAllToolStripMenuItem
             // 
+            this.selectAllToolStripMenuItem.Enabled = false;
             this.selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
-            this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.selectAllToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+A";
+            this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.selectAllToolStripMenuItem.Text = "Select &All";
+            this.selectAllToolStripMenuItem.Click += new System.EventHandler(this.SelectAllTextEvent);
             // 
             // viewToolStripMenuItem
             // 
@@ -280,6 +293,7 @@ namespace VisiBoole.Views
             this.increaseFontToolStripMenuItem.Enabled = false;
             this.increaseFontToolStripMenuItem.Name = "increaseFontToolStripMenuItem";
             this.increaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+";
+            this.increaseFontToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Oemplus)));
             this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
             this.increaseFontToolStripMenuItem.Text = "Increase Font";
             this.increaseFontToolStripMenuItem.Click += new System.EventHandler(this.IncreaseFontEvent);
@@ -289,6 +303,7 @@ namespace VisiBoole.Views
             this.decreaseFontToolStripMenuItem.Enabled = false;
             this.decreaseFontToolStripMenuItem.Name = "decreaseFontToolStripMenuItem";
             this.decreaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl-";
+            this.decreaseFontToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.OemMinus)));
             this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
             this.decreaseFontToolStripMenuItem.Text = "Decrease Font";
             this.decreaseFontToolStripMenuItem.Click += new System.EventHandler(this.DecreaseFontEvent);
@@ -474,89 +489,6 @@ namespace VisiBoole.Views
 
         }
 
-        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            foreach(var sub in Globals.SubDesigns)
-            {
-                if (sub.Value.isDirty)
-                {
-                    if (e.CloseReason == CloseReason.UserClosing)
-                    {
-                        DialogResult result = MessageBox.Show("You have unsaved files. Are you sure you want to exit?", "Dialog Title", MessageBoxButtons.YesNo);
-                        if (result == DialogResult.Yes)
-                        {
-                            Application.Exit();
-                        }
-                        else
-                        {
-                            e.Cancel = true;
-                        }
-                    }
-                    else
-                    {
-                        e.Cancel = true;
-                    }
-                }
-                return;
-            }
-        }
-
-        public void ChangeTheme(string theme)
-        {
-            if (theme == "light")
-            {
-                Globals.Theme = "light";
-                this.menuStrip1.BackColor = System.Drawing.Color.LightGray;
-                this.menuStrip2.BackColor = System.Drawing.Color.LightGray;
-                this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(242)))), ((int)(((byte)(243)))));
-                this.NavTree.ForeColor = System.Drawing.Color.Black;
-                this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(242)))), ((int)(((byte)(243)))));
-                this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.Blue;
-
-                foreach (var sub in Globals.SubDesigns)
-                {
-                    sub.Value.Change_Theme("light");
-                }
-                Globals.tabControl.TabPages.Add("!@#$FillTab!@#$");
-                Globals.tabControl.TabPages.Remove(Globals.tabControl.TabPages[Globals.tabControl.TabPages.Count - 1]);
-            }
-            else if (theme == "dark")
-            {
-                Globals.Theme = "dark";
-                this.menuStrip1.BackColor = System.Drawing.Color.DarkGray;
-                this.menuStrip2.BackColor = System.Drawing.Color.DarkGray;
-                this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
-                this.NavTree.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
-                this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
-                this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
-
-                foreach (var sub in Globals.SubDesigns)
-                {
-                    sub.Value.Change_Theme("dark");
-                }
-                Globals.tabControl.TabPages.Add("!@#$FillTab!@#$");
-                Globals.tabControl.TabPages.Remove(Globals.tabControl.TabPages[Globals.tabControl.TabPages.Count - 1]);
-            }
-        }
-
-        private void MainWindow_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
-        {
-            if(e.Control && e.KeyCode == System.Windows.Forms.Keys.Oemplus)
-            {
-                foreach (var sub in Globals.SubDesigns)
-                {
-                    sub.Value.IncreaseFont();
-                }
-            }
-            else if(e.Control && e.KeyCode == System.Windows.Forms.Keys.OemMinus)
-            {
-                foreach (var sub in Globals.SubDesigns)
-                {
-                    sub.Value.DecreaseFont();
-                }
-            }
-        }
-
         #endregion
 
         private System.Windows.Forms.MenuStrip menuStrip1;
@@ -601,4 +533,3 @@ namespace VisiBoole.Views
         private ToolStripMenuItem closeDesignToolStripMenuItem;
     }
 }
-

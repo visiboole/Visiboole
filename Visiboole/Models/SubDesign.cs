@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Windows.Forms;
 using Ionic;
 
 namespace VisiBoole.Models
@@ -46,6 +48,21 @@ namespace VisiBoole.Models
 		public bool isDirty { get; set; }
 
         /// <summary>
+        /// Previous text of the SubDesign
+        /// </summary>
+        private string lastText = "";
+
+        /// <summary>
+        /// Edit history of the SubDesign
+        /// </summary>
+        public Stack editHistory = new Stack();
+
+        /// <summary>
+        /// Undo history of the SubDesign
+        /// </summary>
+        public Stack undoHistory = new Stack();
+
+        /// <summary>
         /// Constructs a new SubDesign object
         /// </summary>
         /// <param name="filename">The path of the file source for this SubDesign</param>
@@ -65,15 +82,30 @@ namespace VisiBoole.Models
             }
 
             this.Text = GetFileText();
-
+            lastText = Text;
             isDirty = false;
+
+            editHistory.Clear();
+            undoHistory.Clear();
+
             this.TextChanged += SubDesign_TextChanged;
+            this.MouseDown += SubDesign_MouseDown;
+            this.KeyDown += SubDesign_KeyDown;
 
             this.Variables = new Dictionary<string, int>();
             this.Expressions = new Dictionary<string, string>();
             this.Dependencies = new Dictionary<string, List<string>>();
 
 	        this.ShowLineNumbers = true;
+            SetTheme();
+            SetFontSize();
+        }
+
+        /// <summary>
+        /// Sets the theme of the SubDesign
+        /// </summary>
+        public void SetTheme()
+        {
             if (Globals.Theme == "light")
             {
                 this.BackColor = Color.White;
@@ -86,44 +118,11 @@ namespace VisiBoole.Models
             }
         }
 
-        public void Change_Theme(string theme)
-        {
-            if (theme == "light")
-            {
-                this.BackColor = Color.White;
-                this.ForeColor = Color.Black;
-            }
-            else if (theme == "dark")
-            {
-                this.BackColor = Color.FromArgb(75, 77, 81);
-                this.ForeColor = Color.FromArgb(34, 226, 85);
-            }
-        }
-
         /// <summary>
-        /// Sets the dirty flag when the contents of this SubDesign have changed
+        /// Sets the font size of the Sub Design to the global font size
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SubDesign_TextChanged(object sender, EventArgs e)
-		{
-            if (!this.Text.Equals(GetFileText()) && !isDirty)
-            {
-                isDirty = true;
-                if (Globals.tabControl.SelectedTab.Text == FileSourceName)
-                    Globals.tabControl.SelectedTab.Text = "*" + Globals.tabControl.SelectedTab.Text;
-            }
-        }
-
-        public void IncreaseFont()
+        public void SetFontSize()
         {
-            Globals.FontSize += 5;
-            this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
-        }
-
-        public void DecreaseFont()
-        {
-            Globals.FontSize -= 5;
             this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
         }
 
@@ -148,13 +147,214 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
+        /// Updates dirty and changes file name to indicate unsaved changes
+        /// </summary>
+        private void UpdateDirty()
+        {
+            isDirty = true;
+
+            if (Globals.tabControl.TabPages[TabPageIndex].Text == FileSourceName)
+                Globals.tabControl.TabPages[TabPageIndex].Text = "* " + FileSourceName;
+        }
+
+        /// <summary>
+        /// Records edits for undos
+        /// </summary>
+        private void RecordEdit()
+        {
+            bool isDel = this.Text.Length < lastText.Length; // Indicates whether the edit was a deletion
+            int len = Math.Abs(this.Text.Length - lastText.Length); // The length of the string inserted or deleted
+            int loc = isDel ? this.SelectionStart : (this.SelectionStart - len); // The location of the edit
+            string edit = isDel ? lastText.Substring(loc, len) : this.Text.Substring(loc, len); // Gets the edit string
+            editHistory.Push(isDel);
+            editHistory.Push(loc);
+            editHistory.Push(edit);
+            undoHistory.Clear();
+            lastText = this.Text;
+        }
+
+        /// <summary>
+        /// Does a undo or redo operation
+        /// </summary>
+        /// <param name="isDel"></param>
+        /// <param name="loc"></param>
+        /// <param name="edit"></param>
+        private void DoEdit(bool isDel, int loc, string edit)
+        {
+            if (isDel)
+            {
+                lastText = this.Text.Remove(loc, edit.Length);
+                this.Text = lastText;
+                this.SelectionStart = loc;
+            }
+            else
+            {
+                lastText = this.Text.Insert(loc, edit);
+                this.Text = lastText;
+                this.SelectionStart = loc + edit.Length;
+            }
+
+            if (!isDirty) UpdateDirty();
+        }
+
+        /// <summary>
+        /// Sets the dirty flag when the contents of this SubDesign have changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubDesign_TextChanged(object sender, EventArgs e)
+		{
+            if (!this.Text.Equals(lastText))
+            {
+                RecordEdit();
+                if (!isDirty) UpdateDirty();
+            }
+        }
+
+        /// <summary>
+        /// SubDesign mouse down event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubDesign_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                ContextMenu cm = new ContextMenu();
+                MenuItem item = new MenuItem("Undo");
+                item.Click += new EventHandler(UndoTextEvent);
+                item.Enabled = editHistory.Count > 0;
+                cm.MenuItems.Add(item);
+                item = new MenuItem("Redo");
+                item.Click += new EventHandler(RedoTextEvent);
+                item.Enabled = undoHistory.Count > 0;
+                cm.MenuItems.Add(item);
+                cm.MenuItems.Add("-");
+                item = new MenuItem("Cut");
+                item.Click += new EventHandler(CutTextEvent);
+                item.Enabled = this.SelectedText.Length > 0;
+                cm.MenuItems.Add(item);
+                item = new MenuItem("Copy");
+                item.Click += new EventHandler(CopyTextEvent);
+                item.Enabled = this.SelectedText.Length > 0;
+                cm.MenuItems.Add(item);
+                item = new MenuItem("Paste");
+                item.Click += new EventHandler(PasteTextEvent);
+                item.Enabled = Clipboard.ContainsText();
+                cm.MenuItems.Add(item);
+                cm.MenuItems.Add("-");
+                item = new MenuItem("Select All");
+                item.Click += new EventHandler(SelectAllTextEvent);
+                item.Enabled = true;
+                cm.MenuItems.Add(item);
+                this.ContextMenu = cm;
+            }
+        }
+
+        /// <summary>
+        /// SubDesign key down event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubDesign_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Z && e.Control)
+            {
+                if (editHistory.Count > 0) UndoTextEvent(sender, e);
+            }
+            else if (e.KeyCode == Keys.Y && e.Control)
+            {
+                if (undoHistory.Count > 0) RedoTextEvent(sender, e);
+            }
+            else if (e.KeyCode == Keys.A && e.Control)
+            {
+                SelectAllTextEvent(sender, e);
+            }
+        }
+
+        /// <summary>
+        /// Undo text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void UndoTextEvent(object sender, EventArgs e)
+        {
+            string edit = (string)editHistory.Pop(); // Edit string
+            int loc = (int)editHistory.Pop(); // Location of edit
+            bool isDel = (bool)editHistory.Pop(); // Indicates whether the edit is a deletion
+            undoHistory.Push(isDel);
+            undoHistory.Push(loc);
+            undoHistory.Push(edit);
+            DoEdit(!isDel, loc, edit);
+        }
+
+        /// <summary>
+        /// Redo text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void RedoTextEvent(object sender, EventArgs e)
+        {
+            string edit = (string)undoHistory.Pop(); // Edit string
+            int loc = (int)undoHistory.Pop(); // Location of edit
+            bool isDel = (bool)undoHistory.Pop(); // Indicates whether the edit is a deletion
+            editHistory.Push(isDel);
+            editHistory.Push(loc);
+            editHistory.Push(edit);
+            DoEdit(isDel, loc, edit);
+        }
+
+        /// <summary>
+        /// Cut text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void CutTextEvent(object sender, EventArgs e)
+        {
+            this.Cut();
+        }
+
+        /// <summary>
+        /// Copy text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void CopyTextEvent(object sender, EventArgs e)
+        {
+            Clipboard.SetText(this.SelectedText);
+        }
+
+        /// <summary>
+        /// Paste text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void PasteTextEvent(object sender, EventArgs e)
+        {
+            if (Clipboard.ContainsText())
+            {
+                this.SelectedText = Clipboard.GetText(TextDataFormat.Text).ToString();
+            }
+        }
+
+        /// <summary>
+        /// Select all text event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SelectAllTextEvent(object sender, EventArgs e)
+        {
+            this.SelectAll();
+        }
+
+        /// <summary>
         /// Saves the contents of this Text property to the FileSource contents
         /// </summary>
         public void SaveTextToFile()
         {
             File.WriteAllText(this.FileSource.FullName, this.Text);
 			isDirty = false;
-            Globals.tabControl.SelectedTab.Text = FileSourceName;
+            Globals.tabControl.TabPages[TabPageIndex].Text = FileSourceName;
         }
     }
 }

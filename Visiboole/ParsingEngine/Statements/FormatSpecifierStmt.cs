@@ -26,12 +26,6 @@ namespace VisiBoole.ParsingEngine.Statements
         public static Regex Pattern2 { get; } = new Regex(@"^%[ubhd]{([a-zA-Z0-9_]{1,20} ?)+};$");
 
         /// <summary>
-        /// The identifying pattern that can be used to identify and extract this statement from raw text
-        /// This pattern is the third identifying pattern and is of a form similar to: A[m.step.n] = {};
-        /// </summary>
-        public static Regex Pattern3 { get; } = new Regex(@"^[a-zA-z]\[\d\.\.\d\]\s|\=|\s\{[a-zA-z]+\,|\s\}\;$"); // E[3..0] = {F, G, H, I};
-
-        /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
@@ -90,56 +84,84 @@ namespace VisiBoole.ParsingEngine.Statements
                         }
                     }
 
-                    /*
-                    List<char> chars = new List<char>();
+                    List<string> chars = new List<string>();
                     if (content.Contains("="))
                     {
-                        regex = new Regex(@"\=|\s[a-zA-z]+\,|\s", RegexOptions.None);
-                        string rhs = regex.Match(content.Substring(content.IndexOf('='))).Value; // Gets the operator and right hand side of the content string
+                        string rhs = content.Substring(content.IndexOf("=") + 1);
                         rhs = rhs.Replace(" ", "");
-                        string[] parts = rhs.Split(',');
-                        if (parts.Length != (beg - end)) throw;
-                        foreach (string s in parts) chars.Insert(parts);
+                        regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
+                        MatchCollection vars = regex.Matches(rhs); // Gets the operator and right hand side of the content string
+                        string[] parts = new string[vars.Count];
+                        for (int i = 0; i < vars.Count; i++) parts[i] = vars[i].Value;
+                        if (parts.Length != ((beg - end) + 1)) throw new FormatSpecifierSyntaxException();
+                        foreach (string s in parts) chars.Add(s);
                     }
-                    */
-                    
-                    
 
                     // add each variable to our output list of object code and assign values if needed
                     foreach (int i in order)
 		            {
 		                string key = string.Concat(var, i);
-		                IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(key) as IndependentVariable;
-                        DependentVariable depVar = Database.TryGetVariable<DependentVariable>(key) as DependentVariable;
-		                if (indVar != null)
-		                {
-                            if(indVar.Value)
-                            {
-                                valueList.Add(1);
-                            }
-                            else
-                            {
-                                valueList.Add(0);
-                            }
-		                    //Output.Add(indVar);
-		                }
-                        else if (depVar != null)
+                        int value = Database.TryGetValue(key);
+                        if (value != -1)
                         {
-                            if (depVar.Value)
+                            if (chars.Count == 0) valueList.Add(value);
+                            else
                             {
-                                valueList.Add(1);
+                                // Set value
+                                value = Database.TryGetValue(chars[chars.Count - i - 1]);
+
+                                if (value != 1)
+                                {
+                                    Database.SetValue(key, (value == 1));
+                                    valueList.Add(value);
+                                }
+                                else
+                                {
+                                    // Create new variable
+                                    IndependentVariable indVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    Database.AddVariable<IndependentVariable>(indVar);
+                                    Database.SetValue(key, false);
+                                    valueList.Add(0);
+                                }
+
+                                //Database.AddExpression(key, Text);
+                                Database.CreateDependenciesList(key);
+                                Database.AddDependencies(key, chars[chars.Count - i - 1]);
+                            }
+                        }
+                        else
+                        {
+                            // Create new variable
+                            if (chars.Count == 0)
+                            {
+                                IndependentVariable indVar = new IndependentVariable(key, false);
+                                Database.AddVariable<IndependentVariable>(indVar);
+                                valueList.Add(0);
                             }
                             else
                             {
-                                valueList.Add(0);
+                                value = Database.TryGetValue(chars[chars.Count - i - 1]);
+
+                                if (value != 1)
+                                {
+                                    DependentVariable depVar = new DependentVariable(key, (value == 1));
+                                    Database.AddVariable<DependentVariable>(depVar);
+                                    valueList.Add(value);
+                                }
+                                else
+                                {
+                                    // Create new variables
+                                    IndependentVariable indVar = new IndependentVariable(chars[chars.Count - i - 1], false);
+                                    DependentVariable depVar = new DependentVariable(key, false);
+                                    Database.AddVariable<IndependentVariable>(indVar);
+                                    Database.AddVariable<DependentVariable>(depVar);
+                                    valueList.Add(0);
+                                }
+
+                                //Database.AddExpression(key, Text);
+                                Database.CreateDependenciesList(key);
+                                Database.AddDependencies(key, chars[chars.Count - i - 1]);
                             }
-                            //Output.Add(depVar);
-                        }
-		                else
-		                {
-                            IndependentVariable newVar = new IndependentVariable(key, false);
-                            Database.AddVariable<IndependentVariable>(newVar);
-                            valueList.Add(0);
                         }
 		            }
                     string final = Calculate(format, valueList);
@@ -221,7 +243,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="specifier">Format that the values should be converted to; binary, hex, signed, or unsigned.</param>
         /// <param name="values">The list of boolean (binary) values for this statement</param>
         /// <returns></returns>
-        public string Calculate(string specifier, List<int> values)
+        private string Calculate(string specifier, List<int> values)
         {
             switch (specifier.ToUpper())
             {

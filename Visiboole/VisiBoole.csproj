@@ -71,7 +71,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\DesignController.cs" />
     <Compile Include="Controllers\DisplayController.cs" />
+    <Compile Include="Controllers\IDesignController.cs" />
     <Compile Include="Controllers\IDisplayController.cs" />
     <Compile Include="Controllers\IMainWindowController.cs" />
     <Compile Include="Controllers\MainWindowController.cs" />
@@ -88,6 +90,8 @@
     <Compile Include="ParsingEngine\Statements\CommentStmt.cs" />
     <Compile Include="ParsingEngine\Database.cs" />
     <Compile Include="ParsingEngine\ObjectCode\DependentVariable.cs" />
+    <Compile Include="ParsingEngine\Statements\ConcatStmt.cs" />
+    <Compile Include="ParsingEngine\Statements\ConstantStmt.cs" />
     <Compile Include="ParsingEngine\Statements\DffClockStmt.cs" />
     <Compile Include="ParsingEngine\Statements\EmptyStmt.cs" />
     <Compile Include="Models\FormatSpecifier.cs" />
@@ -167,12 +171,14 @@
     <None Include="Resources\VisiBooleIcon.ico" />
     <None Include="Resources\Letter V blue.ico" />
     <Content Include="Resources\Close.png" />
+    <None Include="Resources\MultiTick.png" />
     <Content Include="Resources\NewFile.png" />
     <Content Include="Resources\OpenFile.png" />
     <Content Include="Resources\Run.png" />
     <Content Include="Resources\Save.png" />
     <Content Include="Resources\SaveAll.png" />
     <Content Include="Resources\Stop.png" />
+    <None Include="Resources\Tick.png" />
     <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>

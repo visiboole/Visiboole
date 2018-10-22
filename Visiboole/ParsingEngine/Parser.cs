@@ -186,7 +186,7 @@ namespace VisiBoole.ParsingEngine
 					}
 
                     // check for a format specifier statement
-                    bool success = FormatSpecifierStmt.Pattern1.Match(nextLine).Success || FormatSpecifierStmt.Pattern2.Match(nextLine).Success || FormatSpecifierStmt.Pattern3.Match(nextLine).Success;
+                    bool success = FormatSpecifierStmt.Pattern1.Match(nextLine).Success || FormatSpecifierStmt.Pattern2.Match(nextLine).Success;
                     if (success)
                     {
                         stmtList.Add(new FormatSpecifierStmt(postLnNum, nextLine));
@@ -229,6 +229,15 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
+                    match = ConcatStmt.Pattern.Match(nextLine);
+                    if (match.Success)
+                    {
+                        stmtList.Add(new ConcatStmt(postLnNum, nextLine));
+                        flag = true;
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
 
                     // if we have reached this point with no match then there is a user syntax error
                     // TODO: add more validation checks for augmented error-checking granularity

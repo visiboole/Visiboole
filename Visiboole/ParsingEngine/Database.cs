@@ -130,6 +130,29 @@ namespace VisiBoole.ParsingEngine
 			}
 			return null;
 		}
+
+        /// <summary>
+        /// Tries to get the value of a variable
+        /// </summary>
+        /// <param name="var">The string of a variable</param>
+        /// <returns>The value or -1 for no value</returns>
+        public static int TryGetValue(string var)
+        {
+            IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+            DependentVariable depVar = Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+
+            if (indVar != null)
+            {
+                if (indVar.Value) return 1;
+                else return 0;
+            }
+            else if (depVar != null)
+            {
+                if (depVar.Value) return 1;
+                else return 0;
+            }
+            else return -1; // If variable doesn't exist
+        }
 	    
 
 	    #endregion
