@@ -28,10 +28,10 @@ namespace VisiBoole.ParsingEngine.Statements
         {
             try
             {
-
+                /*
                 Regex regexLeft = new Regex(@"^(([a-zA-Z]+\[[0-9]+\.\.[0-9]+\])|([a-zA-Z]+\[[0-9]+\.[0-9]+\.[0-9]+\]))", RegexOptions.None); // Get left side
                 string leftSide = regexLeft.Match(Text).Value; // Left side of equal sign
-                List<string> leftVars = Expand(leftSide); // Expand left side to get all left variables
+                List<string> leftVars = ExpandVariables(leftSide); // Expand left side to get all left variables
 
                 if (HexPattern.Match(Text).Success)
                 {
@@ -78,6 +78,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
                     // Assign Loop
                 }
+                */
             }
             catch (Exception ex)
             {

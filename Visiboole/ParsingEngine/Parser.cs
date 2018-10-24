@@ -173,7 +173,6 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-
                     // check for a module declaration statement
                     match = ModuleDeclarationStmt.Pattern.Match(nextLine);
 					if (flag == false && match.Success)
@@ -199,7 +198,8 @@ namespace VisiBoole.ParsingEngine
                     match = ConcatStmt.Pattern.Match(nextLine);
                     if (match.Success)
                     {
-                        stmtList.Add(new ConcatStmt(postLnNum, nextLine));
+                        ConcatStmt conact = new ConcatStmt(postLnNum, nextLine);
+                        foreach (BooleanAssignmentStmt b in conact.Concats) stmtList.Add(b);
                         flag = true;
                         preLnNum++;
                         postLnNum++;

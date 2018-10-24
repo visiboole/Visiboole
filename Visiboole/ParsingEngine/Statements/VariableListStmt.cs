@@ -13,10 +13,14 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// The identifying pattern that can be used to identify and extract this statement from raw text
         /// </summary>
-        //public static Regex Pattern { get; } = new Regex(@"^((\*?\w{1,20}) ?)$");
-        public static Regex Pattern { get; } = new Regex(@"^\0*?(\w ?)*;$");
-        public static Regex Pattern2 { get; } = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
-        //string match = regex.Match(content).Value;
+        public static Regex Pattern { get; } = new Regex
+            (@"^(" + regexVariable + @"|" + regexArrayIndexVariable + @")"
+                + @"(\s*(" + regexVariable + @"|" + regexArrayIndexVariable + @"))*\;$");
+
+        public static Regex Pattern2 { get; } = new Regex
+            (@"^("
+                + regexArrayVariables + @"|" + regexStepArrayVariables + @")"
+                + @"(\s*(" + regexArrayVariables + @"|" + regexStepArrayVariables + @"))*\;$");
 
         /// <summary>
         /// Constructs an instance of VariableListStmt
@@ -149,23 +153,6 @@ namespace VisiBoole.ParsingEngine.Statements
             {
 
             }
-
-            /*while (match.Success)
-			{
-				IndependentVariable iv = Database.TryGetVariable<IndependentVariable>(match.Value) as IndependentVariable;
-				string mval = match.Value;
-				if (iv == null)
-				{
-					// Declare the variable as 'true' if preceded by an asterisk '*'
-					iv = new IndependentVariable(mval.IndexOf('*') == 0 ? mval.Substring(1) : mval, mval.IndexOf('*') == 0);
-					Database.AddVariable<IndependentVariable>(iv);
-				}
-                // add each discrete unit to our list of object code output
-				Output.Add(iv);
-				match = match.NextMatch();
-			}
-            LineFeed lf = new LineFeed();
-            Output.Add(lf);*/
 		}
 	}
 }
