@@ -67,10 +67,12 @@ namespace VisiBoole.ParsingEngine.Statements
                     DependentVariable depVar = Database.TryGetVariable<DependentVariable>(v) as DependentVariable;
                     if (indVar != null)
                     {
+                        //Database.SetValue(v, val);
                         Output.Add(indVar);
                     }
                     else if (depVar != null)
                     {
+                        //Database.SetValue(v, val);
                         Output.Add(depVar);
                     }
                     else

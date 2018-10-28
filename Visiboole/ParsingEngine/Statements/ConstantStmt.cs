@@ -81,15 +81,10 @@ namespace VisiBoole.ParsingEngine.Statements
             string line = "";
             foreach (string var in leftVars)
             {
-                IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                DependentVariable depVar = Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
-                if (indVar != null)
+                int value = Database.TryGetValue(var);
+                if (value != -1)
                 {
-                    indVar.Value = rightValues[leftVars.IndexOf(var)] == 1;
-                }
-                else if (depVar != null)
-                {
-                    depVar.Value = rightValues[leftVars.IndexOf(var)] == 1;
+                    //Database.SetValue(var, rightValues[leftVars.IndexOf(var)] == 1);
                 }
                 else
                 {
