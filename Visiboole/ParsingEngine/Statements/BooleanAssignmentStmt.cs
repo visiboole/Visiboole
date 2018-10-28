@@ -296,7 +296,5 @@ namespace VisiBoole.ParsingEngine.Statements
             LineFeed lf = new LineFeed();
             Output.Add(lf);
         }
-
     }
-
 }

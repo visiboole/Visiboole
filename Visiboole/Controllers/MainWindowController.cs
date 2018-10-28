@@ -41,6 +41,15 @@ namespace VisiBoole.Controllers
 		}
 
         /// <summary>
+        /// Gets the display of the main window.
+        /// </summary>
+        /// <returns>The display</returns>
+        public IDisplay GetDisplay()
+        {
+            return displayController.CurrentDisplay;
+        }
+
+        /// <summary>
         /// Set theme of SubDesigns
         /// </summary>
         public void SetTheme()
@@ -215,9 +224,9 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Performs a dirty check and confirms application exit with the user
         /// </summary>
-        public void ExitApplication()
+        public bool ExitApplication()
 		{
-			view.ConfirmExit(designController.CheckUnsavedChanges());
+			return view.ConfirmExit(designController.CheckUnsavedChanges());
 		}
 	}
 }

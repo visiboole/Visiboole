@@ -34,25 +34,6 @@ namespace VisiBoole.ParsingEngine
                 }
                 foreach (Statement stmt in stmtList)
                 {
-                    int openCounter = 0;
-                    int closeCounter = 0;
-                    string holder = stmt.Text;
-                    while (holder.Contains("("))
-                    {
-                        openCounter++;
-                        holder = holder.Remove(holder.IndexOf("("), 1);
-                    }
-                    while (holder.Contains(")"))
-                    {
-                        closeCounter++;
-                        holder = holder.Remove(holder.IndexOf(")"), 1);
-                    }
-
-                    if (!(openCounter == closeCounter))
-                    { 
-                        MessageBox.Show("Parentheses do not match on line: " + (stmtList.IndexOf(stmt) + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return null;
-                    }
                     stmt.Parse();
                 }
                 List<IObjectCodeElement> output = new List<IObjectCodeElement>();
@@ -138,9 +119,9 @@ namespace VisiBoole.ParsingEngine
 						continue;
 					}
 
-					// check for a comment
-					Match match = CommentStmt.Pattern.Match(nextLine);
-					if (match.Success)
+                    // check for a comment
+                    bool success = CommentStmt.Pattern.Match(nextLine).Success;
+					if (success)
 					{
 						stmtList.Add(new CommentStmt(postLnNum, nextLine));
 						preLnNum++;
@@ -148,19 +129,40 @@ namespace VisiBoole.ParsingEngine
 						continue;
 					}
 
-                    // collate statement if end of statement not detected
-                    //while (!nextLine.Contains(";"))
-                    //{
-                    //	string substr = reader.ReadLine();
-                    //	if (substr == null)
-                    //		throw new MissingEndOfStatementException("Expected end of statement. Missing ';' character?", preLnNum);
-                    //	preLnNum++;
-                    //	nextLine += substr;
-                    //}
-
-                    if (!nextLine.Contains(";") && nextLine.Contains("="))
+                    if (!nextLine.Contains(";"))
                     {
-                        MessageBox.Show("You are missing a ';' at the end of line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Missing ';'. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
+                    }
+
+                    /* Check for matching (), [] and {} */
+                    Stack<char> stack = new Stack<char>();
+                    foreach (char c in nextLine)
+                    {
+                        if (c == '(' || c == '[' || c == '{')
+                        {
+                            stack.Push(c);
+                        }
+                        if (c == ')' || c == ']' || c == '}')
+                        {
+                            if (stack.Count > 0)
+                            {
+                                char c2 = stack.Peek();
+                                if ((c == ')' && c2 == '(') || (c == ']' && c2 == '[') || (c == '}' && c2 == '{'))
+                                {
+                                    stack.Pop();
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show("Unmatching '" + c + "'. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return null;
+                            }
+                        }
+                    }
+                    if (stack.Count > 0)
+                    {
+                        MessageBox.Show("Unmatching '" + stack.Peek() + "'. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
                     }
 
@@ -173,10 +175,9 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-
                     // check for a module declaration statement
-                    match = ModuleDeclarationStmt.Pattern.Match(nextLine);
-					if (flag == false && match.Success)
+                    success = ModuleDeclarationStmt.Pattern.Match(nextLine).Success;
+                    if (flag == false && success)
 					{
 						stmtList.Add(new ModuleDeclarationStmt(postLnNum, nextLine));
 						flag = true;
@@ -186,7 +187,7 @@ namespace VisiBoole.ParsingEngine
 					}
 
                     // check for a format specifier statement
-                    bool success = FormatSpecifierStmt.Pattern1.Match(nextLine).Success || FormatSpecifierStmt.Pattern2.Match(nextLine).Success;
+                    success = FormatSpecifierStmt.Pattern.Match(nextLine).Success;
                     if (success)
                     {
                         stmtList.Add(new FormatSpecifierStmt(postLnNum, nextLine));
@@ -196,10 +197,15 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    match = ConcatStmt.Pattern.Match(nextLine);
-                    if (match.Success)
+                    success = ConcatStmt.Pattern.Match(nextLine).Success;
+                    if (success)
                     {
-                        stmtList.Add(new ConcatStmt(postLnNum, nextLine));
+                        ConcatStmt concat = new ConcatStmt(postLnNum, nextLine);
+                        if (concat.Concats.Count > 0)
+                        {
+                            foreach (BooleanAssignmentStmt b in concat.Concats) stmtList.Add(b);
+                        }
+                        else return null;
                         flag = true;
                         preLnNum++;
                         postLnNum++;
@@ -207,9 +213,8 @@ namespace VisiBoole.ParsingEngine
                     }
 
                     // check for a variable list statement
-                    match = VariableListStmt.Pattern.Match(nextLine);
-                    Match match2 = VariableListStmt.Pattern2.Match(nextLine);
-					if (match.Success || match2.Success || nextLine.Contains("*"))
+                    success = VariableListStmt.Pattern.Match(nextLine).Success;
+                    if (success)
 					{
 						stmtList.Add(new VariableListStmt(postLnNum, nextLine));
 						flag = true;
@@ -219,8 +224,8 @@ namespace VisiBoole.ParsingEngine
 					}
 
 					// check for a submodule instantiation statement
-					match = SubmoduleInstantiationStmt.Pattern.Match(nextLine);
-					if (match.Success)
+                    success = SubmoduleInstantiationStmt.Pattern.Match(nextLine).Success;
+					if (success)
 					{
 						stmtList.Add(new SubmoduleInstantiationStmt(postLnNum, nextLine));
 						flag = true;
@@ -228,6 +233,21 @@ namespace VisiBoole.ParsingEngine
 						postLnNum++;
 						continue;
 					}
+
+                    success = ConstantStmt.BinPattern.Match(nextLine).Success || ConstantStmt.DecPattern.Match(nextLine).Success || ConstantStmt.HexPattern.Match(nextLine).Success;
+                    if (success)
+                    {
+                        ConstantStmt stmt = new ConstantStmt(postLnNum, nextLine);
+                        if (stmt.VariableStmt != null)
+                        {
+                            stmtList.Add(stmt.VariableStmt);
+                        }
+                        else return null;
+                        flag = true;
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
 
                     // check for a boolean assignment statement
                     if (!nextLine.Contains("<") || nextLine.Contains("^"))
@@ -241,8 +261,8 @@ namespace VisiBoole.ParsingEngine
 
                     // if we have reached this point with no match then there is a user syntax error
                     // TODO: add more validation checks for augmented error-checking granularity
-                    match = ModuleDeclarationStmt.Pattern.Match(nextLine);
-					if (flag == true && match.Success)
+                    success = ModuleDeclarationStmt.Pattern.Match(nextLine).Success;
+					if (flag == true && success)
 						// module declaration must be on the first line, throw an exception
 						throw new ModuleDeclarationPlacementException("Module declarations must be at the top of the file. Did you mean to use a submodule declaration instead?", preLnNum);
 					// we are past specific error checks - throw a general exception stating the given statement is unrecognized

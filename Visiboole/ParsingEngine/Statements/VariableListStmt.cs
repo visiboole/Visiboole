@@ -13,10 +13,9 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// The identifying pattern that can be used to identify and extract this statement from raw text
         /// </summary>
-        //public static Regex Pattern { get; } = new Regex(@"^((\*?\w{1,20}) ?)$");
-        public static Regex Pattern { get; } = new Regex(@"^\0*?(\w ?)*;$");
-        public static Regex Pattern2 { get; } = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
-        //string match = regex.Match(content).Value;
+        public static Regex Pattern { get; } = new Regex
+            (@"^(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayIndexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")"
+                + @"(\s*(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayIndexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @"))*\;$");
 
         /// <summary>
         /// Constructs an instance of VariableListStmt
@@ -33,139 +32,60 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            // add each variable to our database
-			string input = Text;
-			Regex regex = new Regex(@"\*?\w{1,20}");
-			Match match = regex.Match(input);
+            /* Remove semicolon */
+            Regex regex = new Regex(@"[;]", RegexOptions.None);
+            string content = regex.Replace(Text, string.Empty);
 
-            Regex regex2 = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
-            Match match2 = regex.Match(input);
+            /* Split variables by whitespace */
+            regex = new Regex(@"\s+", RegexOptions.None);
+            string[] contents = regex.Split(content);
 
-            if(match2.Success && input.Contains("[") && input.Contains("]"))
+            /* Output all variables */
+            foreach (string c in contents)
             {
-                List<int> valueList = new List<int>();
-                Regex full = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
-                string fullMatch = full.Match(input).Value;
-                regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
-                string value = regex.Match(input).Value;
-                regex = new Regex(@"\d");
-                MatchCollection matches = regex.Matches(fullMatch);
-                int beg = Convert.ToInt32(matches[0].Value);
-                int end = Convert.ToInt32(matches[1].Value);
+                List<string> vars = new List<string>(); // List of variables
 
-                List<int> order = new List<int>();
-
-                if (beg < end)
+                /* Expand variable in necessary */
+                regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
+                if (regex.Match(c).Success)
                 {
-                    for (int i = beg; i <= end; i++)
+                    List<string> variables = ExpandVariables(c);
+                    foreach (string var in variables)
                     {
-                        order.Add(i);
+                        vars.Add(var);
                     }
                 }
-                else // beg > end
-                {
-                    for (int i = beg; i >= end; i--)
-                    {
-                        order.Add(i);
-                    }
-                }
+                else vars.Add(c);
 
-                // add each variable to our output list of object code
-                foreach (int i in order)
+                /* Add output of each variable */
+                foreach (string var in vars)
                 {
-                    string key = string.Concat(value, i);
-                    IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(key) as IndependentVariable;
-                    DependentVariable depVar = Database.TryGetVariable<DependentVariable>(key) as DependentVariable;
+                    bool val = (var[0] == '*') ? true : false;
+                    string v = (var[0] == '*') ? var.Substring(1) : var;
+
+                    IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(v) as IndependentVariable;
+                    DependentVariable depVar = Database.TryGetVariable<DependentVariable>(v) as DependentVariable;
                     if (indVar != null)
                     {
-                        if (indVar.Value)
-                        {
-                            valueList.Add(1);
-                        }
-                        else
-                        {
-                            valueList.Add(0);
-                        }
+                        //Database.SetValue(v, val);
                         Output.Add(indVar);
                     }
                     else if (depVar != null)
                     {
-                        if (depVar.Value)
-                        {
-                            valueList.Add(1);
-                        }
-                        else
-                        {
-                            valueList.Add(0);
-                        }
+                        //Database.SetValue(v, val);
                         Output.Add(depVar);
                     }
                     else
                     {
-                        IndependentVariable newVar = new IndependentVariable(key, false);
+                        IndependentVariable newVar = new IndependentVariable(v, val);
                         Database.AddVariable<IndependentVariable>(newVar);
-                        valueList.Add(0);
                         Output.Add(newVar);
                     }
                 }
-                LineFeed lf = new LineFeed();
-                Output.Add(lf);
-            }
-            else if (match.Success)
-            {
-                //used to specify variables name and value
-                string variableName;
-                bool variableValue;
-
-                while (match.Success)
-                {
-                    if (match.Value.Contains("*"))
-                    {
-                        variableName = match.Value.Substring(1);
-                        variableValue = true;
-                    }
-                    else
-                    {
-                        variableName = match.Value;
-                        variableValue = false;
-                    }
-                    IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
-                    if (indVar != null)
-                    {
-                        Output.Add(indVar);
-                    }
-                    else
-                    {
-                        indVar = new IndependentVariable(variableName, variableValue);
-                        Database.AddVariable<IndependentVariable>(indVar);
-                        Output.Add(indVar);
-                    }
-                    match = match.NextMatch();
-                }
-                LineFeed lf = new LineFeed();
-                Output.Add(lf);
-            }
-            else
-            {
-
             }
 
-            /*while (match.Success)
-			{
-				IndependentVariable iv = Database.TryGetVariable<IndependentVariable>(match.Value) as IndependentVariable;
-				string mval = match.Value;
-				if (iv == null)
-				{
-					// Declare the variable as 'true' if preceded by an asterisk '*'
-					iv = new IndependentVariable(mval.IndexOf('*') == 0 ? mval.Substring(1) : mval, mval.IndexOf('*') == 0);
-					Database.AddVariable<IndependentVariable>(iv);
-				}
-                // add each discrete unit to our list of object code output
-				Output.Add(iv);
-				match = match.NextMatch();
-			}
             LineFeed lf = new LineFeed();
-            Output.Add(lf);*/
+            Output.Add(lf);
 		}
 	}
 }

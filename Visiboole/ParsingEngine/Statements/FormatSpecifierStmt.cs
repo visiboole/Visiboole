@@ -14,16 +14,11 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class FormatSpecifierStmt : Statement
 	{
         /// <summary>
-        /// The identifying pattern that can be used to identify and extract this statement from raw text
-        /// This pattern is the second identifying pattern and is of a form similar to: A[m.step.n]
+        /// Format Specifier Pattern 
         /// </summary>
-        public static Regex Pattern1 { get; } = new Regex(@"^%[ubhd]{[a-zA-z0-9_]{1,20}\[\d\.\.\d\]};$");
-
-	    /// <summary>
-	    /// The identifying pattern that can be used to identify and extract this statement from raw text.
-	    /// This pattern is the second identifying pattern and is of a form similar to: A(m) A(m-1*step) A(m-2*step) An
-	    /// </summary>
-        public static Regex Pattern2 { get; } = new Regex(@"^%[ubhd]{([a-zA-Z0-9_]{1,20} ?)+};$");
+        public static Regex Pattern { get; } = new Regex
+            (@"^\%[ubhdUBHD]\{(" + Globals.regexVariable + @"|" + Globals.regexArrayIndexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")"
+            + @"(\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayIndexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\}\;$");
 
         /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
@@ -40,200 +35,59 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-		    try
-		    {
-		        // obtain the format specifier token
-		        Regex regex = new Regex(@"([ubhd])", RegexOptions.None);
-		        string format = regex.Match(Text).Value;
+            /* Get format type */
+            Regex regex = new Regex(@"^\%[ubhdUBHD]", RegexOptions.None);
+            string format = regex.Match(Text).Value.Substring(1);
 
-                // used to pass into our functions for calculation
-                List<int> valueList = new List<int>();
+            /* Remove syntax */
+            regex = new Regex(@"[{};]", RegexOptions.None);
+            string content = regex.Replace(Text.Substring(2), string.Empty);
 
-                // strip the surrounding specifier and brackets to get the content
-                string content = regex.Replace(Text, string.Empty, 1);
-		        regex = new Regex(@"[%{};]", RegexOptions.None);
-		        content = regex.Replace(content, string.Empty);
+            /* Split variables by whitespace */
+            regex = new Regex(@"\s+", RegexOptions.None);
+            string[] contents = regex.Split(content);
 
-		        // obtain the variables within the content. First search for pattern A[N..n]
-		        regex = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
-		        string match = regex.Match(content).Value; // E[3..0]
-		        if (!string.IsNullOrEmpty(match))
-		        {
-		            // first pattern found. Expand the expression to extract the variables
-		            regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
-		            string var = regex.Match(match).Value; // E
-		            regex = new Regex(@"\d");
-		            MatchCollection matches = regex.Matches(match);
-		            int beg = Convert.ToInt32(matches[0].Value);
-		            int end = Convert.ToInt32(matches[1].Value);
+            /* Get output values for each variable */
+            List<int> valueList = new List<int>(); // List of output values
+            foreach (string c in contents)
+            {
+                List<string> vars = new List<string>(); // List of variables
 
-                    List<int> order = new List<int>();
-
-                    if (beg < end)
+                /* Expand variable if necessary */
+                regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
+                if (regex.Match(c).Success)
+                {
+                    List<string> variables = ExpandVariables(c);
+                    foreach (string var in variables)
                     {
-                        for(int i=beg; i <= end; i++)
-                        {
-                            order.Add(i);
-                        }
+                        vars.Add(var);
                     }
-                    else // beg > end
-                    {
-                        for(int i=beg; i >= end; i--)
-                        {
-                            order.Add(i);
-                        }
-                    }
-
-                    List<string> chars = new List<string>();
-                    if (content.Contains("="))
-                    {
-                        string rhs = content.Substring(content.IndexOf("=") + 1);
-                        rhs = rhs.Replace(" ", "");
-                        regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
-                        MatchCollection vars = regex.Matches(rhs); // Gets the operator and right hand side of the content string
-                        string[] parts = new string[vars.Count];
-                        for (int i = 0; i < vars.Count; i++) parts[i] = vars[i].Value;
-                        if (parts.Length != ((beg - end) + 1)) throw new FormatSpecifierSyntaxException();
-                        foreach (string s in parts) chars.Add(s);
-                    }
-
-                    // add each variable to our output list of object code and assign values if needed
-                    foreach (int i in order)
-		            {
-		                string key = string.Concat(var, i);
-                        int value = Database.TryGetValue(key);
-                        if (value != -1)
-                        {
-                            if (chars.Count == 0) valueList.Add(value);
-                            else
-                            {
-                                // Set value
-                                value = Database.TryGetValue(chars[chars.Count - i - 1]);
-
-                                if (value != 1)
-                                {
-                                    Database.SetValue(key, (value == 1));
-                                    valueList.Add(value);
-                                }
-                                else
-                                {
-                                    // Create new variable
-                                    IndependentVariable indVar = new IndependentVariable(chars[chars.Count - i - 1], false);
-                                    Database.AddVariable<IndependentVariable>(indVar);
-                                    Database.SetValue(key, false);
-                                    valueList.Add(0);
-                                }
-
-                                //Database.AddExpression(key, Text);
-                                Database.CreateDependenciesList(key);
-                                Database.AddDependencies(key, chars[chars.Count - i - 1]);
-                            }
-                        }
-                        else
-                        {
-                            // Create new variable
-                            if (chars.Count == 0)
-                            {
-                                IndependentVariable indVar = new IndependentVariable(key, false);
-                                Database.AddVariable<IndependentVariable>(indVar);
-                                valueList.Add(0);
-                            }
-                            else
-                            {
-                                value = Database.TryGetValue(chars[chars.Count - i - 1]);
-
-                                if (value != 1)
-                                {
-                                    DependentVariable depVar = new DependentVariable(key, (value == 1));
-                                    Database.AddVariable<DependentVariable>(depVar);
-                                    valueList.Add(value);
-                                }
-                                else
-                                {
-                                    // Create new variables
-                                    IndependentVariable indVar = new IndependentVariable(chars[chars.Count - i - 1], false);
-                                    DependentVariable depVar = new DependentVariable(key, false);
-                                    Database.AddVariable<IndependentVariable>(indVar);
-                                    Database.AddVariable<DependentVariable>(depVar);
-                                    valueList.Add(0);
-                                }
-
-                                //Database.AddExpression(key, Text);
-                                Database.CreateDependenciesList(key);
-                                Database.AddDependencies(key, chars[chars.Count - i - 1]);
-                            }
-                        }
-		            }
-                    string final = Calculate(format, valueList);
-                    Operator val = new Operator(final);
-                    Output.Add(val);
-                    LineFeed lf = new LineFeed();
-                    Output.Add(lf);
                 }
-		        else
-		        {
-		            // first pattern was not found. Search the content for the second pattern: A1 A2 An
-		            regex = new Regex(@"[a-zA-Z0-9_]{1,20}", RegexOptions.None);
-		            MatchCollection matches = regex.Matches(content);
-		            foreach (Match m in matches)
-		            {
-		                // add each variable to our output list of object code
-		                string key = m.Value;
-		                IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(key) as IndependentVariable;
-                        DependentVariable depVar = Database.TryGetVariable<DependentVariable>(key) as DependentVariable;
-                        var x = Database.AllVars;
-		                if (indVar != null)
-		                {
-                            if(indVar.Value)
-                            {
-                                valueList.Add(1);
-                            }
-                            else
-                            {
-                                valueList.Add(0);
-                            }
-                            //add value to list of ints
-		                    //Output.Add(indVar);
-		                }
-                        else if (depVar != null)
-                        {
-                            if (depVar.Value)
-                            {
-                                valueList.Add(1);
-                            }
-                            else
-                            {
-                                valueList.Add(0);
-                            }
-                            //add value to list of ints
-                            //Output.Add(depVar);
-                        }
-		                else
-		                {
-                            IndependentVariable newVar = new IndependentVariable(key, false);
-                            Database.AddVariable<IndependentVariable>(newVar);
-                            valueList.Add(0);
-		                }
-		            }
-                    string final = Calculate(format, valueList);
-                    Operator val = new Operator(final);
-                    Output.Add(val);
-                    LineFeed lf = new LineFeed();
-                    Output.Add(lf);
+                else vars.Add(c);
+
+                /* Add value of each variable to output values */
+                foreach (string var in vars)
+                {
+                    int value = Database.TryGetValue(var);
+                    if (value != -1)
+                    {
+                        valueList.Add(value);
+                    }
+                    else
+                    {
+                        IndependentVariable newVar = new IndependentVariable(var, false);
+                        Database.AddVariable<IndependentVariable>(newVar);
+                        valueList.Add(0);
+                    }
                 }
+            }
 
-		        // if no values have been gathered, then there was a user syntax error
-		        if (Output.Count == 0)
-		        {
-		            throw new FormatSpecifierSyntaxException("Syntax error. Variables in Variable list statement not recognized.", this);
-		        }
-		    }
-		    catch (Exception ex)
-		    {
-		        // TODO: proper exception handling
-		        Globals.DisplayException(ex);
-		    }
-
+            /* Calculate output */
+            string final = Calculate(format, valueList);
+            Operator val = new Operator(final);
+            Output.Add(val);
+            LineFeed lf = new LineFeed();
+            Output.Add(lf);
         }
 
         /// <summary>

@@ -16,7 +16,8 @@ namespace VisiBoole
 		public enum DisplayType
 		{
 			EDIT,
-			RUN
+			RUN,
+            NONE
 		}
 
 		/// <summary>
@@ -29,10 +30,27 @@ namespace VisiBoole
 			MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 
+        /// <summary>
+        /// Tab Control
+        /// </summary>
         public static TabControl tabControl = null;
 
+        /// <summary>
+        /// Theme
+        /// </summary>
         public static string Theme = "dark";
 
+        /// <summary>
+        /// Font size
+        /// </summary>
         public static float FontSize = 12;
+
+        /// <summary>
+        /// Regex Expressions for all type of variables
+        /// </summary>
+        public static readonly string regexVariable = @"([a-zA-Z0-9]+)";
+        public static readonly string regexArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.\.[0-9]+\])";
+        public static readonly string regexArrayIndexVariable = @"([a-zA-Z0-9]+\[[0-9]+\])";
+        public static readonly string regexStepArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.[0-9]+\.[0-9]+\])";
     }
 }

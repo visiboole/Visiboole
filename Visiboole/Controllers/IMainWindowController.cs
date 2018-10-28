@@ -1,10 +1,18 @@
-﻿namespace VisiBoole.Controllers
+﻿using VisiBoole.Views;
+
+namespace VisiBoole.Controllers
 {
 	/// <summary>
 	/// Exposes methods on the controller for the MainWindow
 	/// </summary>
 	public interface IMainWindowController
 	{
+        /// <summary>
+        /// Gets the display of the main window.
+        /// </summary>
+        /// <returns>The display</returns>
+        IDisplay GetDisplay();
+
         /// <summary>
         /// Set theme of SubDesigns
         /// </summary>
@@ -69,6 +77,7 @@
         /// <summary>
         /// Performs a dirty check and confirms application exit with the user
         /// </summary>
-        void ExitApplication();
+        /// <returns>Indicates whether the user wants to close</returns>
+        bool ExitApplication();
     }
 }

@@ -49,6 +49,7 @@ namespace VisiBoole.Views
         /// Confirms exit with the user if the application is dirty
         /// </summary>
         /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
-        void ConfirmExit(bool isDirty);
+        /// <returns>Indicates whether the user wants to close</returns>
+        bool ConfirmExit(bool isDirty);
     }
 }
