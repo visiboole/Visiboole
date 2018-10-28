@@ -23,14 +23,6 @@ namespace VisiBoole.ParsingEngine.Statements
 		public string Text { get; set; }
 
         /// <summary>
-        /// Regex Expressions for all type of variables
-        /// </summary>
-        public static string regexVariable = @"([a-zA-Z0-9]+)";
-        public static string regexArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.\.[0-9]+\])";
-        public static string regexArrayIndexVariable = @"([a-zA-Z0-9]+\[[0-9]+\])";
-        public static string regexStepArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.[0-9]+\.[0-9]+\])";
-
-        /// <summary>
         /// A list of discrete output elements that comprise this statement
         /// </summary>
 		public List<IObjectCodeElement> Output { get; set; } = new List<IObjectCodeElement>();
@@ -60,7 +52,7 @@ namespace VisiBoole.ParsingEngine.Statements
         protected List<string> ExpandVariables(string exp)
         {
             /* Get variable */
-            Regex regex = new Regex(@"^[a-zA-Z0-9]+", RegexOptions.None);
+            Regex regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
             string var = regex.Match(exp).Value;
 
             /* Get everything inside brackets */
