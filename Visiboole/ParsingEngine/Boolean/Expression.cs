@@ -38,6 +38,7 @@ namespace VisiBoole.ParsingEngine.Boolean
             }
         }
 
+        #region Separating Expressions and Variables
         /// <summary>
         /// Parses out the content contained within the innermost parenthesis of the expression
         /// </summary>
@@ -125,7 +126,9 @@ namespace VisiBoole.ParsingEngine.Boolean
                 return indVariable.Value;
             }
         }
+        #endregion
 
+        #region Basic Solve
         /// <summary>
         /// Solves a boolean expression that has been simplified to only ands, ors, and nots
         /// </summary>
@@ -480,6 +483,7 @@ namespace VisiBoole.ParsingEngine.Boolean
             }
             return 0;
         }
+        #endregion
     }
 
 }

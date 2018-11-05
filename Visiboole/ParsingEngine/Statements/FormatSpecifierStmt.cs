@@ -114,6 +114,7 @@ namespace VisiBoole.ParsingEngine.Statements
             }
         }
 
+        #region Conversion to formatted string
         /// <summary>
         /// Converts the given list to its string binary equivalent
         /// </summary>
@@ -171,5 +172,6 @@ namespace VisiBoole.ParsingEngine.Statements
             }
             return ToUnsigned(binary);
         }
+        #endregion
     }
 }

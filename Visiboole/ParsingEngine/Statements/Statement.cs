@@ -12,10 +12,11 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public abstract class Statement
 	{
+        #region Initialization of Line numbers
         /// <summary>
         /// The line number that this statement is located on within edit mode - not simulation mode
         /// </summary>
-		public int LineNumber { get; set; }
+        public int LineNumber { get; set; }
 
         /// <summary>
         /// The raw, unparsed text of this statement
@@ -37,12 +38,13 @@ namespace VisiBoole.ParsingEngine.Statements
 			LineNumber = lnNum;
 			Text = txt;
 		}
+        #endregion
 
         /// <summary>
         /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
         /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
         /// </summary>
-		public abstract void Parse();
+        public abstract void Parse();
 
         /// <summary>
         /// Expands variables

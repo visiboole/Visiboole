@@ -11,6 +11,8 @@ namespace VisiBoole.ParsingEngine.Statements
 {
     public class ConstantStmt : Statement
     {
+
+        #region Patterns for Constants
         /// <summary>
         /// Hex Constant Pattern
         /// </summary>
@@ -25,6 +27,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// Binary Constant Pattern
         /// </summary>
         public static Regex BinPattern { get; } = new Regex(@"^(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[bB][0-1]+\;$");
+        #endregion;
 
         public VariableListStmt VariableStmt;
 
@@ -46,6 +49,7 @@ namespace VisiBoole.ParsingEngine.Statements
             char[] charBinary; // Each binary from right side
             int[] rightValues; // Converted values form right side
 
+            #region Matching or failure case
             if (HexPattern.Match(Text).Success)
             {
                 Regex regexRight = new Regex(@"[hH][a-fA-F0-9]+", RegexOptions.None);
@@ -75,6 +79,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 MessageBox.Show("Number of values is not equal to the number of variables. Line: " + (LineNumber + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            #endregion
 
             rightValues = Array.ConvertAll(charBinary, c => (int)Char.GetNumericValue(c));
 

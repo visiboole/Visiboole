@@ -135,6 +135,7 @@ namespace VisiBoole.ParsingEngine
                         return null;
                     }
 
+                    #region Matching Parenthesis and others
                     /* Check for matching (), [] and {} */
                     Stack<char> stack = new Stack<char>();
                     foreach (char c in nextLine)
@@ -160,12 +161,15 @@ namespace VisiBoole.ParsingEngine
                             }
                         }
                     }
+                    #endregion
+
                     if (stack.Count > 0)
                     {
                         MessageBox.Show("Unmatching '" + stack.Peek() + "'. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
                     }
 
+                    #region Matching for patterns
                     if (nextLine.Contains(".d") || nextLine.Contains("<"))
                     {
                         stmtList.Add(new DffClockStmt(postLnNum, nextLine, tick, init));
@@ -258,6 +262,7 @@ namespace VisiBoole.ParsingEngine
                         postLnNum++;
                         continue;
                     }
+                    #endregion
 
                     // if we have reached this point with no match then there is a user syntax error
                     // TODO: add more validation checks for augmented error-checking granularity
