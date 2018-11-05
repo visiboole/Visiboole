@@ -24,6 +24,9 @@ namespace VisiBoole.Views
 		{
 			InitializeComponent();
             Globals.tabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
+            Globals.tabControl.SelectedIndexChanged += (sender, e) => {
+                UpdateControls(controller.GetDisplay());
+            };
         }
 
 		/// <summary>
@@ -43,7 +46,7 @@ namespace VisiBoole.Views
         /// Update buttons and icons based on the display
         /// </summary>
         /// <param name="current"></param>
-        private void UpdateControls(IDisplay display)
+        public void UpdateControls(IDisplay display)
         {
             openIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
             openToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
@@ -67,10 +70,12 @@ namespace VisiBoole.Views
                 controller.SetFontSize();
             }
 
-            if (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0)
+            if (display.TypeOfDisplay == Globals.DisplayType.EDIT && Globals.tabControl.SelectedTab != null)
             {
                 undoToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().editHistory.Count > 0;
+                undoToolStripMenuItem1.Enabled = Globals.tabControl.SelectedTab.SubDesign().editHistory.Count > 0;
                 redoToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().undoHistory.Count > 0;
+                redoToolStripMenuItem1.Enabled = Globals.tabControl.SelectedTab.SubDesign().undoHistory.Count > 0;
                 cutToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().SelectedText.Length > 0;
                 copyToolStripMenuItem.Enabled = Globals.tabControl.SelectedTab.SubDesign().SelectedText.Length > 0;
                 pasteToolStripMenuItem.Enabled = Clipboard.ContainsText();
@@ -78,7 +83,9 @@ namespace VisiBoole.Views
             else
             {
                 undoToolStripMenuItem.Enabled = false;
+                undoToolStripMenuItem1.Enabled = false;
                 redoToolStripMenuItem.Enabled = false;
+                redoToolStripMenuItem1.Enabled = false;
                 copyToolStripMenuItem.Enabled = false;
                 cutToolStripMenuItem.Enabled = false;
                 pasteToolStripMenuItem.Enabled = false;
@@ -229,27 +236,43 @@ namespace VisiBoole.Views
         /// Confirms exit with the user if the application is dirty
         /// </summary>
         /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
-        public void ConfirmExit(bool isDirty)
+        /// <returns>Indicates whether the user wants to close</returns>
+        public bool ConfirmExit(bool isDirty)
 		{
 			if (isDirty == true)
 			{
 				System.Media.SystemSounds.Asterisk.Play();
 				DialogResult response = MessageBox.Show("You have made changes that have not been saved - do you wish to continue?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
 
-				if (response == DialogResult.Yes)
-				{
-					Application.Exit();
-				}
+                if (response == DialogResult.Yes)
+                {
+                    return true;
+                }
+                else return false;
 			}
 			else
 			{
-				Application.Exit();
+                return true;
 			}
 		}
 
         #endregion
 
         #region "Event Handlers"
+
+        /// <summary>
+        /// Handles the event that occurs when a key is pressed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (controller.GetDisplay() is DisplayEdit)
+            {
+                UpdateControls(controller.GetDisplay());
+            }
+                
+        }
 
         /// <summary>
         /// Handles the event that occurs when the light theme is selected
@@ -425,6 +448,7 @@ namespace VisiBoole.Views
         private void UndoTextEvent(object sender, EventArgs e)
         {
             Globals.tabControl.SelectedTab.SubDesign().UndoTextEvent(sender, e);
+            UpdateControls(controller.GetDisplay());
         }
 
         /// <summary>
@@ -435,6 +459,7 @@ namespace VisiBoole.Views
         private void RedoTextEvent(object sender, EventArgs e)
         {
             Globals.tabControl.SelectedTab.SubDesign().RedoTextEvent(sender, e);
+            UpdateControls(controller.GetDisplay());
         }
 
         /// <summary>
@@ -537,9 +562,31 @@ namespace VisiBoole.Views
 		/// <param name="e"></param>
 		private void ExitApplicationEvent(object sender, EventArgs e)
 		{
-			controller.ExitApplication();
+			if (controller.ExitApplication()) Application.Exit();
 		}
 
+        /// <summary>
+        /// Handles the event when the form is closing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                if (controller.ExitApplication()) Application.Exit();
+                else e.Cancel = true;
+            }
+        }
+
         #endregion
+
+        private void MainWindow_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (controller.GetDisplay() is DisplayEdit)
+            {
+                UpdateControls(controller.GetDisplay());
+            }
+        }
     }
 }

@@ -68,6 +68,7 @@ namespace VisiBoole.Views
             // 
             // numericUpDown1
             // 
+            this.numericUpDown1.AutoSize = true;
             this.numericUpDown1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.numericUpDown1.Location = new System.Drawing.Point(150, 1);
             this.numericUpDown1.Maximum = new decimal(new int[] {
@@ -120,6 +121,7 @@ namespace VisiBoole.Views
             this.Size = new System.Drawing.Size(800, 600);
             this.pnlMain.ResumeLayout(false);
             this.pnlOutputControls.ResumeLayout(false);
+            this.pnlOutputControls.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
 

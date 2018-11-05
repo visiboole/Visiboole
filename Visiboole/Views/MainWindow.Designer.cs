@@ -70,6 +70,8 @@ namespace VisiBoole.Views
             this.openIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.saveIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAllIcon = new System.Windows.Forms.ToolStripMenuItem();
+            this.undoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.redoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.editModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -398,6 +400,8 @@ namespace VisiBoole.Views
             this.openIcon,
             this.saveIcon,
             this.saveAllIcon,
+            this.undoToolStripMenuItem1,
+            this.redoToolStripMenuItem1,
             this.runModeToggle,
             this.editModeToggle});
             this.menuStrip2.Location = new System.Drawing.Point(0, 24);
@@ -441,6 +445,24 @@ namespace VisiBoole.Views
             this.saveAllIcon.ToolTipText = "Save All Designs";
             this.saveAllIcon.Click += new System.EventHandler(this.SaveAllFileEvent);
             // 
+            // undoToolStripMenuItem1
+            // 
+            this.undoToolStripMenuItem1.Enabled = false;
+            this.undoToolStripMenuItem1.Image = global::VisiBoole.Properties.Resources.Undo;
+            this.undoToolStripMenuItem1.Name = "undoToolStripMenuItem1";
+            this.undoToolStripMenuItem1.Size = new System.Drawing.Size(28, 20);
+            this.undoToolStripMenuItem1.ToolTipText = "Undo (Ctrl+Z)";
+            this.undoToolStripMenuItem1.Click += new System.EventHandler(this.UndoTextEvent);
+            // 
+            // redoToolStripMenuItem1
+            // 
+            this.redoToolStripMenuItem1.Enabled = false;
+            this.redoToolStripMenuItem1.Image = global::VisiBoole.Properties.Resources.Redo;
+            this.redoToolStripMenuItem1.Name = "redoToolStripMenuItem1";
+            this.redoToolStripMenuItem1.Size = new System.Drawing.Size(28, 20);
+            this.redoToolStripMenuItem1.ToolTipText = "Redo (Ctrl+Y)";
+            this.redoToolStripMenuItem1.Click += new System.EventHandler(this.RedoTextEvent);
+            // 
             // runModeToggle
             // 
             this.runModeToggle.Enabled = false;
@@ -478,6 +500,8 @@ namespace VisiBoole.Views
             this.Name = "MainWindow";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "VisiBoole - Visualizing HDL";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MainWindow_KeyPress);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.MainLayoutPanel.ResumeLayout(false);
@@ -531,5 +555,7 @@ namespace VisiBoole.Views
         private ToolStripMenuItem saveAllIcon;
         private ToolStripMenuItem newIcon;
         private ToolStripMenuItem closeDesignToolStripMenuItem;
+        private ToolStripMenuItem undoToolStripMenuItem1;
+        private ToolStripMenuItem redoToolStripMenuItem1;
     }
 }

@@ -171,14 +171,14 @@
     <None Include="Resources\VisiBooleIcon.ico" />
     <None Include="Resources\Letter V blue.ico" />
     <Content Include="Resources\Close.png" />
-    <None Include="Resources\MultiTick.png" />
     <Content Include="Resources\NewFile.png" />
     <Content Include="Resources\OpenFile.png" />
+    <None Include="Resources\Redo.png" />
     <Content Include="Resources\Run.png" />
     <Content Include="Resources\Save.png" />
     <Content Include="Resources\SaveAll.png" />
     <Content Include="Resources\Stop.png" />
-    <None Include="Resources\Tick.png" />
+    <None Include="Resources\Undo.png" />
     <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>

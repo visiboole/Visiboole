@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.ParsingEngine.ObjectCode;
 
@@ -41,5 +43,48 @@ namespace VisiBoole.ParsingEngine.Statements
         /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
         /// </summary>
 		public abstract void Parse();
-	}
+
+        /// <summary>
+        /// Expands variables
+        /// </summary>
+        /// <param name="exp">Expression to expand</param>
+        /// <returns>A list of all variables</returns>
+        protected List<string> ExpandVariables(string exp)
+        {
+            /* Get variable */
+            Regex regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
+            string var = regex.Match(exp).Value;
+
+            /* Get everything inside brackets */
+            regex = new Regex(@"\[(.*?)\]", RegexOptions.None);
+            string nums = regex.Match(exp).Value;
+
+            /* Remove brackets */
+            regex = new Regex(@"[\[\]]", RegexOptions.None);
+            nums = regex.Replace(nums, string.Empty);
+
+            /* Get num values */
+            regex = new Regex(@"[0-9]+", RegexOptions.None);
+            MatchCollection matches = regex.Matches(nums);
+
+            /* Assign start, step and end from num values */
+            int start = Convert.ToInt32(matches[0].Value);
+            int step = (matches.Count == 2) ? 1 : Convert.ToInt32(matches[1].Value);
+            int end = (matches.Count == 2) ? Convert.ToInt32(matches[1].Value) : Convert.ToInt32(matches[2].Value);
+
+            /* Create list with expanded variables */
+            List<string> vars = new List<string>();
+            if (start < end)
+            {
+                for (int i = start; i <= end; i += step)
+                    vars.Add(String.Concat(var, i.ToString()));
+            }
+            else
+            {
+                for (int i = start; i >= end; i -= step)
+                    vars.Add(String.Concat(var, i.ToString()));
+            }
+            return vars;
+        }
+    }
 }
