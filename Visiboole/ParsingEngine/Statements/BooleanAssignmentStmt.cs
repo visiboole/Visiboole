@@ -35,13 +35,10 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
         {
+            int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false);
+            int length = Text.IndexOf(';') - start;
             //line of code to start with
-            string fullExpression = Text;
-
-            if(fullExpression.Contains(';'))
-            {
-                fullExpression = fullExpression.Substring(0, fullExpression.IndexOf(';'));
-            }
+            string fullExpression = Text.Substring(start, length);
 
             //get our dependent variable and expression
             string dependent = fullExpression.Substring(0, fullExpression.IndexOf('='));
