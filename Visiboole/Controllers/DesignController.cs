@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using VisiBoole.Models;
 
 namespace VisiBoole.Controllers
@@ -59,6 +60,8 @@ namespace VisiBoole.Controllers
             if (sd != null)
             {
                 SubDesigns.Remove(name);
+                for (int i = 0; i < Globals.tabControl.TabPages.Count; i++)
+                    Globals.tabControl.TabPages[i].SubDesign().TabPageIndex = i;
                 return true;
             }
             else return false;
