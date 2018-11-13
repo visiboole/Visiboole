@@ -18,7 +18,7 @@ namespace VisibooleTests.Models
         public void HtmlBuilderTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename);
+            SubDesign subDesign = new SubDesign(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
             OutputParser outputParser = new OutputParser();
@@ -44,7 +44,7 @@ namespace VisibooleTests.Models
         public void GetHTMLTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename);
+            SubDesign subDesign = new SubDesign(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
             OutputParser outputParser = new OutputParser();

@@ -141,3 +141,5 @@ U:\cis642\VisiBoole\Visiboole\obj\Debug\VisiBoole.csproj.CoreCompileInputs.cache
 U:\cis642\VisiBoole\Visiboole\obj\Debug\VisiBoole.csproj.CopyComplete
 U:\cis642\VisiBoole\Visiboole\obj\Debug\VisiBoole.exe
 U:\cis642\VisiBoole\Visiboole\obj\Debug\VisiBoole.pdb
+U:\cis642\VisiBoole\Visiboole\obj\Debug\VisiBoole.Views.HelpWindow.resources
+U:\cis642\VisiBoole\Visiboole\bin\Debug\Resources\Help Documentation\Syntax.txt

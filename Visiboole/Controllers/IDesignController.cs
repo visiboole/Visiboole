@@ -10,6 +10,11 @@ namespace VisiBoole.Controllers
     public interface IDesignController
     {
         /// <summary>
+		/// Saves the handle to the controller for the MainWindow
+		/// </summary>
+		void AttachMainWindowController(IMainWindowController mwController);
+
+        /// <summary>
         /// Creates a SubDesign with the given name.
         /// </summary>
         /// <param name="path">Name of SubDesign</param>

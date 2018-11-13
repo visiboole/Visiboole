@@ -85,12 +85,12 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="ParsingEngine\Boolean\Expression.cs" />
+    <Compile Include="ParsingEngine\ObjectCode\SpaceFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Parentheses.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />
     <Compile Include="ParsingEngine\Statements\CommentStmt.cs" />
     <Compile Include="ParsingEngine\Database.cs" />
     <Compile Include="ParsingEngine\ObjectCode\DependentVariable.cs" />
-    <Compile Include="ParsingEngine\Statements\ConcatStmt.cs" />
     <Compile Include="ParsingEngine\Statements\ConstantStmt.cs" />
     <Compile Include="ParsingEngine\Statements\DffClockStmt.cs" />
     <Compile Include="ParsingEngine\Statements\EmptyStmt.cs" />
@@ -124,6 +124,12 @@
     <Compile Include="Views\DisplayRun.Designer.cs">
       <DependentUpon>DisplayRun.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\HelpWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\HelpWindow.Designer.cs">
+      <DependentUpon>HelpWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Views\IDisplay.cs" />
     <Compile Include="Views\IMainWindow.cs" />
     <Compile Include="Views\MainWindow.cs">
@@ -150,6 +156,9 @@
     <EmbeddedResource Include="Views\DisplayRun.resx">
       <DependentUpon>DisplayRun.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Views\HelpWindow.resx">
+      <DependentUpon>HelpWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Views\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -171,6 +180,9 @@
     <None Include="Resources\VisiBooleIcon.ico" />
     <None Include="Resources\Letter V blue.ico" />
     <Content Include="Resources\Close.png" />
+    <Content Include="Resources\Help Documentation\Syntax.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\NewFile.png" />
     <Content Include="Resources\OpenFile.png" />
     <None Include="Resources\Redo.png" />

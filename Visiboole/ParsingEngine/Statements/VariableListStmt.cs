@@ -14,8 +14,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// The identifying pattern that can be used to identify and extract this statement from raw text
         /// </summary>
         public static Regex Pattern { get; } = new Regex
-            (@"^(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayIndexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")"
-                + @"(\s*(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayIndexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @"))*\;$");
+            (@"^(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")"
+                + @"(\s*(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @"))*\;$");
 
         /// <summary>
         /// Constructs an instance of VariableListStmt
@@ -36,30 +36,22 @@ namespace VisiBoole.ParsingEngine.Statements
             Regex regex = new Regex(@"[;]", RegexOptions.None);
             string content = regex.Replace(Text, string.Empty);
 
+            /* Get format */
+            regex = new Regex(Globals.regexVariable, RegexOptions.None);
+            string format = regex.Replace(content, "X");
+
             /* Split variables by whitespace */
             regex = new Regex(@"\s+", RegexOptions.None);
-            string[] contents = regex.Split(content);
+            string[] variables = regex.Split(content);
 
             /* Output all variables */
-            foreach (string c in contents)
+            int i = 0;
+            foreach (char c in format)
             {
-                List<string> vars = new List<string>(); // List of variables
-
-                /* Expand variable in necessary */
-                regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
-                if (regex.Match(c).Success)
+                if (c == 'X')
                 {
-                    List<string> variables = ExpandVariables(c);
-                    foreach (string var in variables)
-                    {
-                        vars.Add(var);
-                    }
-                }
-                else vars.Add(c);
+                    string var = variables[i++];
 
-                /* Add output of each variable */
-                foreach (string var in vars)
-                {
                     bool val = (var[0] == '*') ? true : false;
                     string v = (var[0] == '*') ? var.Substring(1) : var;
 
@@ -81,6 +73,11 @@ namespace VisiBoole.ParsingEngine.Statements
                         Database.AddVariable<IndependentVariable>(newVar);
                         Output.Add(newVar);
                     }
+                }
+                else
+                {
+                    SpaceFeed sf = new SpaceFeed();
+                    Output.Add(sf);
                 }
             }
 

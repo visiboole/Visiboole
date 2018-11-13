@@ -6,10 +6,10 @@ using VisiBoole.Models;
 
 namespace VisiBoole.Controllers
 {
-	/// <summary>
-	/// Handles the logic and communication with other objects for the actions in the MainWindow
-	/// </summary>
-	public class MainWindowController : IMainWindowController
+    /// <summary>
+    /// Handles the logic and communication with other objects for the actions in the MainWindow
+    /// </summary>
+    public class MainWindowController : IMainWindowController
 	{
 		/// <summary>
 		/// Handle to the MainWindow which is the view for this controller

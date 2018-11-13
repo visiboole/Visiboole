@@ -42,3 +42,4 @@ U:\cis642\VisiBoole\VisibooleTests\obj\Debug\VisibooleTests.csproj.CoreCompileIn
 U:\cis642\VisiBoole\VisibooleTests\obj\Debug\VisibooleTests.csproj.CopyComplete
 U:\cis642\VisiBoole\VisibooleTests\obj\Debug\VisibooleTests.dll
 U:\cis642\VisiBoole\VisibooleTests\obj\Debug\VisibooleTests.pdb
+U:\cis642\VisiBoole\VisibooleTests\bin\Debug\Resources\Help Documentation\Syntax.txt

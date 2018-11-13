@@ -11,6 +11,11 @@ namespace VisiBoole.Controllers
     public class DesignController : IDesignController
     {
         /// <summary>
+		/// Handle to the controller for the MainWindow
+		/// </summary>
+		private IMainWindowController mwController;
+
+        /// <summary>
 		/// All opened SubDesigns currently loaded by this application
 		/// </summary>
         private Dictionary<string, SubDesign> SubDesigns;
@@ -24,6 +29,15 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+		/// Saves the handle to the controller for the MainWindow
+		/// </summary>
+		/// <param name="mwController"></param>
+		public void AttachMainWindowController(IMainWindowController mwController)
+        {
+            this.mwController = mwController;
+        }
+
+        /// <summary>
         /// Creates a SubDesign with the given name
         /// </summary>
         /// <param name="path">Name of SubDesign</param>
@@ -32,7 +46,7 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                SubDesign newSubDesign = new SubDesign(name);
+                SubDesign newSubDesign = new SubDesign(name, mwController.LoadDisplay);
                 if (!SubDesigns.ContainsKey(newSubDesign.FileSourceName))
                 {
                     SubDesigns.Add(newSubDesign.FileSourceName, newSubDesign);

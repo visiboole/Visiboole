@@ -31,8 +31,9 @@ namespace VisiBoole
 			MainWindowController mwc = new MainWindowController(mw, displayController, designController);
 
             displayController.AttachMainWindowController(mwc);
-			
-			Application.Run(mw);
+            designController.AttachMainWindowController(mwc);
+
+            Application.Run(mw);
 		}
 	}
 }
