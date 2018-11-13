@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using VisiBoole.Controllers;
 
@@ -168,11 +169,6 @@ namespace VisiBoole.Views
         /// <param name="current">The display to be loaded</param>
         public void LoadDisplay(IDisplay previous, IDisplay current)
         {
-            if (current == null)
-            {
-                Globals.DisplayException(new ArgumentNullException("Unable to load given display - the given display is null."));
-            }
-
             if (!this.MainLayoutPanel.Controls.Contains((Control)previous))
             {
                 // No files have been opened
@@ -180,22 +176,23 @@ namespace VisiBoole.Views
             }
             else
             {
-                this.MainLayoutPanel.Controls.Remove((Control)previous);
-
-                if (NavTree.Nodes[0].Nodes.Count == 0)
+                if ((previous == current) ^ (NavTree.Nodes[0].Nodes.Count > 0))
                 {
-                    this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
-                }
+                    this.MainLayoutPanel.Controls.Remove((Control)previous);
+
+                    if (NavTree.Nodes[0].Nodes.Count == 0)
+                        this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
+                }   
             }
 
-            UpdateControls(current); // Change controls to match the new display
-
-            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel))
+            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel) && !this.MainLayoutPanel.Controls.Contains((Control)current))
             {
                 Control c = (Control)current;
                 c.Dock = DockStyle.Fill;
                 this.MainLayoutPanel.Controls.Add(c);
             }
+
+            UpdateControls(current); // Change controls to match the new display
         }
 
         /// <summary>
@@ -259,20 +256,6 @@ namespace VisiBoole.Views
         #endregion
 
         #region "Event Handlers"
-
-        /// <summary>
-        /// Handles the event that occurs when a key is pressed
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (controller.GetDisplay() is DisplayEdit)
-            {
-                UpdateControls(controller.GetDisplay());
-            }
-                
-        }
 
         /// <summary>
         /// Handles the event that occurs when the light theme is selected
@@ -441,6 +424,16 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
+        /// Handles the event when the edit menu is clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void editToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (controller.GetDisplay() is DisplayEdit) UpdateControls(controller.GetDisplay());
+        }
+
+        /// <summary>
         /// Undo text event
         /// </summary>
         /// <param name="sender"></param>
@@ -448,7 +441,6 @@ namespace VisiBoole.Views
         private void UndoTextEvent(object sender, EventArgs e)
         {
             Globals.tabControl.SelectedTab.SubDesign().UndoTextEvent(sender, e);
-            UpdateControls(controller.GetDisplay());
         }
 
         /// <summary>
@@ -459,7 +451,6 @@ namespace VisiBoole.Views
         private void RedoTextEvent(object sender, EventArgs e)
         {
             Globals.tabControl.SelectedTab.SubDesign().RedoTextEvent(sender, e);
-            UpdateControls(controller.GetDisplay());
         }
 
         /// <summary>
@@ -523,6 +514,17 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
+        /// Syntax Documentation Help Menu Click
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void syntaxDocumentationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
+            hw.Show();
+        }
+
+        /// <summary>
         /// Checks whether the user is trying to close a tab
         /// </summary>
         /// <param name="sender"></param>
@@ -580,13 +582,5 @@ namespace VisiBoole.Views
         }
 
         #endregion
-
-        private void MainWindow_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (controller.GetDisplay() is DisplayEdit)
-            {
-                UpdateControls(controller.GetDisplay());
-            }
-        }
     }
 }

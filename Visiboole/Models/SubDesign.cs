@@ -8,6 +8,8 @@ using Ionic;
 
 namespace VisiBoole.Models
 {
+    public delegate void DisplayLoader(Globals.DisplayType dType); // Delegate for LoadDisplay Method
+
     /// <summary>
     /// A User-Created SubDesign
     /// </summary>
@@ -42,6 +44,11 @@ namespace VisiBoole.Models
         /// </summary>
         public string FileSourceName { get; set; }
 
+        /// <summary>
+        /// Delegate for updating the display
+        /// </summary>
+        private DisplayLoader UpdateDisplay;
+
 		/// <summary>
 		/// Returns True if this SubDesign Text does not match the FileSource contents
 		/// </summary>
@@ -66,7 +73,7 @@ namespace VisiBoole.Models
         /// Constructs a new SubDesign object
         /// </summary>
         /// <param name="filename">The path of the file source for this SubDesign</param>
-        public SubDesign(string filename)
+        public SubDesign(string filename, DisplayLoader update)
         {
             if (string.IsNullOrEmpty(filename))
             {
@@ -75,6 +82,7 @@ namespace VisiBoole.Models
 
             FileSource = new FileInfo(filename);
             this.FileSourceName = FileSource.Name;
+            this.UpdateDisplay = update;
 
             if (!File.Exists(filename))
             {
@@ -195,6 +203,7 @@ namespace VisiBoole.Models
             }
 
             if (!isDirty) UpdateDirty();
+            UpdateDisplay(Globals.DisplayType.EDIT);
         }
 
         /// <summary>
@@ -208,6 +217,7 @@ namespace VisiBoole.Models
             {
                 RecordEdit();
                 if (!isDirty) UpdateDirty();
+                UpdateDisplay(Globals.DisplayType.EDIT);
             }
         }
 

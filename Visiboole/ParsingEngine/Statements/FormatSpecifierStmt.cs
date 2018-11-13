@@ -17,8 +17,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// Format Specifier Pattern 
         /// </summary>
         public static Regex Pattern { get; } = new Regex
-            (@"^\%[ubhdUBHD]\{(" + Globals.regexVariable + @"|" + Globals.regexArrayIndexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")"
-            + @"(\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayIndexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\}\;$");
+            (@"^\%[ubhdUBHD]\{(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")"
+            + @"(\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\}\;$");
 
         /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
@@ -45,40 +45,23 @@ namespace VisiBoole.ParsingEngine.Statements
 
             /* Split variables by whitespace */
             regex = new Regex(@"\s+", RegexOptions.None);
-            string[] contents = regex.Split(content);
+            string[] variables = regex.Split(content);
 
             /* Get output values for each variable */
             List<int> valueList = new List<int>(); // List of output values
-            foreach (string c in contents)
+            foreach (string var in variables)
             {
-                List<string> vars = new List<string>(); // List of variables
-
-                /* Expand variable if necessary */
-                regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
-                if (regex.Match(c).Success)
-                {
-                    List<string> variables = ExpandVariables(c);
-                    foreach (string var in variables)
-                    {
-                        vars.Add(var);
-                    }
-                }
-                else vars.Add(c);
-
                 /* Add value of each variable to output values */
-                foreach (string var in vars)
+                int value = Database.TryGetValue(var);
+                if (value != -1)
                 {
-                    int value = Database.TryGetValue(var);
-                    if (value != -1)
-                    {
-                        valueList.Add(value);
-                    }
-                    else
-                    {
-                        IndependentVariable newVar = new IndependentVariable(var, false);
-                        Database.AddVariable<IndependentVariable>(newVar);
-                        valueList.Add(0);
-                    }
+                    valueList.Add(value);
+                }
+                else
+                {
+                    IndependentVariable newVar = new IndependentVariable(var, false);
+                    Database.AddVariable<IndependentVariable>(newVar);
+                    valueList.Add(0);
                 }
             }
 

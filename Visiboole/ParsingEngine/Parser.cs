@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -102,32 +103,32 @@ namespace VisiBoole.ParsingEngine
 			string txt = sd.Text;
 			byte[] byteArr = Encoding.UTF8.GetBytes(txt);
 			MemoryStream stream = new MemoryStream(byteArr);
-			using (StreamReader reader = new StreamReader(stream))
-			{
-				string nextLine;
-				int preLnNum = 0;     // the line number in edit mode, before the text is parsed
-				int postLnNum = 0;    // the line number in simulation mode, after the text is parsed
-				bool flag = false;    // flag is set to true after the first non-empty/comment is found
-				while ((nextLine = reader.ReadLine()) != null)
-				{
-					// check for an empty statement
-					if (string.IsNullOrEmpty(nextLine.Trim()))
-					{
-						stmtList.Add(new EmptyStmt(postLnNum, nextLine));
-						preLnNum++;
-						postLnNum++;
-						continue;
-					}
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                string nextLine;
+                int preLnNum = 0;     // the line number in edit mode, before the text is parsed
+                int postLnNum = 0;    // the line number in simulation mode, after the text is parsed
+                bool flag = false;    // flag is set to true after the first non-empty/comment is found
+                while ((nextLine = reader.ReadLine()) != null)
+                {
+                    // check for an empty statement
+                    if (string.IsNullOrEmpty(nextLine.Trim()))
+                    {
+                        stmtList.Add(new EmptyStmt(postLnNum, nextLine));
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
 
                     // check for a comment
                     bool success = CommentStmt.Pattern.Match(nextLine).Success;
-					if (success)
-					{
-						stmtList.Add(new CommentStmt(postLnNum, nextLine));
-						preLnNum++;
-						postLnNum++;
-						continue;
-					}
+                    if (success)
+                    {
+                        stmtList.Add(new CommentStmt(postLnNum, nextLine));
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
 
                     if (!nextLine.Contains(";"))
                     {
@@ -166,46 +167,13 @@ namespace VisiBoole.ParsingEngine
                         return null;
                     }
 
-                    if (nextLine.Contains(".d") || nextLine.Contains("<"))
-                    {
-                        stmtList.Add(new DffClockStmt(postLnNum, nextLine, tick, init));
-                        flag = true;
-                        preLnNum++;
-                        postLnNum++;
-                        continue;
-                    }
-
-                    // check for a module declaration statement
-                    success = ModuleDeclarationStmt.Pattern.Match(nextLine).Success;
-                    if (flag == false && success)
-					{
-						stmtList.Add(new ModuleDeclarationStmt(postLnNum, nextLine));
-						flag = true;
-						preLnNum++;
-						postLnNum++;
-						continue;
-					}
-
                     // check for a format specifier statement
                     success = FormatSpecifierStmt.Pattern.Match(nextLine).Success;
                     if (success)
                     {
+                        if (nextLine.Contains("["))
+                            nextLine = ReplaceVectors(nextLine);
                         stmtList.Add(new FormatSpecifierStmt(postLnNum, nextLine));
-                        flag = true;
-                        preLnNum++;
-                        postLnNum++;
-                        continue;
-                    }
-
-                    success = ConcatStmt.Pattern.Match(nextLine).Success;
-                    if (success)
-                    {
-                        ConcatStmt concat = new ConcatStmt(postLnNum, nextLine);
-                        if (concat.Concats.Count > 0)
-                        {
-                            foreach (BooleanAssignmentStmt b in concat.Concats) stmtList.Add(b);
-                        }
-                        else return null;
                         flag = true;
                         preLnNum++;
                         postLnNum++;
@@ -215,24 +183,15 @@ namespace VisiBoole.ParsingEngine
                     // check for a variable list statement
                     success = VariableListStmt.Pattern.Match(nextLine).Success;
                     if (success)
-					{
-						stmtList.Add(new VariableListStmt(postLnNum, nextLine));
-						flag = true;
-						preLnNum++;
-						postLnNum++;
-						continue;
-					}
-
-					// check for a submodule instantiation statement
-                    success = SubmoduleInstantiationStmt.Pattern.Match(nextLine).Success;
-					if (success)
-					{
-						stmtList.Add(new SubmoduleInstantiationStmt(postLnNum, nextLine));
-						flag = true;
-						preLnNum++;
-						postLnNum++;
-						continue;
-					}
+                    {
+                        if (nextLine.Contains("["))
+                            nextLine = ReplaceVectors(nextLine);
+                        stmtList.Add(new VariableListStmt(postLnNum, nextLine));
+                        flag = true;
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
 
                     success = ConstantStmt.BinPattern.Match(nextLine).Success || ConstantStmt.DecPattern.Match(nextLine).Success || ConstantStmt.HexPattern.Match(nextLine).Success;
                     if (success)
@@ -249,13 +208,83 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    // check for a boolean assignment statement
-                    if (!nextLine.Contains("<") || nextLine.Contains("^"))
+                    // check for a module declaration statement
+                    success = ModuleDeclarationStmt.Pattern.Match(nextLine).Success;
+                    if (flag == false && success)
                     {
-                        stmtList.Add(new BooleanAssignmentStmt(postLnNum, nextLine));
+                        stmtList.Add(new ModuleDeclarationStmt(postLnNum, nextLine));
                         flag = true;
                         preLnNum++;
                         postLnNum++;
+                        continue;
+                    }
+
+                    // check for a submodule instantiation statement
+                    success = SubmoduleInstantiationStmt.Pattern.Match(nextLine).Success;
+                    if (success)
+                    {
+                        stmtList.Add(new SubmoduleInstantiationStmt(postLnNum, nextLine));
+                        flag = true;
+                        preLnNum++;
+                        postLnNum++;
+                        continue;
+                    }
+
+                    /* Check for clock statement */
+                    if (nextLine.Contains("<"))
+                    {
+                        List<string> lines;
+                        if (nextLine.Contains("[") || nextLine.Contains("{"))
+                        {
+                            lines = ExpandLine(nextLine);
+                            if (lines == null)
+                            {
+                                MessageBox.Show("Inconsistent number of variables. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            lines = new List<string>();
+                            lines.Add(nextLine);
+                        }
+
+                        foreach (string line in lines)
+                        {
+                            stmtList.Add(new DffClockStmt(postLnNum++, line, tick, init));
+                        }
+
+                        flag = true;
+                        preLnNum++;
+                        continue;
+                    }
+
+                    /* Check for boolean statement */
+                    if (!nextLine.Contains("<") || nextLine.Contains("^"))
+                    {
+                        List<string> lines;
+                        if (nextLine.Contains("[") || nextLine.Contains("{"))
+                        {
+                            lines = ExpandLine(nextLine);
+                            if (lines == null)
+                            {
+                                MessageBox.Show("Inconsistent number of variables. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            lines = new List<string>();
+                            lines.Add(nextLine);
+                        }
+
+                        foreach (string line in lines)
+                        {
+                            stmtList.Add(new BooleanAssignmentStmt(postLnNum++, line));
+                        }
+
+                        flag = true;
+                        preLnNum++;
                         continue;
                     }
 
@@ -271,5 +300,148 @@ namespace VisiBoole.ParsingEngine
 			}
 			return stmtList;
 		}
-	}
+
+        /// <summary>
+        /// Expands vector to a list of its variables
+        /// </summary>
+        /// <param name="exp">Expression to expand</param>
+        /// <returns>A list of all variables</returns>
+        private List<string> ExpandVector(string exp)
+        {
+            /* Get variable */
+            Regex regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
+            string var = regex.Match(exp).Value;
+
+            /* Get everything inside brackets */
+            regex = new Regex(@"\[(.*?)\]", RegexOptions.None);
+            string nums = regex.Match(exp).Value;
+
+            /* Remove brackets */
+            regex = new Regex(@"[\[\]]", RegexOptions.None);
+            nums = regex.Replace(nums, string.Empty);
+
+            /* Get num values */
+            regex = new Regex(@"[0-9]+", RegexOptions.None);
+            MatchCollection matches = regex.Matches(nums);
+
+            /* Assign start, step and end from num values */
+            int start = Convert.ToInt32(matches[0].Value);
+            int step = (matches.Count == 2) ? 1 : Convert.ToInt32(matches[1].Value);
+            int end = (matches.Count == 2) ? Convert.ToInt32(matches[1].Value) : Convert.ToInt32(matches[2].Value);
+
+            /* Create list with expanded variables */
+            List<string> vars = new List<string>();
+            if (start < end)
+            {
+                for (int i = start; i <= end; i += step)
+                    vars.Add(String.Concat(var, i.ToString()));
+            }
+            else
+            {
+                for (int i = start; i >= end; i -= step)
+                    vars.Add(String.Concat(var, i.ToString()));
+            }
+
+            return vars;
+        }
+
+        /// <summary>
+        /// Replace vectors with its variables
+        /// </summary>
+        /// <param name="exp">Expression to replace vectors</param>
+        /// <returns>Expression with vector replaced by its variables</returns>
+        private string ReplaceVectors(string exp)
+        {
+            Regex regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
+            MatchCollection matches = regex.Matches(exp);
+            if (matches.Count > 0)
+            {
+                foreach (Match match in matches)
+                {
+                    List<string> variables = ExpandVector(match.Value); // Expand variables to list
+
+                    /* Create expanded variables string */
+                    string expanded = "";
+                    for (int i = 0; i < variables.Count; i++)
+                    {
+                        if (i != (variables.Count - 1)) expanded = String.Concat(expanded + variables[i] + " ");
+                        else expanded = String.Concat(expanded + variables[i]);
+                    }
+                    exp = exp.Replace(match.Value, expanded); // Replace vector with expanded variables
+                }
+            }
+
+            return exp;
+        }
+
+        /// <summary>
+        /// Expands line into lines
+        /// </summary>
+        /// <param name="exp">Line to expand</param>
+        /// <returns>List of all lines</returns>
+        private List<string> ExpandLine(string exp)
+        {
+            List<string> lines = new List<string>();
+            Regex regex = new Regex
+                (@"((" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")(?![^{}]*\}))|"
+                + @"(\{(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")"
+                + @"(\,\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\})", RegexOptions.None);
+            MatchCollection matches = regex.Matches(exp);
+
+            /* Expand all variables */
+            List<List<string>> variables = new List<List<string>>();
+            foreach (Match match in matches)
+            {
+                if (!match.Value.Contains("{"))
+                {
+                    variables.Add(ExpandVector(match.Value));
+                }
+                else
+                {
+                    /* Remove whitespace and braces from concat string */
+                    regex = new Regex(@"[{\s*}]", RegexOptions.None); // Remove whitespace and braces
+                    string concat = regex.Replace(match.Value, string.Empty);
+
+                    /* Split concat into variables */
+                    string[] vars = concat.Split(','); // Split variables by commas
+
+                    List<string> varsList = new List<string>();
+                    foreach (string var in vars)
+                    {
+                        regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
+                        if (regex.Match(var).Success)
+                        {
+                            List<string> expand = ExpandVector(var);
+                            foreach (string v in expand) varsList.Add(v);
+                        }
+                        else varsList.Add(var);
+                    }
+
+                    variables.Add(varsList);
+                }
+            }
+
+            /* Error checking */
+            foreach (List<string> list in variables)
+            {
+                if (list.Count != variables[0].Count)
+                {
+                    return null;
+                }
+            }
+
+            /* Expand lines */
+            for (int i = 0; i < variables[0].Count; i++)
+            {
+                string line = exp;
+                int j = 0;
+                foreach (Match match in matches)
+                {
+                    line = line.Replace(match.Value, variables[j++][i]);
+                }
+                lines.Add(line);
+            }
+            return lines;
+        }
+    }
 }

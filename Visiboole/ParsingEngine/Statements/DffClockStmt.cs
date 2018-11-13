@@ -31,27 +31,13 @@ namespace VisiBoole.ParsingEngine.Statements
             //get our dependent variable and expression
             string dependent = fullExpression.Substring(0, fullExpression.IndexOf('='));
             //use for database calls (value)
-            string delay;// = dependent+".d";
+            string delay = dependent + ".d";
             //use to make output with (name)
-            string delayDisplayAs;
+            string delayDisplayAs = "<";
             string expression = fullExpression.Substring(fullExpression.IndexOf('=') + 1);
 
-            //dependent.d =
-            if(dependent.Contains(".d"))
-            {
-                dependent = dependent.Substring(0, dependent.IndexOf('.'));
-                dependent = dependent.Trim();
-                delay = dependent + ".d";
-                delayDisplayAs = ".d";
-            }
-            //dependent <=
-            else
-            {
-                dependent = dependent.Substring(0, dependent.IndexOf('<'));
-                dependent = dependent.Trim();
-                delay = dependent + ".d";
-                delayDisplayAs = "<";
-            }
+            dependent = dependent.Substring(0, dependent.IndexOf('<'));
+            dependent = dependent.Trim();
 
             //format expression
             expression = expression.Trim();
@@ -100,18 +86,8 @@ namespace VisiBoole.ParsingEngine.Statements
             //Add independentVar to output
             Output.Add(independentVar);
 
-            if(displayAs.Equals(".d"))
-            {
-                DependentVariable dv = new DependentVariable(".d", delay.Value);
-                Output.Add(dv);
-                Operator sign = new Operator("=");
-                Output.Add(sign);
-            }
-            else
-            {
-                DependentVariable dv = new DependentVariable("<=", delay.Value);
-                Output.Add(dv);
-            }
+            DependentVariable dv = new DependentVariable("<=", delay.Value);
+            Output.Add(dv);
 
             //Add expression variables to output
             MakeExpressionOutput(expression);
@@ -126,18 +102,8 @@ namespace VisiBoole.ParsingEngine.Statements
             //Add independentVar to output
             Output.Add(dependentVar);
 
-            if (displayAs.Equals(".d"))
-            {
-                DependentVariable dv = new DependentVariable(".d", delay.Value);
-                Output.Add(dv);
-                Operator sign = new Operator("=");
-                Output.Add(sign);
-            }
-            else
-            {
-                DependentVariable dv = new DependentVariable("<=", delay.Value);
-                Output.Add(dv);
-            }
+            DependentVariable dv = new DependentVariable("<=", delay.Value);
+            Output.Add(dv);
 
             //Add expression variables to output
             MakeExpressionOutput(expression);
