@@ -35,6 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
+            #region Identify format, remove syntax and tokenize the variables
             /* Get format type */
             Regex regex = new Regex(@"^\%[ubhdUBHD]", RegexOptions.None);
             string format = regex.Match(Text).Value.Substring(1);
@@ -46,6 +47,7 @@ namespace VisiBoole.ParsingEngine.Statements
             /* Split variables by whitespace */
             regex = new Regex(@"\s+", RegexOptions.None);
             string[] variables = regex.Split(content);
+            #endregion
 
             /* Get output values for each variable */
             List<int> valueList = new List<int>(); // List of output values
@@ -97,6 +99,7 @@ namespace VisiBoole.ParsingEngine.Statements
             }
         }
 
+        #region THIRD Possibly obsolete conversions - TODO
         /// <summary>
         /// Converts the given list to its string binary equivalent
         /// </summary>
@@ -154,5 +157,6 @@ namespace VisiBoole.ParsingEngine.Statements
             }
             return ToUnsigned(binary);
         }
+        #endregion
     }
 }

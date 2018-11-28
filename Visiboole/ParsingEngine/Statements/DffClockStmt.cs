@@ -28,6 +28,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 fullExpression = fullExpression.Substring(0, fullExpression.IndexOf(';'));
             }
 
+            #region Identify and format clock statement
             //get our dependent variable and expression
             string dependent = fullExpression.Substring(0, fullExpression.IndexOf('='));
             //use for database calls (value)
@@ -49,7 +50,9 @@ namespace VisiBoole.ParsingEngine.Statements
                 dependentValue = GetVariable(delay);
                 Database.SetValue(dependent, dependentValue);
             }
+            #endregion
 
+            #region Make dependencies, solve for delay
             //make dependencies list
             Database.CreateDependenciesList(delay);
             //solve for delay;
@@ -68,6 +71,9 @@ namespace VisiBoole.ParsingEngine.Statements
                 delayVariable = new IndependentVariable(delay, delayValue);
                 Database.AddVariable<IndependentVariable>(delayVariable);
             }
+            #endregion
+
+            #region output
             //make the output
             IndependentVariable dependentInd = Database.TryGetVariable<IndependentVariable>(dependent) as IndependentVariable;
             DependentVariable dependentDep = Database.TryGetVariable<DependentVariable>(dependent) as DependentVariable;
@@ -79,8 +85,10 @@ namespace VisiBoole.ParsingEngine.Statements
             {
                 MakeOrderedOutputDep(dependentDep, delayVariable, delayDisplayAs, expression);
             }
+            #endregion
         }
 
+        #region Ordering output for both variable types
         private void MakeOrderedOutputInd(IndependentVariable independentVar, IndependentVariable delay, string displayAs, string expression)
         {
             //Add independentVar to output
@@ -112,6 +120,7 @@ namespace VisiBoole.ParsingEngine.Statements
             LineFeed lf = new LineFeed();
             Output.Add(lf);
         }
+        #endregion
 
         private void MakeExpressionOutput(string expression)
         {
@@ -162,7 +171,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     }
                 }
 
-
+                #region logic for a NOT sign, an statement end, or both
                 if (variable.Contains('~'))
                 {
                     string newVariable = variable.Substring(1);
@@ -228,6 +237,7 @@ namespace VisiBoole.ParsingEngine.Statements
                         Output.Add(op);
                     }
                 }
+                #endregion
 
                 for (int i = closedParenCount; i != 0; i--)
                 {
@@ -246,6 +256,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <returns>Returns the value of the variable matching the given name</returns>
         private bool GetVariable(string variableName)
         {
+            #region If a variable was found, return val
             //See if variable was already declared in IndependentVariables
             IndependentVariable indVariable = Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
 
@@ -271,6 +282,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 //return the value of the dependent variable
                 return depVariable.Value;
             }
+            #endregion
 
             //Else the variable was not found
             else

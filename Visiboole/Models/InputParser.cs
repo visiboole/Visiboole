@@ -129,12 +129,14 @@ namespace VisiBoole.Models
 			rtb.SelectedText = text;
 		}
 
+        //TODO Error Handling
 		private Tuple<string, List<int>> ParseFormatSpecifier(string txt, int lnNum)
 		{
 			try
 			{
-				// obtain the format specifier token
-				Regex regex = new Regex(@"([ubhd])", RegexOptions.None);
+                #region Regex for formatting
+                // obtain the format specifier token
+                Regex regex = new Regex(@"([ubhd])", RegexOptions.None);
 				string format = regex.Match(txt).Value;
 
 				// strip the surrounding specifier and brackets to get the content
@@ -146,18 +148,21 @@ namespace VisiBoole.Models
 				List<int> elems = new List<int>();
 				regex = new Regex(@"[a-zA-Z0-9_]+\[\d+\.\.\d\]", RegexOptions.None);
 				string match = regex.Match(content).Value;
-				if (!string.IsNullOrEmpty(match))
+                #endregion
+
+                if (!string.IsNullOrEmpty(match))
 				{
-					// first pattern found. Expand the expression to extract the variables
-					regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
+                    #region first pattern found. Expand the expression and add the ordered variables to the list 
+                    regex = new Regex(@"[a-zA-Z0-9_]+", RegexOptions.None);
 					string var = regex.Match(match).Value;
 					regex = new Regex(@"\d");
 					MatchCollection matches = regex.Matches(match);
 					int beg = Convert.ToInt32(matches[0].Value);
 					int end = Convert.ToInt32(matches[1].Value);
+                    
 
-					// arrange beg and end from smallest to largest
-					if (end < beg)
+                    // arrange beg and end from smallest to largest
+                    if (end < beg)
 					{
 						int temp = beg;
 						beg = end;
@@ -179,8 +184,9 @@ namespace VisiBoole.Models
 							throw new Exception();
 						}
 					}
-				}
-				else
+                    #endregion
+                }
+                else
 				{
 					// first pattern was not found. Search the content for the second pattern: A1 A2 An
 					regex = new Regex(@"[a-zA-Z0-9_]{1,20}", RegexOptions.None);
@@ -281,13 +287,14 @@ namespace VisiBoole.Models
 			return lineOfCode;
 		}
 
-		/// <summary>
-		/// Solves the given expression
-		/// </summary>
-		/// <param name="expression">The expression to solve</param>
-		/// <param name="lineNumber">The line number of the expression to solve</param>
-		/// <returns>Returns the line number of the expression that is solved</returns>
-		public int SolveExpression(string expression, int lineNumber)
+        #region Solves the expression from the innermost to the outermost - WELL DOCUMENTED
+        /// <summary>
+        /// Solves the given expression
+        /// </summary>
+        /// <param name="expression">The expression to solve</param>
+        /// <param name="lineNumber">The line number of the expression to solve</param>
+        /// <returns>Returns the line number of the expression that is solved</returns>
+        public int SolveExpression(string expression, int lineNumber)
         {
             string fullExp = expression;
             string exp = "";
@@ -515,8 +522,9 @@ namespace VisiBoole.Models
                 return "FALSE";
             }
         }
+        #endregion
 
-
+        #region Negate, And, Or function - simple logic, returns binary
         /// <summary>
         /// Negates the given value
         /// </summary>
@@ -557,13 +565,15 @@ namespace VisiBoole.Models
             }
             return 0;
         }
+        #endregion
 
-		/// <summary>
-		/// Converts binary to decimal
-		/// </summary>
-		/// <param name="binary">The binary to convert to decimal</param>
-		/// <returns>Returns the converted decimal</returns>
-		public int BinaryToDecimal(string binary)
+        #region Potentially obsolete binary conversion
+        /// <summary>
+        /// Converts binary to decimal
+        /// </summary>
+        /// <param name="binary">The binary to convert to decimal</param>
+        /// <returns>Returns the converted decimal</returns>
+        public int BinaryToDecimal(string binary)
 		{
 			int dec = 0;
 
@@ -574,5 +584,6 @@ namespace VisiBoole.Models
 			}
 			return dec;
 		}
-	}
+        #endregion
+    }
 }

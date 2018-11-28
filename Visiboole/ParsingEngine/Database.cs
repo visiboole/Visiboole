@@ -9,10 +9,11 @@ namespace VisiBoole.ParsingEngine
     /// </summary>
 	public static class Database
 	{
+        #region Dictionaries for Variables, Dependencies, and Expressions
         /// <summary>
         /// All independent variables parsed by the parsing engine
         /// </summary>
-		private static readonly Dictionary<string, IndependentVariable> IndVars = new Dictionary<string, IndependentVariable>();
+        private static readonly Dictionary<string, IndependentVariable> IndVars = new Dictionary<string, IndependentVariable>();
 
 	    /// <summary>
 	    /// All dependent variables parsed by the parsing engine
@@ -36,11 +37,12 @@ namespace VisiBoole.ParsingEngine
         /// expression that relates to the dependent variable for the expression
         /// </summary>
         private static readonly Dictionary<string, string> Expressions = new Dictionary<string, string>();
+        #endregion
 
         /// <summary>
         /// list of "compiled" VisiBoole Object Code. Each item has text and value to be interpreted by the HTML parser
         /// </summary>
-		private static List<IObjectCodeElement> ObjectCode { get; set; }
+        private static List<IObjectCodeElement> ObjectCode { get; set; }
 
 	    #region Accessor methods
 
@@ -153,10 +155,11 @@ namespace VisiBoole.ParsingEngine
             }
             else return -1; // If variable doesn't exist
         }
-	    
 
-	    #endregion
 
+        #endregion
+
+        #region Set or toggle value of variable
         /// <summary>
         /// Toggles the value of the given variable in its corresponding collections
         /// </summary>
@@ -214,7 +217,9 @@ namespace VisiBoole.ParsingEngine
                 IndVars.Add(variableName, Ind);
             }
         }
+        #endregion
 
+        #region TODO - does this need to exist
         /// <summary>
         /// Creates a list containing the expression associated with the dependent variable
         /// </summary>
@@ -226,6 +231,7 @@ namespace VisiBoole.ParsingEngine
                 Dependencies.Add(dependentName, new List<string>());
             }
         }
+        #endregion
 
         /// <summary>
         /// Adds the given variable name to the list of dependencies it is associated with

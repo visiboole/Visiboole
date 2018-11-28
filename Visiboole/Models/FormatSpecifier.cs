@@ -54,7 +54,8 @@ namespace VisiBoole.Models
 			}
 		}
 
-		private string ToBinary()
+        #region Potentially obsolete conversion methods, uncommented
+        private string ToBinary()
 		{
 			string binary = "";
 			foreach (var variable in _vals)
@@ -94,5 +95,6 @@ namespace VisiBoole.Models
 			}
 			return ToUnsigned(binary);
 		}
-	}
+        #endregion
+    }
 }

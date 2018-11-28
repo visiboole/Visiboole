@@ -25,3 +25,19 @@ U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.exe
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.pdb
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.DisplayEdit.resources
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.DisplayRun.resources
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\bin\Release\Resources\Help Documentation\Syntax.txt
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\bin\Release\VisiBoole.exe.config
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\bin\Release\VisiBoole.exe
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\bin\Release\VisiBoole.pdb
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\bin\Release\RicherTextBox.dll
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.csprojAssemblyReference.cache
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.Properties.Resources.resources
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.Views.DisplayEdit.resources
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.Views.DisplayRun.resources
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.Views.HelpWindow.resources
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.Views.MainWindow.resources
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.csproj.GenerateResource.cache
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.csproj.CoreCompileInputs.cache
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.csproj.CopyComplete
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.exe
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.pdb

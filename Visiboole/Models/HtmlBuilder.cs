@@ -35,6 +35,7 @@ namespace VisiBoole.Models
                     fullLine += token.ObjCodeText + " ";
                 }
 
+                #region Indexes which positions will be assigned which color in html
                 string outermost = "";
                 if(fullLine.Contains("(") && fullLine.Contains(")"))
                 {
@@ -74,6 +75,7 @@ namespace VisiBoole.Models
                         }
                     }
                 }
+                #endregion
 
                 bool nextLineOverBarForParentheses = false;
                 List<int> overBarList = new List<int>();
@@ -85,6 +87,7 @@ namespace VisiBoole.Models
 
                 foreach (IObjectCodeElement token in line)
                 {
+                    #region Checks for bars to be put over parenthesis, and what color to assign them
                     string variable = token.ObjCodeText;
                     if(variable.Contains(';'))
                     {
@@ -227,7 +230,9 @@ namespace VisiBoole.Models
                             }
                         }
                     }
+                    #endregion
                 }
+
                 currentLine = currentLine.Substring(0, currentLine.Length - 1);
                 currentLine += "</p>";
                 HtmlText += currentLine + "\n";

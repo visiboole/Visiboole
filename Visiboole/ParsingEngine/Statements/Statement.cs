@@ -51,6 +51,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <returns>A list of all variables</returns>
         protected List<string> ExpandVariables(string exp)
         {
+            #region Regex expansion
             /* Get variable */
             Regex regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
             string var = regex.Match(exp).Value;
@@ -66,6 +67,7 @@ namespace VisiBoole.ParsingEngine.Statements
             /* Get num values */
             regex = new Regex(@"[0-9]+", RegexOptions.None);
             MatchCollection matches = regex.Matches(nums);
+            #endregion
 
             /* Assign start, step and end from num values */
             int start = Convert.ToInt32(matches[0].Value);

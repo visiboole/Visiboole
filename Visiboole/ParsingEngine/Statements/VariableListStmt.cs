@@ -24,6 +24,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="txt">The raw, unparsed text of this statement</param>
 		public VariableListStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
+
 		}
 
 	    /// <summary>
@@ -32,6 +33,7 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
+            #region Tokenize
             /* Remove semicolon */
             Regex regex = new Regex(@"[;]", RegexOptions.None);
             string content = regex.Replace(Text, string.Empty);
@@ -43,6 +45,7 @@ namespace VisiBoole.ParsingEngine.Statements
             /* Split variables by whitespace */
             regex = new Regex(@"\s+", RegexOptions.None);
             string[] variables = regex.Split(content);
+            #endregion
 
             /* Output all variables */
             int i = 0;

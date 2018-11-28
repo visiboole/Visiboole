@@ -22,7 +22,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
 		public ModuleDeclarationStmt(int lnNum, string txt) : base(lnNum, txt)
-		{			
+		{	
+            
 		}
 
 	    /// <summary>

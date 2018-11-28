@@ -11,6 +11,7 @@ namespace VisiBoole.ParsingEngine.Statements
 {
     public class ConstantStmt : Statement
     {
+        #region Regex patterns for constants
         /// <summary>
         /// Hex Constant Pattern
         /// </summary>
@@ -25,6 +26,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// Binary Constant Pattern
         /// </summary>
         public static Regex BinPattern { get; } = new Regex(@"^(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[bB][0-1]+\;$");
+        #endregion
 
         public VariableListStmt VariableStmt;
 
@@ -46,6 +48,7 @@ namespace VisiBoole.ParsingEngine.Statements
             char[] charBinary; // Each binary from right side
             int[] rightValues; // Converted values form right side
 
+            #region Conversion upon regex matching
             if (HexPattern.Match(Text).Success)
             {
                 Regex regexRight = new Regex(@"[hH][a-fA-F0-9]+", RegexOptions.None);
@@ -69,6 +72,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
                 charBinary = rightSide.Substring(1).ToCharArray();
             }
+            #endregion
 
             if (charBinary.Length != leftVars.Count)
             {

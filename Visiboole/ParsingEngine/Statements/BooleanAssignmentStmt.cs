@@ -27,6 +27,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="txt">The raw, unparsed text of this statement</param>
 		public BooleanAssignmentStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
+
 		}
 
 	    /// <summary>
@@ -35,6 +36,7 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
         {
+            #region Extracts dependent variable, formats it and typecasts it
             int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false);
             int length = Text.IndexOf(';') - start;
             //line of code to start with
@@ -51,12 +53,13 @@ namespace VisiBoole.ParsingEngine.Statements
             //add the expression to this dependent variable
             Database.AddExpression(dependent, expression);
 
-            //create dependencies list to add expression variables too
+            //create dependencies list to add expression variables
             Database.CreateDependenciesList(dependent);
 
             //compute our expression and set it to dependentValue
             Expression exp = new Expression();
             bool dependentValue = exp.Solve(expression);
+            #endregion
 
             //make a dependent variable
             DependentVariable depVariable = Database.TryGetVariable<DependentVariable>(dependent) as DependentVariable;
@@ -97,6 +100,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 string variable = item.Trim();
                 if(variable.Contains('~'))
                 {
+                    #region Formatting display elements in order - Contains Hack
                     int closedParenCount = 0;
                     while (variable.Contains("("))
                     {
@@ -160,9 +164,11 @@ namespace VisiBoole.ParsingEngine.Statements
                         Parentheses closedParen = new Parentheses(")");
                         Output.Add(closedParen);
                     }
+                    #endregion
                 }
                 else if(variable.Contains('('))
                 {
+                    #region
                     while (variable.Contains("("))
                     {
                         Parentheses openParen;
@@ -209,9 +215,11 @@ namespace VisiBoole.ParsingEngine.Statements
                         Operator op = new Operator(variable);
                         Output.Add(op);
                     }
+                    #endregion
                 }
                 else if(variable.Contains(')'))
                 {
+                    #region
                     int closedParenCount = 0;
                     while (variable.Contains(")"))
                     {
@@ -242,9 +250,11 @@ namespace VisiBoole.ParsingEngine.Statements
                         Parentheses closedParen = new Parentheses(")");
                         Output.Add(closedParen);
                     }
+                    #endregion
                 }
                 else if(variable.Contains('~') && variable.Contains(';'))
                 {
+                    #region
                     string newVariable = variable.Substring(1, variable.IndexOf(';'));
                     IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
                     DependentVariable depVar = Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
@@ -263,6 +273,7 @@ namespace VisiBoole.ParsingEngine.Statements
                         Operator op = new Operator(variable);
                         Output.Add(op);
                     }
+                    #endregion
                 }
                 else
                 {
