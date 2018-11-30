@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using Ionic;
+using VisiBoole.ParsingEngine;
 
 namespace VisiBoole.Models
 {
@@ -15,20 +16,8 @@ namespace VisiBoole.Models
     /// </summary>
     public class SubDesign : RichTextBoxEx
     {
-        /// <summary>
-        /// Dependent variables associated with the (independent) Variables dictionary
-        /// </summary>
-        public Dictionary<string, List<string>> Dependencies { get; set; }
+        public Database Database;
 
-        /// <summary>
-        /// Independent variables associated with the (dependent) Dependencies dictionary
-        /// </summary>
-        public Dictionary<string, int> Variables { get; set; }
-
-        /// <summary>
-        /// Expressions constructed from independent and dependent variables
-        /// </summary>
-        public Dictionary<string, string> Expressions { get; set; }
         /// <summary>
         /// The index of the TabControl that this occupies
         /// </summary>
@@ -100,10 +89,7 @@ namespace VisiBoole.Models
             this.MouseDown += SubDesign_MouseDown;
             this.KeyDown += SubDesign_KeyDown;
 
-            this.Variables = new Dictionary<string, int>();
-            this.Expressions = new Dictionary<string, string>();
-            this.Dependencies = new Dictionary<string, List<string>>();
-
+            this.Database = new Database();
 	        this.ShowLineNumbers = true;
             SetTheme();
             SetFontSize();

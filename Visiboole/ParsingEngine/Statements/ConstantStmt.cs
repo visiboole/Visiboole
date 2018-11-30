@@ -5,28 +5,27 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
     public class ConstantStmt : Statement
     {
-        #region Regex patterns for constants
         /// <summary>
         /// Hex Constant Pattern
         /// </summary>
-        public static Regex HexPattern { get; } = new Regex(@"^(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[hH][a-fA-F0-9]+\;$");
+        public static Regex HexPattern { get; } = new Regex(@"^(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[hH][a-fA-F0-9]+\;$");
 
         /// <summary>
         /// Decimal Constant Pattern
         /// </summary>
-        public static Regex DecPattern { get; } = new Regex(@"^(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[dD][0-9]+\;$");
+        public static Regex DecPattern { get; } = new Regex(@"^(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[dD][0-9]+\;$");
 
         /// <summary>
         /// Binary Constant Pattern
         /// </summary>
-        public static Regex BinPattern { get; } = new Regex(@"^(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[bB][0-1]+\;$");
-        #endregion
+        public static Regex BinPattern { get; } = new Regex(@"^(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")\s*\=\s*\'[bB][0-1]+\;$");
 
         public VariableListStmt VariableStmt;
 
@@ -35,20 +34,20 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-        public ConstantStmt(int lnNum, string txt) : base(lnNum, txt)
+        public ConstantStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
         {
             Parse();
         }
 
         public override void Parse()
         {
-            Regex regexLeft = new Regex(@"^(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None); // Get left side
+            Regex regexLeft = new Regex(@"^(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None); // Get left side
             string leftSide = regexLeft.Match(Text).Value; // Left side of equal sign
-            List<string> leftVars = ExpandVariables(leftSide); // Expand left side to get all left variables
+            List<string> leftVars = new List<string>(); // Expand left side to get all left variables
+            leftVars.Add(leftSide);
             char[] charBinary; // Each binary from right side
             int[] rightValues; // Converted values form right side
 
-            #region Conversion upon regex matching
             if (HexPattern.Match(Text).Success)
             {
                 Regex regexRight = new Regex(@"[hH][a-fA-F0-9]+", RegexOptions.None);
@@ -72,7 +71,6 @@ namespace VisiBoole.ParsingEngine.Statements
 
                 charBinary = rightSide.Substring(1).ToCharArray();
             }
-            #endregion
 
             if (charBinary.Length != leftVars.Count)
             {
@@ -85,24 +83,32 @@ namespace VisiBoole.ParsingEngine.Statements
             string line = "";
             foreach (string var in leftVars)
             {
-                int value = Database.TryGetValue(var);
+                int value = SubDesign.Database.TryGetValue(var);
                 if (value != -1)
                 {
-                    //Database.SetValue(var, rightValues[leftVars.IndexOf(var)] == 1);
+                    SubDesign.Database.SetValue(var, rightValues[leftVars.IndexOf(var)] == 1);
                 }
                 else
                 {
                     IndependentVariable newVar = new IndependentVariable(var, rightValues[leftVars.IndexOf(var)] == 1);
-                    Database.AddVariable<IndependentVariable>(newVar);
+                    SubDesign.Database.AddVariable<IndependentVariable>(newVar);
                 }
 
-                line = String.Concat(line, var);
+                if (rightValues[leftVars.IndexOf(var)] == 1)
+                {
+                    line = String.Concat(line, "*", var);
+                }
+                else
+                {
+                    line = String.Concat(line, var);
+                }
+                
                 if (leftVars.IndexOf(var) != (leftVars.Count - 1)) line = String.Concat(line, " ");
             }
 
             line = String.Concat(line, ";");
 
-            VariableStmt = new VariableListStmt(LineNumber, line);
+            VariableStmt = new VariableListStmt(SubDesign, LineNumber, line);
         }
     }
 }

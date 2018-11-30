@@ -3,12 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Boolean
 {
     public class Expression
     {
+        private SubDesign SubDesign { get; set; }
+
+        public Expression(SubDesign sd)
+        {
+            SubDesign = sd;
+        }
+
         /// <summary>
         /// Solves the given boolean expression
         /// </summary>
@@ -84,10 +92,10 @@ namespace VisiBoole.ParsingEngine.Boolean
         private bool GetVariable(string variableName)
         {
             //See if variable was already declared in IndependentVariables
-            IndependentVariable indVariable = Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
+            IndependentVariable indVariable = SubDesign.Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
 
             //See if variable was already declared in DependentVariables
-            DependentVariable depVariable = Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
+            DependentVariable depVariable = SubDesign.Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
 
             //If variable was found in IndependentVariables
             if (indVariable != null)
@@ -116,7 +124,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 indVariable = new IndependentVariable(variableName, false);
 
                 //Now add the variable to the database
-                Database.AddVariable<IndependentVariable>(indVariable);
+                SubDesign.Database.AddVariable<IndependentVariable>(indVariable);
 
                 //Add variable to Output
                 //Output.Add(indVariable);

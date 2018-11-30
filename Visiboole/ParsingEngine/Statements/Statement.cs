@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using VisiBoole.Models;
 using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.ParsingEngine.ObjectCode;
 
@@ -12,6 +13,8 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public abstract class Statement
 	{
+        public SubDesign SubDesign { get; set; }
+
         /// <summary>
         /// The line number that this statement is located on within edit mode - not simulation mode
         /// </summary>
@@ -32,8 +35,9 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-		protected Statement(int lnNum, string txt)
+		protected Statement(SubDesign sd, int lnNum, string txt)
 		{
+            SubDesign = sd;
 			LineNumber = lnNum;
 			Text = txt;
 		}
@@ -45,11 +49,11 @@ namespace VisiBoole.ParsingEngine.Statements
 		public abstract void Parse();
 
         /// <summary>
-        /// Expands variables
+        /// Expands vectors into its variables
         /// </summary>
         /// <param name="exp">Expression to expand</param>
         /// <returns>A list of all variables</returns>
-        protected List<string> ExpandVariables(string exp)
+        protected List<string> ExpandVector(string exp)
         {
             #region Regex expansion
             /* Get variable */
@@ -87,6 +91,35 @@ namespace VisiBoole.ParsingEngine.Statements
                     vars.Add(String.Concat(var, i.ToString()));
             }
             return vars;
+        }
+
+        /// <summary>
+        /// Replace vectors with its variables
+        /// </summary>
+        /// <param name="exp">Expression to replace vectors</param>
+        /// <returns>Expression with vector replaced by its variables</returns>
+        protected string ReplaceVectors(string exp)
+        {
+            Regex regex = new Regex(@"(\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
+            MatchCollection matches = regex.Matches(exp);
+            if (matches.Count > 0)
+            {
+                foreach (Match match in matches)
+                {
+                    List<string> variables = ExpandVector(match.Value); // Expand variables to list
+
+                    /* Create expanded variables string */
+                    string expanded = "";
+                    for (int i = 0; i < variables.Count; i++)
+                    {
+                        if (i != (variables.Count - 1)) expanded = String.Concat(expanded + variables[i] + " ");
+                        else expanded = String.Concat(expanded + variables[i]);
+                    }
+                    exp = exp.Replace(match.Value, expanded); // Replace vector with expanded variables
+                }
+            }
+
+            return exp;
         }
     }
 }

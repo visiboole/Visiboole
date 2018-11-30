@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
@@ -19,7 +20,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-        public CommentStmt(int lnNum, string txt) : base(lnNum, txt)
+        public CommentStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
 		{
 		}
 

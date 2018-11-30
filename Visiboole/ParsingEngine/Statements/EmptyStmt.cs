@@ -1,4 +1,5 @@
-﻿using VisiBoole.ParsingEngine.ObjectCode;
+﻿using VisiBoole.Models;
+using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -12,7 +13,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-        public EmptyStmt(int lnNum, string txt) : base(lnNum, txt)
+        public EmptyStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
 		{
 		}
 

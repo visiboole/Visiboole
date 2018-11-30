@@ -51,5 +51,6 @@ namespace VisiBoole
         public static readonly string regexVariable = @"([a-zA-Z0-9]+)";
         public static readonly string regexArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.\.[0-9]+\])";
         public static readonly string regexStepArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.[0-9]+\.[0-9]+\])";
+        public static readonly string regexConstant = @"((\'[hH][a-fA-F0-9]+)|(\'[dD][0-9]+)|(\'[bB][0-1]+))";
     }
 }

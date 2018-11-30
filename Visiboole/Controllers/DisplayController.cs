@@ -16,12 +16,10 @@ namespace VisiBoole.Controllers
 	[System.Runtime.InteropServices.ComVisibleAttribute(true)]
 	public class DisplayController : IDisplayController
 	{
-
-        #region Initializes views, tabs, and the browser
-        /// <summary>
-        /// No-split input view that is hosted by the MainWindow
-        /// </summary>
-        private IDisplay edit;
+		/// <summary>
+		/// No-split input view that is hosted by the MainWindow
+		/// </summary>
+		private IDisplay edit;
 
 		/// <summary>
 		/// Horizontal-split view that is hosted by the MainWindow
@@ -79,14 +77,13 @@ namespace VisiBoole.Controllers
 				currentDisplay = value;
 			}
 		}
-        #endregion
 
         /// <summary>
-        /// Returns a handle to the display of the matching type
-        /// </summary>
-        /// <param name="dType">The type of the display to return</param>
-        /// <returns>Returns a handle to the display of the matching type</returns>
-        public IDisplay GetDisplayOfType(Globals.DisplayType dType)
+		/// Returns a handle to the display of the matching type
+		/// </summary>
+		/// <param name="dType">The type of the display to return</param>
+		/// <returns>Returns a handle to the display of the matching type</returns>
+		public IDisplay GetDisplayOfType(Globals.DisplayType dType)
         {
             switch (dType)
             {
@@ -136,91 +133,11 @@ namespace VisiBoole.Controllers
 		}
 
         /// <summary>
-        /// Handles the event that occurs when the user runs the parser
-        /// </summary>
-        public void Run()
-        {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
-            Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(sd, null, false);
-            if (output == null)
-            {
-                return;
-            }
-
-            HtmlBuilder html = new HtmlBuilder(output);
-            if (html.HtmlText == null)
-            {
-                return;
-            }
-            string htmlOutput = html.GetHTML();
-
-            browser.ObjectForScripting = this;
-            html.DisplayHtml(htmlOutput, browser);
-
-            if (CurrentDisplay is DisplayEdit)
-            {
-                mwController.LoadDisplay(Globals.DisplayType.RUN);
-            }
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the user ticks
-        /// </summary>
-        public void Tick()
-        {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
-            Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(sd, null, true);
-            HtmlBuilder html = new HtmlBuilder(output);
-            string htmlOutput = html.GetHTML();
-
-            browser.ObjectForScripting = this;
-            html.DisplayHtml(htmlOutput, browser);
-
-            if (CurrentDisplay is DisplayEdit)
-            {
-                mwController.LoadDisplay(Globals.DisplayType.RUN);
-            }
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the user clicks on an independent variable
-        /// </summary>
-        /// <param name="variableName">The name of the variable that was clicked by the user</param>
-        public void Variable_Click(string variableName)
-        {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
-            Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(sd, variableName, false);
-            if (output == null)
-            {
-                return;
-            }
-
-            HtmlBuilder html = new HtmlBuilder(output);
-            if (html.HtmlText == null)
-            {
-                return;
-            }
-            string htmlOutput = html.GetHTML();
-
-            browser.ObjectForScripting = this;
-            html.DisplayHtml(htmlOutput, browser);
-
-            if (CurrentDisplay is DisplayEdit)
-            {
-                mwController.LoadDisplay(Globals.DisplayType.RUN);
-            }
-        }
-
-        #region Tab creation, saving, and closing
-        /// <summary>
-        /// Creates a new tab on the TabControl
-        /// </summary>
-        /// <param name="sd">The SubDesign that is displayed in the new tab</param>
-        /// <returns>Returns true if a new tab was successfully created</returns>
-        public bool CreateNewTab(SubDesign sd)
+		/// Creates a new tab on the TabControl
+		/// </summary>
+		/// <param name="sd">The SubDesign that is displayed in the new tab</param>
+		/// <returns>Returns true if a new tab was successfully created</returns>
+		public bool CreateNewTab(SubDesign sd)
         {
             TabPage tab = new TabPage(sd.FileSourceName);
 
@@ -322,6 +239,85 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+		/// Handles the event that occurs when the user runs the parser
+		/// </summary>
+		public void Run()
+        {
+            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Parser p = new Parser();
+            List<IObjectCodeElement> output = p.Parse(sd, null, false);
+            if (output == null)
+            {
+                return;
+            }
+
+            HtmlBuilder html = new HtmlBuilder(sd, output);
+            if (html.HtmlText == null)
+            {
+                return;
+            }
+            string htmlOutput = html.GetHTML();
+
+            browser.ObjectForScripting = this;
+            html.DisplayHtml(htmlOutput, browser);
+
+            if (CurrentDisplay is DisplayEdit)
+            {
+                mwController.LoadDisplay(Globals.DisplayType.RUN);
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user ticks
+        /// </summary>
+        public void Tick()
+        {
+            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Parser p = new Parser();
+            List<IObjectCodeElement> output = p.Parse(sd, null, true);
+            HtmlBuilder html = new HtmlBuilder(sd, output);
+            string htmlOutput = html.GetHTML();
+
+            browser.ObjectForScripting = this;
+            html.DisplayHtml(htmlOutput, browser);
+
+            if (CurrentDisplay is DisplayEdit)
+            {
+                mwController.LoadDisplay(Globals.DisplayType.RUN);
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user clicks on an independent variable
+        /// </summary>
+        /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        public void Variable_Click(string variableName)
+        {
+            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Parser p = new Parser();
+            List<IObjectCodeElement> output = p.Parse(sd, variableName, false);
+            if (output == null)
+            {
+                return;
+            }
+
+            HtmlBuilder html = new HtmlBuilder(sd, output);
+            if (html.HtmlText == null)
+            {
+                return;
+            }
+            string htmlOutput = html.GetHTML();
+
+            browser.ObjectForScripting = this;
+            html.DisplayHtml(htmlOutput, browser);
+
+            if (CurrentDisplay is DisplayEdit)
+            {
+                mwController.LoadDisplay(Globals.DisplayType.RUN);
+            }
+        }
+
+        /// <summary>
 		/// Closes the current tab
 		/// </summary>
 		/// <returns>Indicates whether the tab was closed</returns>
@@ -350,6 +346,5 @@ namespace VisiBoole.Controllers
             }
             else return false;
         }
-        #endregion
     }
 }

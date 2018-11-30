@@ -25,7 +25,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Returns a list of parsed elements containing the text and value of each unit in the given expression</returns>
 		public List<IObjectCodeElement> Parse(SubDesign sd, string variableName, bool tick)
 		{
-            #region initial run
+            //initial run
             if(string.IsNullOrEmpty(variableName) && tick.Equals(false))
             {
                 List<Statement> stmtList = ParseStatements(sd, false, true);
@@ -44,12 +44,10 @@ namespace VisiBoole.ParsingEngine
                 }
                 return output;
             }
-            #endregion
-
-            #region variable clicked
-            else if(!string.IsNullOrEmpty(variableName) && tick.Equals(false))
+            //variable clicked
+			else if(!string.IsNullOrEmpty(variableName) && tick.Equals(false))
             {
-                Database.VariableClicked(variableName);
+                sd.Database.VariableClicked(variableName);
                 List<Statement> stmtList = ParseStatements(sd, false, false);
                 if (stmtList == null)
                 {
@@ -66,9 +64,7 @@ namespace VisiBoole.ParsingEngine
                 }
                 return output;
             }
-            #endregion
-
-            #region clock tick
+            //clock tick
             else
             {
                 List<Statement> stmtList = ParseStatements(sd, true, false);
@@ -94,8 +90,7 @@ namespace VisiBoole.ParsingEngine
                 }
                 return output;
             }
-            #endregion
-        }
+		}
 
 		/// <summary>
 		/// Parses the source code into discrete statements of their respective visiboole type
@@ -116,11 +111,12 @@ namespace VisiBoole.ParsingEngine
                 bool flag = false;    // flag is set to true after the first non-empty/comment is found
                 while ((nextLine = reader.ReadLine()) != null)
                 {
-                    #region Handles empty statements, comments, or incomplete statements (no ';')
+                    nextLine = nextLine.TrimEnd();
+
                     // check for an empty statement
                     if (string.IsNullOrEmpty(nextLine.Trim()))
                     {
-                        stmtList.Add(new EmptyStmt(postLnNum, nextLine));
+                        stmtList.Add(new EmptyStmt(sd, postLnNum, nextLine));
                         preLnNum++;
                         postLnNum++;
                         continue;
@@ -130,7 +126,7 @@ namespace VisiBoole.ParsingEngine
                     bool success = CommentStmt.Pattern.Match(nextLine).Success;
                     if (success)
                     {
-                        stmtList.Add(new CommentStmt(postLnNum, nextLine));
+                        stmtList.Add(new CommentStmt(sd, postLnNum, nextLine));
                         preLnNum++;
                         postLnNum++;
                         continue;
@@ -141,9 +137,8 @@ namespace VisiBoole.ParsingEngine
                         MessageBox.Show("Missing ';'. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
                     }
-                    #endregion
 
-                    #region Check for matching (), [] and {} */
+                    /* Check for matching (), [] and {} */
                     Stack<char> stack = new Stack<char>();
                     foreach (char c in nextLine)
                     {
@@ -173,16 +168,12 @@ namespace VisiBoole.ParsingEngine
                         MessageBox.Show("Unmatching '" + stack.Peek() + "'. Line: " + (postLnNum + 1), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
                     }
-                    #endregion
 
-                    #region Determine which statement type is being parsed
                     // check for a format specifier statement
                     success = FormatSpecifierStmt.Pattern.Match(nextLine).Success;
                     if (success)
                     {
-                        if (nextLine.Contains("["))
-                            nextLine = ReplaceVectors(nextLine);
-                        stmtList.Add(new FormatSpecifierStmt(postLnNum, nextLine));
+                        stmtList.Add(new FormatSpecifierStmt(sd, postLnNum, nextLine));
                         flag = true;
                         preLnNum++;
                         postLnNum++;
@@ -193,9 +184,7 @@ namespace VisiBoole.ParsingEngine
                     success = VariableListStmt.Pattern.Match(nextLine).Success;
                     if (success)
                     {
-                        if (nextLine.Contains("["))
-                            nextLine = ReplaceVectors(nextLine);
-                        stmtList.Add(new VariableListStmt(postLnNum, nextLine));
+                        stmtList.Add(new VariableListStmt(sd, postLnNum, nextLine));
                         flag = true;
                         preLnNum++;
                         postLnNum++;
@@ -205,15 +194,20 @@ namespace VisiBoole.ParsingEngine
                     success = ConstantStmt.BinPattern.Match(nextLine).Success || ConstantStmt.DecPattern.Match(nextLine).Success || ConstantStmt.HexPattern.Match(nextLine).Success;
                     if (success)
                     {
-                        ConstantStmt stmt = new ConstantStmt(postLnNum, nextLine);
-                        if (stmt.VariableStmt != null)
+                        List<string> lines = ExpandLine(nextLine);
+                        foreach (string line in lines)
                         {
-                            stmtList.Add(stmt.VariableStmt);
+                            ConstantStmt stmt = new ConstantStmt(sd, postLnNum++, line);
+
+                            if (stmt.VariableStmt != null)
+                            {
+                                stmtList.Add(stmt.VariableStmt);
+                            }
+                            else return null;
                         }
-                        else return null;
+                            
                         flag = true;
                         preLnNum++;
-                        postLnNum++;
                         continue;
                     }
 
@@ -221,7 +215,7 @@ namespace VisiBoole.ParsingEngine
                     success = ModuleDeclarationStmt.Pattern.Match(nextLine).Success;
                     if (flag == false && success)
                     {
-                        stmtList.Add(new ModuleDeclarationStmt(postLnNum, nextLine));
+                        stmtList.Add(new ModuleDeclarationStmt(sd, postLnNum, nextLine));
                         flag = true;
                         preLnNum++;
                         postLnNum++;
@@ -232,7 +226,7 @@ namespace VisiBoole.ParsingEngine
                     success = SubmoduleInstantiationStmt.Pattern.Match(nextLine).Success;
                     if (success)
                     {
-                        stmtList.Add(new SubmoduleInstantiationStmt(postLnNum, nextLine));
+                        stmtList.Add(new SubmoduleInstantiationStmt(sd, postLnNum, nextLine));
                         flag = true;
                         preLnNum++;
                         postLnNum++;
@@ -260,7 +254,7 @@ namespace VisiBoole.ParsingEngine
 
                         foreach (string line in lines)
                         {
-                            stmtList.Add(new DffClockStmt(postLnNum++, line, tick, init));
+                            stmtList.Add(new DffClockStmt(sd, postLnNum++, line, tick, init));
                         }
 
                         flag = true;
@@ -289,14 +283,13 @@ namespace VisiBoole.ParsingEngine
 
                         foreach (string line in lines)
                         {
-                            stmtList.Add(new BooleanAssignmentStmt(postLnNum++, line));
+                            stmtList.Add(new BooleanAssignmentStmt(sd, postLnNum++, line));
                         }
 
                         flag = true;
                         preLnNum++;
                         continue;
                     }
-                    #endregion
 
                     // if we have reached this point with no match then there is a user syntax error
                     // TODO: add more validation checks for augmented error-checking granularity
@@ -318,9 +311,35 @@ namespace VisiBoole.ParsingEngine
         /// <returns>A list of all variables</returns>
         private List<string> ExpandVector(string exp)
         {
-            #region Regex matching / expand variables
+            List<string> vars = new List<string>();
+            Regex regex;
+
+            if (exp.Contains("'"))
+            {
+                regex = new Regex(@"\'[bBhHdD]", RegexOptions.None);
+                string format = regex.Match(exp).Value;
+
+                if (!format.Equals("'d"))
+                {
+                    foreach (char c in exp.Substring(2))
+                    {
+                        vars.Add(string.Concat(format, c));
+                    }
+                }
+                else
+                {
+                    string binary = Convert.ToString(Convert.ToInt32(exp.Substring(2), 10), 2);
+                    foreach (char c in binary)
+                    {
+                        vars.Add(string.Concat(format, c));
+                    }
+                }
+
+                return vars;
+            }
+
             /* Get variable */
-            Regex regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
+            regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
             string var = regex.Match(exp).Value;
 
             /* Get everything inside brackets */
@@ -334,7 +353,6 @@ namespace VisiBoole.ParsingEngine
             /* Get num values */
             regex = new Regex(@"[0-9]+", RegexOptions.None);
             MatchCollection matches = regex.Matches(nums);
-            #endregion
 
             /* Assign start, step and end from num values */
             int start = Convert.ToInt32(matches[0].Value);
@@ -342,7 +360,6 @@ namespace VisiBoole.ParsingEngine
             int end = (matches.Count == 2) ? Convert.ToInt32(matches[1].Value) : Convert.ToInt32(matches[2].Value);
 
             /* Create list with expanded variables */
-            List<string> vars = new List<string>();
             if (start < end)
             {
                 for (int i = start; i <= end; i += step)
@@ -358,49 +375,19 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Replace vectors with its variables
-        /// </summary>
-        /// <param name="exp">Expression to replace vectors</param>
-        /// <returns>Expression with vector replaced by its variables</returns>
-        private string ReplaceVectors(string exp)
-        {
-            Regex regex = new Regex(@"(" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
-            MatchCollection matches = regex.Matches(exp);
-            if (matches.Count > 0)
-            {
-                foreach (Match match in matches)
-                {
-                    List<string> variables = ExpandVector(match.Value); // Expand variables to list
-
-                    /* Create expanded variables string */
-                    string expanded = "";
-                    for (int i = 0; i < variables.Count; i++)
-                    {
-                        if (i != (variables.Count - 1)) expanded = String.Concat(expanded + variables[i] + " ");
-                        else expanded = String.Concat(expanded + variables[i]);
-                    }
-                    exp = exp.Replace(match.Value, expanded); // Replace vector with expanded variables
-                }
-            }
-
-            return exp;
-        }
-
-        /// <summary>
         /// Expands line into lines
         /// </summary>
         /// <param name="exp">Line to expand</param>
         /// <returns>List of all lines</returns>
         private List<string> ExpandLine(string exp)
         {
-            #region Regex matching for expansion
             List<string> lines = new List<string>();
             Regex regex = new Regex
                 (@"((" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")(?![^{}]*\}))|"
                 + @"(\{(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")"
-                + @"(\,\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\})", RegexOptions.None);
+                + @"(\,\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\})|"
+                + Globals.regexConstant, RegexOptions.None);
             MatchCollection matches = regex.Matches(exp);
-            #endregion
 
             /* Expand all variables */
             List<List<string>> variables = new List<List<string>>();

@@ -13,7 +13,7 @@ namespace VisiBoole.Models
 		public string HtmlText = "";
 		public string currentLine = "";
 
-        public HtmlBuilder(List<IObjectCodeElement> output)
+        public HtmlBuilder(SubDesign sd, List<IObjectCodeElement> output)
         {
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
@@ -53,7 +53,7 @@ namespace VisiBoole.Models
                             startIndex = holdingIndex;
 
                             outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                            Expression exp = new Expression();
+                            Expression exp = new Expression(sd);
                             bool colorValue = exp.Solve(outermost);
 
                             line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
@@ -161,7 +161,6 @@ namespace VisiBoole.Models
                         if (value.Equals(null))
                         {
                             currentLine += "<font color='black' style=\"cursor: no-drop;\" >" + variable + "</font>";
-                            currentLine += " ";
                         }
                         else
                         {
@@ -195,7 +194,8 @@ namespace VisiBoole.Models
                     {
                         if (value.Equals(null))
                         {
-                            currentLine += "<font color='black' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            variable = "&nbsp";
+                            currentLine += "<font color='black' \" >" + variable + "</font>";
                             currentLine += " ";
                         }
                         else

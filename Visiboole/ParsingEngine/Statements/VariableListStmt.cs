@@ -2,6 +2,7 @@
 using VisiBoole.ParsingEngine.ObjectCode;
 using System;
 using System.Collections.Generic;
+using VisiBoole.Models;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -14,7 +15,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// The identifying pattern that can be used to identify and extract this statement from raw text
         /// </summary>
         public static Regex Pattern { get; } = new Regex
-            (@"^(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")"
+            (@"^\s*(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")"
                 + @"(\s*(\*?" + Globals.regexVariable + @"|\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @"))*\;$");
 
         /// <summary>
@@ -22,9 +23,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-		public VariableListStmt(int lnNum, string txt) : base(lnNum, txt)
+		public VariableListStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
 		{
-
 		}
 
 	    /// <summary>
@@ -33,54 +33,51 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            #region Tokenize
-            /* Remove semicolon */
-            Regex regex = new Regex(@"[;]", RegexOptions.None);
-            string content = regex.Replace(Text, string.Empty);
-
-            /* Get format */
-            regex = new Regex(Globals.regexVariable, RegexOptions.None);
-            string format = regex.Replace(content, "X");
+            /* Clean content and make format string */
+            string content = Regex.Replace(Text, @"[;]", string.Empty);
+            string format = Regex.Replace(content, @"[\s]", "#");
+            content = ReplaceVectors(content);
+            format = ReplaceVectors(format);
+            format = Regex.Replace(format, Globals.regexVariable, "X");
+            format = Regex.Replace(format, @"[\s]", string.Empty);
 
             /* Split variables by whitespace */
-            regex = new Regex(@"\s+", RegexOptions.None);
-            string[] variables = regex.Split(content);
-            #endregion
+            string[] variables = Regex.Split(content.Trim(), @"\s+");
 
             /* Output all variables */
             int i = 0;
             foreach (char c in format)
             {
-                if (c == 'X')
+                if (c == '#')
                 {
-                    string var = variables[i++];
+                    SpaceFeed sf = new SpaceFeed();
+                    Output.Add(sf);
+                }
+                else
+                {
+                    string var = variables[i++]; // Variable to be created
 
-                    bool val = (var[0] == '*') ? true : false;
-                    string v = (var[0] == '*') ? var.Substring(1) : var;
+                    bool val = (var[0] == '*');
+                    var = (var[0] == '*') ? var.Substring(1) : var;
 
-                    IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(v) as IndependentVariable;
-                    DependentVariable depVar = Database.TryGetVariable<DependentVariable>(v) as DependentVariable;
+                    IndependentVariable indVar = SubDesign.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+                    DependentVariable depVar = SubDesign.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
                     if (indVar != null)
                     {
-                        //Database.SetValue(v, val);
+                        //SubDesign.Database.SetValue(var, val);
                         Output.Add(indVar);
                     }
                     else if (depVar != null)
                     {
-                        //Database.SetValue(v, val);
+                        //SubDesign.Database.SetValue(var, val);
                         Output.Add(depVar);
                     }
                     else
                     {
-                        IndependentVariable newVar = new IndependentVariable(v, val);
-                        Database.AddVariable<IndependentVariable>(newVar);
+                        IndependentVariable newVar = new IndependentVariable(var, val);
+                        SubDesign.Database.AddVariable<IndependentVariable>(newVar);
                         Output.Add(newVar);
                     }
-                }
-                else
-                {
-                    SpaceFeed sf = new SpaceFeed();
-                    Output.Add(sf);
                 }
             }
 
