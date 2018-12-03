@@ -53,7 +53,7 @@ namespace VisiBoole.Models
                             startIndex = holdingIndex;
 
                             outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                            Expression exp = new Expression(sd);
+                            Expression exp = new Expression();
                             bool colorValue = exp.Solve(outermost);
 
                             line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
@@ -194,9 +194,16 @@ namespace VisiBoole.Models
                     {
                         if (value.Equals(null))
                         {
-                            variable = "&nbsp";
-                            currentLine += "<font color='black' \" >" + variable + "</font>";
-                            currentLine += " ";
+                            if (variable.Equals("&nbsp"))
+                            {
+                                currentLine += variable;
+                            }
+                            else
+                            {
+                                currentLine += "<font color='black' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                currentLine += " ";
+                            }
+                            
                         }
                         else
                         {

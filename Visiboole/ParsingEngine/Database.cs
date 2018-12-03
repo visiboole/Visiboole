@@ -96,6 +96,37 @@ namespace VisiBoole.ParsingEngine
         /// <typeparam name="T">The type matching the target collection of variables</typeparam>
         /// <param name="v">The variable to add to the collection of matching type</param>
         /// <returns>Returns true if the variable was successfully added</returns>
+        public bool AddVariable<T>(T v)
+        {
+            Type varType = typeof(T);
+            if (varType == typeof(IndependentVariable))
+            {
+                IndependentVariable iv = (IndependentVariable)Convert.ChangeType(v, typeof(IndependentVariable));
+                if (!IndVars.ContainsKey(iv.Name))
+                {
+                    IndVars.Add(iv.Name, iv);
+                }
+                if (!AllVars.ContainsKey(iv.Name))
+                {
+                    AllVars.Add(iv.Name, iv);
+                }
+            }
+            else
+            {
+                DependentVariable dv = (DependentVariable)Convert.ChangeType(v, typeof(DependentVariable));
+
+                if (!DepVars.ContainsKey(dv.Name))
+                {
+                    DepVars.Add(dv.Name, dv);
+                }
+                if (!AllVars.ContainsKey(dv.Name))
+                {
+                    AllVars.Add(dv.Name, dv);
+                }
+            }
+            return true;
+        }
+        /*
 		public bool AddVariable<T>(T v)
 		{
 			Type varType = typeof(T);
@@ -115,6 +146,7 @@ namespace VisiBoole.ParsingEngine
 			}
 			return true;
 		}
+        */
 
         /// <summary>
         /// Fetches a variable from the collection of variables matching the given type

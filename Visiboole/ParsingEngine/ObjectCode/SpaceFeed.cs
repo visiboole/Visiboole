@@ -10,7 +10,7 @@ namespace VisiBoole.ParsingEngine.ObjectCode
         /// <summary>
         /// The text representation of this outpute element, a space character
         /// </summary>
-		public string ObjCodeText { get { return " "; } set { } }
+		public string ObjCodeText { get { return "&nbsp"; } set { } }
 
         /// <summary>
         /// The value of this element is null as it is a newline character, not a variable

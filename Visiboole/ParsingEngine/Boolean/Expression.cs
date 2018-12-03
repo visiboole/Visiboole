@@ -10,11 +10,8 @@ namespace VisiBoole.ParsingEngine.Boolean
 {
     public class Expression
     {
-        private SubDesign SubDesign { get; set; }
-
-        public Expression(SubDesign sd)
+        public Expression()
         {
-            SubDesign = sd;
         }
 
         /// <summary>
@@ -92,10 +89,10 @@ namespace VisiBoole.ParsingEngine.Boolean
         private bool GetVariable(string variableName)
         {
             //See if variable was already declared in IndependentVariables
-            IndependentVariable indVariable = SubDesign.Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
+            IndependentVariable indVariable = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
 
             //See if variable was already declared in DependentVariables
-            DependentVariable depVariable = SubDesign.Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
+            DependentVariable depVariable = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
 
             //If variable was found in IndependentVariables
             if (indVariable != null)
@@ -124,7 +121,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 indVariable = new IndependentVariable(variableName, false);
 
                 //Now add the variable to the database
-                SubDesign.Database.AddVariable<IndependentVariable>(indVariable);
+                Globals.tabControl.SelectedTab.SubDesign().Database.AddVariable<IndependentVariable>(indVariable);
 
                 //Add variable to Output
                 //Output.Add(indVariable);

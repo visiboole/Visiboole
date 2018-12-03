@@ -13,14 +13,14 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// <summary>
 	    /// The identifying pattern that can be used to identify and extract this statement from raw text
 	    /// </summary>
-        public static Regex Pattern { get; } = new Regex(@"^"".*""$");
+        public static Regex Regex { get; } = new Regex(@"^"".*""$");
 
         /// <summary>
         /// Constructs an instance of CommentStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-        public CommentStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
+        public CommentStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
 		}
 

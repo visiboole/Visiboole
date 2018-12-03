@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using VisiBoole.Models;
 
 namespace VisiBoole
 {
@@ -46,11 +44,13 @@ namespace VisiBoole
         public static float FontSize = 12;
 
         /// <summary>
-        /// Regex Expressions for all type of variables
+        /// Regular Expression Patterns for Variables
         /// </summary>
-        public static readonly string regexVariable = @"([a-zA-Z0-9]+)";
-        public static readonly string regexArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.\.[0-9]+\])";
-        public static readonly string regexStepArrayVariables = @"([a-zA-Z0-9]+\[[0-9]+\.[0-9]+\.[0-9]+\])";
-        public static readonly string regexConstant = @"((\'[hH][a-fA-F0-9]+)|(\'[dD][0-9]+)|(\'[bB][0-1]+))";
+        public static readonly string PatternVariable = @"([a-zA-Z0-9]+)";
+        public static readonly string PatternVector = @"([a-zA-Z0-9]+\[\d+\.\.\d+\])";
+        public static readonly string PatternStepVector = @"([a-zA-Z0-9]+\[\d+\.\d+\.\d+\])";
+        public static readonly string PatternAnyVectorType = @"(" + PatternVector + @"|" + PatternStepVector + @")";
+        public static readonly string PatternAnyVariableType = @"(" + PatternVariable + @"|" + PatternVector + @"|" + PatternStepVector + @")";
+        public static readonly string PatternConstant = @"((\'[hH][a-fA-F\d]+)|(\'[dD]\d+)|(\'[bB][0-1]+))";
     }
 }

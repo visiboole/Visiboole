@@ -15,18 +15,52 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class FormatSpecifierStmt : Statement
 	{
         /// <summary>
-        /// Format Specifier Pattern 
+        /// Regex for getting the format of the FormatSpecifier
         /// </summary>
-        public static Regex Pattern { get; } = new Regex
-            (@"^\%[ubhdUBHD]\{(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @")"
-            + @"(\s*(" + Globals.regexVariable + @"|" + Globals.regexArrayVariables + @"|" + Globals.regexStepArrayVariables + @"))*\}\;$");
+        private static readonly Regex RegexFormat = new Regex (
+            @"\%"                                       // %
+            + @"[ubhdUBHD]"                             // u or b or h or d or U or B or H or D
+        );
+
+        /// <summary>
+        /// Regex for getting the data of the FormatSpecifier
+        /// </summary>
+        private static readonly Regex RegexData = new Regex (
+            @"\{"                                               // {
+            + Globals.PatternAnyVariableType                    // Any Variable Type
+            + @"("                                              // Being Optional Group
+                + @"\s*"                                        // Any Number of Whitespace
+                + Globals.PatternAnyVariableType                // Any Variable
+            + @")*"                                             // End Optional Group
+            + @"\}"                                             // }
+        );
+
+        /// <summary>
+        /// Regex for a Format Specifier
+        /// </summary>
+        private static readonly Regex RegexFormatSpecifier = new Regex (
+            RegexFormat.ToString()                          // Format of FormatSpecifier
+            + RegexData.ToString()                          // Data of FormatSpecifier
+        );
+
+        /// <summary>
+        /// Regex for a Format Specifier Statement
+        /// </summary>
+        public static readonly Regex Regex = new Regex (
+            RegexFormatSpecifier.ToString()                 // FormatSpecifier
+            + @"("                                          // Being Optional Group
+                + @"\s*"                                    // Any Number of Whitespace
+                + RegexFormat.ToString()                    // Format of FormatSpecifier
+                + RegexData.ToString()                      // Data of FormatSpecifier
+            + @")*"                                         // End Optional Group
+        );
 
         /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-        public FormatSpecifierStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
+        public FormatSpecifierStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
 		}
 
@@ -36,45 +70,61 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            #region Identify format, remove syntax and tokenize the variables
-            /* Get format type */
-            Regex regex = new Regex(@"^\%[ubhdUBHD]", RegexOptions.None);
-            string format = regex.Match(Text).Value.Substring(1);
+            /* Get output format */
+            string outputFormat = RegexFormatSpecifier.Replace(Text, "X"); // Get output format
+            outputFormat = Regex.Replace(outputFormat, @"[;]", string.Empty); // Remove syntax
+            outputFormat = Regex.Replace(outputFormat, @"\s", "_"); // Get output format with spacing
+            outputFormat = Regex.Replace(outputFormat, @"_X", "X"); // Remove one extra space
 
-            /* Remove syntax */
-            regex = new Regex(@"[{};]", RegexOptions.None);
-            string content = regex.Replace(Text.Substring(2), string.Empty);
-
-            /* Replace vectors if any */
-            content = ReplaceVectors(content);
-
-            /* Split variables by whitespace */
-            regex = new Regex(@"\s+", RegexOptions.None);
-            string[] variables = regex.Split(content);
-            #endregion
-
-            /* Get output values for each variable */
-            List<int> valueList = new List<int>(); // List of output values
-            foreach (string var in variables)
+            /* Output format specifiers */
+            MatchCollection matches = RegexFormatSpecifier.Matches(Text); // All Format Specifiers
+            int index = 0; // Format Specifier Index
+            foreach (char c in outputFormat)
             {
-                /* Add value of each variable to output values */
-                int value = SubDesign.Database.TryGetValue(var);
-                if (value != -1)
+                if (c == '_')
                 {
-                    valueList.Add(value);
+                    /* Add space to output feed */
+                    SpaceFeed sf = new SpaceFeed();
+                    Output.Add(sf);
                 }
                 else
                 {
-                    IndependentVariable newVar = new IndependentVariable(var, false);
-                    SubDesign.Database.AddVariable<IndependentVariable>(newVar);
-                    valueList.Add(0);
+                    Match match = matches[index++]; // Get Format Specifier Match
+
+                    /* Get format specifier and replace vectors if necessary */
+                    string formatSpecifier = match.Value; // Get format specifier
+                    string format = RegexFormat.Match(formatSpecifier).Value; // Get format of format specifier
+                    string data = RegexData.Match(formatSpecifier).Value; // Get data of format specifier
+                    data = Regex.Replace(data, @"[{}]", string.Empty); // Remove brackets
+                    data = ReplaceVectors(data); // Replace vectors
+
+                    /* Get variables and values */
+                    string[] variables = Regex.Split(data, @"\s+"); // Split variables by whitespace
+                    List<int> values = new List<int>(); // Values of variables
+                    foreach (string var in variables)
+                    {
+                        /* Add value of each variable to output values */
+                        int value = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(var);
+                        if (value != -1)
+                        {
+                            values.Add(value);
+                        }
+                        else
+                        {
+                            IndependentVariable newVar = new IndependentVariable(var, false);
+                            Globals.tabControl.SelectedTab.SubDesign().Database.AddVariable<IndependentVariable>(newVar);
+                            values.Add(0);
+                        }
+                    }
+
+                    /* Output Format Specifier */
+                    string output = Calculate(format.Substring(1), values); // Output values with format
+                    Operator val = new Operator(output); // Operator of outpute values
+                    Output.Add(val); // Add operator of output to output
                 }
             }
 
-            /* Calculate output */
-            string final = Calculate(format, valueList);
-            Operator val = new Operator(final);
-            Output.Add(val);
+            /* Add new line to output feed */
             LineFeed lf = new LineFeed();
             Output.Add(lf);
         }

@@ -13,8 +13,6 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public abstract class Statement
 	{
-        public SubDesign SubDesign { get; set; }
-
         /// <summary>
         /// The line number that this statement is located on within edit mode - not simulation mode
         /// </summary>
@@ -35,9 +33,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-		protected Statement(SubDesign sd, int lnNum, string txt)
+		protected Statement(int lnNum, string txt)
 		{
-            SubDesign = sd;
 			LineNumber = lnNum;
 			Text = txt;
 		}
@@ -55,23 +52,10 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <returns>A list of all variables</returns>
         protected List<string> ExpandVector(string exp)
         {
-            #region Regex expansion
-            /* Get variable */
-            Regex regex = new Regex(@"^\*?[a-zA-Z0-9]+", RegexOptions.None);
-            string var = regex.Match(exp).Value;
-
-            /* Get everything inside brackets */
-            regex = new Regex(@"\[(.*?)\]", RegexOptions.None);
-            string nums = regex.Match(exp).Value;
-
-            /* Remove brackets */
-            regex = new Regex(@"[\[\]]", RegexOptions.None);
-            nums = regex.Replace(nums, string.Empty);
-
-            /* Get num values */
-            regex = new Regex(@"[0-9]+", RegexOptions.None);
-            MatchCollection matches = regex.Matches(nums);
-            #endregion
+            /* Get variable, bounds and step */
+            string var = Regex.Match(exp, @"^\*?" + Globals.PatternVariable).Value; // Get Variable
+            string nums = Regex.Match(exp, @"\[(.*?)\]").Value; // Get numbers
+            MatchCollection matches = Regex.Matches(nums, @"\d+"); // Get bounds and step
 
             /* Assign start, step and end from num values */
             int start = Convert.ToInt32(matches[0].Value);
@@ -100,8 +84,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <returns>Expression with vector replaced by its variables</returns>
         protected string ReplaceVectors(string exp)
         {
-            Regex regex = new Regex(@"(\*?" + Globals.regexArrayVariables + @"|\*?" + Globals.regexStepArrayVariables + @")", RegexOptions.None);
-            MatchCollection matches = regex.Matches(exp);
+            MatchCollection matches = Regex.Matches(exp, @"\*?" + Globals.PatternAnyVectorType);
             if (matches.Count > 0)
             {
                 foreach (Match match in matches)

@@ -13,7 +13,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-        public EmptyStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
+        public EmptyStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
 		}
 

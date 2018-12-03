@@ -14,14 +14,14 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// <summary>
 	    /// The identifying pattern that can be used to identify and extract this statement from raw text
 	    /// </summary>
-        public static Regex Pattern { get; } = new Regex(@"^@\w{1,20}\(.*:.*:.*\);$");
+        public static Regex Regex { get; } = new Regex(@"^@\w{1,20}\(.*:.*:.*\);$");
 
         /// <summary>
         /// Constructs an instance of SubmoduleInstantiationStmt at given linenumber with txt string input
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-		public SubmoduleInstantiationStmt(SubDesign sd, int lnNum, string txt) : base(sd, lnNum, txt)
+		public SubmoduleInstantiationStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
 
 		}
