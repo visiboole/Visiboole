@@ -1,4 +1,5 @@
-﻿using VisiBoole.Views;
+﻿using System.Collections.Generic;
+using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
 {
@@ -67,6 +68,12 @@ namespace VisiBoole.Controllers
         /// Run mode.
         /// </summary>
         void Run();
+
+        /// <summary>
+        /// Gets variable debugger information for the active SubDesign
+        /// </summary>
+        /// <returns>Variable debugger information</returns>
+        string DebugVariables();
 
         /// <summary>
         /// Closes the selected open file

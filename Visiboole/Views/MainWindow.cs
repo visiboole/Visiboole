@@ -65,6 +65,7 @@ namespace VisiBoole.Views
             increaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
             decreaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
             selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            variablesToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
 
             if (NavTree.Nodes[0].Nodes.Count > 0)
             {
@@ -411,6 +412,12 @@ namespace VisiBoole.Views
         private void RunToggleEvent(object sender, EventArgs e)
         {
             controller.Run();
+        }
+
+        private void variablesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DebugWindow dw = new DebugWindow("Variables", controller.DebugVariables());
+            dw.Show();
         }
 
         /// <summary>

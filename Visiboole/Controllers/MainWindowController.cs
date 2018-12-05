@@ -194,6 +194,15 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Gets variable debugger information for the active SubDesign
+        /// </summary>
+        /// <returns>Variable debugger information</returns>
+        public string DebugVariables()
+        {
+            return designController.DebugVariables(displayController.GetActiveTabPage().SubDesign().FileSourceName);
+        }
+
+        /// <summary>
         /// Closes the selected open file
         /// </summary>
         /// <returns>The name of the file closed</returns>
