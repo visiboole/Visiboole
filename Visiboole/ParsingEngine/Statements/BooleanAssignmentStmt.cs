@@ -17,9 +17,19 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class BooleanAssignmentStmt : Statement
 	{
         /// <summary>
-        /// The identifying pattern that can be used to identify and extract this statement from raw text
+        /// The full expression of the boolean statement
         /// </summary>
-		public static Regex Regex { get; } = new Regex(@"^\w{1,20} <?= ~?(~?\(*?\w{1,20}?\)*? ?\+? ?)+~?\w{1,20}\)?;$");
+        private string FullExpression { get; set; }
+
+        /// <summary>
+        /// The dependent of the boolean statement
+        /// </summary>
+        private string Dependent { get; set; }
+
+        /// <summary>
+        /// The expression of the boolean statement
+        /// </summary>
+        private string Expression { get; set; }
 
         /// <summary>
         /// Constructs an instance of BooleanAssignmentStmt
@@ -28,7 +38,25 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="txt">The raw, unparsed text of this statement</param>
 		public BooleanAssignmentStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
-		}
+            /* Get the dependent and the expression */
+            int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
+            FullExpression = Text.Substring(start, (Text.IndexOf(';') - start));
+            Dependent = FullExpression.Substring(0, FullExpression.IndexOf('=')).Trim();
+            Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
+
+            /* Add expression and dependency to the database */
+            Globals.tabControl.SelectedTab.SubDesign().Database.AddExpression(Dependent, Expression);
+            Globals.tabControl.SelectedTab.SubDesign().Database.CreateDependenciesList(Dependent);
+
+            /* Update variable value */
+            Expression exp = new Expression();
+            bool dependentValue = exp.Solve(Expression);
+            bool currentValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(Dependent) == 1;
+            if (dependentValue != currentValue)
+            {
+                Globals.tabControl.SelectedTab.SubDesign().Database.SetDepVar(Dependent, dependentValue);
+            }  
+        }
 
 	    /// <summary>
 	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
@@ -44,60 +72,26 @@ namespace VisiBoole.ParsingEngine.Statements
                 Output.Add(space);
             }
 
-            string fullExpression = Text.Substring(start, (Text.IndexOf(';') - start)); // Start expression with first non whitespace character
-
-            //get our dependent variable and expression
-            string dependent = fullExpression.Substring(0, fullExpression.IndexOf('='));
-            string expression = fullExpression.Substring(fullExpression.IndexOf('=') + 1);
-
-            //format the dependent variable and expression
-            dependent = dependent.Trim();
-            expression = expression.Trim();
-
-            //add the expression to this dependent variable
-            Globals.tabControl.SelectedTab.SubDesign().Database.AddExpression(dependent, expression);
-
-            //create dependencies list to add expression variables too
-            Globals.tabControl.SelectedTab.SubDesign().Database.CreateDependenciesList(dependent);
-
-            //compute our expression and set it to dependentValue
-            Expression exp = new Expression();
-            bool dependentValue = exp.Solve(expression);
-
-            //make a dependent variable
-            DependentVariable depVariable = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(dependent) as DependentVariable;
-            if (depVariable != null)
-            {
-                Globals.tabControl.SelectedTab.SubDesign().Database.SetDepVar(dependent, dependentValue);
-            }
-            else
-            {
-                depVariable = new DependentVariable(dependent, dependentValue);
-            }
-
-            //add the variable to the Globals.tabControl.SelectedTab.SubDesign().Database
-            Globals.tabControl.SelectedTab.SubDesign().Database.AddVariable<DependentVariable>(depVariable);
-
-            MakeOrderedOutput(depVariable, expression);
+            /* Update variable value */
+            DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
+            MakeOrderedOutput(depVar);
         }
 
         /// <summary>
         /// Arranges the output (IObjectCodeElement) elements to represent this statement as it is written, left to right.
         /// </summary>
-        /// <param name="dependentVar">The dependent variable being assigned to in the given expression</param>
-        /// <param name="expression">The string boolean expression associated with the given dependent variable</param>
-        private void MakeOrderedOutput(DependentVariable dependentVar, string expression)
+        /// <param name="dependent">The dependent variable being assigned to in the given expression</param>
+        private void MakeOrderedOutput(DependentVariable dependent)
         {
             //Add dependent to output
-            Output.Add(dependentVar);
+            Output.Add(dependent);
 
             //Add sign to output
             Operator sign = new Operator("=");
             Output.Add(sign);
 
             //Add expression variables to output
-            string exp = expression;
-            string[] elements = exp.Split(' ');
+            string[] elements = Expression.Split(' ');
             foreach (string item in elements)
             {
                 string variable = item.Trim();

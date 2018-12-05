@@ -46,11 +46,11 @@ namespace VisiBoole
         /// <summary>
         /// Regular Expression Patterns for Variables
         /// </summary>
-        public static readonly string PatternVariable = @"([a-zA-Z0-9]+)";
-        public static readonly string PatternVector = @"([a-zA-Z0-9]+\[\d+\.\.\d+\])";
-        public static readonly string PatternStepVector = @"([a-zA-Z0-9]+\[\d+\.\d+\.\d+\])";
-        public static readonly string PatternAnyVectorType = @"(" + PatternVector + @"|" + PatternStepVector + @")";
-        public static readonly string PatternAnyVariableType = @"(" + PatternVariable + @"|" + PatternVector + @"|" + PatternStepVector + @")";
+        public static readonly string PatternVariable = @"(\*?[a-zA-Z0-9]+)";
+        public static readonly string PatternVector = @"((?<Name>\*?[a-zA-Z0-9]+)\[(?<LeftBound>\d+)\.\.(?<RightBound>\d+)\])";
+        public static readonly string PatternStepVector = @"((?<Name>\*?[a-zA-Z0-9]+)\[(?<LeftBound>\d+)\.(?<Step>\d+)\.(?<RightBound>\d+)\])";
+        public static readonly string PatternAnyVectorType = @"(" + PatternStepVector + @"|" + PatternVector + @")";
+        public static readonly string PatternAnyVariableType = @"(" + PatternStepVector + @"|" + PatternVector + @"|" + PatternVariable + @")";
         public static readonly string PatternConstant = @"((\'[hH][a-fA-F\d]+)|(\'[dD]\d+)|(\'[bB][0-1]+))";
     }
 }

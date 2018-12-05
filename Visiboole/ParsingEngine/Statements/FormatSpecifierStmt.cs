@@ -58,7 +58,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
         /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
+        /// <param name="lnNum">The line number that this statement is located on simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
         public FormatSpecifierStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
@@ -96,7 +96,6 @@ namespace VisiBoole.ParsingEngine.Statements
                     string format = RegexFormat.Match(formatSpecifier).Value; // Get format of format specifier
                     string data = RegexData.Match(formatSpecifier).Value; // Get data of format specifier
                     data = Regex.Replace(data, @"[{}]", string.Empty); // Remove brackets
-                    data = ReplaceVectors(data); // Replace vectors
 
                     /* Get variables and values */
                     string[] variables = Regex.Split(data, @"\s+"); // Split variables by whitespace
@@ -104,17 +103,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     foreach (string var in variables)
                     {
                         /* Add value of each variable to output values */
-                        int value = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(var);
-                        if (value != -1)
-                        {
-                            values.Add(value);
-                        }
-                        else
-                        {
-                            IndependentVariable newVar = new IndependentVariable(var, false);
-                            Globals.tabControl.SelectedTab.SubDesign().Database.AddVariable<IndependentVariable>(newVar);
-                            values.Add(0);
-                        }
+                        values.Add(Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(var));
                     }
 
                     /* Output Format Specifier */

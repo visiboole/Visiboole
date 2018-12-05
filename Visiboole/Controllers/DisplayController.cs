@@ -44,7 +44,7 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// The WebBrowser that shows the output that is shared amongst the displays that are hosted by the MainWindow
 		/// </summary>
-		private WebBrowser browser;
+		public WebBrowser browser;
 
 		/// <summary>
 		/// Handle to the output parser that parses the output that is viewed by the user
@@ -279,7 +279,11 @@ namespace VisiBoole.Controllers
             string htmlOutput = html.GetHTML();
 
             browser.ObjectForScripting = this;
+            int position = browser.Document.Body.ScrollTop;
             html.DisplayHtml(htmlOutput, browser);
+
+            browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
+            
 
             if (CurrentDisplay is DisplayEdit)
             {
@@ -309,7 +313,10 @@ namespace VisiBoole.Controllers
             string htmlOutput = html.GetHTML();
 
             browser.ObjectForScripting = this;
+            int position = browser.Document.Body.ScrollTop;
             html.DisplayHtml(htmlOutput, browser);
+
+            browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
 
             if (CurrentDisplay is DisplayEdit)
             {

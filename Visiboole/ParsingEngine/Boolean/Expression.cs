@@ -81,57 +81,6 @@ namespace VisiBoole.ParsingEngine.Boolean
         }
 
         /// <summary>
-        /// Returns the value of the variable matching the given name. If there is no match,
-        /// a new variable initialized to false is inserted into the database
-        /// </summary>
-        /// <param name="variableName">The name of the variable to search for</param>
-        /// <returns>Returns the value of the variable matching the given name</returns>
-        private bool GetVariable(string variableName)
-        {
-            //See if variable was already declared in IndependentVariables
-            IndependentVariable indVariable = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
-
-            //See if variable was already declared in DependentVariables
-            DependentVariable depVariable = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
-
-            //If variable was found in IndependentVariables
-            if (indVariable != null)
-            {
-                //add variable to Output
-                //Output.Add(indVariable);
-
-                //return the value of the independent variable
-                return indVariable.Value;
-            }
-
-            //If variable was found in DependentVariables
-            else if (depVariable != null)
-            {
-                //add variable to Output
-                //Output.Add(depVariable);
-
-                //return the value of the dependent variable
-                return depVariable.Value;
-            }
-
-            //Else the variable was not found
-            else
-            {
-                //create a variable with a false value since it was not declared
-                indVariable = new IndependentVariable(variableName, false);
-
-                //Now add the variable to the database
-                Globals.tabControl.SelectedTab.SubDesign().Database.AddVariable<IndependentVariable>(indVariable);
-
-                //Add variable to Output
-                //Output.Add(indVariable);
-
-                //return the value of the independent variable
-                return indVariable.Value;
-            }
-        }
-
-        /// <summary>
         /// Solves a boolean expression that has been simplified to only ands, ors, and nots
         /// </summary>
         /// <param name="dependent">The dependent variable that is assigned the given expression</param>
@@ -189,7 +138,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // get rid of the ~ so we can check for the variable in the dictionary
                 string newVariable = oldVariable.Substring(1);
 
-                bool variableValue = GetVariable(newVariable);
+                bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(newVariable) == 1;
 
                 // Might have to switch around
                 if (variableValue)
@@ -257,7 +206,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                     // check independent and dependent variables
                     else
                     {
-                        bool variableValue = GetVariable(elements[i]);
+                        bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
                         if (variableValue)
                         {
                             inputs[i] = 1;
@@ -327,7 +276,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // check independent and dependent variables
                 else
                 {
-                    bool variableValue = GetVariable(elements[i]);
+                    bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
                     if (variableValue)
                     {
                         inputs[i] = 1;
@@ -387,7 +336,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // check independent and dependent variables
                 else
                 {
-                    bool variableValue = GetVariable(elements[i]);
+                    bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
                     if (variableValue)
                     {
                         inputs[i] = 1;

@@ -16,7 +16,10 @@ namespace VisiBoole.Models
     /// </summary>
     public class SubDesign : RichTextBoxEx
     {
-        public Database Database;
+        /// <summary>
+        /// Database of the SubDesign
+        /// </summary>
+        public Database Database { get; set; }
 
         /// <summary>
         /// The index of the TabControl that this occupies

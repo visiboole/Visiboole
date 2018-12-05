@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using VisiBoole.ParsingEngine.Boolean;
 using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.ObjectCode;
+using System.Linq;
 
 namespace VisiBoole.ParsingEngine
 {
@@ -26,9 +28,9 @@ namespace VisiBoole.ParsingEngine
         public Dictionary<string, Variable> AllVars;
 
         /// <summary>
-        /// List of existing vector namespaces
+        /// List of vector namespaces
         /// </summary>
-        private List<string> VectorNamespaces;
+        private Dictionary<string, List<string>> VectorNamespaces;
 
         // Dependencies - List of all variables in the expression that 
         //                relates to the dependent variable for the expression
@@ -60,7 +62,7 @@ namespace VisiBoole.ParsingEngine
             return IndVars;
         }
 
-        public List<string> GetVectorNamespaces()
+        public Dictionary<string, List<string>> GetVectorNamespaces()
         {
             return VectorNamespaces;
         }
@@ -78,6 +80,24 @@ namespace VisiBoole.ParsingEngine
         public void SetDepVar(string name, bool value)
         {
             DepVars[name].Value = value;
+            foreach (KeyValuePair<string,string> kv in Expressions.Reverse())
+            {
+                string dependent = kv.Key;
+                string expression = kv.Value;
+                foreach (Match match in Regex.Matches(expression, Globals.PatternVariable))
+                {
+                    if (match.Value.Equals(name))
+                    {
+                        Expression exp = new Expression();
+                        bool dependentValue = exp.Solve(expression);
+                        bool currentValue = TryGetValue(dependent) == 1;
+                        if (dependentValue != currentValue)
+                        {
+                            SetDepVar(dependent, dependentValue);
+                        }
+                    }
+                }
+            }
         }
 
         public Database()
@@ -85,9 +105,29 @@ namespace VisiBoole.ParsingEngine
             IndVars = new Dictionary<string, IndependentVariable>();
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
-            VectorNamespaces = new List<string>();
+            VectorNamespaces = new Dictionary<string, List<string>>();
             Dependencies = new Dictionary<string, List<string>>();
             Expressions = new Dictionary<string, string>();
+        }
+
+        /// <summary>
+        /// Checks whether a vector namespace can be created
+        /// </summary>
+        /// <param name="name">Namespace to create</param>
+        /// <param name="expanded">Expanded vector</param>
+        /// <returns>Whether the vector namespace was created</returns>
+        public bool AddVectorNamespace(string name, string expanded)
+        {
+            if (!VectorNamespaces.ContainsKey(name))
+            {
+                /* Add Namespace and its values to the dictionary */
+                VectorNamespaces.Add(name, new List<string>(expanded.Split(' ')));
+                return true;
+            }
+            else
+            {
+                return false; // Namespace already exists
+            }
         }
 
         /// <summary>
@@ -126,27 +166,6 @@ namespace VisiBoole.ParsingEngine
             }
             return true;
         }
-        /*
-		public bool AddVariable<T>(T v)
-		{
-			Type varType = typeof(T);
-			if (varType == typeof(IndependentVariable))
-			{
-				IndependentVariable iv = (IndependentVariable)Convert.ChangeType(v, typeof(IndependentVariable));
-                if (AllVars.ContainsKey(iv.Name)) return false;
-                IndVars.Add(iv.Name, iv);
-                AllVars.Add(iv.Name, iv);
-			}
-			else
-			{
-				DependentVariable dv = (DependentVariable)Convert.ChangeType(v, typeof(DependentVariable));
-                if (AllVars.ContainsKey(dv.Name)) return false;
-                DepVars.Add(dv.Name, dv);
-                AllVars.Add(dv.Name, dv);
-			}
-			return true;
-		}
-        */
 
         /// <summary>
         /// Fetches a variable from the collection of variables matching the given type
@@ -174,6 +193,18 @@ namespace VisiBoole.ParsingEngine
 			}
 			return null;
 		}
+
+        /// <summary>
+        /// Converts an independent variable to a dependent variable
+        /// </summary>
+        /// <param name="name">Variable to convert</param>
+        public void MakeDependent(string name)
+        {
+            bool value = IndVars[name].Value;
+            IndVars.Remove(name);
+            AllVars.Remove(name);
+            AddVariable<DependentVariable>(new DependentVariable(name, value));
+        }
 
         /// <summary>
         /// Tries to get the value of a variable

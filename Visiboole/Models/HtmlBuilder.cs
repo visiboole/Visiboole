@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using VisiBoole.ParsingEngine.Boolean;
@@ -8,7 +9,7 @@ using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.Models
 {
-	public class HtmlBuilder
+    public class HtmlBuilder
 	{
 		public string HtmlText = "";
 		public string currentLine = "";
@@ -275,15 +276,15 @@ namespace VisiBoole.Models
 			return HtmlText;
 		}
 
-		/// <summary>
-		/// Displays the html text within the give WebBrowser object
-		/// </summary>
-		/// <param name="html">The html text to display</param>
-		/// <param name="browser">The WebBrowser object to display the HTML in</param>
-		public void DisplayHtml(string html, WebBrowser browser)
+        /// <summary>
+        /// Displays the html text within the give WebBrowser object
+        /// </summary>
+        /// <param name="html">The html text to display</param>
+        /// <param name="browser">The WebBrowser object to display the HTML in</param>
+        public void DisplayHtml(string html, WebBrowser browser)
 		{
-			browser.Refresh();
-			browser.Navigate("about:blank");
+            browser.Refresh();
+            browser.Navigate("about:blank");
 
 			if (browser.Document != null)
 			{
