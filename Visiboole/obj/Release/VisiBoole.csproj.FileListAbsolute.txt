@@ -32,9 +32,11 @@ U:\cis642\VisiBoole\Visiboole\bin\Release\VisiBoole.exe.config
 U:\cis642\VisiBoole\Visiboole\bin\Release\VisiBoole.exe
 U:\cis642\VisiBoole\Visiboole\bin\Release\VisiBoole.pdb
 U:\cis642\VisiBoole\Visiboole\bin\Release\RicherTextBox.dll
+U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.csprojAssemblyReference.cache
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Properties.Resources.resources
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.DisplayEdit.resources
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.DisplayRun.resources
+U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.DebugWindow.resources
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.HelpWindow.resources
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.Views.MainWindow.resources
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.csproj.GenerateResource.cache
