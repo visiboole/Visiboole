@@ -150,8 +150,8 @@ namespace VisiBoole.Models
         {
             isDirty = true;
 
-            if (Globals.tabControl.TabPages[TabPageIndex].Text == FileSourceName)
-                Globals.tabControl.TabPages[TabPageIndex].Text = "* " + FileSourceName;
+            if (Globals.TabControl.TabPages[TabPageIndex].Text == FileSourceName)
+                Globals.TabControl.TabPages[TabPageIndex].Text = "* " + FileSourceName;
         }
 
         /// <summary>
@@ -353,7 +353,7 @@ namespace VisiBoole.Models
         {
             File.WriteAllText(this.FileSource.FullName, this.Text);
 			isDirty = false;
-            Globals.tabControl.TabPages[TabPageIndex].Text = FileSourceName;
+            Globals.TabControl.TabPages[TabPageIndex].Text = FileSourceName;
         }
     }
 }

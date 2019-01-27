@@ -1,4 +1,24 @@
-﻿using System.Windows.Forms;
+﻿/*
+ * Copyright (C) 2019 John Devore
+ * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
+ * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program located at "\Visiboole\license.txt".
+ * If not, see <http://www.gnu.org/licenses/>
+ */
+
+using System.Windows.Forms;
 using VisiBoole.Controllers;
 
 namespace VisiBoole.Views
@@ -11,7 +31,7 @@ namespace VisiBoole.Views
 		/// <summary>
 		/// Handle to the controller for this display
 		/// </summary>
-		private IDisplayController controller;
+		private IDisplayController Controller;
 
 		/// <summary>
 		/// Returns the type of this display
@@ -38,7 +58,7 @@ namespace VisiBoole.Views
 		/// <param name="controller">The handle to the controller to save</param>
 		public void AttachController(IDisplayController controller)
 		{
-			this.controller = controller;
+			this.Controller = controller;
 		}
 
 		/// <summary>
@@ -57,8 +77,6 @@ namespace VisiBoole.Views
 		public void LoadWebBrowser(WebBrowser browser)
 		{
             this.pnlMain.Controls.Add(pnlOutputControls, 0, 0);
-            //pnlOutputControls.Dock = DockStyle.Fill;
-
 
             if (!(browser == null))
 			{
@@ -67,14 +85,24 @@ namespace VisiBoole.Views
 			}
 		}
 
+        /// <summary>
+        /// Handles the event when the tick button is clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnTick_Click(object sender, System.EventArgs e)
         {
-            controller.Tick();
+            Controller.Tick();
         }
 
+        /// <summary>
+        /// Handles the event when the multi tick button is clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnMultiTick_Click(object sender, System.EventArgs e)
         {
-            for (int i = 0; i < numericUpDown1.Value; i++) controller.Tick();
+            for (int i = 0; i < numericUpDown1.Value; i++) Controller.Tick();
         }
     }
 }

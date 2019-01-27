@@ -1,4 +1,24 @@
-﻿using System;
+﻿/*
+ * Copyright (C) 2019 John Devore
+ * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
+ * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program located at "\Visiboole\license.txt".
+ * If not, see <http://www.gnu.org/licenses/>
+ */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -134,14 +154,14 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    /* Check for ; */
+                    // Check for ;
                     if (!line.Contains(";"))
                     {
                         MessageBox.Show("Missing ';'. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
                     }
 
-                    /* Check for matching (), [] and {} */
+                    // Check for matching (), [] and {}
                     Stack<char> stack = new Stack<char>();
                     foreach (char c in line)
                     {
@@ -172,7 +192,7 @@ namespace VisiBoole.ParsingEngine
                         return null;
                     }
 
-                    /* Perform expansions and error checking */
+                    // Perform expansions and error checking
                     if (RegexExpansion.IsMatch(line) && line.Contains("="))
                     {
                         if (line.Contains("*"))
@@ -344,7 +364,7 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    /* Check for clock statement */
+                    // Check for clock statement
                     if (line.Contains("<"))
                     {
                         stmtList.Add(new DffClockStmt(lineNum, line, tick, init));
@@ -353,7 +373,7 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    /* Check for boolean statement */
+                    // Check for boolean statement
                     if (!line.Contains("<") || line.Contains("^"))
                     {
                         stmtList.Add(new BooleanAssignmentStmt(lineNum, line));
@@ -384,7 +404,7 @@ namespace VisiBoole.ParsingEngine
         {
             string expanded = String.Empty;
 
-            /* Get vector name, bounds and step */
+            // Get vector name, bounds and step
             string name = match.Groups["Name"].Value;
             int leftBound = Convert.ToInt32(match.Groups["LeftBound"].Value);
             int rightBound = Convert.ToInt32(match.Groups["RightBound"].Value);
@@ -392,7 +412,7 @@ namespace VisiBoole.ParsingEngine
                     ? (String.IsNullOrEmpty(match.Groups["Step"].Value) ? 1 : Convert.ToInt32(match.Groups["Step"].Value))
                     : (String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : (Convert.ToInt32(match.Groups["Step"].Value) * -1));
 
-            /* Expand vector */
+            // Expand vector
             for (int i = leftBound; i != rightBound; i+=step)
             {
                 expanded += String.Concat(name, i, " ");
@@ -431,7 +451,7 @@ namespace VisiBoole.ParsingEngine
             );
             MatchCollection matches = regex.Matches(line);
 
-            /* Expand all variables */
+            // Expand all variables
             List<List<string>> variables = new List<List<string>>();
             foreach (Match match in matches)
             {
@@ -441,7 +461,7 @@ namespace VisiBoole.ParsingEngine
                 }
                 else
                 {
-                    /* Get concat and split into vars */
+                    // Get concat and split into vars
                     string concat = Regex.Replace(match.Value, @"[{\s*}]", string.Empty);
                     string[] vars = concat.Split(','); // Split variables by commas
 
@@ -466,7 +486,7 @@ namespace VisiBoole.ParsingEngine
                 }
             }
 
-            /* Error checking */
+            // Error checking
             foreach (List<string> list in variables)
             {
                 if (list.Count != variables[0].Count)
@@ -475,7 +495,7 @@ namespace VisiBoole.ParsingEngine
                 }
             }
 
-            /* Expand lines */
+            // Expand lines 
             for (int i = 0; i < variables[0].Count; i++)
             {
                 string newLine = line;
@@ -567,7 +587,7 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (sd.Database.TryGetVariable<Variable>(var) == null)
                         {
-                            /* Create Variable */
+                            // Create Variable
                             bool val = var.Contains("*");
                             if (val && FormatSpecifierStmt.Regex.IsMatch(line))
                             {

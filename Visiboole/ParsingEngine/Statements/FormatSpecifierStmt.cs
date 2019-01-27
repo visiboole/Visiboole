@@ -1,4 +1,24 @@
-﻿using System;
+﻿/*
+ * Copyright (C) 2019 John Devore
+ * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
+ * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program located at "\Visiboole\license.txt".
+ * If not, see <http://www.gnu.org/licenses/>
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using VisiBoole.ErrorHandling;
@@ -70,20 +90,20 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            /* Get output format */
+            // Get output format
             string outputFormat = RegexFormatSpecifier.Replace(Text, "X"); // Get output format
             outputFormat = Regex.Replace(outputFormat, @"[;]", string.Empty); // Remove syntax
             outputFormat = Regex.Replace(outputFormat, @"\s", "_"); // Get output format with spacing
             outputFormat = Regex.Replace(outputFormat, @"_X", "X"); // Remove one extra space
 
-            /* Output format specifiers */
+            // Output format specifiers
             MatchCollection matches = RegexFormatSpecifier.Matches(Text); // All Format Specifiers
             int index = 0; // Format Specifier Index
             foreach (char c in outputFormat)
             {
                 if (c == '_')
                 {
-                    /* Add space to output feed */
+                    // Add space to output feed
                     SpaceFeed sf = new SpaceFeed();
                     Output.Add(sf);
                 }
@@ -91,29 +111,29 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Match match = matches[index++]; // Get Format Specifier Match
 
-                    /* Get format specifier and replace vectors if necessary */
+                    // Get format specifier and replace vectors if necessary
                     string formatSpecifier = match.Value; // Get format specifier
                     string format = RegexFormat.Match(formatSpecifier).Value; // Get format of format specifier
                     string data = RegexData.Match(formatSpecifier).Value; // Get data of format specifier
                     data = Regex.Replace(data, @"[{}]", string.Empty); // Remove brackets
 
-                    /* Get variables and values */
+                    // Get variables and values
                     string[] variables = Regex.Split(data, @"\s+"); // Split variables by whitespace
                     List<int> values = new List<int>(); // Values of variables
                     foreach (string var in variables)
                     {
-                        /* Add value of each variable to output values */
-                        values.Add(Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(var));
+                        // Add value of each variable to output values
+                        values.Add(Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(var));
                     }
 
-                    /* Output Format Specifier */
+                    // Output Format Specifier
                     string output = Calculate(format.Substring(1), values); // Output values with format
                     Operator val = new Operator(output); // Operator of outpute values
                     Output.Add(val); // Add operator of output to output
                 }
             }
 
-            /* Add new line to output feed */
+            // Add new line to output feed
             LineFeed lf = new LineFeed();
             Output.Add(lf);
         }

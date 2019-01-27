@@ -171,7 +171,6 @@
     <EmbeddedResource Include="Views\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -188,6 +187,7 @@
   <ItemGroup>
     <None Include="Resources\VisiBooleIcon.ico" />
     <None Include="Resources\Letter V blue.ico" />
+    <Content Include="license.txt" />
     <Content Include="Resources\Close.png" />
     <Content Include="Resources\Help Documentation\Syntax.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

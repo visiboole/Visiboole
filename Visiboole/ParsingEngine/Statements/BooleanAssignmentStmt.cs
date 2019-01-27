@@ -1,4 +1,24 @@
-﻿using System.Linq;
+﻿/*
+ * Copyright (C) 2019 John Devore
+ * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
+ * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program located at "\Visiboole\license.txt".
+ * If not, see <http://www.gnu.org/licenses/>
+ */
+
+using System.Linq;
 using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.ParsingEngine.Boolean;
@@ -38,23 +58,23 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="txt">The raw, unparsed text of this statement</param>
 		public BooleanAssignmentStmt(int lnNum, string txt) : base(lnNum, txt)
 		{
-            /* Get the dependent and the expression */
+            // Get the dependent and the expression
             int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
             FullExpression = Text.Substring(start, (Text.IndexOf(';') - start));
             Dependent = FullExpression.Substring(0, FullExpression.IndexOf('=')).Trim();
             Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
 
-            /* Add expression and dependency to the database */
-            Globals.tabControl.SelectedTab.SubDesign().Database.AddExpression(Dependent, Expression);
-            Globals.tabControl.SelectedTab.SubDesign().Database.CreateDependenciesList(Dependent);
+            // Add expression and dependency to the database
+            Globals.TabControl.SelectedTab.SubDesign().Database.AddExpression(Dependent, Expression);
+            Globals.TabControl.SelectedTab.SubDesign().Database.CreateDependenciesList(Dependent);
 
-            /* Update variable value */
+            // Update variable value
             Expression exp = new Expression();
             bool dependentValue = exp.Solve(Expression);
-            bool currentValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(Dependent) == 1;
+            bool currentValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(Dependent) == 1;
             if (dependentValue != currentValue)
             {
-                Globals.tabControl.SelectedTab.SubDesign().Database.SetDepVar(Dependent, dependentValue);
+                Globals.TabControl.SelectedTab.SubDesign().Database.SetDepVar(Dependent, dependentValue);
             }  
         }
 
@@ -64,7 +84,7 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
         {
-            /* Get index of first non whitespace character and pad spaces in front */
+            // Get index of first non whitespace character and pad spaces in front
             int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
             for (int i = 0; i < start; i++)
             {
@@ -72,8 +92,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 Output.Add(space);
             }
 
-            /* Update variable value */
-            DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
+            // Update variable value
+            DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
             MakeOrderedOutput(depVar);
         }
 
@@ -137,8 +157,8 @@ namespace VisiBoole.ParsingEngine.Statements
                     {
                         newVariable = variable.Substring(1);
                     }
-                    IndependentVariable indVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
-                    DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
+                    IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
+                    DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
                     if (indVar != null)
                     {
                         IndependentVariable var = new IndependentVariable(variable, indVar.Value);
@@ -190,8 +210,8 @@ namespace VisiBoole.ParsingEngine.Statements
                         Output.Add(openParen);
                     }
 
-                    IndependentVariable indVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
+                    IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
+                    DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
                     if (indVar != null)
                     {
 
@@ -219,8 +239,8 @@ namespace VisiBoole.ParsingEngine.Statements
                         closedParenCount++;
                     }
 
-                    IndependentVariable indVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
+                    IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
+                    DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
                     if (indVar != null)
                     {
                         IndependentVariable var = new IndependentVariable(variable, indVar.Value);
@@ -246,8 +266,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 else if(variable.Contains('~') && variable.Contains(';'))
                 {
                     string newVariable = variable.Substring(1, variable.IndexOf(';'));
-                    IndependentVariable indVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
-                    DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
+                    IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
+                    DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
                     if (indVar != null)
                     {
                         IndependentVariable var = new IndependentVariable(variable, indVar.Value);
@@ -270,8 +290,8 @@ namespace VisiBoole.ParsingEngine.Statements
                     {
                         variable = variable.Substring(0, variable.IndexOf(';'));
                     }
-                    IndependentVariable indVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
+                    IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
+                    DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
 
                     if (indVar != null)
                     {

@@ -1,4 +1,24 @@
-﻿using System.Text.RegularExpressions;
+﻿/*
+ * Copyright (C) 2019 John Devore
+ * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
+ * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program located at "\Visiboole\license.txt".
+ * If not, see <http://www.gnu.org/licenses/>
+ */
+
+using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.ObjectCode;
 using System;
 using System.Collections.Generic;
@@ -40,17 +60,17 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            /* Clean content and make format string */
+            // Clean content and make format string
             string content = Regex.Replace(Text, @"[;]", string.Empty); // Remove syntax
             string outputFormat = Regex.Replace(content, @"\s", "_"); // Get output format with spacing
             outputFormat = Regex.Replace(outputFormat, @"\*?" + Globals.PatternAnyVariableType, "X"); // Replace variables
             outputFormat = Regex.Replace(outputFormat, @"_X", "X"); // Remove one extra space
             outputFormat = Regex.Replace(outputFormat, @"\s", string.Empty); // Remove spacing
 
-            /* Split variables by whitespace */
+            // Split variables by whitespace
             string[] variables = Regex.Split(content.Trim(), @"\s+");
 
-            /* Output all variables */
+            // Output all variables
             int index = 0;
             foreach (char c in outputFormat)
             {
@@ -64,8 +84,8 @@ namespace VisiBoole.ParsingEngine.Statements
                     string var = variables[index++]; // Variable to be created
                     var = (var[0] == '*') ? var.Substring(1) : var;
 
-                    IndependentVariable indVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                    DependentVariable depVar = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+                    IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+                    DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
                     if (indVar != null)
                     {
                         Output.Add(indVar);

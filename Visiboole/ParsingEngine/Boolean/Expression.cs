@@ -1,4 +1,24 @@
-﻿using System;
+﻿/*
+ * Copyright (C) 2019 John Devore
+ * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
+ * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program located at "\Visiboole\license.txt".
+ * If not, see <http://www.gnu.org/licenses/>
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +28,14 @@ using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Boolean
 {
+    /// <summary>
+    /// Boolean expression object
+    /// </summary>
     public class Expression
     {
+        /// <summary>
+        /// Constructs a boolean expression object
+        /// </summary>
         public Expression()
         {
         }
@@ -138,7 +164,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // get rid of the ~ so we can check for the variable in the dictionary
                 string newVariable = oldVariable.Substring(1);
 
-                bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(newVariable) == 1;
+                bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(newVariable) == 1;
 
                 // Might have to switch around
                 if (variableValue)
@@ -206,7 +232,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                     // check independent and dependent variables
                     else
                     {
-                        bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
+                        bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
                         if (variableValue)
                         {
                             inputs[i] = 1;
@@ -276,7 +302,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // check independent and dependent variables
                 else
                 {
-                    bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
+                    bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
                     if (variableValue)
                     {
                         inputs[i] = 1;
@@ -304,6 +330,12 @@ namespace VisiBoole.ParsingEngine.Boolean
             }
         }
 
+        /// <summary>
+        /// Parses the "xor" subexpressions within the given expression
+        /// </summary>
+        /// <param name="dependent">The dependent variable that is assigned the given expression</param>
+        /// <param name="expression">The expression that is associated with the given dependent variable</param>
+        /// <returns>Return expression with [not] gates replaced with values</returns>
         private string ParseXOrs(string expression)
         {
             // set basicExpression variable
@@ -336,7 +368,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // check independent and dependent variables
                 else
                 {
-                    bool variableValue = Globals.tabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
+                    bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
                     if (variableValue)
                     {
                         inputs[i] = 1;
@@ -435,5 +467,4 @@ namespace VisiBoole.ParsingEngine.Boolean
             return 0;
         }
     }
-
 }
