@@ -33,7 +33,7 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// <summary>
 	    /// The identifying pattern that can be used to identify and extract this statement from raw text
 	    /// </summary>
-        public static Regex Regex { get; } = new Regex(@"^"".*""$");
+        public static Regex Regex { get; } = new Regex(@"\s*(?<DoInclude>[+-])?"".*""\;");
 
         /// <summary>
         /// Constructs an instance of CommentStmt

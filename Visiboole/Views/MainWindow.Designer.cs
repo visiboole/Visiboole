@@ -348,7 +348,7 @@ namespace VisiBoole.Views
             // 
             this.variablesToolStripMenuItem.Enabled = false;
             this.variablesToolStripMenuItem.Name = "variablesToolStripMenuItem";
-            this.variablesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.variablesToolStripMenuItem.Size = new System.Drawing.Size(120, 22);
             this.variablesToolStripMenuItem.Text = "Variables";
             this.variablesToolStripMenuItem.Click += new System.EventHandler(this.variablesToolStripMenuItem_Click);
             // 

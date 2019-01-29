@@ -45,7 +45,7 @@ namespace VisiBoole.Views
             InitializeComponent();
 
             this.Text = name;
-            richTextBox1.Text = text;
+            this.richTextBox1.Text = text;
 
             if (Globals.Theme.Equals("light"))
             {
@@ -66,13 +66,17 @@ namespace VisiBoole.Views
                     string output = parts[0]; // Output Variable
                     if (parts.Length == 2)
                     {
-                        output += Environment.NewLine;
-                        richTextBox1.Text += output; // Add variable to output
                         richTextBox1.SelectedText = output;
                         if (Convert.ToBoolean(parts[1]))
                         {
                             richTextBox1.SelectionColor = System.Drawing.Color.Red;
                         }
+                        else
+                        {
+                            richTextBox1.SelectionColor = System.Drawing.Color.Green;
+                        }
+                        richTextBox1.AppendText(output);
+                        richTextBox1.AppendText(Environment.NewLine);
                     }
                     else
                     {

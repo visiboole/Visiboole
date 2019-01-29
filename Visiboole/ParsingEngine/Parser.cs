@@ -148,10 +148,23 @@ namespace VisiBoole.ParsingEngine
                 {
                     lineNum++;
 
-                    if (String.IsNullOrEmpty(line.Trim()) || CommentStmt.Regex.Match(line).Success)
+                    if (String.IsNullOrEmpty(line.Trim()))
                     {
                         expandedSourceCode += String.Concat(line, "\n");
                         continue;
+                    }
+
+                    if (CommentStmt.Regex.Match(line).Success)
+                    {
+                        if (CommentStmt.Regex.Match(line).Groups["DoInclude"].Value.Equals("+"))
+                        {
+                            expandedSourceCode += String.Concat(line.Substring(line.IndexOf('"')), "\n");
+                            continue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
 
                     // Check for ;

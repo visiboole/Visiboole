@@ -608,6 +608,6 @@ namespace VisiBoole.Views
            }
        }
 
-       #endregion
-   }
+        #endregion
+    }
 }
