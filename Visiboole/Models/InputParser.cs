@@ -83,8 +83,9 @@ namespace VisiBoole.Models
 			}
 			else
 			{
-				//Globals.CurrentTab = subDesign.FileSourceName;
-                /*
+				/*Globals.CurrentTab = subDesign.FileSourceName;
+                
+                
 				int newValue = Negate(subDesign.Variables[variableClicked]);
 				subDesign.Variables[variableClicked] = newValue;
                 */
@@ -120,11 +121,11 @@ namespace VisiBoole.Models
 				foreach (string dependentVariable in totalVariables)
 				{
 					//currentDependent is used in SolveExpression()
-                    /*
-					currentDependent = dependentVariable;
-					int updatedVariable = SolveExpression(subDesign.Expressions[dependentVariable], -1);
-					subDesign.Variables[dependentVariable] = updatedVariable;
-                    */
+                    
+					//currentDependent = dependentVariable;
+					//int updatedVariable = SolveExpression(subDesign.Expressions[dependentVariable], -1);
+					//subDesign.Variables[dependentVariable] = updatedVariable;
+                    
 				}
 
 				// TODO: HACK -> FIX THIS (_formatSpecifiers is static)
@@ -282,20 +283,20 @@ namespace VisiBoole.Models
 					{
 						if (!subDesign.Database.AllVars.ContainsKey(s.Substring(1)))
 						{
-                            /*
-							subDesign.Database.AllVars.Add(s.Substring(1), 1);
-							subDesign.Database.Dependencies[s.Substring(1)] = new List<string>();
-                            */
+                            
+							//subDesign.Database.AllVars.Add(s.Substring(1), 1);
+							//subDesign.Database.Dependencies[s.Substring(1)] = new List<string>();
+                            
 						}
 					}
 					else
 					{
 						if (!subDesign.Database.AllVars.ContainsKey(s))
 						{
-                            /*
-							subDesign.Variables.Add(s, 0);
-							subDesign.Dependencies[s] = new List<string>();
-                            */
+                            
+							//subDesign.Variables.Add(s, 0);
+							//subDesign.Dependencies[s] = new List<string>();
+                            
 						}
 					}
 				}
@@ -316,9 +317,9 @@ namespace VisiBoole.Models
 				int x = SolveExpression(expression, lineNumber);
 				if (!subDesign.Database.AllVars.ContainsKey(dependent.Trim()))
 				{
-                    /*
-					subDesign.Database.AllVars.Add(dependent.Trim(), x);
-                    */
+                    
+					//subDesign.Database.AllVars.Add(dependent.Trim(), x);
+                    
 				}
 				return expression;
 			}
@@ -392,9 +393,9 @@ namespace VisiBoole.Models
             // set basicExpression variable
             string basicExpression = expression;
 
-            ///
-            /// look for [not] gates
-            ///
+            //
+            // look for [not] gates
+            //
             int notGate = basicExpression.IndexOf('~');
 
             // found a [not] gate
@@ -435,9 +436,9 @@ namespace VisiBoole.Models
                 */
             }
 
-            ///
-            /// look for [and] gates
-            /// 
+            //
+            // look for [and] gates
+            // 
 
             // start by spliting the expression by [or] sign
             string[] andExpression = basicExpression.Split('+');
@@ -499,9 +500,9 @@ namespace VisiBoole.Models
             }
 
 
-            ///
-            /// look for [or] gates
-            ///
+            //
+            // look for [or] gates
+            //
             string[] orExpression = basicExpression.Split('+');
 
             // format the expression
@@ -553,9 +554,9 @@ namespace VisiBoole.Models
                 }
             }
 
-            ///
-            /// now see what the final (potential) [or] gate is equal too and return "TRUE" or "FALSE"
-            ///
+            //
+            // now see what the final (potential) [or] gate is equal too and return "TRUE" or "FALSE"
+            //
 
             if(Or(values) == 1)
             {
