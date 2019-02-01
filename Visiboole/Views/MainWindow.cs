@@ -609,5 +609,10 @@ namespace VisiBoole.Views
        }
 
         #endregion
+
+        private void MainLayoutPanel_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }

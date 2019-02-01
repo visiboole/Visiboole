@@ -44,3 +44,4 @@ U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.csproj.CoreCompileInputs.cac
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.csproj.CopyComplete
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.exe
 U:\cis642\VisiBoole\Visiboole\obj\Release\VisiBoole.pdb
+C:\Users\Eugene\Source\Repos\Visiboole\Visiboole\obj\Release\VisiBoole.Views.DebugWindow.resources

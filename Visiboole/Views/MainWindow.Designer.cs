@@ -30,8 +30,8 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("My SubDesigns");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Designs:");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -66,7 +66,6 @@ namespace VisiBoole.Views
             this.syntaxDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.OpenFileLinkLabel = new System.Windows.Forms.LinkLabel();
-            this.NavTree = new System.Windows.Forms.TreeView();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip2 = new System.Windows.Forms.MenuStrip();
@@ -78,6 +77,7 @@ namespace VisiBoole.Views
             this.redoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.editModeToggle = new System.Windows.Forms.ToolStripMenuItem();
+            this.NavTree = new System.Windows.Forms.TreeView();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -85,7 +85,7 @@ namespace VisiBoole.Views
             // 
             // menuStrip1
             // 
-            this.menuStrip1.BackColor = System.Drawing.Color.DarkGray;
+            this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -94,7 +94,7 @@ namespace VisiBoole.Views
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1120, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(959, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "MainMenu";
             // 
@@ -112,6 +112,8 @@ namespace VisiBoole.Views
             this.toolStripSeparator2,
             this.closeDesignToolStripMenuItem,
             this.exitToolStripMenuItem});
+            this.fileToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.fileToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
@@ -213,6 +215,8 @@ namespace VisiBoole.Views
             this.pasteToolStripMenuItem,
             this.toolStripSeparator4,
             this.selectAllToolStripMenuItem});
+            this.editToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.editToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
@@ -293,6 +297,8 @@ namespace VisiBoole.Views
             this.toolStripSeparator6,
             this.lightThemeToolStripMenuItem,
             this.darkThemeToolStripMenuItem});
+            this.viewToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.viewToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -340,6 +346,8 @@ namespace VisiBoole.Views
             // 
             this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.variablesToolStripMenuItem});
+            this.debugToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.debugToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
             this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.debugToolStripMenuItem.Text = "Debug";
@@ -356,6 +364,8 @@ namespace VisiBoole.Views
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.syntaxDocumentationToolStripMenuItem});
+            this.helpToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.helpToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
@@ -371,54 +381,40 @@ namespace VisiBoole.Views
             // 
             this.MainLayoutPanel.BackColor = System.Drawing.Color.Transparent;
             this.MainLayoutPanel.ColumnCount = 2;
-            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 17.5F));
-            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 82.5F));
-            this.MainLayoutPanel.Controls.Add(this.OpenFileLinkLabel, 0, 0);
+            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 153F));
+            this.MainLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.MainLayoutPanel.Controls.Add(this.NavTree, 0, 0);
+            this.MainLayoutPanel.Controls.Add(this.OpenFileLinkLabel, 1, 0);
             this.MainLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MainLayoutPanel.Font = new System.Drawing.Font("Garamond", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.MainLayoutPanel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MainLayoutPanel.Location = new System.Drawing.Point(0, 48);
             this.MainLayoutPanel.Margin = new System.Windows.Forms.Padding(1);
             this.MainLayoutPanel.Name = "MainLayoutPanel";
             this.MainLayoutPanel.RowCount = 1;
             this.MainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.MainLayoutPanel.Size = new System.Drawing.Size(1120, 611);
+            this.MainLayoutPanel.Size = new System.Drawing.Size(959, 510);
             this.MainLayoutPanel.TabIndex = 2;
+            this.MainLayoutPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainLayoutPanel_Paint);
             // 
             // OpenFileLinkLabel
             // 
+            this.OpenFileLinkLabel.ActiveLinkColor = System.Drawing.Color.PowderBlue;
+            this.OpenFileLinkLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OpenFileLinkLabel.AutoSize = true;
-            this.OpenFileLinkLabel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.OpenFileLinkLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
-            this.OpenFileLinkLabel.Location = new System.Drawing.Point(197, 0);
+            this.OpenFileLinkLabel.Font = new System.Drawing.Font("Tahoma", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
+            this.OpenFileLinkLabel.Location = new System.Drawing.Point(154, 0);
             this.OpenFileLinkLabel.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
             this.OpenFileLinkLabel.Name = "OpenFileLinkLabel";
-            this.OpenFileLinkLabel.Size = new System.Drawing.Size(922, 611);
+            this.OpenFileLinkLabel.Size = new System.Drawing.Size(804, 510);
             this.OpenFileLinkLabel.TabIndex = 2;
             this.OpenFileLinkLabel.TabStop = true;
-            this.OpenFileLinkLabel.Text = "Open a VisiBoole project or file to get started";
+            this.OpenFileLinkLabel.Text = "Open File";
             this.OpenFileLinkLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.OpenFileLinkLabel.VisitedLinkColor = System.Drawing.Color.DodgerBlue;
             this.OpenFileLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.OpenFileLinkEvent);
-            // 
-            // NavTree
-            // 
-            this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
-            this.NavTree.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.NavTree.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
-            this.NavTree.FullRowSelect = true;
-            this.NavTree.HideSelection = false;
-            this.NavTree.Location = new System.Drawing.Point(1, 1);
-            this.NavTree.Margin = new System.Windows.Forms.Padding(1);
-            this.NavTree.Name = "NavTree";
-            treeNode1.Name = "Node0";
-            treeNode1.Text = "My SubDesigns";
-            this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1});
-            this.NavTree.ShowLines = false;
-            this.NavTree.Size = new System.Drawing.Size(194, 609);
-            this.NavTree.TabIndex = 0;
-            this.NavTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.NavTree_NodeMouseDoubleClick);
             // 
             // openFileDialog1
             // 
@@ -431,8 +427,7 @@ namespace VisiBoole.Views
             // 
             // menuStrip2
             // 
-            this.menuStrip2.BackColor = System.Drawing.Color.DarkGray;
-            this.menuStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible;
+            this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
             this.menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newIcon,
             this.openIcon,
@@ -445,16 +440,17 @@ namespace VisiBoole.Views
             this.menuStrip2.Location = new System.Drawing.Point(0, 24);
             this.menuStrip2.Name = "menuStrip2";
             this.menuStrip2.ShowItemToolTips = true;
-            this.menuStrip2.Size = new System.Drawing.Size(1120, 24);
+            this.menuStrip2.Size = new System.Drawing.Size(959, 24);
             this.menuStrip2.TabIndex = 3;
             this.menuStrip2.Text = "menuStrip2";
             // 
             // newIcon
             // 
             this.newIcon.Image = ((System.Drawing.Image)(resources.GetObject("newIcon.Image")));
+            this.newIcon.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.newIcon.Name = "newIcon";
             this.newIcon.Size = new System.Drawing.Size(28, 20);
-            this.newIcon.ToolTipText = "New Design (Ctrl+N)";
+            this.newIcon.ToolTipText = "New (Ctrl+N)";
             this.newIcon.Click += new System.EventHandler(this.NewFileEvent);
             // 
             // openIcon
@@ -462,16 +458,17 @@ namespace VisiBoole.Views
             this.openIcon.Image = ((System.Drawing.Image)(resources.GetObject("openIcon.Image")));
             this.openIcon.Name = "openIcon";
             this.openIcon.Size = new System.Drawing.Size(28, 20);
-            this.openIcon.ToolTipText = "Open Design (Ctrl+O)";
+            this.openIcon.ToolTipText = "Open (Ctrl+O)";
             this.openIcon.Click += new System.EventHandler(this.OpenFileEvent);
             // 
             // saveIcon
             // 
             this.saveIcon.Enabled = false;
             this.saveIcon.Image = ((System.Drawing.Image)(resources.GetObject("saveIcon.Image")));
+            this.saveIcon.Margin = new System.Windows.Forms.Padding(10, 0, 0, 0);
             this.saveIcon.Name = "saveIcon";
             this.saveIcon.Size = new System.Drawing.Size(28, 20);
-            this.saveIcon.ToolTipText = "Save Design (Ctrl+S)";
+            this.saveIcon.ToolTipText = "Save (Ctrl+S)";
             this.saveIcon.Click += new System.EventHandler(this.SaveFileEvent);
             // 
             // saveAllIcon
@@ -480,13 +477,14 @@ namespace VisiBoole.Views
             this.saveAllIcon.Image = ((System.Drawing.Image)(resources.GetObject("saveAllIcon.Image")));
             this.saveAllIcon.Name = "saveAllIcon";
             this.saveAllIcon.Size = new System.Drawing.Size(28, 20);
-            this.saveAllIcon.ToolTipText = "Save All Designs";
+            this.saveAllIcon.ToolTipText = "Save All";
             this.saveAllIcon.Click += new System.EventHandler(this.SaveAllFileEvent);
             // 
             // undoToolStripMenuItem1
             // 
             this.undoToolStripMenuItem1.Enabled = false;
             this.undoToolStripMenuItem1.Image = global::VisiBoole.Properties.Resources.Undo;
+            this.undoToolStripMenuItem1.Margin = new System.Windows.Forms.Padding(10, 0, 0, 0);
             this.undoToolStripMenuItem1.Name = "undoToolStripMenuItem1";
             this.undoToolStripMenuItem1.Size = new System.Drawing.Size(28, 20);
             this.undoToolStripMenuItem1.ToolTipText = "Undo (Ctrl+Z)";
@@ -503,35 +501,66 @@ namespace VisiBoole.Views
             // 
             // runModeToggle
             // 
+            this.runModeToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
             this.runModeToggle.Enabled = false;
+            this.runModeToggle.ForeColor = System.Drawing.Color.White;
             this.runModeToggle.Image = ((System.Drawing.Image)(resources.GetObject("runModeToggle.Image")));
+            this.runModeToggle.Margin = new System.Windows.Forms.Padding(40, 0, 0, 0);
             this.runModeToggle.Name = "runModeToggle";
             this.runModeToggle.ShortcutKeys = System.Windows.Forms.Keys.F1;
             this.runModeToggle.Size = new System.Drawing.Size(56, 20);
             this.runModeToggle.Text = "Run";
-            this.runModeToggle.ToolTipText = "Run Design";
+            this.runModeToggle.ToolTipText = "Run";
             this.runModeToggle.Click += new System.EventHandler(this.RunToggleEvent);
             // 
             // editModeToggle
             // 
             this.editModeToggle.Enabled = false;
+            this.editModeToggle.ForeColor = System.Drawing.Color.White;
             this.editModeToggle.Image = global::VisiBoole.Properties.Resources.Stop;
             this.editModeToggle.Name = "editModeToggle";
             this.editModeToggle.ShortcutKeys = System.Windows.Forms.Keys.F2;
             this.editModeToggle.Size = new System.Drawing.Size(55, 20);
             this.editModeToggle.Text = "Edit";
-            this.editModeToggle.ToolTipText = "Edit Design";
+            this.editModeToggle.ToolTipText = "Edit";
             this.editModeToggle.Click += new System.EventHandler(this.EditToggleEvent);
+            // 
+            // NavTree
+            // 
+            this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            this.NavTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.NavTree.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.NavTree.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.NavTree.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.NavTree.FullRowSelect = true;
+            this.NavTree.HideSelection = false;
+            this.NavTree.Location = new System.Drawing.Point(1, 1);
+            this.NavTree.Margin = new System.Windows.Forms.Padding(1);
+            this.NavTree.Name = "NavTree";
+            treeNode3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            treeNode3.ForeColor = System.Drawing.Color.DodgerBlue;
+            treeNode3.Name = "Explorer";
+            treeNode3.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            treeNode3.Text = "Designs:";
+            this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode3});
+            this.NavTree.ShowLines = false;
+            this.NavTree.ShowPlusMinus = false;
+            this.NavTree.ShowRootLines = false;
+            this.NavTree.Size = new System.Drawing.Size(151, 508);
+            this.NavTree.TabIndex = 0;
+            this.NavTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.NavTree_NodeMouseDoubleClick);
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
-            this.ClientSize = new System.Drawing.Size(1120, 659);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(66)))), ((int)(((byte)(66)))), ((int)(((byte)(66)))));
+            this.ClientSize = new System.Drawing.Size(959, 558);
             this.Controls.Add(this.MainLayoutPanel);
             this.Controls.Add(this.menuStrip2);
             this.Controls.Add(this.menuStrip1);
+            this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip2;
@@ -575,7 +604,6 @@ namespace VisiBoole.Views
 		private System.Windows.Forms.ToolStripMenuItem selectAllToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
 		private System.Windows.Forms.TableLayoutPanel MainLayoutPanel;
-		private System.Windows.Forms.TreeView NavTree;
 		private System.Windows.Forms.LinkLabel OpenFileLinkLabel;
 		private System.Windows.Forms.OpenFileDialog openFileDialog1;
 		private System.Windows.Forms.SaveFileDialog saveFileDialog1;
@@ -598,5 +626,6 @@ namespace VisiBoole.Views
         private ToolStripMenuItem syntaxDocumentationToolStripMenuItem;
         private ToolStripMenuItem debugToolStripMenuItem;
         private ToolStripMenuItem variablesToolStripMenuItem;
+        private TreeView NavTree;
     }
 }
