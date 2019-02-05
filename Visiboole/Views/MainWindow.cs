@@ -123,12 +123,12 @@ namespace VisiBoole.Views
            if (theme == "light")
            {
                Globals.Theme = "light";
-               this.menuStrip1.BackColor = System.Drawing.Color.LightGray;
-               this.menuStrip2.BackColor = System.Drawing.Color.LightGray;
-               this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(242)))), ((int)(((byte)(243)))));
+               this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
+               this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
+               this.NavTree.BackColor = System.Drawing.Color.DodgerBlue;
                this.NavTree.ForeColor = System.Drawing.Color.Black;
-               this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(242)))), ((int)(((byte)(243)))));
-               this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.Blue;
+               this.BackColor = System.Drawing.Color.AliceBlue;
+               this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
 
                this.MainWindowController.SetTheme();
                Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");
@@ -137,12 +137,12 @@ namespace VisiBoole.Views
            else if (theme == "dark")
            {
                Globals.Theme = "dark";
-               this.menuStrip1.BackColor = System.Drawing.Color.DarkGray;
-               this.menuStrip2.BackColor = System.Drawing.Color.DarkGray;
-               this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
-               this.NavTree.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
-               this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(77)))), ((int)(((byte)(81)))));
-               this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(226)))), ((int)(((byte)(85)))));
+               this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
+               this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
+               this.NavTree.BackColor = System.Drawing.Color.FromArgb(48,48,48);
+               this.NavTree.ForeColor = System.Drawing.Color.DodgerBlue;
+               this.BackColor = System.Drawing.Color.FromArgb(66,66,66);
+               this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
 
                this.MainWindowController.SetTheme();
                Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");

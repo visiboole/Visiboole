@@ -110,8 +110,8 @@ namespace VisiBoole.Models
             }
             else if (Globals.Theme == "dark")
             {
-                this.BackColor = Color.FromArgb(75, 77, 81);
-                this.ForeColor = Color.FromArgb(34, 226, 85);
+                this.BackColor = Color.FromArgb(48, 48, 48);
+                this.ForeColor = Color.White;
             }
         }
 
@@ -151,7 +151,10 @@ namespace VisiBoole.Models
             isDirty = true;
 
             if (Globals.TabControl.TabPages[TabPageIndex].Text == FileSourceName)
-                Globals.TabControl.TabPages[TabPageIndex].Text = "* " + FileSourceName;
+            {
+                Globals.TabControl.TabPages[TabPageIndex].Text = "*  " + FileSourceName;
+            }
+                
         }
 
         /// <summary>

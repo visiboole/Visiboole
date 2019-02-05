@@ -129,13 +129,13 @@ namespace VisiBoole.Models
                         else if (nextLineOverBarForParentheses == true && token.ObjCodeValue == false)
                         {
                             overBarList.Add(token.MatchingIndex);
-                            currentLine += "<font color='red' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
                             currentLine += " ";
                             nextLineOverBarForParentheses = false;
                         }
                         else if(token.ObjCodeValue == true)
                         {
-                            currentLine += "<font color='red' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
                             currentLine += " ";
                         }
                         else
@@ -155,12 +155,12 @@ namespace VisiBoole.Models
                         }
                         else if(overBarList.Contains(token.Match) && token.ObjCodeValue == false)
                         {
-                            currentLine += "<font color='red' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
                             currentLine += " ";
                         }
                         else if (token.ObjCodeValue == true)
                         {
-                            currentLine += "<font color='red' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
                             currentLine += " ";
                         }
                         else
@@ -201,11 +201,11 @@ namespace VisiBoole.Models
                             {
                                 if (varType == typeof(DependentVariable)) //if variable is dependent
                                 {
-                                    currentLine += "<font color='red' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
+                                    currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
                                 }
                                 else //if variable is independent
                                 {
-                                    currentLine += "<font color='red' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    currentLine += "<font color='crimson' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
                                 }
                                 currentLine += " ";
                             }
@@ -232,11 +232,11 @@ namespace VisiBoole.Models
                             {
                                 if (varType == typeof(DependentVariable)) //if variable is dependent
                                 {
-                                    currentLine += "<font color='red' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
                                 }
                                 else //if variable is independent
                                 {
-                                    currentLine += "<font color='red' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    currentLine += "<font color='crimson' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
                                 }
                                 currentLine += " ";
                             }

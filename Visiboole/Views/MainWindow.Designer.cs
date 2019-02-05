@@ -30,8 +30,8 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Designs:");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Designs:");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,6 +65,7 @@ namespace VisiBoole.Views
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.syntaxDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.NavTree = new System.Windows.Forms.TreeView();
             this.OpenFileLinkLabel = new System.Windows.Forms.LinkLabel();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
@@ -77,7 +78,6 @@ namespace VisiBoole.Views
             this.redoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.editModeToggle = new System.Windows.Forms.ToolStripMenuItem();
-            this.NavTree = new System.Windows.Forms.TreeView();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -392,13 +392,41 @@ namespace VisiBoole.Views
             this.MainLayoutPanel.Name = "MainLayoutPanel";
             this.MainLayoutPanel.RowCount = 1;
             this.MainLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.MainLayoutPanel.Size = new System.Drawing.Size(959, 510);
+            this.MainLayoutPanel.Size = new System.Drawing.Size(959, 523);
             this.MainLayoutPanel.TabIndex = 2;
             this.MainLayoutPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainLayoutPanel_Paint);
             // 
+            // NavTree
+            // 
+            this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            this.NavTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.NavTree.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.NavTree.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.NavTree.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.NavTree.FullRowSelect = true;
+            this.NavTree.HideSelection = false;
+            this.NavTree.Indent = 5;
+            this.NavTree.ItemHeight = 18;
+            this.NavTree.Location = new System.Drawing.Point(1, 1);
+            this.NavTree.Margin = new System.Windows.Forms.Padding(1);
+            this.NavTree.Name = "NavTree";
+            treeNode1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            treeNode1.ForeColor = System.Drawing.Color.DodgerBlue;
+            treeNode1.Name = "Explorer";
+            treeNode1.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            treeNode1.Text = "Designs:";
+            this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode1});
+            this.NavTree.ShowLines = false;
+            this.NavTree.ShowPlusMinus = false;
+            this.NavTree.ShowRootLines = false;
+            this.NavTree.Size = new System.Drawing.Size(151, 521);
+            this.NavTree.TabIndex = 0;
+            this.NavTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.NavTree_NodeMouseDoubleClick);
+            // 
             // OpenFileLinkLabel
             // 
-            this.OpenFileLinkLabel.ActiveLinkColor = System.Drawing.Color.PowderBlue;
+            this.OpenFileLinkLabel.ActiveLinkColor = System.Drawing.Color.RoyalBlue;
             this.OpenFileLinkLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -408,7 +436,7 @@ namespace VisiBoole.Views
             this.OpenFileLinkLabel.Location = new System.Drawing.Point(154, 0);
             this.OpenFileLinkLabel.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
             this.OpenFileLinkLabel.Name = "OpenFileLinkLabel";
-            this.OpenFileLinkLabel.Size = new System.Drawing.Size(804, 510);
+            this.OpenFileLinkLabel.Size = new System.Drawing.Size(804, 523);
             this.OpenFileLinkLabel.TabIndex = 2;
             this.OpenFileLinkLabel.TabStop = true;
             this.OpenFileLinkLabel.Text = "Open File";
@@ -525,38 +553,12 @@ namespace VisiBoole.Views
             this.editModeToggle.ToolTipText = "Edit";
             this.editModeToggle.Click += new System.EventHandler(this.EditToggleEvent);
             // 
-            // NavTree
-            // 
-            this.NavTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.NavTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.NavTree.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.NavTree.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.NavTree.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.NavTree.FullRowSelect = true;
-            this.NavTree.HideSelection = false;
-            this.NavTree.Location = new System.Drawing.Point(1, 1);
-            this.NavTree.Margin = new System.Windows.Forms.Padding(1);
-            this.NavTree.Name = "NavTree";
-            treeNode3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            treeNode3.ForeColor = System.Drawing.Color.DodgerBlue;
-            treeNode3.Name = "Explorer";
-            treeNode3.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            treeNode3.Text = "Designs:";
-            this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode3});
-            this.NavTree.ShowLines = false;
-            this.NavTree.ShowPlusMinus = false;
-            this.NavTree.ShowRootLines = false;
-            this.NavTree.Size = new System.Drawing.Size(151, 508);
-            this.NavTree.TabIndex = 0;
-            this.NavTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.NavTree_NodeMouseDoubleClick);
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(66)))), ((int)(((byte)(66)))), ((int)(((byte)(66)))));
-            this.ClientSize = new System.Drawing.Size(959, 558);
+            this.ClientSize = new System.Drawing.Size(959, 571);
             this.Controls.Add(this.MainLayoutPanel);
             this.Controls.Add(this.menuStrip2);
             this.Controls.Add(this.menuStrip1);
@@ -564,6 +566,7 @@ namespace VisiBoole.Views
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip2;
+            this.MinimumSize = new System.Drawing.Size(560, 350);
             this.Name = "MainWindow";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "VisiBoole - Visualizing HDL";

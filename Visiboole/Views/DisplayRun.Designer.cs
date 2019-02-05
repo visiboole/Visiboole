@@ -45,44 +45,49 @@ namespace VisiBoole.Views
             this.pnlMain.BackColor = System.Drawing.Color.Transparent;
             this.pnlMain.ColumnCount = 1;
             this.pnlMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.pnlMain.Controls.Add(this.pnlOutputControls, 0, 1);
+            this.pnlMain.Controls.Add(this.pnlOutputControls, 0, 0);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMain.Location = new System.Drawing.Point(0, 0);
+            this.pnlMain.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
             this.pnlMain.Name = "pnlMain";
-            this.pnlMain.RowCount = 2;
-            this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 6F));
-            this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 94F));
+            this.pnlMain.RowCount = 1;
+            this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.pnlMain.Size = new System.Drawing.Size(800, 600);
             this.pnlMain.TabIndex = 1;
             // 
             // pnlOutputControls
             // 
+            this.pnlOutputControls.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlOutputControls.Controls.Add(this.numericUpDown1);
             this.pnlOutputControls.Controls.Add(this.btnMultiTick);
             this.pnlOutputControls.Controls.Add(this.btnTick);
-            this.pnlOutputControls.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlOutputControls.Location = new System.Drawing.Point(3, 39);
+            this.pnlOutputControls.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlOutputControls.Location = new System.Drawing.Point(0, 0);
+            this.pnlOutputControls.Margin = new System.Windows.Forms.Padding(0);
             this.pnlOutputControls.Name = "pnlOutputControls";
-            this.pnlOutputControls.Size = new System.Drawing.Size(794, 558);
+            this.pnlOutputControls.Size = new System.Drawing.Size(800, 27);
             this.pnlOutputControls.TabIndex = 0;
             // 
             // numericUpDown1
             // 
-            this.numericUpDown1.AutoSize = true;
-            this.numericUpDown1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numericUpDown1.Location = new System.Drawing.Point(150, 1);
+            this.numericUpDown1.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.numericUpDown1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.numericUpDown1.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown1.Location = new System.Drawing.Point(129, 3);
+            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.numericUpDown1.Maximum = new decimal(new int[] {
             50,
             0,
             0,
             0});
+            this.numericUpDown1.MaximumSize = new System.Drawing.Size(60, 0);
             this.numericUpDown1.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(75, 26);
+            this.numericUpDown1.Size = new System.Drawing.Size(60, 31);
             this.numericUpDown1.TabIndex = 2;
             this.numericUpDown1.Value = new decimal(new int[] {
             1,
@@ -92,10 +97,13 @@ namespace VisiBoole.Views
             // 
             // btnMultiTick
             // 
-            this.btnMultiTick.Dock = System.Windows.Forms.DockStyle.Left;
-            this.btnMultiTick.Location = new System.Drawing.Point(75, 0);
+            this.btnMultiTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.btnMultiTick.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnMultiTick.Location = new System.Drawing.Point(65, 2);
+            this.btnMultiTick.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
+            this.btnMultiTick.MaximumSize = new System.Drawing.Size(60, 22);
             this.btnMultiTick.Name = "btnMultiTick";
-            this.btnMultiTick.Size = new System.Drawing.Size(75, 558);
+            this.btnMultiTick.Size = new System.Drawing.Size(60, 22);
             this.btnMultiTick.TabIndex = 1;
             this.btnMultiTick.Text = "X Ticks";
             this.btnMultiTick.UseVisualStyleBackColor = true;
@@ -103,10 +111,13 @@ namespace VisiBoole.Views
             // 
             // btnTick
             // 
-            this.btnTick.Dock = System.Windows.Forms.DockStyle.Left;
-            this.btnTick.Location = new System.Drawing.Point(0, 0);
+            this.btnTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.btnTick.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnTick.Location = new System.Drawing.Point(2, 2);
+            this.btnTick.Margin = new System.Windows.Forms.Padding(0);
+            this.btnTick.MaximumSize = new System.Drawing.Size(60, 22);
             this.btnTick.Name = "btnTick";
-            this.btnTick.Size = new System.Drawing.Size(75, 558);
+            this.btnTick.Size = new System.Drawing.Size(60, 22);
             this.btnTick.TabIndex = 0;
             this.btnTick.Text = "Tick";
             this.btnTick.UseVisualStyleBackColor = true;
@@ -121,7 +132,6 @@ namespace VisiBoole.Views
             this.Size = new System.Drawing.Size(800, 600);
             this.pnlMain.ResumeLayout(false);
             this.pnlOutputControls.ResumeLayout(false);
-            this.pnlOutputControls.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
 
@@ -130,9 +140,9 @@ namespace VisiBoole.Views
 		#endregion
 
 		private System.Windows.Forms.TableLayoutPanel pnlMain;
-		private System.Windows.Forms.Panel pnlOutputControls;
-        private Button btnTick;
-        private Button btnMultiTick;
+        private Panel pnlOutputControls;
         private NumericUpDown numericUpDown1;
+        private Button btnMultiTick;
+        private Button btnTick;
     }
 }
