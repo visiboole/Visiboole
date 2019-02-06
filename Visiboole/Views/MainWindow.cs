@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -59,9 +60,9 @@ namespace VisiBoole.Views
            this.MainWindowController = controller;
        }
 
-       #endregion
+        #endregion
 
-       #region "Utility Methods"
+        #region "Utility Methods"
 
        /// <summary>
        /// Update buttons and icons based on the display
@@ -85,7 +86,6 @@ namespace VisiBoole.Views
            increaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
            decreaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
            selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-           variablesToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
 
            if (NavTree.Nodes[0].Nodes.Count > 0)
            {
@@ -149,6 +149,21 @@ namespace VisiBoole.Views
                Globals.TabControl.TabPages.Remove(Globals.TabControl.TabPages[Globals.TabControl.TabPages.Count - 1]);
            }
        }
+
+        /// <summary>
+        /// Sets the Colorblind Toggle text to the current mode
+        /// </summary>
+        private void SetColorblindMode()
+        {
+            if (Globals.ColorBlind)
+            {
+                colorBlindModeToolStripMenuItem.Text = "Turn Off Colorblind Mode";
+            }
+            else
+            {
+                colorBlindModeToolStripMenuItem.Text = "Turn On Colorblind Mode";
+            }
+        }
 
        /// <summary>
        /// Adds a new node in the TreeView
@@ -286,7 +301,7 @@ namespace VisiBoole.Views
        private void LightThemeEvent(object sender, EventArgs e)
        {
            SetTheme("light");
-       }
+        }
 
        /// <summary>
        /// Handles the event that occurs when the light theme is selected
@@ -296,7 +311,7 @@ namespace VisiBoole.Views
        private void DarkThemeEvent(object sender, EventArgs e)
        {
            SetTheme("dark");
-       }
+        }
 
        /// <summary>
        /// Increases the font size of all SubDesigns
@@ -307,7 +322,8 @@ namespace VisiBoole.Views
        {
            Globals.FontSize += 3;
            MainWindowController.SetFontSize();
-           if (editModeToggle.Enabled) MainWindowController.Run();
+
+            if (editModeToggle.Enabled) MainWindowController.Run();
        }
 
        /// <summary>
@@ -321,7 +337,19 @@ namespace VisiBoole.Views
            {
                Globals.FontSize -= 3;
                MainWindowController.SetFontSize();
-               if (editModeToggle.Enabled) MainWindowController.Run();
+
+                if (editModeToggle.Enabled) MainWindowController.Run();
+           }
+       }
+
+       private void colorBlindModeToolStripMenuItem_Click(object sender, EventArgs e)
+       {
+            Globals.ColorBlind = Globals.ColorBlind ? false : true;
+            SetColorblindMode();
+
+            if (editModeToggle.Enabled)
+           {
+               MainWindowController.Run();
            }
        }
 
@@ -432,12 +460,6 @@ namespace VisiBoole.Views
        private void RunToggleEvent(object sender, EventArgs e)
        {
            MainWindowController.Run();
-       }
-
-       private void variablesToolStripMenuItem_Click(object sender, EventArgs e)
-       {
-           DebugWindow dw = new DebugWindow("Variables", MainWindowController.DebugVariables());
-           dw.Show();
        }
 
        /// <summary>
@@ -601,12 +623,34 @@ namespace VisiBoole.Views
        /// <param name="e"></param>
        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
        {
-           if (e.CloseReason == CloseReason.UserClosing)
+            if (e.CloseReason == CloseReason.UserClosing)
            {
-               if (MainWindowController.ExitApplication()) Application.Exit();
-               else e.Cancel = true;
+                if (MainWindowController.ExitApplication())
+                {
+                    Properties.Settings.Default.Theme = Globals.Theme;
+                    Properties.Settings.Default.FontSize = Globals.FontSize;
+                    Properties.Settings.Default.Colorblind = Globals.ColorBlind;
+                    Properties.Settings.Default.Save();
+
+                    Application.Exit();
+                }
+                else e.Cancel = true;
            }
        }
+
+        /// <summary>
+        /// Handles the event when the Main Window is loaded.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainWindow_Load(object sender, EventArgs e)
+        {
+            Globals.Theme = Properties.Settings.Default.Theme;
+            SetTheme(Globals.Theme);
+            Globals.FontSize = Properties.Settings.Default.FontSize;
+            Globals.ColorBlind = Properties.Settings.Default.Colorblind;
+            SetColorblindMode();
+        }
 
         #endregion
 

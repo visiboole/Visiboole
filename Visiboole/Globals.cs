@@ -56,12 +56,17 @@ namespace VisiBoole
         /// <summary>
         /// Theme
         /// </summary>
-        public static string Theme = "dark";
+        public static string Theme = Properties.Settings.Default.Theme;
 
         /// <summary>
         /// Font size
         /// </summary>
-        public static float FontSize = 12;
+        public static float FontSize = Properties.Settings.Default.FontSize;
+
+        /// <summary>
+        /// Whether Color Blind mode is toggled
+        /// </summary>
+        public static bool ColorBlind = Properties.Settings.Default.Colorblind;
 
         /// <summary>
         /// Regular Expression Patterns for Variables

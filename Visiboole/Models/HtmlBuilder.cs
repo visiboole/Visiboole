@@ -122,25 +122,55 @@ namespace VisiBoole.Models
                         if(nextLineOverBarForParentheses == true && token.ObjCodeValue == true)
                         {
                             overBarList.Add(token.MatchingIndex);
-                            currentLine += "<font color='green' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='lightseagreen' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='green' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
                             currentLine += " ";
                             nextLineOverBarForParentheses = false;
                         }
                         else if (nextLineOverBarForParentheses == true && token.ObjCodeValue == false)
                         {
                             overBarList.Add(token.MatchingIndex);
-                            currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='magenta' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
                             currentLine += " ";
                             nextLineOverBarForParentheses = false;
                         }
                         else if(token.ObjCodeValue == true)
                         {
-                            currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='magenta' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
+                            
                             currentLine += " ";
                         }
                         else
                         {
-                            currentLine += "<font color='green' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='lightseagreen' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='green' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
+                           
                             currentLine += " ";
                         }
                         continue;
@@ -150,22 +180,52 @@ namespace VisiBoole.Models
                     {
                         if (overBarList.Contains(token.Match) && token.ObjCodeValue == true)
                         {
-                            currentLine += "<font color='green' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='lightseagreen' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='green' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
+                            
                             currentLine += " ";
                         }
                         else if(overBarList.Contains(token.Match) && token.ObjCodeValue == false)
                         {
-                            currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='magenta' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            }
+                            
                             currentLine += " ";
                         }
                         else if (token.ObjCodeValue == true)
                         {
-                            currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='magenta' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
                             currentLine += " ";
                         }
                         else
                         {
-                            currentLine += "<font color='green' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            if (Globals.ColorBlind)
+                            {
+                                currentLine += "<font color='lightseagreen' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
+                            else
+                            {
+                                currentLine += "<font color='green' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                            }
                             currentLine += " ";
                         }
                         continue;
@@ -189,11 +249,27 @@ namespace VisiBoole.Models
                             {
                                 if (varType == typeof(DependentVariable)) //if variable is dependent
                                 {
-                                    currentLine += "<font color='green' style=\"cursor: no-drop; text-decoration: overline;\">" + variable.Substring(1) + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='lightseagreen' style=\"cursor: no-drop; text-decoration: overline;\">" + variable.Substring(1) + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='green' style=\"cursor: no-drop; text-decoration: overline;\">" + variable.Substring(1) + "</font>";
+                                    }
+                                    
                                 }
                                 else //if variable is independent
                                 {
-                                    currentLine += "<font color='green' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='lightseagreen' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='green' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    }
+                                    
                                 }
                                 currentLine += " ";
                             }
@@ -201,11 +277,27 @@ namespace VisiBoole.Models
                             {
                                 if (varType == typeof(DependentVariable)) //if variable is dependent
                                 {
-                                    currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='magenta' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='crimson' style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
+                                    }
+                                    
                                 }
                                 else //if variable is independent
                                 {
-                                    currentLine += "<font color='crimson' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='magenta' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='crimson' style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                    }
+                                    
                                 }
                                 currentLine += " ";
                             }
@@ -232,11 +324,27 @@ namespace VisiBoole.Models
                             {
                                 if (varType == typeof(DependentVariable)) //if variable is dependent
                                 {
-                                    currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='magenta' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='crimson' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    }
+                                    
                                 }
                                 else //if variable is independent
                                 {
-                                    currentLine += "<font color='crimson' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='magenta' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='crimson' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    }
+                                    
                                 }
                                 currentLine += " ";
                             }
@@ -244,11 +352,27 @@ namespace VisiBoole.Models
                             {
                                 if (varType == typeof(DependentVariable)) //if variable is dependent
                                 {
-                                    currentLine += "<font color='green' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='lightseagreen' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='green' style=\"cursor: no-drop;\" >" + variable + "</font>";
+                                    }
+                                    
                                 }
                                 else if (varType == typeof(IndependentVariable))
                                 {
-                                    currentLine += "<font color='green' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    if (Globals.ColorBlind)
+                                    {
+                                        currentLine += "<font color='lightseagreen' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    }
+                                    else
+                                    {
+                                        currentLine += "<font color='green' style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                    }
+                                    
                                 }
                                 else
                                 {

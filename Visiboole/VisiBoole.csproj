@@ -59,6 +59,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -112,6 +113,7 @@
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="Views\DisplayEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -123,12 +125,6 @@
     </Compile>
     <Compile Include="Views\DisplayRun.Designer.cs">
       <DependentUpon>DisplayRun.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Views\DebugWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Views\DebugWindow.Designer.cs">
-      <DependentUpon>DebugWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Views\HelpWindow.cs">
       <SubType>Form</SubType>
@@ -161,9 +157,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Views\DisplayRun.resx">
       <DependentUpon>DisplayRun.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Views\DebugWindow.resx">
-      <DependentUpon>DebugWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Views\HelpWindow.resx">
       <DependentUpon>HelpWindow.cs</DependentUpon>

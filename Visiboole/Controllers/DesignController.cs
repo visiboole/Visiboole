@@ -138,24 +138,5 @@ namespace VisiBoole.Controllers
             }
             return false;
         }
-
-        /// <summary>
-        /// Gets variable debugger information for a given SubDesign
-        /// </summary>
-        /// <param name="name">Name of SubDesign</param>
-        /// <returns>Variable debugger information</returns>
-        public string DebugVariables(string name)
-        {
-            string debugInfo = null;
-            SubDesign sd;
-            SubDesigns.TryGetValue(name, out sd);
-
-            if (sd != null)
-            {
-                debugInfo = sd.Database.GetVariableDebugInformation();
-            }
-
-            return debugInfo;
-        }
     }
 }

@@ -62,12 +62,5 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <returns>Indicates whether there are unsaved changes</returns>
         bool CheckUnsavedChanges();
-
-        /// <summary>
-        /// Gets variable debugger information for a given SubDesign
-        /// </summary>
-        /// <param name="name">Name of SubDesign</param>
-        /// <returns>Variable debugger information</returns>
-        string DebugVariables(string name);
     }
 }

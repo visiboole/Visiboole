@@ -353,34 +353,5 @@ namespace VisiBoole.ParsingEngine
                 Expressions.Add(dependentName, expressionValue);
             }
         }
-
-        /// <summary>
-        /// Gets the debugger information for the variables in this database.
-        /// </summary>
-        /// <returns>String containing the information</returns>
-        public string GetVariableDebugInformation()
-        {
-            string debugInfo = String.Empty;
-
-            debugInfo += String.Concat("Independent Variables:", Environment.NewLine);
-            foreach (KeyValuePair<string, IndependentVariable> kv in IndVars)
-            {
-                debugInfo += String.Concat(kv.Key, ",", kv.Value.Value, Environment.NewLine);
-            }
-            debugInfo += String.Concat(Environment.NewLine, "Dependent Variables:", Environment.NewLine);
-            foreach (KeyValuePair<string, DependentVariable> kv in DepVars)
-            {
-                if (Expressions.ContainsKey(kv.Key))
-                {
-                    debugInfo += String.Concat(kv.Key, ",", kv.Value.Value, ",", Expressions[kv.Key], Environment.NewLine);
-                }
-                else
-                {
-                    debugInfo += String.Concat(kv.Key, ",", kv.Value.Value, Environment.NewLine);
-                }
-            }
-
-            return debugInfo;
-        }
     }
 }

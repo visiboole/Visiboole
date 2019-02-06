@@ -60,8 +60,8 @@ namespace VisiBoole.Views
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.lightThemeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.darkThemeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.variablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.colorBlindModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.syntaxDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
@@ -90,7 +90,6 @@ namespace VisiBoole.Views
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
             this.viewToolStripMenuItem,
-            this.debugToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -296,7 +295,9 @@ namespace VisiBoole.Views
             this.decreaseFontToolStripMenuItem,
             this.toolStripSeparator6,
             this.lightThemeToolStripMenuItem,
-            this.darkThemeToolStripMenuItem});
+            this.darkThemeToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.colorBlindModeToolStripMenuItem});
             this.viewToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.viewToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
@@ -309,7 +310,7 @@ namespace VisiBoole.Views
             this.increaseFontToolStripMenuItem.Name = "increaseFontToolStripMenuItem";
             this.increaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+";
             this.increaseFontToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Oemplus)));
-            this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.increaseFontToolStripMenuItem.Text = "Increase Font";
             this.increaseFontToolStripMenuItem.Click += new System.EventHandler(this.IncreaseFontEvent);
             // 
@@ -319,46 +320,40 @@ namespace VisiBoole.Views
             this.decreaseFontToolStripMenuItem.Name = "decreaseFontToolStripMenuItem";
             this.decreaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl-";
             this.decreaseFontToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.OemMinus)));
-            this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.decreaseFontToolStripMenuItem.Text = "Decrease Font";
             this.decreaseFontToolStripMenuItem.Click += new System.EventHandler(this.DecreaseFontEvent);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(176, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(208, 6);
             // 
             // lightThemeToolStripMenuItem
             // 
             this.lightThemeToolStripMenuItem.Name = "lightThemeToolStripMenuItem";
-            this.lightThemeToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.lightThemeToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.lightThemeToolStripMenuItem.Text = "Light Theme";
             this.lightThemeToolStripMenuItem.Click += new System.EventHandler(this.LightThemeEvent);
             // 
             // darkThemeToolStripMenuItem
             // 
             this.darkThemeToolStripMenuItem.Name = "darkThemeToolStripMenuItem";
-            this.darkThemeToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.darkThemeToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.darkThemeToolStripMenuItem.Text = "Dark Theme";
             this.darkThemeToolStripMenuItem.Click += new System.EventHandler(this.DarkThemeEvent);
             // 
-            // debugToolStripMenuItem
+            // toolStripSeparator5
             // 
-            this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.variablesToolStripMenuItem});
-            this.debugToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.debugToolStripMenuItem.ForeColor = System.Drawing.Color.White;
-            this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
-            this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
-            this.debugToolStripMenuItem.Text = "Debug";
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(208, 6);
             // 
-            // variablesToolStripMenuItem
+            // colorBlindModeToolStripMenuItem
             // 
-            this.variablesToolStripMenuItem.Enabled = false;
-            this.variablesToolStripMenuItem.Name = "variablesToolStripMenuItem";
-            this.variablesToolStripMenuItem.Size = new System.Drawing.Size(120, 22);
-            this.variablesToolStripMenuItem.Text = "Variables";
-            this.variablesToolStripMenuItem.Click += new System.EventHandler(this.variablesToolStripMenuItem_Click);
+            this.colorBlindModeToolStripMenuItem.Name = "colorBlindModeToolStripMenuItem";
+            this.colorBlindModeToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.colorBlindModeToolStripMenuItem.Text = "Turn On Colorblind Mode";
+            this.colorBlindModeToolStripMenuItem.Click += new System.EventHandler(this.colorBlindModeToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -571,6 +566,7 @@ namespace VisiBoole.Views
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "VisiBoole - Visualizing HDL";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
+            this.Load += new System.EventHandler(this.MainWindow_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.MainLayoutPanel.ResumeLayout(false);
@@ -627,8 +623,8 @@ namespace VisiBoole.Views
         private ToolStripMenuItem redoToolStripMenuItem1;
         private ToolStripMenuItem helpToolStripMenuItem;
         private ToolStripMenuItem syntaxDocumentationToolStripMenuItem;
-        private ToolStripMenuItem debugToolStripMenuItem;
-        private ToolStripMenuItem variablesToolStripMenuItem;
         private TreeView NavTree;
+        private ToolStripSeparator toolStripSeparator5;
+        private ToolStripMenuItem colorBlindModeToolStripMenuItem;
     }
 }
