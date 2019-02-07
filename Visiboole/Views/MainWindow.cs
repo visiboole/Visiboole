@@ -658,5 +658,17 @@ namespace VisiBoole.Views
         {
 
         }
+
+        private void MenuItemDropDownOpeningEvent(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = (ToolStripMenuItem)sender;
+            menu.ForeColor = Color.Black;
+        }
+
+        private void MenuItemDropDownClosedEvent(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = (ToolStripMenuItem)sender;
+            menu.ForeColor = Color.White;
+        }
     }
 }

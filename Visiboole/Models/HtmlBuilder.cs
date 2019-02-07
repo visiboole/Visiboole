@@ -38,8 +38,8 @@ namespace VisiBoole.Models
         {
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
-            string trueColor = (Globals.ColorBlind) ? "'magenta'" : "'crimson'";
-            string falseColor = "'green'";
+            string trueColor = "'crimson'";
+            string falseColor = (Globals.ColorBlind) ? "'royalblue'" : "'green'";
 
             foreach (List<IObjectCodeElement> line in newOutput)
             {
