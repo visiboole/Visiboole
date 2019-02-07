@@ -93,6 +93,7 @@ namespace VisiBoole.Models
             this.KeyDown += SubDesign_KeyDown;
 
             this.Database = new Database();
+            this.AcceptsTab = true;
 	        this.ShowLineNumbers = true;
             SetTheme();
             SetFontSize();

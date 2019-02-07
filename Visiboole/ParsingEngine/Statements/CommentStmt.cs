@@ -33,7 +33,7 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// <summary>
 	    /// The identifying pattern that can be used to identify and extract this statement from raw text
 	    /// </summary>
-        public static Regex Regex { get; } = new Regex(@"\s*(?<DoInclude>[+-])?"".*""\;");
+        public static Regex Regex { get; } = new Regex(@"(?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;)");
 
         /// <summary>
         /// Constructs an instance of CommentStmt
@@ -53,6 +53,11 @@ namespace VisiBoole.ParsingEngine.Statements
 			// only add comments to simulator if the user has the setting enabled
 			if (Properties.Settings.Default.SimulationComments)
 			{
+                string spaces = Regex.Match(Text).Groups["Spacing"].Value;
+                foreach (char space in spaces)
+                {
+                    Output.Add(new SpaceFeed());
+                }
 				Output.Add(this);
 			}
             LineFeed lf = new LineFeed();

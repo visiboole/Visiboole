@@ -154,11 +154,14 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
+                    line = line.Replace("\t", "            ");
+
                     if (CommentStmt.Regex.Match(line).Success)
                     {
-                        if (CommentStmt.Regex.Match(line).Groups["DoInclude"].Value.Equals("+"))
+                        Match match = CommentStmt.Regex.Match(line);
+                        if (match.Groups["DoInclude"].Value.Equals("+"))
                         {
-                            expandedSourceCode += String.Concat(line.Substring(line.IndexOf('"')), "\n");
+                            expandedSourceCode += String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value, "\n");
                             continue;
                         }
                         else

@@ -32,7 +32,7 @@ namespace VisibooleTests.Models
             List<IObjectCodeElement> output = p.Parse(subDesign, null, false);
             Assert.IsNotNull(output);
 
-            HtmlBuilder html = new HtmlBuilder(output);
+            HtmlBuilder html = new HtmlBuilder(subDesign, output);
             Assert.IsNotNull(html);
 
         }
@@ -56,7 +56,7 @@ namespace VisibooleTests.Models
             List<IObjectCodeElement> output = p.Parse(subDesign, null, false);
             Assert.IsNotNull(output);
 
-            HtmlBuilder html = new HtmlBuilder(output);
+            HtmlBuilder html = new HtmlBuilder(subDesign, output);
             Assert.IsNotNull(html.GetHTML());
 
         }
