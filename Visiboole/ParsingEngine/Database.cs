@@ -97,23 +97,33 @@ namespace VisiBoole.ParsingEngine
             return ObjectCode;
         }
 
-        public void SetDepVar(string name, bool value)
+        public void SetValues(string variableName, bool value)
         {
-            DepVars[name].Value = value;
+            IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
+            DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
+            if (indVar != null)
+            {
+                IndVars[variableName].Value = value;
+            }
+            else
+            {
+                DepVars[variableName].Value = value;
+            }
+
             foreach (KeyValuePair<string,string> kv in Expressions.Reverse())
             {
                 string dependent = kv.Key;
                 string expression = kv.Value;
                 foreach (Match match in Regex.Matches(expression, Globals.PatternVariable))
                 {
-                    if (match.Value.Equals(name))
+                    if (match.Value.Equals(variableName))
                     {
                         Expression exp = new Expression();
                         bool dependentValue = exp.Solve(expression);
                         bool currentValue = TryGetValue(dependent) == 1;
                         if (dependentValue != currentValue)
                         {
-                            SetDepVar(dependent, dependentValue);
+                            SetValues(dependent, dependentValue);
                         }
                     }
                 }

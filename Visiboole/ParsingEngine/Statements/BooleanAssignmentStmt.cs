@@ -69,13 +69,18 @@ namespace VisiBoole.ParsingEngine.Statements
             Globals.TabControl.SelectedTab.SubDesign().Database.CreateDependenciesList(Dependent);
 
             // Update variable value
+            Evaluate();
+        }
+
+        public void Evaluate()
+        {
             Expression exp = new Expression();
             bool dependentValue = exp.Solve(Expression);
             bool currentValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(Dependent) == 1;
             if (dependentValue != currentValue)
             {
-                Globals.TabControl.SelectedTab.SubDesign().Database.SetDepVar(Dependent, dependentValue);
-            }  
+                Globals.TabControl.SelectedTab.SubDesign().Database.SetValues(Dependent, dependentValue);
+            }
         }
 
 	    /// <summary>

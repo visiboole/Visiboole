@@ -106,6 +106,29 @@ namespace VisiBoole.ParsingEngine
                     return null;
                 }
                 List<Statement> stmtList = ParseStatements(expandedSourceCode, true, false);
+                // Set delay values
+                foreach (Statement stmt in stmtList)
+                {
+                    if (stmt.GetType() == typeof(DffClockStmt))
+                    {
+                        ((DffClockStmt)stmt).Tick();
+                    }
+                }
+                foreach (Statement stmt in stmtList)
+                {
+                    if (stmt.GetType() == typeof(BooleanAssignmentStmt))
+                    {
+                        ((BooleanAssignmentStmt)stmt).Evaluate();
+                    }
+                }
+                /*
+                foreach (Statement stmt in stmtList)
+                {
+                    if (stmt.GetType() != typeof(DffClockStmt))
+                    {
+                        stmt.Parse();
+                    }
+                }
                 foreach (Statement stmt in stmtList)
                 {
                     if (stmt.GetType() == typeof(DffClockStmt))
@@ -113,12 +136,10 @@ namespace VisiBoole.ParsingEngine
                         stmt.Parse();
                     }
                 }
+                */
                 foreach (Statement stmt in stmtList)
                 {
-                    if (stmt.GetType() != typeof(DffClockStmt))
-                    {
-                        stmt.Parse();
-                    }
+                    stmt.Parse();
                 }
                 List<IObjectCodeElement> output = new List<IObjectCodeElement>();
                 foreach (Statement stmt in stmtList)
@@ -573,30 +594,6 @@ namespace VisiBoole.ParsingEngine
                                 IndependentVariable indVar = new IndependentVariable(var, false);
                                 sd.Database.AddVariable<IndependentVariable>(indVar);
                             }
-                        }
-                        if (sd.Database.TryGetVariable<Variable>(var) == null)
-                        {
-                            if (dependent.Equals(var))
-                            {
-                                if (line.Contains("<"))
-                                {
-                                    var = var + ".d";
-                                }
-                                DependentVariable depVar = new DependentVariable(var, false);
-                                sd.Database.AddVariable<DependentVariable>(depVar);
-                            }
-                            else
-                            {
-                                IndependentVariable indVar = new IndependentVariable(var, false);
-                                sd.Database.AddVariable<IndependentVariable>(indVar);
-                            }
-                        }
-                        else
-                        {
-                            IndependentVariable indVar = sd.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                            DependentVariable depVar = sd.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
-
-
                         }
                     }
                     else

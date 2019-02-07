@@ -71,19 +71,20 @@ namespace VisiBoole.ParsingEngine.Statements
             Delay = Dependent + ".d";
             Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
 
-            // Set dependent value
-            if (clock_tick || initial_run)
-            {
-                Variable test = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<Variable>(Delay);
-                bool delayValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(Delay) == 1;
-                Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(Dependent, delayValue);
-            }
-
             // Add dependency and set delay value
+            // Globals.TabControl.SelectedTab.SubDesign().Database.AddExpression(Delay, Expression);
             Globals.TabControl.SelectedTab.SubDesign().Database.CreateDependenciesList(Delay);
             Expression exp = new Expression();
-            bool depValue = exp.Solve(Expression);
-            Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(Delay, depValue);
+            bool delayValue = exp.Solve(Expression);
+            Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(Delay, delayValue);
+
+            // Update all next values, then tick, then reevaluate expression
+        }
+
+        public void Tick()
+        {
+            DependentVariable delayVariable = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+            Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(Dependent, delayVariable.Value);
         }
 
         public override void Parse()
@@ -109,6 +110,17 @@ namespace VisiBoole.ParsingEngine.Statements
             else
             {
                 Output.Add(dependentDep);
+            }
+
+            if (clock_tick)
+            {
+                Expression exp = new Expression();
+                bool delayValue = exp.Solve(Expression);
+                if (delayValue != delayVariable.Value)
+                {
+                    Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(Delay, delayValue);
+                    delayVariable = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+                }
             }
             DependentVariable dv = new DependentVariable("<=", delayVariable.Value);
             Output.Add(dv);

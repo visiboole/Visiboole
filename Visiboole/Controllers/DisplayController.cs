@@ -303,7 +303,6 @@ namespace VisiBoole.Controllers
             html.DisplayHtml(htmlOutput, browser);
 
             browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
-            
 
             if (CurrentDisplay is DisplayEdit)
             {
