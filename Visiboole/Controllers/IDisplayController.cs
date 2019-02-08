@@ -91,7 +91,8 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Handles the event that occurs when the user ticks
         /// </summary>
-        void Tick();
+        /// <param name="count">The number of times to tick</param>
+        void Tick(int count);
 
         /// <summary>
 		/// Closes the current tab

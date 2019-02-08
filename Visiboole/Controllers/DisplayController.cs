@@ -290,17 +290,20 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Handles the event that occurs when the user ticks
         /// </summary>
-        public void Tick()
+        public void Tick(int count)
         {
             SubDesign sd = tabControl.SelectedTab.SubDesign();
-            Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(sd, null, true);
-            HtmlBuilder html = new HtmlBuilder(sd, output);
-            string htmlOutput = html.GetHTML();
-
             browser.ObjectForScripting = this;
             int position = browser.Document.Body.ScrollTop;
-            html.DisplayHtml(htmlOutput, browser);
+
+            for (int i = 0; i < count; i++)
+            {
+                Parser p = new Parser();
+                List<IObjectCodeElement> output = p.Parse(sd, null, true);
+                HtmlBuilder html = new HtmlBuilder(sd, output);
+                string htmlOutput = html.GetHTML();
+                html.DisplayHtml(htmlOutput, browser);
+            }
 
             browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
 

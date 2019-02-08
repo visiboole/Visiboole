@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using System;
 using System.Windows.Forms;
 using VisiBoole.Controllers;
 
@@ -92,7 +93,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void btnTick_Click(object sender, System.EventArgs e)
         {
-            Controller.Tick();
+            Controller.Tick(1);
         }
 
         /// <summary>
@@ -102,7 +103,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void btnMultiTick_Click(object sender, System.EventArgs e)
         {
-            for (int i = 0; i < numericUpDown1.Value; i++) Controller.Tick();
+            Controller.Tick(Convert.ToInt32(numericUpDown1.Value));
         }
     }
 }
