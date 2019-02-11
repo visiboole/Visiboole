@@ -104,12 +104,12 @@ namespace VisiBoole.Models
         /// </summary>
         public void SetTheme()
         {
-            if (Globals.Theme == "light")
+            if (Properties.Settings.Default.Theme == "Light")
             {
                 this.BackColor = Color.White;
                 this.ForeColor = Color.Black;
             }
-            else if (Globals.Theme == "dark")
+            else if (Properties.Settings.Default.Theme == "Dark")
             {
                 this.BackColor = Color.FromArgb(48, 48, 48);
                 this.ForeColor = Color.White;
@@ -121,7 +121,7 @@ namespace VisiBoole.Models
         /// </summary>
         public void SetFontSize()
         {
-            this.Font = new Font(DefaultFont.FontFamily, Globals.FontSize);
+            this.Font = new Font(DefaultFont.FontFamily, Properties.Settings.Default.FontSize);
         }
 
         /// <summary>
@@ -225,29 +225,29 @@ namespace VisiBoole.Models
             {
                 ContextMenu cm = new ContextMenu();
                 MenuItem item = new MenuItem("Undo");
-                item.Click += new EventHandler(UndoTextEvent);
+                item.Click += new EventHandler(UndoTextMenuClick);
                 item.Enabled = editHistory.Count > 0;
                 cm.MenuItems.Add(item);
                 item = new MenuItem("Redo");
-                item.Click += new EventHandler(RedoTextEvent);
+                item.Click += new EventHandler(RedoTextMenuClick);
                 item.Enabled = undoHistory.Count > 0;
                 cm.MenuItems.Add(item);
                 cm.MenuItems.Add("-");
                 item = new MenuItem("Cut");
-                item.Click += new EventHandler(CutTextEvent);
+                item.Click += new EventHandler(CutTextMenuClick);
                 item.Enabled = this.SelectedText.Length > 0;
                 cm.MenuItems.Add(item);
                 item = new MenuItem("Copy");
-                item.Click += new EventHandler(CopyTextEvent);
+                item.Click += new EventHandler(CopyTextMenuClick);
                 item.Enabled = this.SelectedText.Length > 0;
                 cm.MenuItems.Add(item);
                 item = new MenuItem("Paste");
-                item.Click += new EventHandler(PasteTextEvent);
+                item.Click += new EventHandler(PasteTextMenuClick);
                 item.Enabled = Clipboard.ContainsText();
                 cm.MenuItems.Add(item);
                 cm.MenuItems.Add("-");
                 item = new MenuItem("Select All");
-                item.Click += new EventHandler(SelectAllTextEvent);
+                item.Click += new EventHandler(SelectAllTextMenuClick);
                 item.Enabled = true;
                 cm.MenuItems.Add(item);
                 this.ContextMenu = cm;
@@ -263,24 +263,24 @@ namespace VisiBoole.Models
         {
             if (e.KeyCode == Keys.Z && e.Control)
             {
-                if (editHistory.Count > 0) UndoTextEvent(sender, e);
+                if (editHistory.Count > 0) UndoTextMenuClick(sender, e);
             }
             else if (e.KeyCode == Keys.Y && e.Control)
             {
-                if (undoHistory.Count > 0) RedoTextEvent(sender, e);
+                if (undoHistory.Count > 0) RedoTextMenuClick(sender, e);
             }
             else if (e.KeyCode == Keys.A && e.Control)
             {
-                SelectAllTextEvent(sender, e);
+                SelectAllTextMenuClick(sender, e);
             }
         }
 
         /// <summary>
-        /// Undo text event
+        /// Handles the event that occurs when the undo menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UndoTextEvent(object sender, EventArgs e)
+        public void UndoTextMenuClick(object sender, EventArgs e)
         {
             string edit = (string)editHistory.Pop(); // Edit string
             int loc = (int)editHistory.Pop(); // Location of edit
@@ -292,11 +292,11 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
-        /// Redo text event
+        /// Handles the event that occurs when the redo menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void RedoTextEvent(object sender, EventArgs e)
+        public void RedoTextMenuClick(object sender, EventArgs e)
         {
             string edit = (string)undoHistory.Pop(); // Edit string
             int loc = (int)undoHistory.Pop(); // Location of edit
@@ -308,31 +308,31 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
-        /// Cut text event
+        /// Handles the event that occurs when the cut menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void CutTextEvent(object sender, EventArgs e)
+        public void CutTextMenuClick(object sender, EventArgs e)
         {
             this.Cut();
         }
 
         /// <summary>
-        /// Copy text event
+        /// Handles the event that occurs when the copy menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void CopyTextEvent(object sender, EventArgs e)
+        public void CopyTextMenuClick(object sender, EventArgs e)
         {
             Clipboard.SetText(this.SelectedText);
         }
 
         /// <summary>
-        /// Paste text event
+        /// Handles the event that occurs when the paste menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void PasteTextEvent(object sender, EventArgs e)
+        public void PasteTextMenuClick(object sender, EventArgs e)
         {
             if (Clipboard.ContainsText())
             {
@@ -341,11 +341,11 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
-        /// Select all text event
+        /// Handles the event that occurs when the select all menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SelectAllTextEvent(object sender, EventArgs e)
+        public void SelectAllTextMenuClick(object sender, EventArgs e)
         {
             this.SelectAll();
         }

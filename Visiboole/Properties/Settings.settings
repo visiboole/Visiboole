@@ -6,7 +6,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="Theme" Type="System.String" Scope="User">
-      <Value Profile="(Default)">dark</Value>
+      <Value Profile="(Default)">Dark</Value>
     </Setting>
     <Setting Name="FontSize" Type="System.Single" Scope="User">
       <Value Profile="(Default)">12</Value>

@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -28,6 +29,7 @@ using VisiBoole.ErrorHandling;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.ParsingEngine.Statements;
+using VisiBoole.Views;
 
 namespace VisiBoole.ParsingEngine
 {
@@ -180,7 +182,7 @@ namespace VisiBoole.ParsingEngine
                     if (CommentStmt.Regex.Match(line).Success)
                     {
                         Match match = CommentStmt.Regex.Match(line);
-                        if (match.Groups["DoInclude"].Value.Equals("+"))
+                        if (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+"))
                         {
                             expandedSourceCode += String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value, "\n");
                             continue;
@@ -194,7 +196,7 @@ namespace VisiBoole.ParsingEngine
                     // Check for ;
                     if (!line.Contains(";"))
                     {
-                        MessageBox.Show("Missing ';'. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", ';' is missing.", DialogType.Ok);
                         return null;
                     }
 
@@ -218,14 +220,14 @@ namespace VisiBoole.ParsingEngine
                             }
                             else
                             {
-                                MessageBox.Show("Unmatching '" + c + "'. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", unmatching '" + c + "'.", DialogType.Ok);
                                 return null;
                             }
                         }
                     }
                     if (stack.Count > 0)
                     {
-                        MessageBox.Show("Unmatching '" + stack.Peek() + "'. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", unmatching '" + stack.Peek() + "'.", DialogType.Ok);
                         return null;
                     }
 
@@ -234,7 +236,7 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (line.Contains("*"))
                         {
-                            MessageBox.Show("You cannot use a '*' with a variable in an assignment statement. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", you cannot use a '*' with a variable in an assignment statement.", DialogType.Ok);
                             return null;
                         }
 
@@ -242,14 +244,29 @@ namespace VisiBoole.ParsingEngine
 
                         if (expansion != null)
                         {
-                            /*
+                            /* Commented out for now
                             MatchCollection matches = Regex.Matches(line, Globals.PatternAnyVectorType);
                             foreach (Match match in matches)
                             {
-                                if (!sd.Database.AddVectorNamespace(match.Groups["Name"].Value, ExpandHorizontally(match)))
+                                string vectorName = match.Groups["Name"].Value;
+                                string expanded = ExpandHorizontally(match);
+
+                                if (sd.Database.HasVectorNamespace(vectorName))
                                 {
-                                    MessageBox.Show("Vector Namespace " + match.Groups["Name"].Value + " already exists. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    return null;
+                                    List<string> expandedComponents = expanded.Split().ToList();
+                                    List<string> vectorComponents = sd.Database.GetVectorComponents(vectorName);
+                                    int intersectCount = vectorComponents.Intersect(expandedComponents).Count();
+
+                                    if (!(intersectCount > 0 && intersectCount == expandedComponents.Count()))
+                                    {
+                                        // Display error if the referenced components aren't a subset of the components in the database
+                                        Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", vector namespace " + vectorName + " is already defined. Only the following components: " + String.Join(" ", vectorComponents) + " can be referenced.", DialogType.Ok);
+                                        return null;
+                                    }
+                                }
+                                else
+                                {
+                                    sd.Database.AddVectorNamespace(vectorName, expanded);
                                 }
                             }
                             */
@@ -262,7 +279,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            MessageBox.Show("Vector and/or Concatenation element counts must be consistent across entire expression. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", vector and/or concatenation element counts must be consistent across the entire expression.", DialogType.Ok);
                             return null;
                         }
                     }
@@ -272,16 +289,30 @@ namespace VisiBoole.ParsingEngine
                         while (RegexExpansion.IsMatch(output))
                         {
                             Match match = RegexExpansion.Matches(output)[0]; // Get match
+                            string vectorName = match.Groups["Name"].Value;
                             string expanded = ExpandHorizontally(match);
-                            output = output.Substring(0, match.Index) + expanded + output.Substring(match.Index + match.Length);
-                            sd.Database.AddVectorNamespace(match.Groups["Name"].Value, expanded);
-                            /*
-                            if (!sd.Database.AddVectorNamespace(match.Groups["Name"].Value, expanded))
+
+                            /* Commented out for now
+                            if (sd.Database.HasVectorNamespace(vectorName))
                             {
-                                MessageBox.Show("Vector Namespace " + match.Groups["Name"].Value + " already exists. Line: " + lineNum, "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                return null;
+                                List<string> expandedComponents = expanded.Split().ToList();
+                                List<string> vectorComponents = sd.Database.GetVectorComponents(vectorName);
+                                int intersectCount = vectorComponents.Intersect(expandedComponents).Count();
+
+                                if (!(intersectCount > 0 && intersectCount == expandedComponents.Count()))
+                                {
+                                    // Display error if the referenced components aren't a subset of the components in the database
+                                    Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", vector namespace " + vectorName + " is already defined. Only the following components: " + String.Join(" ", vectorComponents) + " can be referenced.", DialogType.Ok);
+                                    return null;
+                                }
+                            }
+                            else
+                            {
+                                sd.Database.AddVectorNamespace(vectorName, expanded);
                             }
                             */
+
+                            output = output.Substring(0, match.Index) + expanded + output.Substring(match.Index + match.Length);
                         }
 
                         if (init && !InitVariables(sd, output))

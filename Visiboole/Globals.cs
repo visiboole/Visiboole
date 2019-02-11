@@ -20,6 +20,7 @@
 
 using System;
 using System.Windows.Forms;
+using VisiBoole.Views;
 
 namespace VisiBoole
 {
@@ -49,24 +50,14 @@ namespace VisiBoole
 		}
 
         /// <summary>
+        /// Dialog box for the application.
+        /// </summary>
+        public static DialogBox Dialog = new DialogBox();
+
+        /// <summary>
         /// Tab Control
         /// </summary>
         public static TabControl TabControl = null;
-
-        /// <summary>
-        /// Theme
-        /// </summary>
-        public static string Theme = Properties.Settings.Default.Theme;
-
-        /// <summary>
-        /// Font size
-        /// </summary>
-        public static float FontSize = Properties.Settings.Default.FontSize;
-
-        /// <summary>
-        /// Whether Color Blind mode is toggled
-        /// </summary>
-        public static bool ColorBlind = Properties.Settings.Default.Colorblind;
 
         /// <summary>
         /// Regular Expression Patterns for Variables

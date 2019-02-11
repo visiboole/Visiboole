@@ -47,7 +47,7 @@ namespace VisiBoole.Views
             this.Text = name;
             this.textBox.Text = text;
 
-            if (Globals.Theme.Equals("light"))
+            if (Properties.Settings.Default.Theme.Equals("Light"))
             {
                 textBox.BackColor = System.Drawing.Color.White;
                 this.BackColor = System.Drawing.Color.LightGray;

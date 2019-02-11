@@ -39,12 +39,12 @@ namespace VisiBoole.Models
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
             string trueColor = "'crimson'";
-            string falseColor = (Globals.ColorBlind) ? "'royalblue'" : "'green'";
+            string falseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
 
             foreach (List<IObjectCodeElement> line in newOutput)
             {
                 lineNumber++;
-                currentLine = "<p style=\"font-size:" + (Globals.FontSize + 6) + "px\">";
+                currentLine = "<p style=\"font-size:" + (Properties.Settings.Default.FontSize + 6) + "px\">";
                 Dictionary<int, int> parenIndexes = new Dictionary<int, int>();
 
                 string fullLine = "";

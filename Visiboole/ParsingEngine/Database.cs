@@ -141,14 +141,24 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Checks whether a vector namespace can be created
+        /// Checks whether a vector namespace can be created.
+        /// </summary>
+        /// <param name="name">Namespace of the vector</param>
+        /// <returns>Whether the namespace already exists or not</returns>
+        public bool HasVectorNamespace(string name)
+        {
+            return VectorNamespaces.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// Adds a vector namespace that doesn't already exist.
         /// </summary>
         /// <param name="name">Namespace to create</param>
         /// <param name="expanded">Expanded vector</param>
         /// <returns>Whether the vector namespace was created</returns>
         public bool AddVectorNamespace(string name, string expanded)
         {
-            if (!VectorNamespaces.ContainsKey(name))
+            if (!HasVectorNamespace(name))
             {
                 // Add Namespace and its values to the dictionary
                 VectorNamespaces.Add(name, new List<string>(expanded.Split(' ')));
@@ -157,6 +167,23 @@ namespace VisiBoole.ParsingEngine
             else
             {
                 return false; // Namespace already exists
+            }
+        }
+
+        /// <summary>
+        /// Returns a list of components for the specified vector namespace.
+        /// </summary>
+        /// <param name="name">Namepsace of the vector</param>
+        /// <returns>List of components that belong to the vector namespace</returns>
+        public List<string> GetVectorComponents(string name)
+        {
+            if (HasVectorNamespace(name))
+            {
+                return VectorNamespaces[name];
+            }
+            else
+            {
+                return null;
             }
         }
 

@@ -114,6 +114,12 @@
     <Compile Include="ParsingEngine\ObjectCode\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="Views\DialogBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\DialogBox.Designer.cs">
+      <DependentUpon>DialogBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="Views\DisplayEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -152,6 +158,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="Views\DialogBox.resx">
+      <DependentUpon>DialogBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Views\DisplayEdit.resx">
       <DependentUpon>DisplayEdit.cs</DependentUpon>
     </EmbeddedResource>
