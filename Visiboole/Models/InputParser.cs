@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using VisiBoole.Views;
 
 namespace VisiBoole.Models
 {
@@ -251,9 +252,9 @@ namespace VisiBoole.Models
 			}
 			catch (Exception ex)
 			{
-				// TODO: proper exception handling
-				Globals.DisplayException(ex);
-				return null;
+                // TODO: proper exception handling
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                return null;
 			}			
 		}
 

@@ -40,16 +40,6 @@ namespace VisiBoole
 		}
 
         /// <summary>
-        /// Error-handling method for errors in the application
-        /// </summary>
-        /// <param name="e"></param>
-        public static void DisplayException(Exception e)
-		{
-			Cursor.Current = Cursors.Default;
-			MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		}
-
-        /// <summary>
         /// Dialog box for the application.
         /// </summary>
         public static DialogBox Dialog = new DialogBox();

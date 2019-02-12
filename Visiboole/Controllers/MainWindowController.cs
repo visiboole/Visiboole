@@ -110,7 +110,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception ex)
             {
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
             }
         }
 
@@ -148,7 +148,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception ex)
             {
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
             }
         }
 
@@ -163,7 +163,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception ex)
             {
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
             }
         }
 
@@ -186,7 +186,7 @@ namespace VisiBoole.Controllers
             catch (Exception ex)
             {
                 view.SaveFileSuccess(false);
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
             }
         }
 
@@ -201,7 +201,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception ex)
             {
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
             }
         }
 
@@ -236,7 +236,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception ex)
             {
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
                 return null;
             }
         }

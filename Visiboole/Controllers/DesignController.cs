@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using VisiBoole.Models;
+using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
 {
@@ -76,7 +77,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception ex)
             {
-                Globals.DisplayException(ex);
+                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
                 return null;
             }
         }
