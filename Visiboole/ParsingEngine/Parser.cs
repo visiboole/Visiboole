@@ -244,7 +244,7 @@ namespace VisiBoole.ParsingEngine
 
                         if (expansion != null)
                         {
-                            /* Commented out for now
+                            /*
                             MatchCollection matches = Regex.Matches(line, Globals.PatternAnyVectorType);
                             foreach (Match match in matches)
                             {
@@ -292,7 +292,7 @@ namespace VisiBoole.ParsingEngine
                             string vectorName = match.Groups["Name"].Value;
                             string expanded = ExpandHorizontally(match);
 
-                            /* Commented out for now
+                            /*
                             if (sd.Database.HasVectorNamespace(vectorName))
                             {
                                 List<string> expandedComponents = expanded.Split().ToList();

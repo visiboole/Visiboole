@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.Views;
 
 namespace VisiBoole.Models
@@ -84,48 +85,41 @@ namespace VisiBoole.Models
 			}
 			else
 			{
-				/*Globals.CurrentTab = subDesign.FileSourceName;
-                
-                
-				int newValue = Negate(subDesign.Variables[variableClicked]);
-				subDesign.Variables[variableClicked] = newValue;
-                */
+				//Globals.CurrentTab = subDesign.FileSourceName;
+				int newValue = Negate(subDesign.Database.TryGetValue(variableClicked));
+				subDesign.Database.SetValue(variableClicked, newValue == 1);
 
 				//build list of all dependent variables based on user click
 				List<string> totalVariables = new List<string>();
 
-                /*
-				foreach (string dependentVariable in subDesign.Dependencies[variableClicked])
+				foreach (string dependentVariable in subDesign.Database.Dependencies[variableClicked])
 				{
 					totalVariables.Add(dependentVariable);
 				}
-                */
 
 				int count = 0;
 				int end = totalVariables.Count;
 
 				while (count != end)
 				{
-                    /*
 					for (int i = count; i < end; i++)
 					{
-						foreach (string dependentVariable in subDesign.Dependencies[totalVariables[i]])
+						foreach (string dependentVariable in subDesign.Database.Dependencies[totalVariables[i]])
 						{
 							totalVariables.Add(dependentVariable);
 						}
 					}
 					count = end;
 					end = totalVariables.Count;
-                    */
 				}
 
 				foreach (string dependentVariable in totalVariables)
 				{
 					//currentDependent is used in SolveExpression()
                     
-					//currentDependent = dependentVariable;
-					//int updatedVariable = SolveExpression(subDesign.Expressions[dependentVariable], -1);
-					//subDesign.Variables[dependentVariable] = updatedVariable;
+					currentDependent = dependentVariable;
+					int updatedVariable = SolveExpression(subDesign.Database.Expressions[dependentVariable], -1);
+                    subDesign.Database.SetValues(dependentVariable, updatedVariable == 1);
                     
 				}
 
@@ -202,11 +196,10 @@ namespace VisiBoole.Models
 					// add to our list the value of each variable
 					for (int i = beg; i < end; i++)
 					{
-                        /*
 						string key = string.Concat(var, i);
-						if (subDesign.Variables.ContainsKey(key))
+						if (subDesign.Database.AllVars.ContainsKey(key))
 						{
-							elems.Add(subDesign.Variables[key]);
+							elems.Add(subDesign.Database.TryGetValue(key));
 						}
 						else
 						{
@@ -214,7 +207,6 @@ namespace VisiBoole.Models
 							// TODO: throw a proper error with metadata
 							throw new Exception();
 						}
-                        */
 					}
                     #endregion
                 }
@@ -226,10 +218,9 @@ namespace VisiBoole.Models
 					foreach (Match m in matches)
 					{
 						// add to our list the value of each variable
-                        /*
-						if (subDesign.Variables.ContainsKey(m.Value))
+						if (subDesign.Database.AllVars.ContainsKey(m.Value))
 						{
-							elems.Add(subDesign.Variables[m.Value]);
+							elems.Add(subDesign.Database.TryGetValue(m.Value));
 						}
 						else
 						{
@@ -237,7 +228,6 @@ namespace VisiBoole.Models
 							// TODO: throw a proper error with metadata
 							throw new Exception();
 						}
-                        */
 					}
 				}
 
@@ -284,9 +274,8 @@ namespace VisiBoole.Models
 					{
 						if (!subDesign.Database.AllVars.ContainsKey(s.Substring(1)))
 						{
-                            
-							//subDesign.Database.AllVars.Add(s.Substring(1), 1);
-							//subDesign.Database.Dependencies[s.Substring(1)] = new List<string>();
+							subDesign.Database.AllVars.Add(s.Substring(1), new IndependentVariable(s.Substring(1), true));
+							subDesign.Database.Dependencies[s.Substring(1)] = new List<string>();
                             
 						}
 					}
@@ -295,9 +284,8 @@ namespace VisiBoole.Models
 						if (!subDesign.Database.AllVars.ContainsKey(s))
 						{
                             
-							//subDesign.Variables.Add(s, 0);
-							//subDesign.Dependencies[s] = new List<string>();
-                            
+                            subDesign.Database.AllVars.Add(s, new IndependentVariable(s, false));
+                            subDesign.Database.Dependencies[s] = new List<string>();
 						}
 					}
 				}
@@ -315,11 +303,11 @@ namespace VisiBoole.Models
 				{
 					subDesign.Database.Expressions.Add(currentDependent, expression);
 				}
-				int x = SolveExpression(expression, lineNumber);
+				int value = SolveExpression(expression, lineNumber);
 				if (!subDesign.Database.AllVars.ContainsKey(dependent.Trim()))
 				{
                     
-					//subDesign.Database.AllVars.Add(dependent.Trim(), x);
+					subDesign.Database.AllVars.Add(dependent.Trim(), new DependentVariable(dependent.Trim(), value == 1));
                     
 				}
 				return expression;
@@ -413,11 +401,10 @@ namespace VisiBoole.Models
                 string newVariable = oldVariable.Substring(1);
 
                 // check to see variable is in subdesign
-                /*
-                if (subDesign.Variables.ContainsKey(newVariable))
+                if (subDesign.Database.AllVars.ContainsKey(newVariable))
                 {
                     // applies [not] gate to the variable
-                    if (Negate(subDesign.Variables[newVariable]) == 1)
+                    if (Negate(subDesign.Database.TryGetValue(newVariable)) == 1)
                     {
                         // replace variable with TRUE
                         basicExpression = basicExpression.Replace(oldVariable, "TRUE");
@@ -428,13 +415,12 @@ namespace VisiBoole.Models
                         basicExpression = basicExpression.Replace(oldVariable, "FALSE");
                     }
                     // adds the current dependent variable to the dependencies of this variable
-                    if (!subDesign.Dependencies[newVariable].Contains(currentDependent))
+                    if (!subDesign.Database.Dependencies[newVariable].Contains(currentDependent))
                     {
-                        subDesign.Dependencies[newVariable].Add(currentDependent);
+                        subDesign.Database.Dependencies[newVariable].Add(currentDependent);
                     }
                 }
                 notGate = basicExpression.IndexOf('~');
-                */
             }
 
             //
@@ -473,18 +459,16 @@ namespace VisiBoole.Models
                         inputs[i] = 0;
                     }
                     // check to see variable is in subdesign
-                    /*
-                    if (subDesign.Variables.ContainsKey(elements[i]))
+                    if (subDesign.Database.AllVars.ContainsKey(elements[i]))
                     {
                         //set input
-                        inputs[i] = subDesign.Variables[elements[i]];
+                        inputs[i] = subDesign.Database.TryGetValue(elements[i]);
                         // adds the current dependent variable to the dependencies of this variable
-                        if (!subDesign.Dependencies[elements[i]].Contains(currentDependent))
+                        if (!subDesign.Database.Dependencies[elements[i]].Contains(currentDependent))
                         {
-                            subDesign.Dependencies[elements[i]].Add(currentDependent);
+                            subDesign.Database.Dependencies[elements[i]].Add(currentDependent);
                         }
                     }
-                    */
                 }
 
                 // applies [and] gate to each input/expression
@@ -532,11 +516,10 @@ namespace VisiBoole.Models
                 else
                 {
                     // check to see variable is in subdesign
-                    /*
-                    if (subDesign.Variables.ContainsKey(orExpression[i]))
+                    if (subDesign.Database.AllVars.ContainsKey(orExpression[i]))
                     {
                         // get the boolean value of the variable
-                        if (subDesign.Variables[orExpression[i]] == 1)
+                        if (subDesign.Database.TryGetValue(orExpression[i]) == 1)
                         {
                             //set value
                             values[i] = 1;
@@ -547,11 +530,10 @@ namespace VisiBoole.Models
                             values[i] = 0;
                         }
                     }
-                    if (!subDesign.Dependencies[orExpression[i]].Contains(currentDependent))
+                    if (!subDesign.Database.Dependencies[orExpression[i]].Contains(currentDependent))
                     {
-                        subDesign.Dependencies[orExpression[i]].Add(currentDependent);
+                        subDesign.Database.Dependencies[orExpression[i]].Add(currentDependent);
                     }
-                    */
                 }
             }
 
