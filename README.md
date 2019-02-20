@@ -1,4 +1,4 @@
-
+ ## Visiboole
 
  Copyright (C) 2019 John Devore  
  Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve  
@@ -17,7 +17,6 @@
  GNU General Public License for more details:
            http://www.gnu.org/licenses/  
 
-## Visiboole
 -----
 		   
  
