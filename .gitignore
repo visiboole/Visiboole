@@ -3,6 +3,10 @@
 ################################################################################
 
 /.vs
-/ParsingEngine/obj/Debug
-/ParsingEngine/obj/Release
+/ParsingEngine/bin/
+/ParsingEngine/obj/
+/Visiboole/bin/
+/Visiboole/obj/
+/VisibooleTests/bin/
+/VisibooleTests/obj/
 /Visiboole/.vs/VisiBoole/v15
