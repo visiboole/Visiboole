@@ -78,8 +78,6 @@ namespace VisiBoole.Views
             saveAllIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            printToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            printPreviewToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT) && NavTree.Nodes[0].Nodes.Count > 0;
             runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
             closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
@@ -567,26 +565,6 @@ namespace VisiBoole.Views
         private void SelectAllTextEvent(object sender, EventArgs e)
         {
             Globals.TabControl.SelectedTab.SubDesign().SelectAllTextMenuClick(sender, e);
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the print menu is clicked.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PrintFileMenuClick(object sender, EventArgs e)
-        {
-
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the print-preview menu is clicked
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PrintPreviewFileMenuClick(object sender, EventArgs e)
-        {
-
         }
 
         /// <summary>
