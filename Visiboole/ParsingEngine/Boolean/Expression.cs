@@ -199,7 +199,7 @@ namespace VisiBoole.ParsingEngine.Boolean
             string basicExpression = expression;
 
             // split into a string array off of the [or] gate
-            string[] andExpression = basicExpression.Split('+');
+            string[] andExpression = basicExpression.Split('|');
 
             // format the expression
             for (int i = 0; i < andExpression.Length; i++)
@@ -275,7 +275,7 @@ namespace VisiBoole.ParsingEngine.Boolean
             string basicExpression = expression;
 
             // split into a string array off of the [or] gate
-            string[] elements = basicExpression.Split('+');
+            string[] elements = basicExpression.Split('|');
 
             // format the expression
             for (int i = 0; i < elements.Length; i++)
