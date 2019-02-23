@@ -81,7 +81,7 @@ namespace VisiBoole.Models
                 FileSource.Create().Close();
             }
 
-            this.Text = GetFileText();
+            Text = GetFileText();
             lastText = Text;
             isDirty = false;
 
@@ -104,15 +104,22 @@ namespace VisiBoole.Models
         /// </summary>
         public void SetTheme()
         {
+            NumberBorder = Color.DodgerBlue;
+            NumberColor = Color.DodgerBlue;
+
             if (Properties.Settings.Default.Theme == "Light")
             {
-                this.BackColor = Color.White;
+                this.BackColor = SystemColors.ControlLightLight;
                 this.ForeColor = Color.Black;
+                NumberBackground1 = SystemColors.ControlLightLight;
+                NumberBackground2 = SystemColors.ControlLightLight;
             }
             else if (Properties.Settings.Default.Theme == "Dark")
             {
                 this.BackColor = Color.FromArgb(48, 48, 48);
-                this.ForeColor = Color.White;
+                this.ForeColor = SystemColors.ControlLightLight;
+                NumberBackground1 = Color.FromArgb(48, 48, 48);
+                NumberBackground2 = Color.FromArgb(48, 48, 48);
             }
         }
 
@@ -131,7 +138,7 @@ namespace VisiBoole.Models
         private string GetFileText()
         {
             string text = string.Empty;
-
+            
             using (StreamReader reader = this.FileSource.OpenText())
             {
                 string nextLine = string.Empty;
@@ -141,7 +148,7 @@ namespace VisiBoole.Models
                     text += nextLine + "\n";
                 }
             }
-            return text;
+            return text.Replace("\t", new string(' ', 8));
         }
 
         /// <summary>
@@ -167,6 +174,44 @@ namespace VisiBoole.Models
             int len = Math.Abs(this.Text.Length - lastText.Length); // The length of the string inserted or deleted
             int loc = isDel ? this.SelectionStart : (this.SelectionStart - len); // The location of the edit
             string edit = isDel ? lastText.Substring(loc, len) : this.Text.Substring(loc, len); // Gets the edit string
+
+            // Check for special edits such as tabs, quotes and grouping characters
+            if (edit.Equals("\t"))
+            {
+                Text = Text.Remove(loc, 1); // Remove tab
+                edit = new string(' ', 8);
+                Text = Text.Insert(loc, edit); // Insert spaces for tab
+                SelectionStart = loc + 8; // Restore cursor location
+            }
+            else if (edit.Equals("\"") && !isDel)
+            {
+                Text = Text.Remove(loc, 1);
+                edit = new string('\"', 2);
+                Text = Text.Insert(loc, edit);
+                SelectionStart = loc + 1;
+            }
+            else if (edit.Equals("[") && !isDel)
+            {
+                Text = Text.Remove(loc, 1);
+                edit = "[]";
+                Text = Text.Insert(loc, edit);
+                SelectionStart = loc + 1;
+            }
+            else if (edit.Equals("{") && !isDel)
+            {
+                Text = Text.Remove(loc, 1);
+                edit = "{}";
+                Text = Text.Insert(loc, edit);
+                SelectionStart = loc + 1;
+            }
+            else if (edit.Equals("(") && !isDel)
+            {
+                Text = Text.Remove(loc, 1);
+                edit = "()";
+                Text = Text.Insert(loc, edit);
+                SelectionStart = loc + 1;
+            }
+
             editHistory.Push(isDel);
             editHistory.Push(loc);
             editHistory.Push(edit);
@@ -209,6 +254,7 @@ namespace VisiBoole.Models
             if (!this.Text.Equals(lastText))
             {
                 RecordEdit();
+                OnTextChanged(new EventArgs());
                 if (!isDirty) UpdateDirty();
                 UpdateDisplay(Globals.DisplayType.EDIT);
             }

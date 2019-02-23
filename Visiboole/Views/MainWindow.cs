@@ -678,6 +678,8 @@ namespace VisiBoole.Views
         private void MainWindowFormLoadEvent(object sender, EventArgs e)
         {
             SetTheme(Properties.Settings.Default.Theme);
+            colorBlindModeToolStripMenuItem.Checked = Properties.Settings.Default.Colorblind;
+            simulationCommentsToolStripMenuItem.Checked = Properties.Settings.Default.SimulationComments;
         }
 
         #endregion

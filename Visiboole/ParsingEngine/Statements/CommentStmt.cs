@@ -50,16 +50,13 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-			// only add comments to simulator if the user has the setting enabled
-			if (Properties.Settings.Default.SimulationComments)
-			{
-                string spaces = Regex.Match(Text).Groups["Spacing"].Value;
-                foreach (char space in spaces)
-                {
-                    Output.Add(new SpaceFeed());
-                }
-				Output.Add(this);
-			}
+            string spaces = Regex.Match(Text).Groups["Spacing"].Value;
+            foreach (char space in spaces)
+            {
+                Output.Add(new SpaceFeed());
+            }
+            Output.Add(this);
+
             LineFeed lf = new LineFeed();
             Output.Add(lf);
 		}

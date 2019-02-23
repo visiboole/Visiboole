@@ -177,12 +177,12 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    line = line.Replace("\t", "            ");
+                    line = line.TrimEnd();
 
                     if (CommentStmt.Regex.Match(line).Success)
                     {
                         Match match = CommentStmt.Regex.Match(line);
-                        if (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+"))
+                        if (!match.Groups["DoInclude"].Value.Equals("-") && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+")))
                         {
                             expandedSourceCode += String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value, "\n");
                             continue;
