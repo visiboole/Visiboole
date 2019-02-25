@@ -478,16 +478,17 @@ namespace VisiBoole.ParsingEngine
             int rightBound = Convert.ToInt32(match.Groups["RightBound"].Value);
             int step = (leftBound < rightBound)
                     ? (String.IsNullOrEmpty(match.Groups["Step"].Value) ? 1 : Convert.ToInt32(match.Groups["Step"].Value))
-                    : (String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : (Convert.ToInt32(match.Groups["Step"].Value) * -1));
+                    : (String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : -Math.Abs(Convert.ToInt32(match.Groups["Step"].Value)));
 
             // Expand vector
-            for (int i = leftBound; i != rightBound; i+=step)
+            int i = leftBound;
+            while ((step > 0 && i <= rightBound) || (step < 0 && i >= rightBound))
             {
                 expanded += String.Concat(name, i, " ");
+                i += step;
             }
-            expanded += String.Concat(name, rightBound);
 
-            return expanded;
+            return expanded.TrimEnd();
         }
 
         /// <summary>

@@ -521,7 +521,7 @@ namespace VisiBoole.Views
             this.runModeToggle.ShortcutKeys = System.Windows.Forms.Keys.F1;
             this.runModeToggle.Size = new System.Drawing.Size(56, 20);
             this.runModeToggle.Text = "Run";
-            this.runModeToggle.ToolTipText = "Run";
+            this.runModeToggle.ToolTipText = "Run Design";
             this.runModeToggle.Click += new System.EventHandler(this.RunButtonClick);
             // 
             // editModeToggle
@@ -533,7 +533,7 @@ namespace VisiBoole.Views
             this.editModeToggle.ShortcutKeys = System.Windows.Forms.Keys.F2;
             this.editModeToggle.Size = new System.Drawing.Size(55, 20);
             this.editModeToggle.Text = "Edit";
-            this.editModeToggle.ToolTipText = "Edit";
+            this.editModeToggle.ToolTipText = "Edit Design";
             this.editModeToggle.Click += new System.EventHandler(this.EditButtonClick);
             // 
             // MainWindow
