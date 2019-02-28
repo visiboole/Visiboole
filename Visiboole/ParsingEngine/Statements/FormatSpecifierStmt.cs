@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using VisiBoole.ErrorHandling;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 

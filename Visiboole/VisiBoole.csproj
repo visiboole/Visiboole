@@ -78,11 +78,6 @@
     <Compile Include="Controllers\IDisplayController.cs" />
     <Compile Include="Controllers\IMainWindowController.cs" />
     <Compile Include="Controllers\MainWindowController.cs" />
-    <Compile Include="ErrorHandling\ErrorHandler.cs" />
-    <Compile Include="ErrorHandling\FormatSpecifierSyntaxException.cs" />
-    <Compile Include="ErrorHandling\MissingEndOfStatementException.cs" />
-    <Compile Include="ErrorHandling\ModuleDeclarationPlacementException.cs" />
-    <Compile Include="ErrorHandling\StatementNotRecognizedException.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="ParsingEngine\Boolean\Expression.cs" />

@@ -25,7 +25,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using VisiBoole.ErrorHandling;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.ParsingEngine.Statements;
@@ -450,14 +449,6 @@ namespace VisiBoole.ParsingEngine
                         continue;
                     }
 
-                    // if we have reached this point with no match then there is a user syntax error
-                    // TODO: add more validation checks for augmented error-checking granularity
-                    success = ModuleDeclarationStmt.Regex.Match(line).Success;
-					if (flag == true && success)
-						// module declaration must be on the first line, throw an exception
-						throw new ModuleDeclarationPlacementException("Module declarations must be at the top of the file. Did you mean to use a submodule declaration instead?");
-					// we are past specific error checks - throw a general exception stating the given statement is unrecognized
-					throw new StatementNotRecognizedException("Statement not recognized as visiboole source code.");
 				}
 			}
 			return stmtList;
