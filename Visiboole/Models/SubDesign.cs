@@ -73,8 +73,8 @@ namespace VisiBoole.Models
             }
 
             FileSource = new FileInfo(filename);
-            this.FileSourceName = FileSource.Name;
-            this.UpdateDisplay = update;
+            FileSourceName = FileSource.Name;
+            UpdateDisplay = update;
 
             if (!File.Exists(filename))
             {
@@ -88,13 +88,13 @@ namespace VisiBoole.Models
             editHistory.Clear();
             undoHistory.Clear();
 
-            this.TextChanged += SubDesign_TextChanged;
-            this.MouseDown += SubDesign_MouseDown;
-            this.KeyDown += SubDesign_KeyDown;
+            TextChanged += SubDesign_TextChanged;
+            MouseDown += SubDesign_MouseDown;
+            KeyDown += SubDesign_KeyDown;
 
-            this.Database = new Database();
-            this.AcceptsTab = true;
-	        this.ShowLineNumbers = true;
+            Database = new Database();
+            AcceptsTab = true;
+	        ShowLineNumbers = true;
             SetTheme();
             SetFontSize();
         }
@@ -109,15 +109,15 @@ namespace VisiBoole.Models
 
             if (Properties.Settings.Default.Theme == "Light")
             {
-                this.BackColor = SystemColors.ControlLightLight;
-                this.ForeColor = Color.Black;
+                BackColor = SystemColors.ControlLightLight;
+                ForeColor = Color.Black;
                 NumberBackground1 = SystemColors.ControlLightLight;
                 NumberBackground2 = SystemColors.ControlLightLight;
             }
             else if (Properties.Settings.Default.Theme == "Dark")
             {
-                this.BackColor = Color.FromArgb(48, 48, 48);
-                this.ForeColor = SystemColors.ControlLightLight;
+                BackColor = Color.FromArgb(48, 48, 48);
+                ForeColor = SystemColors.ControlLightLight;
                 NumberBackground1 = Color.FromArgb(48, 48, 48);
                 NumberBackground2 = Color.FromArgb(48, 48, 48);
             }
@@ -128,7 +128,7 @@ namespace VisiBoole.Models
         /// </summary>
         public void SetFontSize()
         {
-            this.Font = new Font(DefaultFont.FontFamily, Properties.Settings.Default.FontSize);
+            Font = new Font(DefaultFont.FontFamily, Properties.Settings.Default.FontSize);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace VisiBoole.Models
         {
             string text = string.Empty;
             
-            using (StreamReader reader = this.FileSource.OpenText())
+            using (StreamReader reader = FileSource.OpenText())
             {
                 string nextLine = string.Empty;
 
@@ -170,10 +170,10 @@ namespace VisiBoole.Models
         /// </summary>
         private void RecordEdit()
         {
-            bool isDel = this.Text.Length < lastText.Length; // Indicates whether the edit was a deletion
-            int len = Math.Abs(this.Text.Length - lastText.Length); // The length of the string inserted or deleted
-            int loc = isDel ? this.SelectionStart : (this.SelectionStart - len); // The location of the edit
-            string edit = isDel ? lastText.Substring(loc, len) : this.Text.Substring(loc, len); // Gets the edit string
+            bool isDel = Text.Length < lastText.Length; // Indicates whether the edit was a deletion
+            int len = Math.Abs(Text.Length - lastText.Length); // The length of the string inserted or deleted
+            int loc = isDel ? SelectionStart : (SelectionStart - len); // The location of the edit
+            string edit = isDel ? lastText.Substring(loc, len) : Text.Substring(loc, len); // Gets the edit string
 
             // Check for special edits such as tabs, quotes and grouping characters
             if (edit.Equals("\t"))
@@ -216,7 +216,7 @@ namespace VisiBoole.Models
             editHistory.Push(loc);
             editHistory.Push(edit);
             undoHistory.Clear();
-            lastText = this.Text;
+            lastText = Text;
         }
 
         /// <summary>
@@ -229,15 +229,15 @@ namespace VisiBoole.Models
         {
             if (isDel)
             {
-                lastText = this.Text.Remove(loc, edit.Length);
-                this.Text = lastText;
-                this.SelectionStart = loc;
+                lastText = Text.Remove(loc, edit.Length);
+                Text = lastText;
+                SelectionStart = loc;
             }
             else
             {
-                lastText = this.Text.Insert(loc, edit);
-                this.Text = lastText;
-                this.SelectionStart = loc + edit.Length;
+                lastText = Text.Insert(loc, edit);
+                Text = lastText;
+                SelectionStart = loc + edit.Length;
             }
 
             if (!isDirty) UpdateDirty();
@@ -251,7 +251,7 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         private void SubDesign_TextChanged(object sender, EventArgs e)
 		{
-            if (!this.Text.Equals(lastText))
+            if (!Text.Equals(lastText))
             {
                 RecordEdit();
                 OnTextChanged(new EventArgs());
@@ -281,11 +281,11 @@ namespace VisiBoole.Models
                 cm.MenuItems.Add("-");
                 item = new MenuItem("Cut");
                 item.Click += new EventHandler(CutTextMenuClick);
-                item.Enabled = this.SelectedText.Length > 0;
+                item.Enabled = SelectedText.Length > 0;
                 cm.MenuItems.Add(item);
                 item = new MenuItem("Copy");
                 item.Click += new EventHandler(CopyTextMenuClick);
-                item.Enabled = this.SelectedText.Length > 0;
+                item.Enabled = SelectedText.Length > 0;
                 cm.MenuItems.Add(item);
                 item = new MenuItem("Paste");
                 item.Click += new EventHandler(PasteTextMenuClick);
@@ -296,7 +296,7 @@ namespace VisiBoole.Models
                 item.Click += new EventHandler(SelectAllTextMenuClick);
                 item.Enabled = true;
                 cm.MenuItems.Add(item);
-                this.ContextMenu = cm;
+                ContextMenu = cm;
             }
         }
 
@@ -360,7 +360,7 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         public void CutTextMenuClick(object sender, EventArgs e)
         {
-            this.Cut();
+            Cut();
         }
 
         /// <summary>
@@ -370,7 +370,7 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         public void CopyTextMenuClick(object sender, EventArgs e)
         {
-            Clipboard.SetText(this.SelectedText);
+            Clipboard.SetText(SelectedText);
         }
 
         /// <summary>
@@ -382,7 +382,7 @@ namespace VisiBoole.Models
         {
             if (Clipboard.ContainsText())
             {
-                this.SelectedText = Clipboard.GetText(TextDataFormat.Text).ToString();
+                SelectedText = Clipboard.GetText(TextDataFormat.Text).ToString();
             }
         }
 
@@ -393,7 +393,7 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         public void SelectAllTextMenuClick(object sender, EventArgs e)
         {
-            this.SelectAll();
+            SelectAll();
         }
 
         /// <summary>
@@ -401,7 +401,7 @@ namespace VisiBoole.Models
         /// </summary>
         public void SaveTextToFile()
         {
-            File.WriteAllText(this.FileSource.FullName, this.Text);
+            File.WriteAllText(FileSource.FullName, Text);
 			isDirty = false;
             Globals.TabControl.TabPages[TabPageIndex].Text = FileSourceName;
         }

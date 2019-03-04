@@ -66,7 +66,15 @@ namespace VisiBoole.Controllers
         /// <returns>The display</returns>
         public IDisplay GetDisplay()
         {
-            return displayController.CurrentDisplay;
+            try
+            {
+                return displayController.CurrentDisplay;
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                return null;
+            }
         }
 
         /// <summary>
@@ -74,7 +82,14 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void SetTheme()
         {
-            designController.SetThemes();
+            try
+            {
+                designController.SetThemes();
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+            }
         }
 
         /// <summary>
@@ -82,7 +97,14 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void SetFontSize()
         {
-            designController.SetSubDesignFontSizes();
+            try
+            {
+                designController.SetSubDesignFontSizes();
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+            }
         }
 
         /// <summary>
@@ -108,9 +130,9 @@ namespace VisiBoole.Controllers
 
                 LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
             }
         }
 
@@ -120,9 +142,16 @@ namespace VisiBoole.Controllers
         /// <param name="dType">The type of display that should be loaded</param>
         public void LoadDisplay(Globals.DisplayType dType)
         {
-            displayController.PreviousDisplay = displayController.CurrentDisplay;
-            displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
-            view.LoadDisplay(displayController.PreviousDisplay, displayController.CurrentDisplay);
+            try
+            {
+                displayController.PreviousDisplay = displayController.CurrentDisplay;
+                displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
+                view.LoadDisplay(displayController.PreviousDisplay, displayController.CurrentDisplay);
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+            }
         }
 
         /// <summary>
@@ -130,9 +159,16 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void SwitchDisplay()
         {
-            if (displayController.CurrentDisplay is DisplayRun)
+            try
             {
-                LoadDisplay(Globals.DisplayType.EDIT);
+                if (displayController.CurrentDisplay is DisplayRun)
+                {
+                    LoadDisplay(Globals.DisplayType.EDIT);
+                }
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
             }
         }
 
@@ -146,9 +182,9 @@ namespace VisiBoole.Controllers
             {
                 displayController.SelectTabPage(fileName);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
             }
         }
 
@@ -161,9 +197,9 @@ namespace VisiBoole.Controllers
             {
                 view.SaveFileSuccess(displayController.SaveActiveTab());
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
             }
         }
 
@@ -183,10 +219,10 @@ namespace VisiBoole.Controllers
                 ProcessNewFile(path);
                 view.SaveFileSuccess(true);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 view.SaveFileSuccess(false);
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
             }
         }
 
@@ -199,9 +235,9 @@ namespace VisiBoole.Controllers
             {
                 view.SaveFileSuccess(displayController.SaveAllTabs());
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
             }
         }
 
@@ -210,7 +246,14 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void Run()
         {
-            displayController.Run();
+            try
+            {
+                displayController.Run();
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+            }
         }
 
         /// <summary>
@@ -219,10 +262,10 @@ namespace VisiBoole.Controllers
         /// <returns>The name of the file closed</returns>
         public string CloseFile()
         {
-            SubDesign sd = displayController.GetActiveTabPage().SubDesign();
-
             try
             {
+                SubDesign sd = displayController.GetActiveTabPage().SubDesign();
+
                 if (view.ConfirmClose(sd.isDirty))
                 {
                     if (displayController.CloseActiveTab())
@@ -234,9 +277,9 @@ namespace VisiBoole.Controllers
 
                 return null;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
                 return null;
             }
         }
@@ -246,7 +289,15 @@ namespace VisiBoole.Controllers
         /// </summary>
         public bool ExitApplication()
 		{
-			return view.ConfirmExit(designController.CheckUnsavedChanges());
+            try
+            {
+                return view.ConfirmExit(designController.CheckUnsavedChanges());
+            }
+            catch (Exception exception)
+            {
+                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                return false;
+            }
 		}
 	}
 }

@@ -47,7 +47,11 @@ namespace VisiBoole.Views
             InitializeComponent();
             Globals.TabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
             Globals.TabControl.SelectedIndexChanged += (sender, e) => {
-                UpdateControls(MainWindowController.GetDisplay());
+                IDisplay display = MainWindowController.GetDisplay();
+                if (display != null)
+                {
+                    UpdateControls(display);
+                }
             };
         }
 
@@ -501,9 +505,10 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void EditMenuClick(object sender, EventArgs e)
         {
-            if (MainWindowController.GetDisplay() is DisplayEdit)
+            IDisplay display = MainWindowController.GetDisplay();
+            if (display != null && display is DisplayEdit)
             {
-                UpdateControls(MainWindowController.GetDisplay());
+                UpdateControls(display);
             }
         }
 
