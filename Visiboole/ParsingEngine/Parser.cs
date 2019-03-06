@@ -53,6 +53,18 @@ namespace VisiBoole.ParsingEngine
 	public class Parser
 	{
         /// <summary>
+        /// Regex patterns for parsing.
+        /// </summary>
+        public static readonly string NamePattern = @"([~*]?(?<Name>[_a-zA-Z]\w{0,19}))";
+        public static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d+)\.(?<Step>[1-9]\d*)?\.(?<RightBound>\d+)\])|(\[\])))";
+        public static readonly string VariablePattern = $@"({NamePattern}|{VectorPattern})";
+        public static readonly string ConstantPattern = @"((?<BitCount>\d{1,2})?\'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
+        public static readonly string AnyVariablePattern = $@"({NamePattern}|{VectorPattern}|{ConstantPattern})";
+        public static readonly string FormatSpecifierPattern = $@"(%(?<Format>[ubhdUBHD])\{{(?<Vars>{VariablePattern}(\s*{VariablePattern})*)\}})";
+        public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
+        public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
+
+        /// <summary>
         /// The design being parsed.
         /// </summary>
         private SubDesign Design;
@@ -203,6 +215,7 @@ namespace VisiBoole.ParsingEngine
                 while ((line = reader.ReadLine()) != null)
                 {
                     PreLineNumber++;
+                    line = line.TrimEnd(); // Trim end of line
                     StatementType? type = GetStatementType(line);
 
                     if (type == null)
@@ -216,6 +229,20 @@ namespace VisiBoole.ParsingEngine
                     else if (type == StatementType.FormatSpecifier)
                     {
                         // Verify formats
+                        if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({NamePattern})"))
+                        {
+                            // If line contains a variable outside {}
+                            Globals.Logger.Add($"Line {PreLineNumber}: Variables in a format specifier statement must be inside a format specifier.");
+                            valid = false;
+                        }
+
+                        // Check for formats inside formats or formats without variables
+                        MatchCollection formats = Regex.Matches(line, FormatSpecifierPattern);
+                        if (formats.Count != line.Count(c => c == '%'))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid format specifier.");
+                            valid = false;
+                        }
                     }
 
                     if (valid)
@@ -227,7 +254,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         else if (type == StatementType.Comment)
                         {
-                            Match match = Regex.Match(line, CommentStmt.CommentRegex);
+                            Match match = Regex.Match(line, CommentPattern);
 
                             if (!match.Groups["DoInclude"].Value.Equals("-") && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+")))
                             {
@@ -241,7 +268,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            bool needsExpansion = Regex.IsMatch(line, Globals.VectorRegex);
+                            bool needsExpansion = Regex.IsMatch(line, VectorPattern);
                             if (needsExpansion && line.Contains("="))
                             {
                                 // Vertical expansion needed
@@ -258,9 +285,9 @@ namespace VisiBoole.ParsingEngine
                             {
                                 // Horizontal expansion needed
                                 string expandedLine = line;
-                                while (Regex.IsMatch(expandedLine, Globals.VectorRegex))
+                                while (Regex.IsMatch(expandedLine, VectorPattern))
                                 {
-                                    Match match = Regex.Matches(expandedLine, Globals.VectorRegex)[0]; // Get match
+                                    Match match = Regex.Matches(expandedLine, VectorPattern)[0]; // Get match
 
                                     string expanded;
                                     if (String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
@@ -584,7 +611,7 @@ namespace VisiBoole.ParsingEngine
             // Check for valid comment
             if (type == StatementType.Comment)
             {
-                if (!Regex.IsMatch(lexeme, @"^\s*[+-]?"".*"";$"))
+                if (!Regex.IsMatch(lexeme, CommentPattern))
                 {
                     Globals.Logger.Add($"Line {PreLineNumber}: Invalid comment statement.");
                     return null;
@@ -695,7 +722,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the lexeme is a variable</returns>
         private bool IsVariable(string lexeme)
         {
-            Match match = Regex.Match(lexeme, @"^" + Globals.VariableRegex + @"$");
+            Match match = Regex.Match(lexeme, $@"^{NamePattern}$");
             if (match.Success)
             {
                 // Check variable name has at least one letter
@@ -726,7 +753,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the lexeme is a vector</returns>
         private bool IsVector(string lexeme)
         {
-            Match match = Regex.Match(lexeme, @"^" + Globals.VectorRegex + @"$");
+            Match match = Regex.Match(lexeme, $@"^{VectorPattern}$");
             if (match.Success)
             {
                 // Check for invalid vector namespace name
@@ -775,7 +802,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            expandedList = ExpandHorizontally(Regex.Match(vector, @"^" + Globals.VectorRegex + @"$"));
+                            expandedList = ExpandHorizontally(Regex.Match(vector, $@"^{VectorPattern}$"));
                         }
                     }
 
@@ -823,7 +850,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the lexeme is a constant</returns>
         private bool IsConstant(string lexeme)
         {
-            Match match = Regex.Match(lexeme, @"^" + Globals.ConstantRegex + @"$");
+            Match match = Regex.Match(lexeme, $@"^{ConstantPattern}$");
             if (match.Success)
             {
                 // Check bit count
@@ -935,7 +962,7 @@ namespace VisiBoole.ParsingEngine
             int rightBound = Convert.ToInt32(match.Groups["RightBound"].Value);
             int step = (leftBound < rightBound)
                     ? (String.IsNullOrEmpty(match.Groups["Step"].Value) ? 1 : Convert.ToInt32(match.Groups["Step"].Value))
-                    : (String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : -Math.Abs(Convert.ToInt32(match.Groups["Step"].Value)));
+                    : (String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : -Convert.ToInt32(match.Groups["Step"].Value));
 
             // Expand vector
             int i = leftBound;
@@ -965,21 +992,19 @@ namespace VisiBoole.ParsingEngine
 
             Regex regex = new Regex (
                 @"("                                            // Begin Group
-                    + Globals.VectorRegex                       // Any Vector Type
+                    + VectorPattern                             // Any Vector Type
                     + @"(?![^{}]*\})"                           // Not Inside {}
                 + @")"                                          // End Group
                 + @"|"                                          // Or
                 + @"("                                          // Begin Group
                     + @"\{"                                     // {
-                    + Globals.VarRegex                          // Any Variable Type
+                    + AnyVariablePattern                        // Any Variable Type
                     + @"("                                      // Begin Optional Group
                         + @"\,\s*"                              // Comma & Any Number of Whitespace
-                        + Globals.VarRegex                      // Any Variable Type
+                        + AnyVariablePattern                    // Any Variable Type
                     + @")*"                                     // End Optional Group
                     + @"\}"                                     // }
                 + @")"                                          // End Group
-                + @"|"                                          // Or
-                + Globals.ConstantRegex                         // Constant
             );
             MatchCollection matches = regex.Matches(line);
 
@@ -1020,7 +1045,7 @@ namespace VisiBoole.ParsingEngine
                     List<string> concatVars = new List<string>();
                     foreach (string var in vars)
                     {
-                        Match vector = Regex.Match(var, Globals.VectorRegex);
+                        Match vector = Regex.Match(var, VectorPattern);
                         if (vector.Success) // Come back to here
                         {
                             List<string> components;

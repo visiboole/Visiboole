@@ -44,19 +44,14 @@ namespace VisiBoole
         /// </summary>
         public static DialogBox Dialog = new DialogBox();
 
+        /// <summary>
+        /// Error logging for the application.
+        /// </summary>
         public static ErrorDialog Logger = new ErrorDialog();
 
         /// <summary>
         /// Tab Control
         /// </summary>
         public static TabControl TabControl = null;
-
-        /// <summary>
-        /// Regular Expression Patterns for Variables
-        /// </summary>
-        public static readonly string VariableRegex = @"[~*]?(?<Name>[_a-zA-Z]\w{0,19})";
-        public static readonly string VectorRegex = @"[~*]?(?<Name>[_a-zA-Z]\w{0,19})((\[(?<LeftBound>\d+)\.(?<Step>[1-9]\d*)?\.(?<RightBound>\d+)\])|(\[\]))";
-        public static readonly string VarRegex = @"((" + VariableRegex + @")|(" + VectorRegex + @"))";
-        public static readonly string ConstantRegex = @"(?<BitCount>\d{1,2})?\'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+)))";
     }
 }

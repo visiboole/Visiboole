@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.ParsingEngine.ObjectCode;
+using VisiBoole.ParsingEngine.Statements;
 
 namespace VisiBoole.Models
 {
@@ -113,8 +114,9 @@ namespace VisiBoole.Models
                 {
                     #region Checks for bars to be put over parenthesis, and what color to assign them
                     string variable = token.ObjCodeText;
-                    if(variable.Contains(';'))
+                    if(variable.Contains(';') && !(token is CommentStmt))
                     {
+                        // Remove ; if not comment
                         variable = variable.Substring(0, variable.IndexOf(';'));
                     }
                     bool? value = token.ObjCodeValue;
@@ -255,7 +257,8 @@ namespace VisiBoole.Models
                                 }
                                 else
                                 {
-                                    currentLine += "<font color='black')\" >" + variable.Replace("\"", "") + "</font>";
+                                    // Comment
+                                    currentLine += "<font color='black')\" >" + variable + "</font>";
                                 }
                                 currentLine += " ";
                             }

@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using System;
 using System.Text.RegularExpressions;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
@@ -30,11 +31,6 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public class CommentStmt : Statement, IObjectCodeElement
 	{
-        /// <summary>
-        /// Regex for comments.
-        /// </summary>
-        public static readonly string CommentRegex = @"(?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;)";
-
         /// <summary>
         /// Constructs an instance of CommentStmt
         /// </summary>
@@ -51,10 +47,14 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Output front padding
-            foreach (char space in Regex.Match(Text, CommentRegex).Groups["Spacing"].Value)
+            Match comment = Regex.Match(Text, Parser.CommentPattern);
+            foreach (char space in comment.Groups["Spacing"].Value)
             {
                 Output.Add(new SpaceFeed());
             }
+
+            // Remove "" and ;
+            Text = String.Concat(comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3));
 
             // Output comment and line feed
             Output.Add(this);

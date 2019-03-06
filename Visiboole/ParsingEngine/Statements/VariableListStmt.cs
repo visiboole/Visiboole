@@ -47,8 +47,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Clean content and make format string
-            //string content = Regex.Replace(Text, @"[;]", string.Empty); // Remove syntax
-            MatchCollection matches = Regex.Matches(Text, @"(" + Globals.VariableRegex + @")|((?<=\s)\s+)");
+            MatchCollection matches = Regex.Matches(Text, $@"({Parser.NamePattern}|{Parser.SpacingPattern})");
             foreach (Match match in matches)
             {
                 if (String.IsNullOrWhiteSpace(match.Value))
