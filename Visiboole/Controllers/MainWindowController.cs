@@ -70,9 +70,9 @@ namespace VisiBoole.Controllers
             {
                 return displayController.CurrentDisplay;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while retrieving the current display type.", DialogType.Ok);
                 return null;
             }
         }
@@ -86,9 +86,9 @@ namespace VisiBoole.Controllers
             {
                 designController.SetThemes();
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while setting the themes of the designs.", DialogType.Ok);
             }
         }
 
@@ -101,9 +101,9 @@ namespace VisiBoole.Controllers
             {
                 designController.SetSubDesignFontSizes();
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while setting the font sizes of the designs.", DialogType.Ok);
             }
         }
 
@@ -130,9 +130,9 @@ namespace VisiBoole.Controllers
 
                 LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while processing a new file.", DialogType.Ok);
             }
         }
 
@@ -148,9 +148,9 @@ namespace VisiBoole.Controllers
                 displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
                 view.LoadDisplay(displayController.PreviousDisplay, displayController.CurrentDisplay);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while loading the display.", DialogType.Ok);
             }
         }
 
@@ -166,9 +166,9 @@ namespace VisiBoole.Controllers
                     LoadDisplay(Globals.DisplayType.EDIT);
                 }
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while switching the display type.", DialogType.Ok);
             }
         }
 
@@ -182,9 +182,9 @@ namespace VisiBoole.Controllers
             {
                 displayController.SelectTabPage(fileName);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while selecting a tab page.", DialogType.Ok);
             }
         }
 
@@ -197,9 +197,9 @@ namespace VisiBoole.Controllers
             {
                 view.SaveFileSuccess(displayController.SaveActiveTab());
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while saving a file.", DialogType.Ok);
             }
         }
 
@@ -219,10 +219,10 @@ namespace VisiBoole.Controllers
                 ProcessNewFile(path);
                 view.SaveFileSuccess(true);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 view.SaveFileSuccess(false);
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured during a save as file operation.", DialogType.Ok);
             }
         }
 
@@ -235,9 +235,9 @@ namespace VisiBoole.Controllers
             {
                 view.SaveFileSuccess(displayController.SaveAllTabs());
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while saving all files.", DialogType.Ok);
             }
         }
 
@@ -253,6 +253,7 @@ namespace VisiBoole.Controllers
             catch (Exception exception)
             {
                 Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                // Leave this error message for debugging purposes
             }
         }
 
@@ -277,9 +278,9 @@ namespace VisiBoole.Controllers
 
                 return null;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while closing a file.", DialogType.Ok);
                 return null;
             }
         }
@@ -293,9 +294,9 @@ namespace VisiBoole.Controllers
             {
                 return view.ConfirmExit(designController.CheckUnsavedChanges());
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
+                Globals.Dialog.New("Error", "An unexpected error has occured while closing the application.", DialogType.Ok);
                 return false;
             }
 		}

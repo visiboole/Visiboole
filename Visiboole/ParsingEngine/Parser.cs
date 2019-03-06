@@ -33,12 +33,59 @@ using VisiBoole.Views;
 namespace VisiBoole.ParsingEngine
 {
     /// <summary>
+    /// Statement types recognized by the parser.
+    /// </summary>
+    public enum StatementType
+    {
+        Submodule,
+        Boolean,
+        Clock,
+        VariableList,
+        FormatSpecifier,
+        Comment,
+        Empty
+    }
+
+    /// <summary>
     /// The main class of the parsing engine. This class is the brains of the parsing engine and 
     /// communicates with the calling classes.
     /// </summary>
 	public class Parser
 	{
-        private static Regex RegexExpansion = new Regex(Globals.PatternAnyVectorType);
+        /// <summary>
+        /// The design being parsed.
+        /// </summary>
+        private SubDesign Design;
+
+        /// <summary>
+        /// Line number of the design being parsed. (Used for errors)
+        /// </summary>
+        private int PreLineNumber;
+
+        /// <summary>
+        /// Line number of the parsed output. (Used for statements)
+        /// </summary>
+        private int PostLineNumber;
+
+        /// <summary>
+        /// Memo for vector expansions.
+        /// </summary>
+        private Dictionary<string, List<string>> ExpansionMemo;
+
+        /// <summary>
+        /// Indicates whether the parser is ticking.
+        /// </summary>
+        private bool Tick;
+
+        /// <summary>
+        /// Indicates whether the parser is initializing.
+        /// </summary>
+        private bool Init;
+
+        public Parser()
+        {
+            ExpansionMemo = new Dictionary<string, List<string>>();
+        }
 
         /// <summary>
         /// The entry method of the parsing engine. This method acts as "main" for the parsing engine.
@@ -48,18 +95,19 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Returns a list of parsed elements containing the text and value of each unit in the given expression</returns>
 		public List<IObjectCodeElement> Parse(SubDesign sd, string variableName, bool tick)
 		{
+            Design = sd;
+            Tick = tick;
+            Globals.Logger.Start();
+
             //initial run
             if(string.IsNullOrEmpty(variableName) && tick.Equals(false))
             {
-                sd.Database = new Database();
-                string expandedSourceCode = GetExpandedSourceCode(sd, true);
-                if (expandedSourceCode == null)
-                {
-                    return null;
-                }
-                List<Statement> stmtList = ParseStatements(expandedSourceCode, false, true);
+                Init = true;
+                Design.Database = new Database();
+                List<Statement> stmtList = ParseStatements();
                 if(stmtList == null)
                 {
+                    Globals.Logger.Display();
                     return null;
                 }
                 foreach (Statement stmt in stmtList)
@@ -76,15 +124,12 @@ namespace VisiBoole.ParsingEngine
             //variable clicked
 			else if(!string.IsNullOrEmpty(variableName) && tick.Equals(false))
             {
-                string expandedSourceCode = GetExpandedSourceCode(sd, false);
-                if (expandedSourceCode == null)
-                {
-                    return null;
-                }
-                sd.Database.VariableClicked(variableName);
-                List<Statement> stmtList = ParseStatements(expandedSourceCode, false, false);
+                Init = false;
+                Design.Database.VariableClicked(variableName);
+                List<Statement> stmtList = ParseStatements();
                 if (stmtList == null)
                 {
+                    Globals.Logger.Display();
                     return null;
                 }
                 foreach (Statement stmt in stmtList)
@@ -101,12 +146,14 @@ namespace VisiBoole.ParsingEngine
             //clock tick
             else
             {
-                string expandedSourceCode = GetExpandedSourceCode(sd, false);
-                if (expandedSourceCode == null)
+                Init = false;
+                List<Statement> stmtList = ParseStatements();
+                if (stmtList == null)
                 {
+                    Globals.Logger.Display();
                     return null;
                 }
-                List<Statement> stmtList = ParseStatements(expandedSourceCode, true, false);
+
                 // Set delay values
                 foreach (Statement stmt in stmtList)
                 {
@@ -115,6 +162,7 @@ namespace VisiBoole.ParsingEngine
                         ((DffClockStmt)stmt).Tick();
                     }
                 }
+                // Reevlaute booleans
                 foreach (Statement stmt in stmtList)
                 {
                     if (stmt.GetType() == typeof(BooleanAssignmentStmt))
@@ -122,22 +170,7 @@ namespace VisiBoole.ParsingEngine
                         ((BooleanAssignmentStmt)stmt).Evaluate();
                     }
                 }
-                /*
-                foreach (Statement stmt in stmtList)
-                {
-                    if (stmt.GetType() != typeof(DffClockStmt))
-                    {
-                        stmt.Parse();
-                    }
-                }
-                foreach (Statement stmt in stmtList)
-                {
-                    if (stmt.GetType() == typeof(DffClockStmt))
-                    {
-                        stmt.Parse();
-                    }
-                }
-                */
+
                 foreach (Statement stmt in stmtList)
                 {
                     stmt.Parse();
@@ -152,319 +185,752 @@ namespace VisiBoole.ParsingEngine
 		}
 
         /// <summary>
-        /// Expands the source of a given SubDesign, intializes variables and performs erorr checking
+        /// Returns a list of statements from parsed source code.
         /// </summary>
-        /// <param name="sd">Subdesign to create expanded source code for</param>
-        /// <param name="init">Whether variables need to be initialized</param>
-        /// <returns>The expanded source code</returns>
-        private string GetExpandedSourceCode(SubDesign sd, bool init)
+        /// <returns>List of statements</returns>
+        private List<Statement> ParseStatements()
         {
-            string expandedSourceCode = String.Empty;
-            byte[] byteArr = Encoding.UTF8.GetBytes(sd.Text);
-            MemoryStream stream = new MemoryStream(byteArr);
+            bool valid = true;
+            List<Statement> statements = new List<Statement>();
+
+            byte[] bytes = Encoding.UTF8.GetBytes(Design.Text);
+            MemoryStream stream = new MemoryStream(bytes);
             using (StreamReader reader = new StreamReader(stream))
             {
+                PreLineNumber = 0;
+                PostLineNumber = 0;
                 string line;
-                int lineNum = 0;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    lineNum++;
+                    PreLineNumber++;
+                    StatementType? type = GetStatementType(line);
 
-                    if (String.IsNullOrEmpty(line.Trim()))
+                    if (type == null)
                     {
-                        expandedSourceCode += String.Concat(line, "\n");
-                        continue;
+                        valid = false;
+                    }
+                    else if (type == StatementType.Boolean || type == StatementType.Clock)
+                    {
+                        // Verify expressions
+                    }
+                    else if (type == StatementType.FormatSpecifier)
+                    {
+                        // Verify formats
                     }
 
-                    line = line.TrimEnd();
-
-                    if (CommentStmt.Regex.Match(line).Success)
+                    if (valid)
                     {
-                        Match match = CommentStmt.Regex.Match(line);
-                        if (!match.Groups["DoInclude"].Value.Equals("-") && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+")))
+                        // Create statements
+                        if (type == StatementType.Empty)
                         {
-                            expandedSourceCode += String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value, "\n");
-                            continue;
+                            statements.Add(new EmptyStmt(PostLineNumber++, line));
+                        }
+                        else if (type == StatementType.Comment)
+                        {
+                            Match match = Regex.Match(line, CommentStmt.CommentRegex);
+
+                            if (!match.Groups["DoInclude"].Value.Equals("-") && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+")))
+                            {
+                                line = String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value); // Remove + or -
+                                statements.Add(new CommentStmt(PostLineNumber++, line));
+                            }
+                        }
+                        else if (type == StatementType.Submodule)
+                        {
+                            statements.Add(new SubmoduleInstantiationStmt(PostLineNumber++, line));
                         }
                         else
                         {
-                            continue;
-                        }
-                    }
-
-                    // Check for ;
-                    if (!line.Contains(";"))
-                    {
-                        Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", ';' is missing.", DialogType.Ok);
-                        return null;
-                    }
-
-                    // Check for matching (), [] and {}
-                    Stack<char> stack = new Stack<char>();
-                    foreach (char c in line)
-                    {
-                        if (c == '(' || c == '[' || c == '{')
-                        {
-                            stack.Push(c);
-                        }
-                        if (c == ')' || c == ']' || c == '}')
-                        {
-                            if (stack.Count > 0)
+                            bool needsExpansion = Regex.IsMatch(line, Globals.VectorRegex);
+                            if (needsExpansion && line.Contains("="))
                             {
-                                char c2 = stack.Peek();
-                                if ((c == ')' && c2 == '(') || (c == ']' && c2 == '[') || (c == '}' && c2 == '{'))
+                                // Vertical expansion needed
+                                string expansion = ExpandVertically(line);
+                                if (expansion == null)
                                 {
-                                    stack.Pop();
-                                }
-                            }
-                            else
-                            {
-                                Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", unmatching '" + c + "'.", DialogType.Ok);
-                                return null;
-                            }
-                        }
-                    }
-                    if (stack.Count > 0)
-                    {
-                        Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", unmatching '" + stack.Peek() + "'.", DialogType.Ok);
-                        return null;
-                    }
-
-                    // Perform expansions and error checking
-                    if (RegexExpansion.IsMatch(line) && line.Contains("="))
-                    {
-                        if (line.Contains("*"))
-                        {
-                            Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", you cannot use a '*' with a variable in an assignment statement.", DialogType.Ok);
-                            return null;
-                        }
-
-                        string expansion = ExpandVertically(line);
-
-                        if (expansion != null)
-                        {
-                            /*
-                            MatchCollection matches = Regex.Matches(line, Globals.PatternAnyVectorType);
-                            foreach (Match match in matches)
-                            {
-                                string vectorName = match.Groups["Name"].Value;
-                                string expanded = ExpandHorizontally(match);
-
-                                if (sd.Database.HasVectorNamespace(vectorName))
-                                {
-                                    List<string> expandedComponents = expanded.Split().ToList();
-                                    List<string> vectorComponents = sd.Database.GetVectorComponents(vectorName);
-                                    int intersectCount = vectorComponents.Intersect(expandedComponents).Count();
-
-                                    if (!(intersectCount > 0 && intersectCount == expandedComponents.Count()))
-                                    {
-                                        // Display error if the referenced components aren't a subset of the components in the database
-                                        Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", vector namespace " + vectorName + " is already defined. Only the following components: " + String.Join(" ", vectorComponents) + " can be referenced.", DialogType.Ok);
-                                        return null;
-                                    }
-                                }
-                                else
-                                {
-                                    sd.Database.AddVectorNamespace(vectorName, expanded);
-                                }
-                            }
-                            */
-
-                            if (init && !InitVariables(sd, expansion))
-                            {
-                                return null;
-                            }
-                            expandedSourceCode += String.Concat(expansion, "\n");
-                        }
-                        else
-                        {
-                            Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", vector and/or concatenation element counts must be consistent across the entire expression.", DialogType.Ok);
-                            return null;
-                        }
-                    }
-                    else if (RegexExpansion.IsMatch(line))
-                    {
-                        string output = line;
-                        while (RegexExpansion.IsMatch(output))
-                        {
-                            Match match = RegexExpansion.Matches(output)[0]; // Get match
-                            string vectorName = match.Groups["Name"].Value;
-                            string expanded = ExpandHorizontally(match);
-
-                            /*
-                            if (sd.Database.HasVectorNamespace(vectorName))
-                            {
-                                List<string> expandedComponents = expanded.Split().ToList();
-                                List<string> vectorComponents = sd.Database.GetVectorComponents(vectorName);
-                                int intersectCount = vectorComponents.Intersect(expandedComponents).Count();
-
-                                if (!(intersectCount > 0 && intersectCount == expandedComponents.Count()))
-                                {
-                                    // Display error if the referenced components aren't a subset of the components in the database
-                                    Globals.Dialog.New("Syntax Error", "On line " + lineNum + ", vector namespace " + vectorName + " is already defined. Only the following components: " + String.Join(" ", vectorComponents) + " can be referenced.", DialogType.Ok);
+                                    Globals.Logger.Add($"Line {PreLineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
                                     return null;
                                 }
+
+                                line = expansion;
                             }
-                            else
+                            else if (needsExpansion)
                             {
-                                sd.Database.AddVectorNamespace(vectorName, expanded);
+                                // Horizontal expansion needed
+                                string expandedLine = line;
+                                while (Regex.IsMatch(expandedLine, Globals.VectorRegex))
+                                {
+                                    Match match = Regex.Matches(expandedLine, Globals.VectorRegex)[0]; // Get match
+
+                                    string expanded;
+                                    if (String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
+                                    {
+                                        // Indicates vectorNameSpace[] syntax
+                                        expanded = String.Join(" ", Design.Database.GetVectorComponents(match.Groups["Name"].Value));
+                                    }
+                                    else if (ExpansionMemo.ContainsKey(match.Value))
+                                    {
+                                        expanded = String.Join(" ", ExpansionMemo[match.Value]);
+                                    }
+                                    else
+                                    {
+                                        expanded = String.Join(" ", ExpandHorizontally(match));
+                                    }
+
+                                    expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
+                                }
+
+                                line = expandedLine;
                             }
-                            */
 
-                            output = output.Substring(0, match.Index) + expanded + output.Substring(match.Index + match.Length);
-                        }
+                            // Add statement for each expansion of line
+                            foreach (string source in line.Split(new string[] {"\n"}, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                if (Init && !InitVariables(type, source))
+                                {
+                                    // Unable to initialize variables
+                                    valid = false;
+                                }
 
-                        if (init && !InitVariables(sd, output))
-                        {
-                            return null;
+                                if (type == StatementType.Boolean)
+                                {
+                                    statements.Add(new BooleanAssignmentStmt(PostLineNumber++, source));
+                                }
+                                else if (type == StatementType.Clock)
+                                {
+                                    statements.Add(new DffClockStmt(PostLineNumber++, source, Tick, Init));
+                                }
+                                else if (type == StatementType.FormatSpecifier)
+                                {
+                                    statements.Add(new FormatSpecifierStmt(PostLineNumber++, source));
+                                }
+                                else if (type == StatementType.VariableList)
+                                {
+                                    statements.Add(new VariableListStmt(PostLineNumber++, source));
+                                }
+                            }
                         }
-                        expandedSourceCode += String.Concat(output, "\n");
-                    }
-                    else
-                    {
-                        if (init && !InitVariables(sd, line))
-                        {
-                            return null;
-                        }
-                        expandedSourceCode += String.Concat(line, "\n");
                     }
                 }
             }
 
-            return expandedSourceCode;
+            if (!valid)
+            {
+                return null;
+            }
+            else
+            {
+                return statements;
+            }
         }
 
-		/// <summary>
-		/// Parses the source code into discrete statements of their respective visiboole type
-		/// </summary>
-		/// <param name="sd">The subdesign containing the user source code to be parsed</param>
-		/// <returns>Returns a list of visiboole statements, indexed by line number</returns>
-		private List<Statement> ParseStatements(string sourceCode, bool tick, bool init)
-		{
-			List<Statement> stmtList = new List<Statement>();
-			byte[] byteArr = Encoding.UTF8.GetBytes(sourceCode);
-			MemoryStream stream = new MemoryStream(byteArr);
-            using (StreamReader reader = new StreamReader(stream))
+        /// <summary>
+        /// Returns the type of statement for a given line.
+        /// </summary>
+        /// <param name="line">Line to interpret</param>
+        /// <returns>Type of statement</returns>
+        private StatementType? GetStatementType(string line)
+        {
+            StatementType? type = StatementType.Empty;
+            List<string> tokens = new List<string>();
+            Stack<char> groupings = new Stack<char>();
+            string lexeme = "";
+
+            foreach (char c in line)
             {
-                string line; // Current line
-                int lineNum = 0;
-                bool flag = false;    // flag is set to true after the first non-empty/comment is found
-                while ((line = reader.ReadLine()) != null)
+                string newChar = c.ToString();
+
+                if (type == StatementType.Comment)
                 {
-                    // check for an empty statement
-                    if (string.IsNullOrEmpty(line.Trim()))
+                    lexeme = String.Concat(lexeme, newChar);
+                }
+                else if (newChar.Equals("\""))
+                {
+                    if (!(lexeme.Equals("+") || lexeme.Equals("-") || lexeme.Equals("")))
                     {
-                        stmtList.Add(new EmptyStmt(lineNum, line));
-                        lineNum++;
-                        continue;
+                        Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
+                        return null;
                     }
 
-                    // check for a comment
-                    bool success = CommentStmt.Regex.Match(line).Success;
-                    if (success)
+                    if (tokens.Any(token => !token.Equals(" ")))
                     {
-                        stmtList.Add(new CommentStmt(lineNum, line));
-                        lineNum++;
-                        continue;
+                        Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
+                        return null;
                     }
 
-                    // check for a format specifier statement
-                    success = FormatSpecifierStmt.Regex.Match(line).Success;
-                    if (success)
+                    type = StatementType.Comment;
+                    lexeme = String.Concat(lexeme, newChar);
+                }
+                else if (Regex.IsMatch(newChar, @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'<,.-]"))
+                {
+                    // Invalid char
+                    Globals.Logger.Add($"Line {PreLineNumber}: Invalid character '{newChar}'.");
+                    return null;
+                }
+                else if (Regex.IsMatch(newChar, @"[\s{}(),;]"))
+                {
+                    // Ending characters
+                    if (newChar.Equals("{") || newChar.Equals("("))
                     {
-                        stmtList.Add(new FormatSpecifierStmt(lineNum, line));
-                        flag = true;
-                        lineNum++;
-                        continue;
+                        // Add grouping char to stack
+                        groupings.Push(newChar[0]);
                     }
-
-                    // check for a variable list statement
-                    success = VariableListStmt.Regex.Match(line).Success;
-                    if (success)
+                    else if (newChar.Equals("}") || newChar.Equals(")"))
                     {
-                        stmtList.Add(new VariableListStmt(lineNum, line));
-                        flag = true;
-                        lineNum++;
-                        continue;
-                    }
-
-                    /*
-                    success = ConstantStmt.BinPattern.Match(line).Success || ConstantStmt.DecPattern.Match(line).Success || ConstantStmt.HexPattern.Match(line).Success;
-                    if (success)
-                    {
-                        List<string> lines = ExpandLine(line);
-                        foreach (string line in lines)
+                        // Check for correct closing
+                        if (groupings.Count > 0)
                         {
-                            ConstantStmt stmt = new ConstantStmt(postLnNum++, line);
-
-                            if (stmt.VariableStmt != null)
+                            char top = groupings.Peek();
+                            if ((newChar.Equals(")") && top == '(') || (newChar.Equals("}") && top == '{'))
                             {
-                                stmtList.Add(stmt.VariableStmt);
+                                groupings.Pop();
                             }
-                            else return null;
+                            else
+                            {
+                                Globals.Logger.Add($"Line {PreLineNumber}: '{top}' must be matched first.");
+                                return null;
+                            }
                         }
-                            
-                        flag = true;
-                        
-                        
-                        continue;
+                        else
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Unmatched '{newChar}'.");
+                            return null;
+                        }
                     }
-                    */
-
-                    // check for a module declaration statement
-                    success = ModuleDeclarationStmt.Regex.Match(line).Success;
-                    if (flag == false && success)
+                    else if (newChar.Equals(","))
                     {
-                        stmtList.Add(new ModuleDeclarationStmt(lineNum, line));
-                        flag = true;
-                        lineNum++;
-                        continue;
+                        // Check for misplaced comma
+                        if (groupings.Count == 0)
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: ',' must be in {{}} or () in a submodule statement.");
+                            return null;
+                        }
+                        else
+                        {
+                            char top = groupings.Peek();
+
+                            if (type == StatementType.Submodule && top != '(')
+                            {
+                                Globals.Logger.Add($"Line {PreLineNumber}: ',' must be in () in a submodule statement.");
+                                return null;
+                            }
+                            else if (type != StatementType.Submodule && top != '{')
+                            {
+                                Globals.Logger.Add($"Line {PreLineNumber}: ',' must be in {{}}.");
+                                return null;
+                            }
+                        }
                     }
 
-                    // check for a submodule instantiation statement
-                    success = SubmoduleInstantiationStmt.Regex.Match(line).Success;
-                    if (success)
+                    if (lexeme.Length > 0)
                     {
-                        stmtList.Add(new SubmoduleInstantiationStmt(lineNum, line));
-                        flag = true;
-                        lineNum++;
-                        continue;
+                        if (IsToken(lexeme))
+                        {
+                            // Check for invalid tokens with current statement type
+                            if (lexeme.Equals("="))
+                            {
+                                if (type != StatementType.Empty)
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used once in a boolean statement.");
+                                    return null;
+                                }
+                                else
+                                {
+                                    type = StatementType.Boolean;
+                                }
+                            }
+                            else if (lexeme.Equals("<="))
+                            {
+                                if (type != StatementType.Empty)
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used once in a clock statement.");
+                                    return null;
+                                }
+                                else
+                                {
+                                    type = StatementType.Clock;
+                                }
+                            }
+                            else if (lexeme.Contains("%"))
+                            {
+                                if (type != StatementType.Empty && type != StatementType.FormatSpecifier)
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used in a format specifier statement.");
+                                    return null;
+                                }
+                                else if (type == StatementType.Empty)
+                                {
+                                    type = StatementType.FormatSpecifier;
+                                }
+                            }
+                            else if (lexeme.Contains("@"))
+                            {
+                                if (type != StatementType.Empty)
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used in a submodule statement.");
+                                    return null;
+                                }
+                                else
+                                {
+                                    type = StatementType.Submodule;
+                                }
+                            }
+                            else if (lexeme.Contains("~"))
+                            {
+                                if (lexeme.Equals("~") && !newChar.Equals("("))
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector or parenthesis on the right side of a boolean statement.");
+                                    return null;
+                                }
+
+                                if (!(type == StatementType.Boolean || type == StatementType.Clock))
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector or parenthesis on the right side of a boolean statement.");
+                                    return null;
+                                }
+                            }
+                            else if (lexeme.Contains("*"))
+                            {
+                                if (type != StatementType.Empty)
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '*' can only be used in a variable list statement.");
+                                    return null;
+                                }
+                            }
+                            else if (Regex.IsMatch(lexeme, @"^([+|^-])|(==)$"))
+                            {
+                                if (!(type == StatementType.Boolean || type == StatementType.Clock))
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used in a boolean or clock statement.");
+                                    return null;
+                                }
+                            }
+                            else if (lexeme.Contains("'"))
+                            {
+                                if (!(type == StatementType.Boolean || type == StatementType.Clock))
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: Constants can only be used on the right side of a boolean or statement.");
+                                    return null;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return null;
+                        }
+
+                        tokens.Add(lexeme);
+                        lexeme = "";
                     }
 
-                    // Check for clock statement
-                    if (line.Contains("<"))
+                    if (newChar.Equals("{") || newChar.Equals("}"))
                     {
-                        stmtList.Add(new DffClockStmt(lineNum, line, tick, init));
-                        flag = true;
-                        lineNum++;
-                        continue;
+                        if (type != StatementType.FormatSpecifier && type != StatementType.Boolean)
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{newChar}' must be part of a boolean or format specifier statement.");
+                            return null;
+                        }
                     }
-
-                    // Check for boolean statement
-                    if (!line.Contains("<") || line.Contains("^"))
+                    else if (newChar.Equals("(") || newChar.Equals(")"))
                     {
-                        stmtList.Add(new BooleanAssignmentStmt(lineNum, line));
-                        flag = true;
-                        lineNum++;
-                        continue;
+                        if (type != StatementType.Submodule && type != StatementType.Boolean)
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{newChar}' must be part of a submodule or boolean statement.");
+                            return null;
+                        }
+                    }
+                    else if (newChar.Equals(";"))
+                    {
+                        if (tokens.Count == 0)
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: ';' cannot start a statement.");
+                            return null;
+                        }
+
+                        if (tokens.Contains(";"))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid ';'.");
+                            return null;
+                        }
+
+                        if (tokens.Last().Equals(" "))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Spaces cannot be before ';'.");
+                            return null;
+                        }
                     }
 
-				}
-			}
-			return stmtList;
-		}
+                    tokens.Add(newChar);
+                }
+                else
+                {
+                    // Appending characters
+
+                    // Check for constant inside {}
+                    if (newChar.Equals("'"))
+                    {
+                        // Check for constant bit count inside {}
+                        if (groupings.Count > 0 && groupings.Peek() == '{' && (String.IsNullOrEmpty(lexeme) || !lexeme.All(ch => Char.IsDigit(ch))))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Constants in concat fields must specify bit count.");
+                            return null;
+                        }
+                    }
+
+                    lexeme = String.Concat(lexeme, newChar);
+                }
+            }
+
+            // Check for valid comment
+            if (type == StatementType.Comment)
+            {
+                if (!Regex.IsMatch(lexeme, @"^\s*[+-]?"".*"";$"))
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Invalid comment statement.");
+                    return null;
+                }
+
+                return type;
+            }
+
+            // Check for unparsed lexeme
+            if (lexeme.Length > 0)
+            {
+                Globals.Logger.Add($"Line {PreLineNumber}: Invalid '{lexeme}'.");
+                return null;
+            }
+
+            // Check if all tokens are only whitespace
+            if (!tokens.Any(token => !token.Equals(" ")))
+            {
+                // If only whitespace tokens return
+                return type;
+            }
+
+            // At this point, if type is Empty & a non whitespace token exists => type should be set to VariableList
+            if (type == StatementType.Empty)
+            {
+                type = StatementType.VariableList;
+            }
+
+            // Check for unclosed groupings
+            if (groupings.Count > 0)
+            {
+                foreach (char grouping in groupings)
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: '{grouping}' is not matched.");
+                }
+                return null;
+            }
+
+            // Check for ending ;
+            if (!tokens.Contains(";"))
+            {
+                Globals.Logger.Add($"Line {PreLineNumber}: Line must end with a ';'.");
+                return null;
+            }
+
+            return type;
+        }
+
+        /// <summary>
+        /// Returns whether a lexeme is a token.
+        /// </summary>
+        /// <param name="lexeme">Lexeme to interpret</param>
+        /// <returns>Whether the lexeme is a token</returns>
+        private bool IsToken(string lexeme)
+        {
+            if (Regex.IsMatch(lexeme, @"^[=+^|-]$"))
+            {
+                // Lexeme is operator
+                return true;
+            }
+            else if (lexeme.Equals("=="))
+            {
+                // Lexeme is == operator
+                return true;
+            }
+            else if (lexeme.Equals("<="))
+            {
+                // Lexeme is <= operator
+                return true;
+            }
+            else if (lexeme.Equals("~"))
+            {
+                // Lexeme is ~ operator
+                return true;
+            }
+            else if (Regex.IsMatch(lexeme, @"^%[bBdDuUhH]$"))
+            {
+                // Lexeme is format specifier
+                return true;
+            }
+            else if (IsVector(lexeme))
+            {
+                // Lexeme is vector
+                return true;
+            }
+            else if (IsVariable(lexeme))
+            {
+                // Lexeme is variable
+                return true;
+            }
+            else if (IsConstant(lexeme))
+            {
+                // Lexeme is constant
+                return true;
+            }
+            else
+            {
+                // Not sure what lexeme is
+                Globals.Logger.Add($"Line {PreLineNumber}: Invalid '{lexeme}'.");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns whether a lexeme is a variable. (If so, initializes it)
+        /// </summary>
+        /// <param name="lexeme">Lexeme to interpret</param>
+        /// <returns>Whether the lexeme is a variable</returns>
+        private bool IsVariable(string lexeme)
+        {
+            Match match = Regex.Match(lexeme, @"^" + Globals.VariableRegex + @"$");
+            if (match.Success)
+            {
+                // Check variable name has at least one letter
+                if (!lexeme.Any(c => char.IsLetter(c)))
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Invalid variable name.");
+                    return false;
+                }
+
+                if (Design.Database.HasVectorNamespace(lexeme))
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Variable {lexeme} already exists as a vector.");
+                    return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns whether a lexeme is a vector. (If so, initializes it)
+        /// </summary>
+        /// <param name="lexeme">Lexeme to interpret</param>
+        /// <returns>Whether the lexeme is a vector</returns>
+        private bool IsVector(string lexeme)
+        {
+            Match match = Regex.Match(lexeme, @"^" + Globals.VectorRegex + @"$");
+            if (match.Success)
+            {
+                // Check for invalid vector namespace name
+                string vectorNamespace = match.Groups["Name"].Value;
+                if (Char.IsDigit(vectorNamespace[vectorNamespace.Length - 1]))
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Vector namespaces cannot end in a number.");
+                    return false;
+                }
+
+                // Check vector bounds and step
+                int leftBound = String.IsNullOrEmpty(match.Groups["LeftBound"].Value) ? -1 : Convert.ToInt32(match.Groups["LeftBound"].Value);
+                int step = String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : Convert.ToInt32(match.Groups["Step"].Value);
+                int rightBound = String.IsNullOrEmpty(match.Groups["RightBound"].Value) ? -1 : Convert.ToInt32(match.Groups["RightBound"].Value);
+                if (leftBound > 31 || rightBound > 31 || step > 31)
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Vector bounds and step must be between 0 and 31.");
+                    return false;
+                }
+
+                // (If necessary) reformat vector so leftBound is most significant bit
+                /*
+                if (leftBound < rightBound)
+                {
+                    lexeme = String.Concat(lexeme.Substring(0, lexeme.IndexOf("[") + 1), match.Groups["RightBound"].Value, ".", match.Groups["Step"].Value, ".", match.Groups["LeftBound"].Value, "]");
+                }
+                */
+
+                if (Init)
+                {
+                    // Check if namespace is used by a variable
+                    if (Design.Database.TryGetVariable<Variable>(vectorNamespace) != null)
+                    {
+                        Globals.Logger.Add($"Line {PreLineNumber}: {vectorNamespace} cannot be used. A variable with that name already exists.");
+                        return false;
+                    }
+
+                    // Check for existing vector namespace
+                    string vector = (lexeme[0] == '~' || lexeme[0] == '*') ? lexeme.Substring(1) : lexeme; // Remove ~ or *
+                    List<string> expandedList = new List<string>();
+                    if (leftBound != -1)
+                    {
+                        if (ExpansionMemo.ContainsKey(vector))
+                        {
+                            expandedList = ExpansionMemo[vector];
+                        }
+                        else
+                        {
+                            expandedList = ExpandHorizontally(Regex.Match(vector, @"^" + Globals.VectorRegex + @"$"));
+                        }
+                    }
+
+                    if (Design.Database.HasVectorNamespace(vectorNamespace))
+                    {
+                        // These ifs cannot be combined
+                        if (leftBound != -1)
+                        {
+                            List<string> vectorComponents = Design.Database.GetVectorComponents(vectorNamespace);
+                            int intersectCount = vectorComponents.Intersect(expandedList).Count();
+
+                            if (!(intersectCount > 0 && intersectCount == expandedList.Count()))
+                            {
+                                // Display error if the referenced components aren't a subset of the components in the database
+                                Globals.Logger.Add($"Line {PreLineNumber}: Vector namespace {vectorNamespace} is already defined. Only the following components: {String.Join(" ", vectorComponents)} can be referenced.");
+                                return false;
+                            }
+                        }
+                        // Else isn't needed. Vector namespace[] notation will never reference outside components
+                    }
+                    else
+                    {
+                        if (leftBound == -1)
+                        {
+                            // Vector can't be declared as namespace[]
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{vector}' notation cannot be used before the vector is initialized.");
+                            return false;
+                        }
+                        Design.Database.AddVectorNamespace(vectorNamespace, expandedList);
+                    }
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns whether a lexeme is a constant.
+        /// </summary>
+        /// <param name="lexeme">Lexeme to interpret</param>
+        /// <returns>Whether the lexeme is a constant</returns>
+        private bool IsConstant(string lexeme)
+        {
+            Match match = Regex.Match(lexeme, @"^" + Globals.ConstantRegex + @"$");
+            if (match.Success)
+            {
+                // Check bit count
+                if (!String.IsNullOrEmpty(match.Groups["BitCount"].Value) && Convert.ToInt32(match.Groups["BitCount"].Value) > 32)
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Constant can have at most 32 bits.");
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Initializes variables in a line.
+        /// </summary>
+        /// <param name="type">Type of statement</param>
+        /// <param name="line">Line</param>
+        /// <returns>Whether the operation was successful</returns>
+        private bool InitVariables(StatementType? type, string line)
+        {
+            MatchCollection matches = Regex.Matches(line, @"\*?(?<Name>[_a-zA-Z]\w{0,19})");
+            foreach (Match match in matches)
+            {
+                string var = match.Value;
+                if (line.Contains("="))
+                {
+                    string dependent = line.Contains("<")
+                        ? line.Substring(0, line.IndexOf('<')).Trim()
+                        : line.Substring(0, line.IndexOf('=')).Trim();
+
+                    if (dependent.Equals(var))
+                    {
+                        if (Design.Database.TryGetVariable<Variable>(var) == null)
+                        {
+                            Design.Database.AddVariable<DependentVariable>(new DependentVariable(var, false));
+
+                            if (line.Contains("<"))
+                            {
+                                // Create delay variable
+                                var += ".d";
+                                Design.Database.AddVariable<DependentVariable>(new DependentVariable(var, false));
+                            }
+                        }
+                        else
+                        {
+                            if (Design.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable != null)
+                            {
+                                Design.Database.MakeDependent(var);
+                            }
+
+                            if (line.Contains("<"))
+                            {
+                                var += ".d";
+                                if (Design.Database.TryGetVariable<Variable>(var) == null)
+                                {
+                                    // Delay doesn't exist
+                                    Design.Database.AddVariable<DependentVariable>(new DependentVariable(var, false));
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Design.Database.TryGetVariable<Variable>(var) == null)
+                        {
+                            IndependentVariable indVar = new IndependentVariable(var, false);
+                            Design.Database.AddVariable<IndependentVariable>(indVar);
+                        }
+                    }
+                }
+                else
+                {
+                    bool val = var.Contains("*");
+                    var = val ? var.Substring(1) : var; // Remove * if present
+
+                    if (Design.Database.TryGetVariable<Variable>(var) == null)
+                    {
+                        // Create Variable
+                        IndependentVariable indVar = new IndependentVariable(var, val);
+                        Design.Database.AddVariable<IndependentVariable>(indVar);
+                    }
+                    else if (type == StatementType.VariableList)
+                    {
+                        Globals.Logger.Add($"Line {PreLineNumber}: {var} has already been declared.");
+                        return false; // You cannot declare a variable twice
+                    }
+                }
+            }
+
+            return true;
+        }
 
         /// <summary>
         /// Expands vector to its variable list
         /// </summary>
         /// <param name="match">The Vector Match</param>
         /// <returns>The expanded string</returns>
-        private string ExpandHorizontally(Match match)
+        private List<string> ExpandHorizontally(Match match)
         {
-            string expanded = String.Empty;
+            List<string> expansion = new List<string>();
 
             // Get vector name, bounds and step
-            string name = match.Groups["Name"].Value;
+            string name = (match.Value.Contains("*") || match.Value.Contains("~")) ? String.Concat(match.Value[0], match.Groups["Name"].Value) : match.Groups["Name"].Value;
             int leftBound = Convert.ToInt32(match.Groups["LeftBound"].Value);
             int rightBound = Convert.ToInt32(match.Groups["RightBound"].Value);
             int step = (leftBound < rightBound)
@@ -475,11 +941,17 @@ namespace VisiBoole.ParsingEngine
             int i = leftBound;
             while ((step > 0 && i <= rightBound) || (step < 0 && i >= rightBound))
             {
-                expanded += String.Concat(name, i, " ");
+                expansion.Add(String.Concat(name, i));
                 i += step;
             }
 
-            return expanded.TrimEnd();
+            // Save expansion
+            if (!ExpansionMemo.ContainsKey(match.Value))
+            {
+                ExpansionMemo.Add(match.Value, expansion);
+            }
+
+            return expansion;
         }
 
         /// <summary>
@@ -493,21 +965,21 @@ namespace VisiBoole.ParsingEngine
 
             Regex regex = new Regex (
                 @"("                                            // Begin Group
-                    + Globals.PatternAnyVectorType              // Any Vector Type
+                    + Globals.VectorRegex                       // Any Vector Type
                     + @"(?![^{}]*\})"                           // Not Inside {}
                 + @")"                                          // End Group
                 + @"|"                                          // Or
                 + @"("                                          // Begin Group
                     + @"\{"                                     // {
-                    + Globals.PatternAnyVariableType            // Any Variable Type
+                    + Globals.VarRegex                          // Any Variable Type
                     + @"("                                      // Begin Optional Group
                         + @"\,\s*"                              // Comma & Any Number of Whitespace
-                        + Globals.PatternAnyVariableType        // Any Variable Type
+                        + Globals.VarRegex                      // Any Variable Type
                     + @")*"                                     // End Optional Group
                     + @"\}"                                     // }
                 + @")"                                          // End Group
                 + @"|"                                          // Or
-                + Globals.PatternConstant                       // Constant
+                + Globals.ConstantRegex                         // Constant
             );
             MatchCollection matches = regex.Matches(line);
 
@@ -517,7 +989,27 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!match.Value.Contains("{"))
                 {
-                    variables.Add(new List<string>(ExpandHorizontally(match).Split(' ')));
+                    if (String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
+                    {
+                        // Indicates vectorNameSpace[] syntax
+                        List<string> components = Design.Database.GetVectorComponents(match.Groups["Name"].Value);
+                        if (match.Value.Contains("~") && !components[0].Contains("~"))
+                        {
+                            for (int i = 0; i < components.Count; i++)
+                            {
+                                components[i] = String.Concat("~", components[i]);
+                            }
+                        }
+                        variables.Add(components);
+                    }
+                    else if (ExpansionMemo.ContainsKey(match.Value))
+                    {
+                        variables.Add(ExpansionMemo[match.Value]);
+                    }
+                    else
+                    {
+                        variables.Add(ExpandHorizontally(match));
+                    }
                 }
                 else
                 {
@@ -528,12 +1020,27 @@ namespace VisiBoole.ParsingEngine
                     List<string> concatVars = new List<string>();
                     foreach (string var in vars)
                     {
-                        if (Regex.IsMatch(var, Globals.PatternAnyVectorType))
+                        Match vector = Regex.Match(var, Globals.VectorRegex);
+                        if (vector.Success) // Come back to here
                         {
-                            string expansion = ExpandHorizontally(Regex.Match(var, Globals.PatternAnyVectorType));
-                            foreach (string v in expansion.Split(' '))
+                            List<string> components;
+                            if (String.IsNullOrEmpty(vector.Groups["LeftBound"].Value))
                             {
-                                concatVars.Add(v);
+                                // Indicates vectorNameSpace[] syntax
+                                components = Design.Database.GetVectorComponents(vector.Groups["Name"].Value);
+                            }
+                            else if (ExpansionMemo.ContainsKey(var))
+                            {
+                                components = ExpansionMemo[var];
+                            }
+                            else
+                            {
+                                components = ExpandHorizontally(vector);
+                            }
+
+                            foreach (string component in components)
+                            {
+                                concatVars.Add(component);
                             }
                         }
                         else
@@ -567,85 +1074,6 @@ namespace VisiBoole.ParsingEngine
                 expanded += String.Concat(newLine, "\n");
             }
             return expanded;
-        }
-
-        /// <summary>
-        /// Initializes variables inside source line(s)
-        /// </summary>
-        /// <param name="sd">Subdesign to initialize variables</param>
-        /// <param name="source">Source line(s)</param>
-        /// <returns>Whether the operation was successful</returns>
-        private bool InitVariables(SubDesign sd, string source)
-        {
-            string[] lines = source.Split('\n');
-            foreach (string line in lines)
-            {
-                MatchCollection matches = Regex.Matches(line, Globals.PatternVariable);
-                foreach (Match match in matches)
-                {
-                    string var = match.Value;
-                    if (line.Contains("="))
-                    {
-                        string dependent = line.Contains("<")
-                            ? line.Substring(0, line.IndexOf('<')).Trim()
-                            : line.Substring(0, line.IndexOf('=')).Trim();
-
-                        if (dependent.Equals(var))
-                        {
-                            if (line.Contains("<"))
-                            {
-                                var += ".d";
-                            }
-
-                            if (sd.Database.TryGetVariable<Variable>(var) == null)
-                            {
-                                DependentVariable depVar = new DependentVariable(var, false);
-                                sd.Database.AddVariable<DependentVariable>(depVar);
-                            }
-                            else
-                            {
-                                if (sd.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable != null)
-                                {
-                                    sd.Database.MakeDependent(var);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (sd.Database.TryGetVariable<Variable>(var) == null)
-                            {
-                                IndependentVariable indVar = new IndependentVariable(var, false);
-                                sd.Database.AddVariable<IndependentVariable>(indVar);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (sd.Database.TryGetVariable<Variable>(var) == null)
-                        {
-                            // Create Variable
-                            bool val = var.Contains("*");
-                            if (val && FormatSpecifierStmt.Regex.IsMatch(line))
-                            {
-                                return false; // You cannot use * in a FormatSpecifier
-                            }
-                            var = val ? var.Substring(1) : var; // Remove * if present
-                            IndependentVariable indVar = new IndependentVariable(var, val);
-                            sd.Database.AddVariable<IndependentVariable>(indVar);
-                        }
-                        else
-                        {
-                            if (VariableListStmt.Regex.IsMatch(line))
-                            {
-                                return false; // You cannot declare a variable twice
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            return true;
         }
     }
 }

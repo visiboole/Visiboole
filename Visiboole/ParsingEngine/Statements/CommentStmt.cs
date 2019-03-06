@@ -30,10 +30,10 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public class CommentStmt : Statement, IObjectCodeElement
 	{
-	    /// <summary>
-	    /// The identifying pattern that can be used to identify and extract this statement from raw text
-	    /// </summary>
-        public static Regex Regex { get; } = new Regex(@"(?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;)");
+        /// <summary>
+        /// Regex for comments.
+        /// </summary>
+        public static readonly string CommentRegex = @"(?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;)";
 
         /// <summary>
         /// Constructs an instance of CommentStmt
@@ -50,15 +50,15 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            string spaces = Regex.Match(Text).Groups["Spacing"].Value;
-            foreach (char space in spaces)
+            // Output front padding
+            foreach (char space in Regex.Match(Text, CommentRegex).Groups["Spacing"].Value)
             {
                 Output.Add(new SpaceFeed());
             }
-            Output.Add(this);
 
-            LineFeed lf = new LineFeed();
-            Output.Add(lf);
+            // Output comment and line feed
+            Output.Add(this);
+            Output.Add(new LineFeed());
 		}
 
 		#region IObjectCodeElement attributes
@@ -69,6 +69,5 @@ namespace VisiBoole.ParsingEngine.Statements
         public int MatchingIndex { get; set; }
 
 		#endregion
-
 	}
 }

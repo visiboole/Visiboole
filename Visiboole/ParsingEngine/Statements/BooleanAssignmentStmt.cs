@@ -141,7 +141,7 @@ namespace VisiBoole.ParsingEngine.Statements
                                 variable = variable.Remove(variable.IndexOf('('), 1);
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             openParen = new Parentheses("(");
                             variable = variable.Remove(variable.IndexOf('('), 1);
@@ -206,7 +206,7 @@ namespace VisiBoole.ParsingEngine.Statements
                                 variable = variable.Remove(variable.IndexOf('('), 1);
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             openParen = new Parentheses("(");
                             variable = variable.Remove(variable.IndexOf('('), 1);

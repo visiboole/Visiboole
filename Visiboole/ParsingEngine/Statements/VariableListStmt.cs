@@ -32,20 +32,6 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class VariableListStmt : Statement
 	{
         /// <summary>
-        /// Regex for a Variable List Statement
-        /// </summary>
-        public static readonly Regex Regex = new Regex (
-            @"^"                                    // Start of Line
-            + @"\s*"                                // Any Number of Whitespace
-            + Globals.PatternVariable               // Variable List
-            + @"("                                  // Begin Optional Group
-                + @"\s*"                            // Any Number of Whitespace
-                + Globals.PatternVariable           // Variable List
-            + @")*"                                 // End Optional Group
-            + @"\;$"                                // Ending ;
-        );
-
-        /// <summary>
         /// Constructs an instance of VariableListStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on simulation mode</param>
@@ -61,28 +47,20 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Clean content and make format string
-            string content = Regex.Replace(Text, @"[;]", string.Empty); // Remove syntax
-            string outputFormat = Regex.Replace(content, @"\s", "_"); // Get output format with spacing
-            outputFormat = Regex.Replace(outputFormat, @"\*?" + Globals.PatternAnyVariableType, "X"); // Replace variables
-            outputFormat = Regex.Replace(outputFormat, @"_X", "X"); // Remove one extra space
-            outputFormat = Regex.Replace(outputFormat, @"\s", string.Empty); // Remove spacing
-
-            // Split variables by whitespace
-            string[] variables = Regex.Split(content.Trim(), @"\s+");
-
-            // Output all variables
-            int index = 0;
-            foreach (char c in outputFormat)
+            //string content = Regex.Replace(Text, @"[;]", string.Empty); // Remove syntax
+            MatchCollection matches = Regex.Matches(Text, @"(" + Globals.VariableRegex + @")|((?<=\s)\s+)");
+            foreach (Match match in matches)
             {
-                if (c == '_')
+                if (String.IsNullOrWhiteSpace(match.Value))
                 {
-                    SpaceFeed sf = new SpaceFeed();
-                    Output.Add(sf);
+                    for (int i = 0; i < match.Value.Length; i++)
+                    {
+                        Output.Add(new SpaceFeed());
+                    }
                 }
                 else
                 {
-                    string var = variables[index++]; // Variable to be created
-                    var = (var[0] == '*') ? var.Substring(1) : var;
+                    string var = (match.Value[0] == '*') ? match.Value.Substring(1) : match.Value;
 
                     IndependentVariable indVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
                     DependentVariable depVar = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
@@ -97,8 +75,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
-            LineFeed lf = new LineFeed();
-            Output.Add(lf);
-		}
+            Output.Add(new LineFeed());
+        }
 	}
 }

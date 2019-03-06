@@ -44,6 +44,8 @@ namespace VisiBoole
         /// </summary>
         public static DialogBox Dialog = new DialogBox();
 
+        public static ErrorDialog Logger = new ErrorDialog();
+
         /// <summary>
         /// Tab Control
         /// </summary>
@@ -52,11 +54,9 @@ namespace VisiBoole
         /// <summary>
         /// Regular Expression Patterns for Variables
         /// </summary>
-        public static readonly string PatternVariable = @"(\*?[a-zA-Z][a-zA-Z0-9]*)";
-        public static readonly string PatternVector = @"((?<Name>\*?[a-zA-Z][a-zA-Z0-9]*)\[(?<LeftBound>\d+)\.\.(?<RightBound>\d+)\])";
-        public static readonly string PatternStepVector = @"((?<Name>\*?[a-zA-Z][a-zA-Z0-9]*)\[(?<LeftBound>\d+)\.(?<Step>-?\d+)\.(?<RightBound>\d+)\])";
-        public static readonly string PatternAnyVectorType = @"(" + PatternStepVector + @"|" + PatternVector + @")";
-        public static readonly string PatternAnyVariableType = @"(" + PatternStepVector + @"|" + PatternVector + @"|" + PatternVariable + @")";
-        public static readonly string PatternConstant = @"((\'[hH][a-fA-F\d]+)|(\'[dD]\d+)|(\'[bB][0-1]+))";
+        public static readonly string VariableRegex = @"[~*]?(?<Name>[_a-zA-Z]\w{0,19})";
+        public static readonly string VectorRegex = @"[~*]?(?<Name>[_a-zA-Z]\w{0,19})((\[(?<LeftBound>\d+)\.(?<Step>[1-9]\d*)?\.(?<RightBound>\d+)\])|(\[\]))";
+        public static readonly string VarRegex = @"((" + VariableRegex + @")|(" + VectorRegex + @"))";
+        public static readonly string ConstantRegex = @"(?<BitCount>\d{1,2})?\'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+)))";
     }
 }

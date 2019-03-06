@@ -77,8 +77,6 @@ namespace VisiBoole.ParsingEngine.Statements
             Expression exp = new Expression();
             bool delayValue = exp.Solve(Expression);
             Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(Delay, delayValue);
-
-            // Update all next values, then tick, then reevaluate expression
         }
 
         public void Tick()
@@ -159,7 +157,7 @@ namespace VisiBoole.ParsingEngine.Statements
                                 variable = variable.Remove(variable.IndexOf('('), 1);
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             openParen = new Parentheses("(");
                             variable = variable.Remove(variable.IndexOf('('), 1);

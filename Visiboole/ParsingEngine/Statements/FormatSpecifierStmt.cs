@@ -34,45 +34,9 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class FormatSpecifierStmt : Statement
 	{
         /// <summary>
-        /// Regex for getting the format of the FormatSpecifier
+        /// Regex for format specifiers.
         /// </summary>
-        private static readonly Regex RegexFormat = new Regex (
-            @"\%"                                       // %
-            + @"[ubhdUBHD]"                             // u or b or h or d or U or B or H or D
-        );
-
-        /// <summary>
-        /// Regex for getting the data of the FormatSpecifier
-        /// </summary>
-        private static readonly Regex RegexData = new Regex (
-            @"\{"                                               // {
-            + Globals.PatternAnyVariableType                    // Any Variable Type
-            + @"("                                              // Being Optional Group
-                + @"\s*"                                        // Any Number of Whitespace
-                + Globals.PatternAnyVariableType                // Any Variable
-            + @")*"                                             // End Optional Group
-            + @"\}"                                             // }
-        );
-
-        /// <summary>
-        /// Regex for a Format Specifier
-        /// </summary>
-        private static readonly Regex RegexFormatSpecifier = new Regex (
-            RegexFormat.ToString()                          // Format of FormatSpecifier
-            + RegexData.ToString()                          // Data of FormatSpecifier
-        );
-
-        /// <summary>
-        /// Regex for a Format Specifier Statement
-        /// </summary>
-        public static readonly Regex Regex = new Regex (
-            RegexFormatSpecifier.ToString()                 // FormatSpecifier
-            + @"("                                          // Being Optional Group
-                + @"\s*"                                    // Any Number of Whitespace
-                + RegexFormat.ToString()                    // Format of FormatSpecifier
-                + RegexData.ToString()                      // Data of FormatSpecifier
-            + @")*"                                         // End Optional Group
-        );
+        public readonly string FormatSpecifierRegex = @"%(?<Format>[ubhdUBHD])\{(?<Vars>" + Globals.VarRegex + @"(\s*" + Globals.VarRegex + @")*)\}";
 
         /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
@@ -89,35 +53,21 @@ namespace VisiBoole.ParsingEngine.Statements
 	    /// </summary>
         public override void Parse()
 		{
-            // Get output format
-            string outputFormat = RegexFormatSpecifier.Replace(Text, "X"); // Get output format
-            outputFormat = Regex.Replace(outputFormat, @"[;]", string.Empty); // Remove syntax
-            outputFormat = Regex.Replace(outputFormat, @"\s", "_"); // Get output format with spacing
-            outputFormat = Regex.Replace(outputFormat, @"_X", "X"); // Remove one extra space
-
-            // Output format specifiers
-            MatchCollection matches = RegexFormatSpecifier.Matches(Text); // All Format Specifiers
-            int index = 0; // Format Specifier Index
-            foreach (char c in outputFormat)
+            // Find format specifiers and extra spacing
+            MatchCollection matches = Regex.Matches(Text, @"(" + FormatSpecifierRegex + @")|(?![^{}]*\})((?<=\s)\s+)");
+            foreach (Match match in matches)
             {
-                if (c == '_')
+                if (String.IsNullOrWhiteSpace(match.Value))
                 {
-                    // Add space to output feed
-                    SpaceFeed sf = new SpaceFeed();
-                    Output.Add(sf);
+                    for (int i = 0; i < match.Value.Length; i++)
+                    {
+                        Output.Add(new SpaceFeed());
+                    }
                 }
                 else
                 {
-                    Match match = matches[index++]; // Get Format Specifier Match
-
-                    // Get format specifier and replace vectors if necessary
-                    string formatSpecifier = match.Value; // Get format specifier
-                    string format = RegexFormat.Match(formatSpecifier).Value; // Get format of format specifier
-                    string data = RegexData.Match(formatSpecifier).Value; // Get data of format specifier
-                    data = Regex.Replace(data, @"[{}]", string.Empty); // Remove brackets
-
                     // Get variables and values
-                    string[] variables = Regex.Split(data, @"\s+"); // Split variables by whitespace
+                    string[] variables = Regex.Split(match.Groups["Vars"].Value, @"\s+"); // Split variables by whitespace
                     List<int> values = new List<int>(); // Values of variables
                     foreach (string var in variables)
                     {
@@ -126,15 +76,13 @@ namespace VisiBoole.ParsingEngine.Statements
                     }
 
                     // Output Format Specifier
-                    string output = Calculate(format.Substring(1), values); // Output values with format
+                    string output = Calculate(match.Groups["Format"].Value, values); // Output values with format
                     Operator val = new Operator(output); // Operator of outpute values
                     Output.Add(val); // Add operator of output to output
                 }
             }
 
-            // Add new line to output feed
-            LineFeed lf = new LineFeed();
-            Output.Add(lf);
+            Output.Add(new LineFeed());
         }
 
         /// <summary>

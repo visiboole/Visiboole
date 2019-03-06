@@ -57,7 +57,19 @@ namespace VisiBoole.Views
         /// <returns></returns>
         public DialogResult New(string title, string message, DialogType type)
         {
-            this.uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
+            if (message.Length < 90)
+            {
+                uxLabelMessage.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            }
+            else if (message.Length < 180)
+            {
+                uxLabelMessage.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            }
+            else
+            {
+                uxLabelMessage.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            }
+
             this.uxLabelTitle.Text = title;
             this.uxLabelMessage.Text = message;
             this.uxButton1.Select();
@@ -91,6 +103,7 @@ namespace VisiBoole.Views
         {
             Color color = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
             e.Graphics.DrawRectangle(new Pen(color, 4), this.DisplayRectangle);
+            this.uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
         }
     }
 }

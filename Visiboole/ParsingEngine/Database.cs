@@ -114,7 +114,7 @@ namespace VisiBoole.ParsingEngine
             {
                 string dependent = kv.Key;
                 string expression = kv.Value;
-                foreach (Match match in Regex.Matches(expression, Globals.PatternVariable))
+                foreach (Match match in Regex.Matches(expression, @"[_a-zA-Z]\w{0,19}"))
                 {
                     if (match.Value.Equals(variableName))
                     {
@@ -154,14 +154,14 @@ namespace VisiBoole.ParsingEngine
         /// Adds a vector namespace that doesn't already exist.
         /// </summary>
         /// <param name="name">Namespace to create</param>
-        /// <param name="expanded">Expanded vector</param>
+        /// <param name="components">Expanded vector</param>
         /// <returns>Whether the vector namespace was created</returns>
-        public bool AddVectorNamespace(string name, string expanded)
+        public bool AddVectorNamespace(string name, List<string> components)
         {
             if (!HasVectorNamespace(name))
             {
                 // Add Namespace and its values to the dictionary
-                VectorNamespaces.Add(name, new List<string>(expanded.Split(' ')));
+                VectorNamespaces.Add(name, components);
                 return true;
             }
             else

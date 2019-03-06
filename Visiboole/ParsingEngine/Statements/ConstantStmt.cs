@@ -35,6 +35,15 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
     public class ConstantStmt : Statement
     {
+        public ConstantStmt(int lnNum, string txt) : base(lnNum, txt)
+        {
+        }
+
+        public override void Parse()
+        {
+        }
+
+        /*
         /// <summary>
         /// Hex Constant Pattern
         /// </summary>
@@ -118,7 +127,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     line = String.Concat(line, var);
                 }
-                
+
                 if (leftVars.IndexOf(var) != (leftVars.Count - 1)) line = String.Concat(line, " ");
             }
 
@@ -126,5 +135,6 @@ namespace VisiBoole.ParsingEngine.Statements
 
             VariableStmt = new VariableListStmt(LineNumber, line);
         }
-    }
+        */
+        }
 }
