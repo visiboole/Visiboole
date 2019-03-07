@@ -46,61 +46,66 @@ namespace VisiBoole.Models
             {
                 lineNumber++;
                 currentLine = "<p style=\"font-size:" + (Properties.Settings.Default.FontSize + 6) + "px\">";
-                Dictionary<int, int> parenIndexes = new Dictionary<int, int>();
 
-                string fullLine = "";
-                int indexer = 0;
-                foreach(var token in line)
+                if (!(line.Count == 1 && line[0] is CommentStmt))
                 {
-                    if(token.ObjCodeText == "(" || token.ObjCodeText == ")")
-                    {
-                        parenIndexes[fullLine.Length] = line.IndexOf(token, indexer);
-                        indexer = line.IndexOf(token, indexer) + 1;
-                    }
-                    fullLine += token.ObjCodeText + " ";
-                }
+                    // Do all this if not a comment statement
+                    Dictionary<int, int> parenIndexes = new Dictionary<int, int>();
 
-                #region Indexes which positions will be assigned which color in html
-                string outermost = "";
-                if(fullLine.Contains("(") && fullLine.Contains(")"))
-                {
-                    int startIndex = fullLine.IndexOf('(');
-                    int endIndex = fullLine.IndexOf(')');
-                    List<int> previousStartingIndexes = new List<int>();
-                        
-                    while(startIndex < endIndex)
+                    string fullLine = "";
+                    int indexer = 0;
+                    foreach (var token in line)
                     {
-                        int holdingIndex = startIndex;
-                        startIndex = fullLine.IndexOf('(', startIndex + 1);
-
-                        if(startIndex == -1 || previousStartingIndexes.Contains(startIndex))
+                        if (token.ObjCodeText == "(" || token.ObjCodeText == ")")
                         {
-                            startIndex = holdingIndex;
+                            parenIndexes[fullLine.Length] = line.IndexOf(token, indexer);
+                            indexer = line.IndexOf(token, indexer) + 1;
+                        }
+                        fullLine += token.ObjCodeText + " ";
+                    }
 
-                            outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                            Expression exp = new Expression();
-                            bool colorValue = exp.Solve(outermost);
+                    #region Indexes which positions will be assigned which color in html
+                    string outermost = "";
+                    if (fullLine.Contains("(") && fullLine.Contains(")"))
+                    {
+                        int startIndex = fullLine.IndexOf('(');
+                        int endIndex = fullLine.IndexOf(')');
+                        List<int> previousStartingIndexes = new List<int>();
 
-                            line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
-                            line[parenIndexes[startIndex]].MatchingIndex = startIndex;
-                            line[parenIndexes[startIndex]].Match = endIndex;
-                            line[parenIndexes[endIndex]].ObjCodeValue = colorValue;
-                            line[parenIndexes[endIndex]].Match = startIndex;
-                            line[parenIndexes[endIndex]].MatchingIndex = endIndex;
+                        while (startIndex < endIndex)
+                        {
+                            int holdingIndex = startIndex;
+                            startIndex = fullLine.IndexOf('(', startIndex + 1);
 
-                            previousStartingIndexes.Add(startIndex);
-
-                            endIndex = fullLine.IndexOf(')', endIndex + 1);
-                            startIndex = 0;
-
-                            if(endIndex == -1)
+                            if (startIndex == -1 || previousStartingIndexes.Contains(startIndex))
                             {
-                                break;
+                                startIndex = holdingIndex;
+
+                                outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
+                                Expression exp = new Expression();
+                                bool colorValue = exp.Solve(outermost);
+
+                                line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
+                                line[parenIndexes[startIndex]].MatchingIndex = startIndex;
+                                line[parenIndexes[startIndex]].Match = endIndex;
+                                line[parenIndexes[endIndex]].ObjCodeValue = colorValue;
+                                line[parenIndexes[endIndex]].Match = startIndex;
+                                line[parenIndexes[endIndex]].MatchingIndex = endIndex;
+
+                                previousStartingIndexes.Add(startIndex);
+
+                                endIndex = fullLine.IndexOf(')', endIndex + 1);
+                                startIndex = 0;
+
+                                if (endIndex == -1)
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
+                    #endregion
                 }
-                #endregion
 
                 bool nextLineOverBarForParentheses = false;
                 List<int> overBarList = new List<int>();
@@ -112,11 +117,20 @@ namespace VisiBoole.Models
 
                 foreach (IObjectCodeElement token in line)
                 {
-                    #region Checks for bars to be put over parenthesis, and what color to assign them
-                    string variable = token.ObjCodeText;
-                    if(variable.Contains(';') && !(token is CommentStmt))
+                    if (token is CommentStmt)
                     {
-                        // Remove ; if not comment
+                        // Replace possible colors and provide normal spacing
+                        string commentHTML = Regex.Replace(token.ObjCodeText, @"(?<=\s)\s", "&nbsp;");
+                        commentHTML = ColorComment(commentHTML);
+                        currentLine += String.Concat(commentHTML, " ");
+                        continue;
+                    }
+
+                    #region Checks for bars to be put over parenthesis, and what color to assign them
+
+                    string variable = token.ObjCodeText;
+                    if (variable.Contains(';'))
+                    {
                         variable = variable.Substring(0, variable.IndexOf(';'));
                     }
                     bool? value = token.ObjCodeValue;
@@ -222,7 +236,7 @@ namespace VisiBoole.Models
                         {
                             if (variable.Equals("&nbsp"))
                             {
-                                currentLine += variable;
+                                currentLine += "&nbsp;";
                             }
                             else
                             {
@@ -257,8 +271,8 @@ namespace VisiBoole.Models
                                 }
                                 else
                                 {
-                                    // Comment
-                                    currentLine += "<font color='black')\" >" + variable + "</font>";
+                                    // Comments were here. Keep this in case something else ends up here. Note what does.
+                                    bool test = true;                                    
                                 }
                                 currentLine += " ";
                             }
@@ -271,6 +285,82 @@ namespace VisiBoole.Models
                 currentLine += "</p>";
                 HtmlText += currentLine + "\n";
             }
+        }
+
+        /// <summary>
+        /// Adds coloring to comments.
+        /// </summary>
+        /// <param name="comment">Base comment</param>
+        /// <returns>The comment with html coloring added</returns>
+        private string ColorComment(string comment)
+        {
+            bool coloring = false;
+            string color = "";
+
+            MatchCollection matches = Regex.Matches(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)");
+            if (matches.Count == 0 || (matches.Count > 0 && matches[0].Index != 0))
+            {
+                // Comment starts with black
+                comment = comment.Insert(0, "<font color='black'>");
+                color = "black";
+                coloring = true;
+
+                if (matches.Count == 0)
+                {
+                    comment = String.Concat(comment, "</font>");
+                    return comment;
+                }
+            }
+
+            // Replace all coloring tags with proper html color tags
+            while (Regex.IsMatch(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)"))
+            {
+                Match match = Regex.Match(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)");
+
+                int indexAfterMatch = match.Index + match.Length;
+                int lengthAfterMatch = comment.Length - indexAfterMatch;
+
+                if (coloring || match.Value.Equals("</>"))
+                {
+                    // Close color
+                    comment = String.Concat(comment.Substring(0, match.Index), "</font>", comment.Substring(indexAfterMatch, lengthAfterMatch));
+                    coloring = false;
+
+                    // Move index and length values if adding a color
+                    indexAfterMatch = match.Index + 7; // Moves index past </font>
+                    lengthAfterMatch = comment.Length - indexAfterMatch;
+                }
+
+                // New color
+                coloring = true;
+                int indexBeforeMatch = color.Equals("") ? match.Index : indexAfterMatch;
+                string newColor = match.Value.Substring(1, match.Length - 2); // Remove <>
+                bool isValidColor = IsValidHTMLColor(newColor);
+                color = isValidColor ? newColor : "black"; // Color is set to new color if valid and black if not valid
+                comment = String.Concat(comment.Substring(0, indexBeforeMatch), $"<font color='{color}'>", comment.Substring(indexAfterMatch, lengthAfterMatch));
+            }
+
+            if (!comment.EndsWith("</font>"))
+            {
+                comment = String.Concat(comment, "</font>");
+            }
+
+            return comment;
+        }
+
+        /// <summary>
+        /// Returns whether the provided color is a recognized color.
+        /// </summary>
+        /// <param name="color">Color to check</param>
+        /// <returns>Whether the color is a valid html color</returns>
+        private bool IsValidHTMLColor(string color)
+        {
+            if (Regex.IsMatch(color, @"^#(?:[0-9a-fA-F]{3}){1,2}$"))
+            {
+                return true;
+            }
+
+            return System.Drawing.Color.FromName(color).IsKnownColor;
         }
 
         private List<List<IObjectCodeElement>> PreParseHTML(List<IObjectCodeElement> output)

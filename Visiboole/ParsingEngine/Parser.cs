@@ -55,14 +55,14 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex patterns for parsing.
         /// </summary>
-        public static readonly string NamePattern = @"([~*]?(?<Name>[_a-zA-Z]\w{0,19}))";
+        public static readonly string NamePattern = @"([~*]*(?<Name>[_a-zA-Z]\w{0,19}))";
         public static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d+)\.(?<Step>[1-9]\d*)?\.(?<RightBound>\d+)\])|(\[\])))";
         public static readonly string VariablePattern = $@"({NamePattern}|{VectorPattern})";
         public static readonly string ConstantPattern = @"((?<BitCount>\d{1,2})?\'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
         public static readonly string AnyVariablePattern = $@"({NamePattern}|{VectorPattern}|{ConstantPattern})";
         public static readonly string FormatSpecifierPattern = $@"(%(?<Format>[ubhdUBHD])\{{(?<Vars>{VariablePattern}(\s*{VariablePattern})*)\}})";
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
-        public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
+        public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<Color><#?[a-zA-Z0-9]+>)?(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
 
         /// <summary>
         /// The design being parsed.
@@ -217,6 +217,8 @@ namespace VisiBoole.ParsingEngine
                     PreLineNumber++;
                     line = line.TrimEnd(); // Trim end of line
                     StatementType? type = GetStatementType(line);
+                    line = line.Replace("**", ""); // Remove double negatives
+                    line = line.Replace("~~", ""); // Remove double negatives
 
                     if (type == null)
                     {
@@ -258,7 +260,7 @@ namespace VisiBoole.ParsingEngine
 
                             if (!match.Groups["DoInclude"].Value.Equals("-") && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+")))
                             {
-                                line = String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value); // Remove + or -
+                                line = String.Concat(match.Groups["Spacing"].Value, match.Groups["Color"].Value, match.Groups["Comment"].Value); // Remove + or -
                                 statements.Add(new CommentStmt(PostLineNumber++, line));
                             }
                         }
@@ -373,22 +375,26 @@ namespace VisiBoole.ParsingEngine
                 }
                 else if (newChar.Equals("\""))
                 {
-                    if (!(lexeme.Equals("+") || lexeme.Equals("-") || lexeme.Equals("")))
+                    if (!Regex.IsMatch(lexeme, @"^(<#?[a-zA-Z0-9]+>[+-]?)$"))
                     {
-                        Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
-                        return null;
-                    }
+                        // If not possible color/color code: do normal comment checks
+                        if (!(lexeme.Equals("+") || lexeme.Equals("-") || lexeme.Equals("")))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
+                            return null;
+                        }
 
-                    if (tokens.Any(token => !token.Equals(" ")))
-                    {
-                        Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
-                        return null;
+                        if (tokens.Any(token => !token.Equals(" ")))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
+                            return null;
+                        }
                     }
 
                     type = StatementType.Comment;
                     lexeme = String.Concat(lexeme, newChar);
                 }
-                else if (Regex.IsMatch(newChar, @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'<,.-]"))
+                else if (Regex.IsMatch(newChar, @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]"))
                 {
                     // Invalid char
                     Globals.Logger.Add($"Line {PreLineNumber}: Invalid character '{newChar}'.");
@@ -504,9 +510,9 @@ namespace VisiBoole.ParsingEngine
                             }
                             else if (lexeme.Contains("~"))
                             {
-                                if (lexeme.Equals("~") && !newChar.Equals("("))
+                                if (lexeme.Equals("~") && !newChar.Equals("(") && !newChar.Equals("{"))
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector or parenthesis on the right side of a boolean statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector, ( or {{ on the right side of a boolean statement.");
                                     return null;
                                 }
 
@@ -682,7 +688,7 @@ namespace VisiBoole.ParsingEngine
                 // Lexeme is <= operator
                 return true;
             }
-            else if (lexeme.Equals("~"))
+            else if (lexeme.All(c => c == '~'))
             {
                 // Lexeme is ~ operator
                 return true;
@@ -792,7 +798,7 @@ namespace VisiBoole.ParsingEngine
                     }
 
                     // Check for existing vector namespace
-                    string vector = (lexeme[0] == '~' || lexeme[0] == '*') ? lexeme.Substring(1) : lexeme; // Remove ~ or *
+                    string vector = (lexeme.Contains('~') || lexeme.Contains('~')) ? lexeme.Substring(lexeme.IndexOf(lexeme.First(c => Regex.IsMatch(c.ToString(), @"[_a-zA-Z]")))) : lexeme; // Remove all ~ or all *
                     List<string> expandedList = new List<string>();
                     if (leftBound != -1)
                     {
@@ -1048,11 +1054,22 @@ namespace VisiBoole.ParsingEngine
                         Match vector = Regex.Match(var, VectorPattern);
                         if (vector.Success) // Come back to here
                         {
-                            List<string> components;
+                            List<string> components = new List<string>();
                             if (String.IsNullOrEmpty(vector.Groups["LeftBound"].Value))
                             {
                                 // Indicates vectorNameSpace[] syntax
-                                components = Design.Database.GetVectorComponents(vector.Groups["Name"].Value);
+                                List<string> namespaceComponents = Design.Database.GetVectorComponents(vector.Groups["Name"].Value);
+                                foreach (string component in namespaceComponents)
+                                {
+                                    if (var.Contains("~"))
+                                    {
+                                        components.Add(String.Concat("~", component));
+                                    }
+                                    else
+                                    {
+                                        components.Add(component);
+                                    }
+                                }
                             }
                             else if (ExpansionMemo.ContainsKey(var))
                             {

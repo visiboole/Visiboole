@@ -54,7 +54,7 @@ namespace VisiBoole.ParsingEngine.Statements
             }
 
             // Remove "" and ;
-            Text = String.Concat(comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3));
+            Text = String.Concat(comment.Groups["Color"].Value, comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3));
 
             // Output comment and line feed
             Output.Add(this);
