@@ -47,7 +47,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Output front padding
-            Match comment = Regex.Match(Text, Parser.CommentPattern);
+            Match comment = Parser.CommentRegex.Match(Text);
             foreach (char space in comment.Groups["Spacing"].Value)
             {
                 Output.Add(new SpaceFeed());

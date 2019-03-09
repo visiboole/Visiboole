@@ -19,7 +19,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestEmptySubdesign()
         {
             string filename = "EmptyTestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -35,7 +35,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestBasicVariableList()
         {
             string filename = "BasicVarListTestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -51,7 +51,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestBasicBooleanExpression()
         {
             string filename = "BasicBoolExpTestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -67,7 +67,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestBasicClockExpression()
         {
             string filename = "BasicClockTestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -83,7 +83,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression0()
         {
             string filename = "Comp0TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -99,7 +99,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression1()
         {
             string filename = "Comp1TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -115,7 +115,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression2()
         {
             string filename = "Comp2TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -131,7 +131,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression3()
         {
             string filename = "Comp3TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -147,7 +147,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression4()
         {
             string filename = "Comp4TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -163,7 +163,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression5()
         {
             string filename = "Comp5TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -179,7 +179,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression6()
         {
             string filename = "Comp6TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -194,7 +194,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression7()
         {
             string filename = "Comp7TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {
@@ -209,7 +209,7 @@ namespace VisibooleTests.ParsingEngine
         public void TestComplexBooleanExpression8()
         {
             string filename = "Comp8TestingVisiboole.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             Parser parser = new Parser();
             try
             {

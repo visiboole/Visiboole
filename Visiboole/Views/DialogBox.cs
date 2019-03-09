@@ -13,7 +13,7 @@ namespace VisiBoole.Views
 {
     public enum DialogType
     {
-        YesNo, Ok
+        YesNoCancel, YesNo, Ok
     }
 
     /// <summary>
@@ -74,20 +74,37 @@ namespace VisiBoole.Views
             this.uxLabelMessage.Text = message;
             this.uxButton1.Select();
 
-            if (type == DialogType.YesNo)
+            if (type == DialogType.YesNoCancel)
             {
-                uxButton1.Text = "Yes";
-                uxButton1.DialogResult = DialogResult.Yes;
+                uxButton1.Visible = true;
+                uxButton1.Text = "Cancel";
+                uxButton1.DialogResult = DialogResult.Cancel;
                 uxButton2.Visible = true;
                 uxButton2.Text = "No";
                 uxButton2.DialogResult = DialogResult.No;
+                uxButton3.Visible = true;
+                uxButton3.Text = "Yes";
+                uxButton3.DialogResult = DialogResult.Yes;
+                uxButtonExit.DialogResult = DialogResult.Cancel;
+            }
+            else if (type == DialogType.YesNo)
+            {
+                uxButton1.Visible = true;
+                uxButton1.Text = "No";
+                uxButton1.DialogResult = DialogResult.No;
+                uxButton2.Visible = true;
+                uxButton2.Text = "Yes";
+                uxButton2.DialogResult = DialogResult.Yes;
+                uxButton3.Visible = false;
                 uxButtonExit.DialogResult = DialogResult.No;
             }
             else
             {
+                uxButton1.Visible = true;
                 uxButton1.Text = "OK";
                 uxButton1.DialogResult = DialogResult.OK;
                 uxButton2.Visible = false;
+                uxButton3.Visible = false;
                 uxButtonExit.DialogResult = DialogResult.OK;
             }
 

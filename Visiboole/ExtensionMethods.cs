@@ -29,17 +29,17 @@ namespace VisiBoole
 	public static class ExtensionMethods
 	{
 		/// <summary>
-		/// Returns the SubDesign displayed by this tabpage
+		/// Returns the Design displayed by this tabpage
 		/// </summary>
 		/// <param name="tab">The parent control for the subdesign</param>
-		/// <returns>Returns the SubDesign for this tabpage</returns>
-		public static SubDesign SubDesign(this TabPage tab)
+		/// <returns>Returns the Design for this tabpage</returns>
+		public static Design Design(this TabPage tab)
 		{
 			foreach (Control c in tab.Controls)
 			{
-                if ((c as SubDesign) != null)
+                if ((c as Design) != null)
                 {
-                    return c as SubDesign;
+                    return c as Design;
                 }
 			}
 			return null;

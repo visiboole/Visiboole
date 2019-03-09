@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Drawing;
 using System.IO;
@@ -45,8 +46,10 @@ namespace VisiBoole.Views
         public MainWindow()
         {
             InitializeComponent();
+            NavTree.NodeMouseClick += (sender, args) => NavTree.SelectedNode = args.Node;
             Globals.TabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
             Globals.TabControl.SelectedIndexChanged += (sender, e) => {
+                MainWindowController.SelectFile(Globals.TabControl.SelectedIndex);
                 IDisplay display = MainWindowController.GetDisplay();
                 if (display != null)
                 {
@@ -85,6 +88,7 @@ namespace VisiBoole.Views
             runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
             closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            closeAllDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             increaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
             decreaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
             selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
@@ -96,12 +100,12 @@ namespace VisiBoole.Views
 
             if (display.TypeOfDisplay == Globals.DisplayType.EDIT && Globals.TabControl.SelectedTab != null)
             {
-                undoToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.SubDesign().editHistory.Count > 0;
-                undoToolStripMenuItem1.Enabled = Globals.TabControl.SelectedTab.SubDesign().editHistory.Count > 0;
-                redoToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.SubDesign().undoHistory.Count > 0;
-                redoToolStripMenuItem1.Enabled = Globals.TabControl.SelectedTab.SubDesign().undoHistory.Count > 0;
-                cutToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.SubDesign().SelectedText.Length > 0;
-                copyToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.SubDesign().SelectedText.Length > 0;
+                undoToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().EditHistory.Count > 0;
+                undoToolStripMenuItem1.Enabled = Globals.TabControl.SelectedTab.Design().EditHistory.Count > 0;
+                redoToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().UndoHistory.Count > 0;
+                redoToolStripMenuItem1.Enabled = Globals.TabControl.SelectedTab.Design().UndoHistory.Count > 0;
+                cutToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().SelectedText.Length > 0;
+                copyToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().SelectedText.Length > 0;
                 pasteToolStripMenuItem.Enabled = Clipboard.ContainsText();
             }
             else
@@ -169,6 +173,8 @@ namespace VisiBoole.Views
             ContextMenu contextMenu = new ContextMenu();
             contextMenu.MenuItems.Add("Save Design", new EventHandler(SaveFileMenuClick));
             contextMenu.MenuItems.Add("Close Design", new EventHandler(CloseFileMenuClick));
+            contextMenu.MenuItems.Add("Close All Except This", new EventHandler(CloseAllExceptMenuClick));
+            contextMenu.MenuItems.Add("Close All Designs", new EventHandler(CloseAllMenuClick));
             fileNode.ContextMenu = contextMenu;
 
             if (NavTree.Nodes.ContainsKey(fileName))
@@ -242,10 +248,10 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
-        /// Confrims whether the user wants to close the selected SubDesign
+        /// Confrims whether the user wants to close the selected Design
         /// </summary>
-        /// <param name="isDirty">True if the SubDesign being closed has been modified since last save</param>
-        /// <returns>Whether the selected SubDesign will be closed</returns>
+        /// <param name="isDirty">True if the Design being closed has been modified since last save</param>
+        /// <returns>Whether the selected Design will be closed</returns>
         public bool ConfirmClose(bool isDirty)
         {
             if (isDirty == true)
@@ -271,7 +277,7 @@ namespace VisiBoole.Views
         /// <summary>
         /// Confirms exit with the user if the application is dirty.
         /// </summary>
-        /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
+        /// <param name="isDirty">True if any open Designs have been modified since last save</param>
         /// <returns>Indicates whether the user wants to close</returns>
         public bool ConfirmExit(bool isDirty)
         {
@@ -464,7 +470,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SaveAllFileMenuClick(object sender, EventArgs e)
         {
-            MainWindowController.SaveAll();
+            MainWindowController.SaveFiles();
         }
 
         /// <summary>
@@ -474,7 +480,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void NavTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            MainWindowController.SelectTabPage(e.Node.Name);
+            MainWindowController.SelectFile(e.Node.Index);
             MainWindowController.SwitchDisplay();
         }
 
@@ -519,7 +525,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void UndoTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.SubDesign().UndoTextMenuClick(sender, e);
+            Globals.TabControl.SelectedTab.Design().UndoTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -529,7 +535,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void RedoTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.SubDesign().RedoTextMenuClick(sender, e);
+            Globals.TabControl.SelectedTab.Design().RedoTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -539,7 +545,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CutTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.SubDesign().CutTextMenuClick(sender, e);
+            Globals.TabControl.SelectedTab.Design().CutTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -549,7 +555,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CopyTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.SubDesign().CopyTextMenuClick(sender, e);
+            Globals.TabControl.SelectedTab.Design().CopyTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -559,7 +565,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void PasteTextEvent(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.SubDesign().PasteTextMenuClick(sender, e);
+            Globals.TabControl.SelectedTab.Design().PasteTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -569,7 +575,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SelectAllTextEvent(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.SubDesign().SelectAllTextMenuClick(sender, e);
+            Globals.TabControl.SelectedTab.Design().SelectAllTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -608,10 +614,51 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CloseFileMenuClick(object sender, EventArgs e)
         {
-            string name = MainWindowController.CloseFile();
+            string name = MainWindowController.CloseActiveFile();
             if (name != null)
             {
                 RemoveNavTreeNode(name);
+                if (NavTree.Nodes[0].Nodes.Count == 0)
+                {
+                    MainWindowController.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user wants to close all files.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CloseAllExceptMenuClick(object sender, EventArgs e)
+        {
+            List<string> closedFiles = MainWindowController.CloseFilesExceptFor(NavTree.SelectedNode.Name);
+
+            if (closedFiles != null && closedFiles.Count > 0)
+            {
+                foreach (string file in closedFiles)
+                {
+                    RemoveNavTreeNode(file);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user wants to close all files.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CloseAllMenuClick(object sender, EventArgs e)
+        {
+            List<string> closedFiles = MainWindowController.CloseFiles();
+
+            if (closedFiles != null && closedFiles.Count > 0)
+            {
+                foreach (string file in closedFiles)
+                {
+                    RemoveNavTreeNode(file);
+                }
+
                 if (NavTree.Nodes[0].Nodes.Count == 0)
                 {
                     MainWindowController.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
@@ -626,8 +673,20 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void ExitApplicationMenuClick(object sender, EventArgs e)
         {
-            if (MainWindowController.ExitApplication())
+            List<string> closedFiles = MainWindowController.ExitApplication();
+
+            if (closedFiles != null && closedFiles.Count > 0)
             {
+                foreach (string file in closedFiles)
+                {
+                    RemoveNavTreeNode(file);
+                }
+            }
+
+            if (NavTree.Nodes[0].Nodes.Count == 0)
+            {
+                // When all files are closed
+                Properties.Settings.Default.Save();
                 Application.Exit();
             }
         }
@@ -663,8 +722,19 @@ namespace VisiBoole.Views
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                if (MainWindowController.ExitApplication())
+                List<string> closedFiles = MainWindowController.ExitApplication();
+
+                if (closedFiles != null && closedFiles.Count > 0)
                 {
+                    foreach (string file in closedFiles)
+                    {
+                        RemoveNavTreeNode(file);
+                    }
+                }
+
+                if (NavTree.Nodes[0].Nodes.Count == 0)
+                {
+                    // When all files are closed
                     Properties.Settings.Default.Save();
                     Application.Exit();
                 }

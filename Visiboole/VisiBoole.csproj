@@ -85,7 +85,7 @@
     <Compile Include="ParsingEngine\ObjectCode\Parentheses.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />
     <Compile Include="ParsingEngine\Statements\CommentStmt.cs" />
-    <Compile Include="ParsingEngine\Database.cs" />
+    <Compile Include="Models\Database.cs" />
     <Compile Include="ParsingEngine\ObjectCode\DependentVariable.cs" />
     <Compile Include="ParsingEngine\Statements\ConstantStmt.cs" />
     <Compile Include="ParsingEngine\Statements\DffClockStmt.cs" />
@@ -102,7 +102,7 @@
     <Compile Include="Models\OutputParser.cs" />
     <Compile Include="ParsingEngine\Parser.cs" />
     <Compile Include="ParsingEngine\Statements\Statement.cs" />
-    <Compile Include="Models\SubDesign.cs">
+    <Compile Include="Models\Design.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />

@@ -35,7 +35,7 @@ namespace VisiBoole.Controllers
         IDisplay GetDisplay();
 
         /// <summary>
-        /// Set theme of SubDesigns
+        /// Set theme of Designs
         /// </summary>
         void SetTheme();
 
@@ -63,10 +63,10 @@ namespace VisiBoole.Controllers
         void SwitchDisplay();
 
         /// <summary>
-		/// Selects the tabpage in the tabcontrol with name matching the given string
-		/// </summary>
-		/// <param name="fileName">The name of the tabpage to select</param>
-		void SelectTabPage(string fileName);
+        /// Selects the file at the specified index.
+        /// </summary>
+        /// <param name="index">The index of the file</param>
+        void SelectFile(int index);
 
         /// <summary>
         /// Saves the file that is currently active in the selected tabpage
@@ -82,7 +82,7 @@ namespace VisiBoole.Controllers
         /// <summary>
 		/// Saves all files opened
 		/// </summary>
-		void SaveAll();
+		void SaveFiles();
 
         /// <summary>
         /// Run mode.
@@ -93,12 +93,25 @@ namespace VisiBoole.Controllers
         /// Closes the selected open file
         /// </summary>
         /// <returns>The name of the file closed</returns>
-        string CloseFile();
+        string CloseActiveFile();
 
         /// <summary>
-        /// Performs a dirty check and confirms application exit with the user
+        /// Closes all files.
         /// </summary>
-        /// <returns>Indicates whether the user wants to close</returns>
-        bool ExitApplication();
+        /// <returns>List of closed files</returns>
+        List<string> CloseFiles();
+
+        /// <summary>
+        /// Closes all files except for the provided file name.
+        /// </summary>
+        /// <param name="name">Name of the file to keep open</param>
+        /// <returns>List of closed files</returns>
+        List<string> CloseFilesExceptFor(string name);
+
+        /// <summary>
+        /// Attempts to close all files.
+        /// </summary>
+        /// <returns>List of closed files</returns>
+        List<string> ExitApplication();
     }
 }

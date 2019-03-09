@@ -59,16 +59,16 @@ namespace VisiBoole.Views
 		void SaveFileSuccess(bool fileSaved);
 
         /// <summary>
-        /// Confrims whether the user wants to close the selected SubDesign
+        /// Confrims whether the user wants to close the selected Design
         /// </summary>
-        /// <param name="isDirty">True if the SubDesign being closed has been modified since last save</param>
-        /// <returns>Whether the selected SubDesign will be closed</returns>
+        /// <param name="isDirty">True if the Design being closed has been modified since last save</param>
+        /// <returns>Whether the selected Design will be closed</returns>
 		bool ConfirmClose(bool isDirty);
 
         /// <summary>
         /// Confirms exit with the user if the application is dirty
         /// </summary>
-        /// <param name="isDirty">True if any open SubDesigns have been modified since last save</param>
+        /// <param name="isDirty">True if any open Designs have been modified since last save</param>
         /// <returns>Indicates whether the user wants to close</returns>
         bool ConfirmExit(bool isDirty);
     }

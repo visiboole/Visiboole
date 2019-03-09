@@ -30,37 +30,70 @@ namespace VisiBoole.Controllers
     public interface IDesignController
     {
         /// <summary>
-		/// Saves the handle to the controller for the MainWindow
-		/// </summary>
-		void AttachMainWindowController(IMainWindowController mwController);
-
-        /// <summary>
-        /// Creates a SubDesign with the given name.
+        /// Saves the handle to the controller for the MainWindow
         /// </summary>
-        /// <param name="path">Name of SubDesign</param>
-        /// <returns>The SubDesign created</returns>
-        SubDesign CreateSubDesign(string name);
+        void AttachMainWindowController(IMainWindowController mwController);
 
         /// <summary>
-        /// Closes a given SubDesign.
+        /// Selects a Design with the provided index
         /// </summary>
-        /// <param name="path">Name of SubDesign</param>
-        bool CloseSubDesign(string name);
+        /// <param name="index">Index of the design to select</param>
+        void SelectDesign(int index);
 
         /// <summary>
-        /// Update the font sizes of all SubDesigns.
+        /// Returns the names of all Designs.
         /// </summary>
-        void SetSubDesignFontSizes();
+        /// <returns>Names of all Designs.</returns>
+        string[] GetDesigns();
 
         /// <summary>
-        /// Set the themes of all SubDesigns
+        /// Returns the active Design.
+        /// </summary>
+        /// <returns>Active Design</returns>
+        Design GetActiveDesign();
+
+        /// <summary>
+        /// Gets a design by name.
+        /// </summary>
+        /// <param name="name">Name of design</param>
+        /// <returns>Design with the provided name</returns>
+        Design GetDesign(string name);
+
+        /// <summary>
+        /// Creates a Design with the given name.
+        /// </summary>
+        /// <param name="path">Name of Design</param>
+        /// <returns>The Design created</returns>
+        Design CreateDesign(string name);
+
+        /// <summary>
+        /// Saves the active Design.
+        /// </summary>
+        /// <returns>Whether the save was successful</returns>
+        bool SaveActiveDesign();
+
+        /// <summary>
+        /// Closes a given Design.
+        /// </summary>
+        /// <param name="name">Name of Design</param>
+        /// <param name="save">Indicates whether the user wants the design saved</param>
+        /// <returns>Indicates whether the Design was closed</returns>
+        bool CloseDesign(string name, bool save);
+
+        /// <summary>
+        /// Saves all Designs
+        /// </summary>
+        /// <returns>Whether the save was successful</returns>
+        bool SaveDesigns();
+
+        /// <summary>
+        /// Update the font sizes of all Designs.
+        /// </summary>
+        void SetDesignFontSizes();
+
+        /// <summary>
+        /// Set the themes of all Designs
         /// </summary>
         void SetThemes();
-
-        /// <summary>
-        /// Checks all SubDesigns for unsaved changes
-        /// </summary>
-        /// <returns>Indicates whether there are unsaved changes</returns>
-        bool CheckUnsavedChanges();
     }
 }

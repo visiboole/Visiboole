@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using VisiBoole.Views;
 using System.IO;
 using VisiBoole.Models;
+using System.Windows.Forms;
 
 namespace VisiBoole.Controllers
 {
@@ -78,7 +79,7 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Set theme of SubDesigns
+        /// Set theme of Designs
         /// </summary>
         public void SetTheme()
         {
@@ -99,7 +100,7 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                designController.SetSubDesignFontSizes();
+                designController.SetDesignFontSizes();
             }
             catch (Exception)
             {
@@ -121,7 +122,7 @@ namespace VisiBoole.Controllers
                     File.Delete(path);
                 }
 
-                SubDesign sd = designController.CreateSubDesign(path);
+                Design sd = designController.CreateDesign(path);
 
                 if (displayController.CreateNewTab(sd) == true)
                 {
@@ -173,14 +174,15 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Selects the tabpage in the tabcontrol with name matching the given string
+        /// Selects the file at the specified index.
         /// </summary>
-        /// <param name="fileName">The name of the tabpage to select</param>
-        public void SelectTabPage(string fileName)
+        /// <param name="index">The index of the file</param>
+        public void SelectFile(int index)
         {
             try
             {
-                displayController.SelectTabPage(fileName);
+                displayController.SelectTabPage(index);
+                designController.SelectDesign(index);
             }
             catch (Exception)
             {
@@ -195,7 +197,7 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                view.SaveFileSuccess(displayController.SaveActiveTab());
+                view.SaveFileSuccess(designController.SaveActiveDesign());
             }
             catch (Exception)
             {
@@ -212,7 +214,7 @@ namespace VisiBoole.Controllers
             try
             {
                 // Write the contents of the active tab in a new file at location of the selected path
-                string content = displayController.GetActiveTabPage().SubDesign().Text;
+                string content = displayController.GetActiveTabPage().Design().Text;
                 File.WriteAllText(Path.ChangeExtension(path, ".vbi"), content);
 
                 // Process the new file as usual
@@ -229,11 +231,11 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Saves all files opened
         /// </summary>
-        public void SaveAll()
+        public void SaveFiles()
         {
             try
             {
-                view.SaveFileSuccess(displayController.SaveAllTabs());
+                view.SaveFileSuccess(designController.SaveDesigns());
             }
             catch (Exception)
             {
@@ -258,25 +260,52 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Closes the selected open file
+        /// Closes a file with the provided name.
         /// </summary>
+        /// <param name="name">Name of file to close</param>
         /// <returns>The name of the file closed</returns>
-        public string CloseFile()
+        private string CloseFile(string name)
         {
-            try
-            {
-                SubDesign sd = displayController.GetActiveTabPage().SubDesign();
+            Design design = designController.GetDesign(name);
 
-                if (view.ConfirmClose(sd.isDirty))
+            if (design != null)
+            {
+                bool save = true;
+
+                if (design.IsDirty)
                 {
-                    if (displayController.CloseActiveTab())
+                    DialogResult result = Globals.Dialog.New("Confirm", $"{name} has unsaved changes. Would you like to save these changes?", DialogType.YesNoCancel);
+                    if (result == DialogResult.No)
                     {
-                        designController.CloseSubDesign(sd.FileSourceName);
-                        return sd.FileSourceName;
+                        save = false;
+                    }
+                    else if (result == DialogResult.Cancel)
+                    {
+                        return null;
                     }
                 }
 
+                // Otherwise close file
+                displayController.CloseTab(design.TabPageIndex);
+                designController.CloseDesign(name, save);
+                return design.FileSourceName;
+            }
+            else
+            {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Closes the selected open file
+        /// </summary>
+        /// <returns>The name of the file closed</returns>
+        public string CloseActiveFile()
+        {
+            try
+            {
+                Design design = designController.GetActiveDesign();
+                return CloseFile(design.FileSourceName);
             }
             catch (Exception)
             {
@@ -286,18 +315,89 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Performs a dirty check and confirms application exit with the user
+        /// Closes all files.
         /// </summary>
-        public bool ExitApplication()
+        /// <returns>List of closed files</returns>
+        public List<string> CloseFiles()
+        {
+            try
+            {
+                List<string> closedFiles = new List<string>();
+                string[] files = designController.GetDesigns();
+
+                // Try to close all files
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (CloseFile(files[i]) == null)
+                    {
+                        return closedFiles; // File wasn't closed
+                    }
+                    else
+                    {
+                        closedFiles.Add(files[i]); // Add to list of closed files
+                    }
+                }
+
+                return closedFiles;
+            }
+            catch (Exception)
+            {
+                Globals.Dialog.New("Error", "An unexpected error has occured while closing all files.", DialogType.Ok);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Closes all files except for the provided file name.
+        /// </summary>
+        /// <param name="name">Name of the file to keep open</param>
+        /// <returns>List of closed files</returns>
+        public List<string> CloseFilesExceptFor(string name)
+        {
+            try
+            {
+                //string name = designController.GetActiveDesign().FileSourceName;
+                List<string> closedFiles = new List<string>();
+                string[] files = designController.GetDesigns();
+
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (!files[i].Equals(name))
+                    {
+                        if (CloseFile(files[i]) == null)
+                        {
+                            return closedFiles;
+                        }
+                        else
+                        {
+                            closedFiles.Add(files[i]);
+                        }
+                    }
+                }
+
+                return closedFiles;
+            }
+            catch (Exception)
+            {
+                Globals.Dialog.New("Error", "An unexpected error has occured while closing all files.", DialogType.Ok);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to close all files.
+        /// </summary>
+        /// <returns>List of closed files</returns>
+        public List<string> ExitApplication()
 		{
             try
             {
-                return view.ConfirmExit(designController.CheckUnsavedChanges());
+                return CloseFiles();
             }
             catch (Exception)
             {
                 Globals.Dialog.New("Error", "An unexpected error has occured while closing the application.", DialogType.Ok);
-                return false;
+                return null;
             }
 		}
 	}

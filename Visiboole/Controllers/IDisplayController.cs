@@ -54,21 +54,9 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// Creates a new tab on the TabControl
 		/// </summary>
-		/// <param name="sd">The SubDesign that is displayed in the new tab</param>
+		/// <param name="design">The Design that is displayed in the new tab</param>
 		/// <returns>Returns true if a new tab was successfully created</returns>
-		bool CreateNewTab(SubDesign sd);
-
-		/// <summary>
-		/// Saves the file that is associated with the currently selected tabpage
-		/// </summary>
-		/// <returns>Indicates whether the file was saved</returns>
-		bool SaveActiveTab();
-
-        /// <summary>
-		/// Saves the files associated to all tabpages
-		/// </summary>
-		/// <returns>Indicates whether the files were saved</returns>
-		bool SaveAllTabs();
+		bool CreateNewTab(Design design);
 
         /// <summary>
         /// Returns the TabPage that is currently selected
@@ -77,11 +65,10 @@ namespace VisiBoole.Controllers
         TabPage GetActiveTabPage();
 
         /// <summary>
-		/// Selects the tabpage with matching name
+		/// Selects the tab page with the given index.
 		/// </summary>
-		/// <param name="fileName">The name of the tabpage to select</param>
-		/// <returns>Returns the tabpage that matches the given string</returns>
-		bool SelectTabPage(string fileName);
+		/// <param name="index">Index of tabpage to select</param>
+		void SelectTabPage(int index);
 
         /// <summary>
         /// Handles the event that occurs when the user runs the parser
@@ -93,6 +80,13 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <param name="count">The number of times to tick</param>
         void Tick(int count);
+
+        /// <summary>
+        /// Closes a specific tab in the tab control
+        /// </summary>
+        /// <param name="index">Index to close</param>
+        /// <returns>Whether the operation was successful</returns>
+        bool CloseTab(int index);
 
         /// <summary>
 		/// Closes the current tab

@@ -108,15 +108,15 @@ namespace VisiBoole.ParsingEngine.Statements
             string line = "";
             foreach (string var in leftVars)
             {
-                int value = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(var);
+                int value = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(var);
                 if (value != -1)
                 {
-                    Globals.TabControl.SelectedTab.SubDesign().Database.SetValue(var, rightValues[leftVars.IndexOf(var)] == 1);
+                    Globals.TabControl.SelectedTab.Design().Database.SetValue(var, rightValues[leftVars.IndexOf(var)] == 1);
                 }
                 else
                 {
                     IndependentVariable newVar = new IndependentVariable(var, rightValues[leftVars.IndexOf(var)] == 1);
-                    Globals.TabControl.SelectedTab.SubDesign().Database.AddVariable<IndependentVariable>(newVar);
+                    Globals.TabControl.SelectedTab.Design().Database.AddVariable<IndependentVariable>(newVar);
                 }
 
                 if (rightValues[leftVars.IndexOf(var)] == 1)

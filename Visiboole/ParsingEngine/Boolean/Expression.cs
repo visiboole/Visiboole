@@ -127,6 +127,9 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // look for [not] gates
                 basicExpression = ParseNots(basicExpression);
 
+                // look for [eqaulto] gates
+                //basicExpression = ParseEqualTo(basicExpression);
+
                 // look for [and] gates
                 basicExpression = ParseAnds(basicExpression);
 
@@ -164,7 +167,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // get rid of the ~ so we can check for the variable in the dictionary
                 string newVariable = oldVariable.Substring(1);
 
-                bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(newVariable) == 1;
+                bool variableValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(newVariable) == 1;
 
                 // Might have to switch around
                 if (variableValue)
@@ -232,7 +235,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                     // check independent and dependent variables
                     else
                     {
-                        bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
+                        bool variableValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(elements[i]) == 1;
                         if (variableValue)
                         {
                             inputs[i] = 1;
@@ -302,7 +305,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // check independent and dependent variables
                 else
                 {
-                    bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
+                    bool variableValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(elements[i]) == 1;
                     if (variableValue)
                     {
                         inputs[i] = 1;
@@ -368,7 +371,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                 // check independent and dependent variables
                 else
                 {
-                    bool variableValue = Globals.TabControl.SelectedTab.SubDesign().Database.TryGetValue(elements[i]) == 1;
+                    bool variableValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(elements[i]) == 1;
                     if (variableValue)
                     {
                         inputs[i] = 1;
@@ -396,6 +399,84 @@ namespace VisiBoole.ParsingEngine.Boolean
                 return "FALSE";
             }
         }
+
+        /// <summary>
+        /// Parses the "and" subexpressions within the given expression
+        /// </summary>
+        /// <param name="dependent">The dependent variable that is assigned the given expression</param>
+        /// <param name="expression">The expression that is associated with the given dependent variable</param>
+        /// <returns>Return expression with [not] gates replaced with values</returns>
+        /*
+        private string ParseEqualTo(string expression)
+        {
+            // set basicExpression variable
+            string basicExpression = expression;
+
+            // split into a string array off of the [or] gate
+            string[] equalToExpression = basicExpression.Split(new string[] { "==" }, StringSplitOptions.None);
+
+            // format the expression
+            for (int i = 0; i < equalToExpression.Length; i++)
+            {
+                equalToExpression[i] = equalToExpression[i].Trim();
+            }
+
+            // loop through each element
+            foreach (string exp in equalToExpression)
+            {
+                // break element up to see if it has multiple variables
+                string[] elements = exp.Split(' ');
+
+                // make a new array to store int's instead of string's
+                int[] inputs = new int[elements.Length];
+
+                // loop through each element to get their boolean value
+                for (int i = 0; i < elements.Length; i++)
+                {
+                    // check for TRUE
+                    if (elements[i].Equals("TRUE"))
+                    {
+                        inputs[i] = 1;
+                    }
+                    // check for FALSE
+                    else if (elements[i].Equals("FALSE"))
+                    {
+                        inputs[i] = 0;
+                    }
+                    // check independent and dependent variables
+                    else
+                    {
+                        bool variableValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(elements[i]) == 1;
+                        if (variableValue)
+                        {
+                            inputs[i] = 1;
+                        }
+                        else
+                        {
+                            inputs[i] = 0;
+                        }
+
+                        // Add the variable to the Dependencies
+                        //Database.AddDependencies(dependent, elements[i]);
+                    }
+                }
+                // applies [and] gate to each input/expression
+                if (Equals(inputs) == 1)
+                {
+                    // replace variable with TRUE
+                    basicExpression = basicExpression.Replace(exp, "TRUE");
+                }
+                else
+                {
+                    // replace variable with FALSE
+                    basicExpression = basicExpression.Replace(exp, "FALSE");
+                }
+            }
+
+            // return expression with [and] gates replaced with values
+            return basicExpression;
+        }
+        */
 
         /// <summary>
         /// Negates the given value
@@ -428,6 +509,20 @@ namespace VisiBoole.ParsingEngine.Boolean
                     return 0;
                 }
             }
+            return 1;
+        }
+
+        private int Equals(int[] values)
+        {
+            int equalValue = values[0];
+            foreach (int value in values)
+            {
+                if (value != equalValue)
+                {
+                    return 0;
+                }
+            }
+
             return 1;
         }
 

@@ -14,7 +14,7 @@ namespace VisibooleTests.Models
         public void ParseInputTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
 
@@ -28,7 +28,7 @@ namespace VisibooleTests.Models
         public void ContainsVariableTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
 
@@ -55,7 +55,7 @@ namespace VisibooleTests.Models
         public void SolveExpressionTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
 
@@ -75,7 +75,7 @@ namespace VisibooleTests.Models
         public void NegateTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
 
@@ -92,7 +92,7 @@ namespace VisibooleTests.Models
         public void BinaryToDecimalTest()
         {
             string filename = "newFile1.vbi";
-            SubDesign subDesign = new SubDesign(filename, delegate { });
+            Design subDesign = new Design(filename, delegate { });
             FileInfo file = new FileInfo(filename);
             InputParser inputParser = new InputParser(subDesign);
 

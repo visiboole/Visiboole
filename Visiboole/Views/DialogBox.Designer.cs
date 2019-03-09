@@ -35,6 +35,7 @@
             this.uxButton1 = new System.Windows.Forms.Button();
             this.uxButton2 = new System.Windows.Forms.Button();
             this.uxLabelMessage = new System.Windows.Forms.Label();
+            this.uxButton3 = new System.Windows.Forms.Button();
             this.uxPanelTop.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -105,12 +106,23 @@
             this.uxLabelMessage.Text = "Message";
             this.uxLabelMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // uxButton3
+            // 
+            this.uxButton3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.uxButton3.Location = new System.Drawing.Point(170, 194);
+            this.uxButton3.Name = "uxButton3";
+            this.uxButton3.Size = new System.Drawing.Size(78, 26);
+            this.uxButton3.TabIndex = 4;
+            this.uxButton3.Text = "Button 3";
+            this.uxButton3.UseVisualStyleBackColor = true;
+            // 
             // DialogBox
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(425, 225);
+            this.Controls.Add(this.uxButton3);
             this.Controls.Add(this.uxLabelMessage);
             this.Controls.Add(this.uxButton2);
             this.Controls.Add(this.uxButton1);
@@ -137,5 +149,6 @@
         private System.Windows.Forms.Button uxButton1;
         private System.Windows.Forms.Button uxButton2;
         private System.Windows.Forms.Label uxLabelMessage;
+        private System.Windows.Forms.Button uxButton3;
     }
 }

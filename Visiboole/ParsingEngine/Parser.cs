@@ -63,11 +63,26 @@ namespace VisiBoole.ParsingEngine
         public static readonly string FormatSpecifierPattern = $@"(%(?<Format>[ubhdUBHD])\{{(?<Vars>{VariablePattern}(\s*{VariablePattern})*)\}})";
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
         public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<Color><#?[a-zA-Z0-9]+>)?(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
+        private static readonly string OperatorPattern = @"^(([=+^|-])|(<=)|(~+)|(==))$";
+        private static readonly string SeperatorPattern = @"[\s{}(),;]";
+        private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]";
+
+        /// <summary>
+        /// Compiled regexs for parsing.
+        /// </summary>
+        public static Regex NameRegex = new Regex(String.Concat("^", NamePattern, "$"), RegexOptions.Compiled);
+        public static Regex VectorRegex = new Regex(VectorPattern, RegexOptions.Compiled);
+        public static Regex ConstantRegex = new Regex(String.Concat("^", ConstantPattern, "$"), RegexOptions.Compiled);
+        public static Regex FormatSpecifierRegex = new Regex(FormatSpecifierPattern, RegexOptions.Compiled);
+        public static Regex CommentRegex = new Regex(CommentPattern, RegexOptions.Compiled);
+        private static Regex OperatorRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
+        private static Regex SeperatorRegex = new Regex(SeperatorPattern, RegexOptions.Compiled);
+        private static Regex InvalidRegex = new Regex(InvalidPattern, RegexOptions.Compiled);
 
         /// <summary>
         /// The design being parsed.
         /// </summary>
-        private SubDesign Design;
+        private Design Design;
 
         /// <summary>
         /// Line number of the design being parsed. (Used for errors)
@@ -105,7 +120,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="sd">The subdesign containing the text to parse</param>
         /// <param name="variableName">The clicked variable if it exists, else the empty string</param>
         /// <returns>Returns a list of parsed elements containing the text and value of each unit in the given expression</returns>
-		public List<IObjectCodeElement> Parse(SubDesign sd, string variableName, bool tick)
+		public List<IObjectCodeElement> Parse(Design sd, string variableName, bool tick)
 		{
             Design = sd;
             Tick = tick;
@@ -239,7 +254,7 @@ namespace VisiBoole.ParsingEngine
                         }
 
                         // Check for formats inside formats or formats without variables
-                        MatchCollection formats = Regex.Matches(line, FormatSpecifierPattern);
+                        MatchCollection formats = FormatSpecifierRegex.Matches(line);
                         if (formats.Count != line.Count(c => c == '%'))
                         {
                             Globals.Logger.Add($"Line {PreLineNumber}: Invalid format specifier.");
@@ -256,9 +271,9 @@ namespace VisiBoole.ParsingEngine
                         }
                         else if (type == StatementType.Comment)
                         {
-                            Match match = Regex.Match(line, CommentPattern);
+                            Match match = CommentRegex.Match(line);
 
-                            if (!match.Groups["DoInclude"].Value.Equals("-") && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value.Equals("+")))
+                            if (match.Groups["DoInclude"].Value != "-" && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value == "+"))
                             {
                                 line = String.Concat(match.Groups["Spacing"].Value, match.Groups["Color"].Value, match.Groups["Comment"].Value); // Remove + or -
                                 statements.Add(new CommentStmt(PostLineNumber++, line));
@@ -270,7 +285,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            bool needsExpansion = Regex.IsMatch(line, VectorPattern);
+                            bool needsExpansion = VectorRegex.IsMatch(line);
                             if (needsExpansion && line.Contains("="))
                             {
                                 // Vertical expansion needed
@@ -287,7 +302,7 @@ namespace VisiBoole.ParsingEngine
                             {
                                 // Horizontal expansion needed
                                 string expandedLine = line;
-                                while (Regex.IsMatch(expandedLine, VectorPattern))
+                                while (VectorRegex.IsMatch(expandedLine))
                                 {
                                     Match match = Regex.Matches(expandedLine, VectorPattern)[0]; // Get match
 
@@ -363,28 +378,32 @@ namespace VisiBoole.ParsingEngine
             StatementType? type = StatementType.Empty;
             List<string> tokens = new List<string>();
             Stack<char> groupings = new Stack<char>();
-            string lexeme = "";
+            StringBuilder lexeme = new StringBuilder();
+            string currentLexeme;
+            string newChar;
 
             foreach (char c in line)
             {
-                string newChar = c.ToString();
+                newChar = c.ToString();
 
                 if (type == StatementType.Comment)
                 {
-                    lexeme = String.Concat(lexeme, newChar);
+                    lexeme.Append(c);
                 }
-                else if (newChar.Equals("\""))
+                else if (c == '"')
                 {
-                    if (!Regex.IsMatch(lexeme, @"^(<#?[a-zA-Z0-9]+>[+-]?)$"))
+                    currentLexeme = lexeme.ToString();
+
+                    if (!Regex.IsMatch(currentLexeme, @"^(<#?[a-zA-Z0-9]+>[+-]?)$"))
                     {
                         // If not possible color/color code: do normal comment checks
-                        if (!(lexeme.Equals("+") || lexeme.Equals("-") || lexeme.Equals("")))
+                        if (!(currentLexeme == "+" || currentLexeme == "-" || currentLexeme == ""))
                         {
                             Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
                             return null;
                         }
 
-                        if (tokens.Any(token => !token.Equals(" ")))
+                        if (tokens.Any(token => token != " "))
                         {
                             Globals.Logger.Add($"Line {PreLineNumber}: Invalid '\"'.");
                             return null;
@@ -392,29 +411,25 @@ namespace VisiBoole.ParsingEngine
                     }
 
                     type = StatementType.Comment;
-                    lexeme = String.Concat(lexeme, newChar);
+                    lexeme.Append(c);
                 }
-                else if (Regex.IsMatch(newChar, @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]"))
+                else if (SeperatorRegex.IsMatch(newChar))
                 {
-                    // Invalid char
-                    Globals.Logger.Add($"Line {PreLineNumber}: Invalid character '{newChar}'.");
-                    return null;
-                }
-                else if (Regex.IsMatch(newChar, @"[\s{}(),;]"))
-                {
+                    currentLexeme = lexeme.ToString();
+
                     // Ending characters
-                    if (newChar.Equals("{") || newChar.Equals("("))
+                    if (c == '{' || c == '(')
                     {
                         // Add grouping char to stack
-                        groupings.Push(newChar[0]);
+                        groupings.Push(c);
                     }
-                    else if (newChar.Equals("}") || newChar.Equals(")"))
+                    else if (c == '}' || c == ')')
                     {
                         // Check for correct closing
                         if (groupings.Count > 0)
                         {
                             char top = groupings.Peek();
-                            if ((newChar.Equals(")") && top == '(') || (newChar.Equals("}") && top == '{'))
+                            if ((c == ')' && top == '(') || (c == '}' && top == '{'))
                             {
                                 groupings.Pop();
                             }
@@ -426,11 +441,11 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: Unmatched '{newChar}'.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: Unmatched '{c}'.");
                             return null;
                         }
                     }
-                    else if (newChar.Equals(","))
+                    else if (c == ',')
                     {
                         // Check for misplaced comma
                         if (groupings.Count == 0)
@@ -455,12 +470,12 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
 
-                    if (lexeme.Length > 0)
+                    if (currentLexeme.Length > 0)
                     {
-                        if (IsToken(lexeme))
+                        if (IsToken(currentLexeme))
                         {
                             // Check for invalid tokens with current statement type
-                            if (lexeme.Equals("="))
+                            if (currentLexeme == "=")
                             {
                                 if (type != StatementType.Empty)
                                 {
@@ -472,7 +487,7 @@ namespace VisiBoole.ParsingEngine
                                     type = StatementType.Boolean;
                                 }
                             }
-                            else if (lexeme.Equals("<="))
+                            else if (currentLexeme == "<=")
                             {
                                 if (type != StatementType.Empty)
                                 {
@@ -484,7 +499,7 @@ namespace VisiBoole.ParsingEngine
                                     type = StatementType.Clock;
                                 }
                             }
-                            else if (lexeme.Contains("%"))
+                            else if (currentLexeme.Contains("%"))
                             {
                                 if (type != StatementType.Empty && type != StatementType.FormatSpecifier)
                                 {
@@ -496,7 +511,7 @@ namespace VisiBoole.ParsingEngine
                                     type = StatementType.FormatSpecifier;
                                 }
                             }
-                            else if (lexeme.Contains("@"))
+                            else if (currentLexeme.Contains("@"))
                             {
                                 if (type != StatementType.Empty)
                                 {
@@ -508,9 +523,9 @@ namespace VisiBoole.ParsingEngine
                                     type = StatementType.Submodule;
                                 }
                             }
-                            else if (lexeme.Contains("~"))
+                            else if (currentLexeme.Contains("~"))
                             {
-                                if (lexeme.Equals("~") && !newChar.Equals("(") && !newChar.Equals("{"))
+                                if (currentLexeme == "~" && c != '(' && c != '{')
                                 {
                                     Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector, ( or {{ on the right side of a boolean statement.");
                                     return null;
@@ -522,7 +537,7 @@ namespace VisiBoole.ParsingEngine
                                     return null;
                                 }
                             }
-                            else if (lexeme.Contains("*"))
+                            else if (currentLexeme.Contains("*"))
                             {
                                 if (type != StatementType.Empty)
                                 {
@@ -530,7 +545,7 @@ namespace VisiBoole.ParsingEngine
                                     return null;
                                 }
                             }
-                            else if (Regex.IsMatch(lexeme, @"^([+|^-])|(==)$"))
+                            else if (Regex.IsMatch(currentLexeme, @"^([+|^-])|(==)$"))
                             {
                                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                                 {
@@ -538,7 +553,7 @@ namespace VisiBoole.ParsingEngine
                                     return null;
                                 }
                             }
-                            else if (lexeme.Contains("'"))
+                            else if (currentLexeme.Contains("'"))
                             {
                                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                                 {
@@ -552,27 +567,27 @@ namespace VisiBoole.ParsingEngine
                             return null;
                         }
 
-                        tokens.Add(lexeme);
-                        lexeme = "";
+                        tokens.Add(currentLexeme);
+                        lexeme.Clear();
                     }
 
-                    if (newChar.Equals("{") || newChar.Equals("}"))
+                    if (c == '{' || c == '}')
                     {
                         if (type != StatementType.FormatSpecifier && type != StatementType.Boolean)
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: '{newChar}' must be part of a boolean or format specifier statement.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{c}' must be part of a boolean or format specifier statement.");
                             return null;
                         }
                     }
-                    else if (newChar.Equals("(") || newChar.Equals(")"))
+                    else if (c == '(' || c == ')')
                     {
                         if (type != StatementType.Submodule && type != StatementType.Boolean)
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: '{newChar}' must be part of a submodule or boolean statement.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{c}' must be part of a submodule or boolean statement.");
                             return null;
                         }
                     }
-                    else if (newChar.Equals(";"))
+                    else if (c == ';')
                     {
                         if (tokens.Count == 0)
                         {
@@ -593,31 +608,38 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
 
-                    tokens.Add(newChar);
+                    tokens.Add(c.ToString());
+                }
+                else if (InvalidRegex.IsMatch(newChar))
+                {
+                    // Invalid char
+                    Globals.Logger.Add($"Line {PreLineNumber}: Invalid character '{c}'.");
+                    return null;
                 }
                 else
                 {
                     // Appending characters
+                    currentLexeme = lexeme.ToString();
 
                     // Check for constant inside {}
-                    if (newChar.Equals("'"))
+                    if (c == '\'')
                     {
                         // Check for constant bit count inside {}
-                        if (groupings.Count > 0 && groupings.Peek() == '{' && (String.IsNullOrEmpty(lexeme) || !lexeme.All(ch => Char.IsDigit(ch))))
+                        if (groupings.Count > 0 && groupings.Peek() == '{' && (String.IsNullOrEmpty(currentLexeme) || !currentLexeme.All(ch => Char.IsDigit(ch))))
                         {
                             Globals.Logger.Add($"Line {PreLineNumber}: Constants in concat fields must specify bit count.");
                             return null;
                         }
                     }
 
-                    lexeme = String.Concat(lexeme, newChar);
+                    lexeme.Append(c);
                 }
             }
 
             // Check for valid comment
             if (type == StatementType.Comment)
             {
-                if (!Regex.IsMatch(lexeme, CommentPattern))
+                if (!CommentRegex.IsMatch(lexeme.ToString()))
                 {
                     Globals.Logger.Add($"Line {PreLineNumber}: Invalid comment statement.");
                     return null;
@@ -673,29 +695,9 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the lexeme is a token</returns>
         private bool IsToken(string lexeme)
         {
-            if (Regex.IsMatch(lexeme, @"^[=+^|-]$"))
+            if (IsVariable(lexeme))
             {
-                // Lexeme is operator
-                return true;
-            }
-            else if (lexeme.Equals("=="))
-            {
-                // Lexeme is == operator
-                return true;
-            }
-            else if (lexeme.Equals("<="))
-            {
-                // Lexeme is <= operator
-                return true;
-            }
-            else if (lexeme.All(c => c == '~'))
-            {
-                // Lexeme is ~ operator
-                return true;
-            }
-            else if (Regex.IsMatch(lexeme, @"^%[bBdDuUhH]$"))
-            {
-                // Lexeme is format specifier
+                // Lexeme is variable
                 return true;
             }
             else if (IsVector(lexeme))
@@ -703,9 +705,14 @@ namespace VisiBoole.ParsingEngine
                 // Lexeme is vector
                 return true;
             }
-            else if (IsVariable(lexeme))
+            else if (OperatorRegex.IsMatch(lexeme))
             {
-                // Lexeme is variable
+                // Lexeme is operator
+                return true;
+            }
+            else if (Regex.IsMatch(lexeme, @"^%[bBdDuUhH]$"))
+            {
+                // Lexeme is format specifier
                 return true;
             }
             else if (IsConstant(lexeme))
@@ -728,7 +735,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the lexeme is a variable</returns>
         private bool IsVariable(string lexeme)
         {
-            Match match = Regex.Match(lexeme, $@"^{NamePattern}$");
+            Match match = NameRegex.Match(lexeme);
             if (match.Success)
             {
                 // Check variable name has at least one letter
@@ -856,7 +863,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the lexeme is a constant</returns>
         private bool IsConstant(string lexeme)
         {
-            Match match = Regex.Match(lexeme, $@"^{ConstantPattern}$");
+            Match match = ConstantRegex.Match(lexeme);
             if (match.Success)
             {
                 // Check bit count

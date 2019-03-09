@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Permissions;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using VisiBoole.ParsingEngine.Boolean;
@@ -35,7 +36,7 @@ namespace VisiBoole.Models
 		public string HtmlText = "";
 		public string currentLine = "";
 
-        public HtmlBuilder(SubDesign sd, List<IObjectCodeElement> output)
+        public HtmlBuilder(Design sd, List<IObjectCodeElement> output)
         {
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
@@ -119,10 +120,8 @@ namespace VisiBoole.Models
                 {
                     if (token is CommentStmt)
                     {
-                        // Replace possible colors and provide normal spacing
-                        string commentHTML = Regex.Replace(token.ObjCodeText, @"(?<=\s)\s", "&nbsp;");
-                        commentHTML = ColorComment(commentHTML);
-                        currentLine += String.Concat(commentHTML, " ");
+                        // Add coloring tags to comment
+                        currentLine += String.Concat(ColorComment(token.ObjCodeText), " ");
                         continue;
                     }
 
@@ -294,57 +293,104 @@ namespace VisiBoole.Models
         /// <returns>The comment with html coloring added</returns>
         private string ColorComment(string comment)
         {
-            bool coloring = false;
+            MatchCollection matches = Regex.Matches(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)");
+            if (matches.Count == 0)
+            {
+                // No special coloring specified
+                return EncodeText(comment);
+            }
+
+            StringBuilder commentHTML = new StringBuilder();
+            string appendText = "";
             string color = "";
 
-            MatchCollection matches = Regex.Matches(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)");
-            if (matches.Count == 0 || (matches.Count > 0 && matches[0].Index != 0))
+            if (matches[0].Index != 0)
             {
-                // Comment starts with black
-                comment = comment.Insert(0, "<font color='black'>");
-                color = "black";
-                coloring = true;
+                // Start comment
+                appendText = comment.Substring(0, matches[0].Index);
+                commentHTML.Append(EncodeText(appendText));
+            }
 
-                if (matches.Count == 0)
+            int indexOfMatch = 0;
+            int indexAfterMatch = 0;
+            int indexOfNextMatch = 0;
+            bool coloring = false;
+            bool isValidColor = true;
+            bool isClosingTag = false;
+
+            // Iterate through all matches and construct html
+            for (int i = 0; i < matches.Count; i++)
+            {
+                Match match = matches[i]; // Get match
+                indexOfMatch = match.Index; // Get match index
+                indexAfterMatch = indexOfMatch + match.Length; // Get index after match
+                indexOfNextMatch = (i + 1 < matches.Count) ? matches[i + 1].Index : -1; // Get index of next match
+                isClosingTag = match.Value == "</>";
+
+                if (!isClosingTag)
                 {
-                    comment = String.Concat(comment, "</font>");
-                    return comment;
+                    color = match.Value.Substring(1, match.Length - 2); // Get color by removing <>
+                    isValidColor = IsValidHTMLColor(color); // Check whether the provided color is valid
+
+                    if (isValidColor)
+                    {
+                        if (coloring)
+                        {
+                            commentHTML.Append("</font>"); // Append closing color tag
+                        }
+                        commentHTML.Append($"<font color='{color}'>"); // Append color tag
+                        coloring = true;
+                    }
+                    else
+                    {
+                        commentHTML.Append(EncodeText(match.Value)); // Append bad color tag
+                    }
+                }
+                else
+                {
+                    if (coloring)
+                    {
+                        commentHTML.Append("</font>"); // Append closing color tag
+                        coloring = false;
+                    }
+                    else
+                    {
+                        commentHTML.Append(EncodeText(match.Value)); // Append bad closing tag
+                    }
+                }
+
+                if (indexOfNextMatch != -1)
+                {
+                    // There is another match
+                    appendText = comment.Substring(indexAfterMatch, indexOfNextMatch - indexAfterMatch);
+                    commentHTML.Append(EncodeText(appendText));
+                }
+                else
+                {
+                    // There are no other matches
+                    appendText = comment.Substring(indexAfterMatch, comment.Length - indexAfterMatch);
+                    commentHTML.Append(EncodeText(appendText));
+                    if (coloring)
+                    {
+                        commentHTML.Append("</font>");
+                    }
                 }
             }
 
-            // Replace all coloring tags with proper html color tags
-            while (Regex.IsMatch(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)"))
-            {
-                Match match = Regex.Match(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)");
+            return commentHTML.ToString();
+        }
 
-                int indexAfterMatch = match.Index + match.Length;
-                int lengthAfterMatch = comment.Length - indexAfterMatch;
-
-                if (coloring || match.Value.Equals("</>"))
-                {
-                    // Close color
-                    comment = String.Concat(comment.Substring(0, match.Index), "</font>", comment.Substring(indexAfterMatch, lengthAfterMatch));
-                    coloring = false;
-
-                    // Move index and length values if adding a color
-                    indexAfterMatch = match.Index + 7; // Moves index past </font>
-                    lengthAfterMatch = comment.Length - indexAfterMatch;
-                }
-
-                // New color
-                coloring = true;
-                int indexBeforeMatch = color.Equals("") ? match.Index : indexAfterMatch;
-                string newColor = match.Value.Substring(1, match.Length - 2); // Remove <>
-                bool isValidColor = IsValidHTMLColor(newColor);
-                color = isValidColor ? newColor : "black"; // Color is set to new color if valid and black if not valid
-                comment = String.Concat(comment.Substring(0, indexBeforeMatch), $"<font color='{color}'>", comment.Substring(indexAfterMatch, lengthAfterMatch));
-            }
-
-            if (!comment.EndsWith("</font>"))
-            {
-                comment = String.Concat(comment, "</font>");
-            }
-
+        /// <summary>
+        /// Encodes specific characters with their html encoding values. (This allows certain characters to show up in the simulator)
+        /// </summary>
+        /// <param name="comment">Comment to encode</param>
+        /// <returns>Comment with specific characters encoded.</returns>
+        private string EncodeText(string comment)
+        {
+            // Replace specific characters with their encodings so they show in text
+            comment = Regex.Replace(comment, @"(?<=\s)\s", "&nbsp;");
+            comment = comment.Replace("<", "&lt;");
+            comment = comment.Replace(">", "&gt;");
             return comment;
         }
 

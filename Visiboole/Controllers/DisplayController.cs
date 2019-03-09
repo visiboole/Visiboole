@@ -155,80 +155,35 @@ namespace VisiBoole.Controllers
         /// <summary>
 		/// Creates a new tab on the TabControl
 		/// </summary>
-		/// <param name="sd">The SubDesign that is displayed in the new tab</param>
+		/// <param name="design">The Design that is displayed in the new tab</param>
 		/// <returns>Returns true if a new tab was successfully created</returns>
-		public bool CreateNewTab(SubDesign sd)
+		public bool CreateNewTab(Design design)
         {
-            TabPage tab = new TabPage(sd.FileSourceName);
+            TabPage tab = new TabPage(design.FileSourceName);
 
-            tab.Name = sd.FileSourceName;
+            tab.Name = design.FileSourceName;
             tab.ImageKey = "Close";
             tab.ImageIndex = 0;
-            tab.Controls.Add(sd);
-            sd.Dock = DockStyle.Fill;
+            tab.Controls.Add(design);
+            design.Dock = DockStyle.Fill;
 
-            if (tabControl.TabPages.ContainsKey(sd.FileSourceName))
+            if (tabControl.TabPages.ContainsKey(design.FileSourceName))
             {
-                int index = tabControl.TabPages.IndexOfKey(sd.FileSourceName);
+                int index = tabControl.TabPages.IndexOfKey(design.FileSourceName);
 
-                tabControl.TabPages.RemoveByKey(sd.FileSourceName);
+                tabControl.TabPages.RemoveByKey(design.FileSourceName);
                 tabControl.TabPages.Insert(index, tab);
-                sd.TabPageIndex = tabControl.TabPages.IndexOf(tab);
+                design.TabPageIndex = tabControl.TabPages.IndexOf(tab);
                 tabControl.SelectTab(tab);
                 return false;
             }
             else
             {
                 tabControl.TabPages.Add(tab);
-                sd.TabPageIndex = tabControl.TabPages.IndexOf(tab);
+                design.TabPageIndex = tabControl.TabPages.IndexOf(tab);
                 tabControl.SelectTab(tab);
                 return true;
             }
-        }
-
-        /// <summary>
-        /// Saves a particular SubDesign
-        /// </summary>
-        /// <param name="sd">The SubDesign to save</param>
-        /// <returns>Indicates whether the save was successful</returns>
-        private bool SaveSubDesign(SubDesign sd)
-        {
-            if (sd == null)
-            {
-                return false;
-            }
-            else
-            {
-                sd.SaveTextToFile();
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Saves the file that is associated with the currently selected tabpage
-        /// </summary>
-        /// <returns></returns>
-        public bool SaveActiveTab()
-		{
-            bool saved = SaveSubDesign(tabControl.SelectedTab.SubDesign());
-            return saved;
-		}
-
-        /// <summary>
-		/// Saves the files associated to all tabpages
-		/// </summary>
-		/// <returns>Indicates whether the files were saved</returns>
-        public bool SaveAllTabs()
-        {
-            foreach (TabPage tab in tabControl.TabPages)
-            {
-                SubDesign sd = tab.SubDesign();
-                bool saved = SaveSubDesign(sd);
-
-                if (!saved) return false;
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -241,20 +196,14 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Selects the tabpage with matching name
-        /// </summary>
-        /// <param name="fileName">The name of the tabpage to select</param>
-        /// <returns>Returns the tabpage that matches the given string</returns>
-        public bool SelectTabPage(string fileName)
+		/// Selects the tab page with the given index.
+		/// </summary>
+		/// <param name="index">Index of tabpage to select</param>
+		public void SelectTabPage(int index)
         {
-            if (tabControl.TabPages.IndexOfKey(fileName) != -1)
+            if (index != -1)
             {
-                tabControl.SelectTab(fileName);
-                return true;
-            }
-            else
-            {
-                return false;
+                tabControl.SelectTab(index);
             }
         }
 
@@ -263,15 +212,15 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		public void Run()
         {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Design design = tabControl.SelectedTab.Design();
             Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(sd, null, false);
+            List<IObjectCodeElement> output = p.Parse(design, null, false);
             if (output == null)
             {
                 return;
             }
 
-            HtmlBuilder html = new HtmlBuilder(sd, output);
+            HtmlBuilder html = new HtmlBuilder(design, output);
             if (html.HtmlText == null)
             {
                 return;
@@ -292,15 +241,15 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void Tick(int count)
         {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Design design = tabControl.SelectedTab.Design();
             browser.ObjectForScripting = this;
             int position = browser.Document.Body.ScrollTop;
 
             for (int i = 0; i < count; i++)
             {
                 Parser p = new Parser();
-                List<IObjectCodeElement> output = p.Parse(sd, null, true);
-                HtmlBuilder html = new HtmlBuilder(sd, output);
+                List<IObjectCodeElement> output = p.Parse(design, null, true);
+                HtmlBuilder html = new HtmlBuilder(design, output);
                 string htmlOutput = html.GetHTML();
                 html.DisplayHtml(htmlOutput, browser);
             }
@@ -319,15 +268,15 @@ namespace VisiBoole.Controllers
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
         public void Variable_Click(string variableName)
         {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Design design = tabControl.SelectedTab.Design();
             Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(sd, variableName, false);
+            List<IObjectCodeElement> output = p.Parse(design, variableName, false);
             if (output == null)
             {
                 return;
             }
 
-            HtmlBuilder html = new HtmlBuilder(sd, output);
+            HtmlBuilder html = new HtmlBuilder(design, output);
             if (html.HtmlText == null)
             {
                 return;
@@ -347,12 +296,42 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Closes a specific tab in the tab control
+        /// </summary>
+        /// <param name="index">Index to close</param>
+        /// <returns>Whether the operation was successful</returns>
+        public bool CloseTab(int index)
+        {
+            TabPage tab = tabControl.TabPages[index];
+
+            if (tab != null)
+            {
+                if (tabControl.SelectedIndex != 0)
+                {
+                    tabControl.SelectedIndex -= 1;
+                }
+                else
+                {
+                    tabControl.SelectedIndex += 1;
+                }
+
+                tabControl.TabPages.Remove(tab); // Remove tab page
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
 		/// Closes the current tab
 		/// </summary>
 		/// <returns>Indicates whether the tab was closed</returns>
         public bool CloseActiveTab()
         {
-            SubDesign sd = tabControl.SelectedTab.SubDesign();
+            Design design = tabControl.SelectedTab.Design();
 
             TabPage tab = tabControl.SelectedTab;
             if (tab != null)

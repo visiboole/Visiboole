@@ -37,16 +37,22 @@ namespace VisiBoole.Controllers
 		private IMainWindowController mwController;
 
         /// <summary>
-		/// All opened SubDesigns currently loaded by this application
+		/// All opened Designs currently loaded by this application
 		/// </summary>
-        private Dictionary<string, SubDesign> SubDesigns;
+        private Dictionary<string, Design> Designs;
+
+        /// <summary>
+        /// The active Design
+        /// </summary>
+        private Design ActiveDesign;
 
         /// <summary>
         /// Constructs design controller
         /// </summary>
         public DesignController()
         {
-            SubDesigns = new Dictionary<string, SubDesign>();
+            Designs = new Dictionary<string, Design>();
+            ActiveDesign = null;
         }
 
         /// <summary>
@@ -59,85 +65,175 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Creates a SubDesign with the given name
+        /// Selects a Design with the provided index
         /// </summary>
-        /// <param name="path">Name of SubDesign</param>
-        /// <returns>The SubDesign created</returns>
-        public SubDesign CreateSubDesign(string name)
+        /// <param name="index">Index of the design to select</param>
+        public void SelectDesign(int index)
         {
-            try
+            if (index == -1)
             {
-                SubDesign newSubDesign = new SubDesign(name, mwController.LoadDisplay);
-                if (!SubDesigns.ContainsKey(newSubDesign.FileSourceName))
-                {
-                    SubDesigns.Add(newSubDesign.FileSourceName, newSubDesign);
-                }
-
-                return newSubDesign;
+                ActiveDesign = null; // No designs opened
             }
-            catch (Exception ex)
+            else
             {
-                Globals.Dialog.New("Error", ex.ToString(), DialogType.Ok);
+                ActiveDesign = Designs.Values.First(design => design.TabPageIndex == index);
+            }
+        }
+
+        /// <summary>
+        /// Returns the names of all Designs.
+        /// </summary>
+        /// <returns>Names of all Designs.</returns>
+        public string[] GetDesigns()
+        {
+            return Designs.Keys.ToArray();
+        }
+
+        /// <summary>
+        /// Returns the active Design.
+        /// </summary>
+        /// <returns>Active Design</returns>
+        public Design GetActiveDesign()
+        {
+            return ActiveDesign;
+        }
+
+        /// <summary>
+        /// Gets a design by name.
+        /// </summary>
+        /// <param name="name">Name of design</param>
+        /// <returns>Design with the provided name</returns>
+        public Design GetDesign(string name)
+        {
+            Design design;
+            Designs.TryGetValue(name, out design);
+
+            if (design != null)
+            {
+                return design;
+            }
+            else
+            {
                 return null;
             }
         }
 
         /// <summary>
-        /// Closes a given SubDesign.
+        /// Creates a Design with the given name
         /// </summary>
-        /// <param name="name">Name of SubDesign</param>
-        /// <returns>Indicates whether the SubDesign was closed</returns>
-        public bool CloseSubDesign(string name)
+        /// <param name="path">Name of Design</param>
+        /// <returns>The Design created</returns>
+        public Design CreateDesign(string name)
         {
-            SubDesign sd;
-            SubDesigns.TryGetValue(name, out sd);
-
-            if (sd != null)
+            Design newDesign = new Design(name, mwController.LoadDisplay);
+            if (!Designs.ContainsKey(newDesign.FileSourceName))
             {
-                SubDesigns.Remove(name);
-                for (int i = 0; i < Globals.TabControl.TabPages.Count; i++)
-                    Globals.TabControl.TabPages[i].SubDesign().TabPageIndex = i;
-                return true;
+                Designs.Add(newDesign.FileSourceName, newDesign);
+                ActiveDesign = newDesign;
             }
-            else return false;
+
+            return newDesign;
         }
 
         /// <summary>
-        /// Update the font sizes of all SubDesigns.
+        /// Saves the provided Design.
         /// </summary>
-        public void SetSubDesignFontSizes()
+        /// <param name="design">Design to save.</param>
+        /// <param name="isClosing">Indicates whether the design is closing</param>
+        private void SaveDesign(Design design, bool isClosing)
         {
-            foreach (SubDesign s in SubDesigns.Values)
+            if (design.IsDirty)
+            {
+                design.SaveTextToFile(isClosing);
+            }
+        }
+
+        /// <summary>
+        /// Saves the active Design.
+        /// </summary>
+        /// <returns>Whether the save was successful</returns>
+        public bool SaveActiveDesign()
+        {
+            SaveDesign(ActiveDesign, false);
+            return true;
+        }
+
+        /// <summary>
+        /// Saves the design with the provided name.
+        /// </summary>
+        /// <param name="name">Name of Design to save</param>
+        /// <returns>Whether the save was successful</returns>
+        public bool SaveDesign(string name)
+        {
+            Design design = GetDesign(name);
+            SaveDesign(design, false);
+            return true;
+        }
+
+        /// <summary>
+        /// Saves all Designs
+        /// </summary>
+        /// <returns>Whether the save was successful</returns>
+        public bool SaveDesigns()
+        {
+            foreach (Design design in Designs.Values)
+            {
+                SaveDesign(design, false);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Closes a given Design.
+        /// </summary>
+        /// <param name="name">Name of Design</param>
+        /// <param name="save">Indicates whether the user wants the design saved</param>
+        /// <returns>Indicates whether the Design was closed</returns>
+        public bool CloseDesign(string name, bool save)
+        {
+            Design design = GetDesign(name);
+
+            if (design != null)
+            {
+                if (design.IsDirty && save)
+                {
+                    SaveDesign(design, true);
+                }
+
+                Designs.Remove(name);
+                for (int i = 0; i < Globals.TabControl.TabPages.Count; i++)
+                {
+                    Globals.TabControl.TabPages[i].Design().TabPageIndex = i;
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Update the font sizes of all Designs.
+        /// </summary>
+        public void SetDesignFontSizes()
+        {
+            foreach (Design s in Designs.Values)
             {
                 s.SetFontSize();
             }
         }
 
         /// <summary>
-        /// Change the themes of all SubDesigns
+        /// Change the themes of all Designs
         /// </summary>
         public void SetThemes()
         {
-            foreach (SubDesign s in SubDesigns.Values)
+            foreach (Design s in Designs.Values)
             {
                 s.SetTheme();
             }
-        }
-
-        /// <summary>
-        /// Checks all SubDesigns for unsaved changes
-        /// </summary>
-        /// <returns>Indicates whether there are unsaved changes</returns>
-        public bool CheckUnsavedChanges()
-        {
-            foreach (SubDesign s in SubDesigns.Values)
-            {
-                if (s.isDirty)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }

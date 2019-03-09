@@ -34,7 +34,7 @@ namespace VisiBoole.Models
 	/// </summary>
 	public class InputParser
 	{
-        SubDesign subDesign;
+        Design subDesign;
 		/// <summary>
 		/// The current dependent variable
 		/// </summary>
@@ -48,7 +48,7 @@ namespace VisiBoole.Models
 		/// <summary>
 		/// Constructs an instance of InputParser
 		/// </summary>
-		public InputParser(SubDesign sub)//string[] codeText, string fileName)
+		public InputParser(Design sub)//string[] codeText, string fileName)
 		{
             this.subDesign = sub;
 		}
@@ -143,7 +143,7 @@ namespace VisiBoole.Models
 			}
 		}
 
-		private void changeLine(SubDesign rtb, int line, string text)
+		private void changeLine(Design rtb, int line, string text)
 		{
 			int s1 = rtb.GetFirstCharIndexFromLine(line);
 			int s2 = line < rtb.Lines.Count() - 1 ?
