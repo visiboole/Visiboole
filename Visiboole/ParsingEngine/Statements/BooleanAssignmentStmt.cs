@@ -39,17 +39,17 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// The full expression of the boolean statement
         /// </summary>
-        private string FullExpression { get; set; }
+        private string FullExpression;
 
         /// <summary>
         /// The dependent of the boolean statement
         /// </summary>
-        private string Dependent { get; set; }
+        private string Dependent;
 
         /// <summary>
         /// The expression of the boolean statement
         /// </summary>
-        private string Expression { get; set; }
+        private string Expression;
 
         /// <summary>
         /// Constructs an instance of BooleanAssignmentStmt
@@ -63,6 +63,7 @@ namespace VisiBoole.ParsingEngine.Statements
             FullExpression = Text.Substring(start, (Text.IndexOf(';') - start));
             Dependent = FullExpression.Substring(0, FullExpression.IndexOf('=')).Trim();
             Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
+            Expression = Regex.Replace(Expression, @"\s+", " "); // Replace multiple spaces
 
             // Add expression and dependency to the database
             Globals.TabControl.SelectedTab.Design().Database.AddExpression(Dependent, Expression);
@@ -74,8 +75,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
         public void Evaluate()
         {
-            Expression exp = new Expression();
-            bool dependentValue = exp.Solve(Expression);
+            bool dependentValue = ExpressionSolver.Solve(Expression);
             bool currentValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(Dependent) == 1;
             if (dependentValue != currentValue)
             {
@@ -99,220 +99,16 @@ namespace VisiBoole.ParsingEngine.Statements
 
             // Update variable value
             DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
-            MakeOrderedOutput(depVar);
-        }
 
-        /// <summary>
-        /// Arranges the output (IObjectCodeElement) elements to represent this statement as it is written, left to right.
-        /// </summary>
-        /// <param name="dependent">The dependent variable being assigned to in the given expression</param>
-        private void MakeOrderedOutput(DependentVariable dependent)
-        {
             //Add dependent to output
-            Output.Add(dependent);
+            Output.Add(depVar);
 
             //Add sign to output
             Operator sign = new Operator("=");
             Output.Add(sign);
 
             //Add expression variables to output
-            string[] elements = Expression.Split(' ');
-            foreach (string item in elements)
-            {
-                string variable = item.Trim();
-                if(variable.Contains('~'))
-                {
-                    int closedParenCount = 0;
-                    while (variable.Contains("("))
-                    {
-                        Parentheses openParen;
-                        try
-                        {
-                            if (variable[variable.IndexOf('(') - 1] == '~')
-                            {
-                                Operator notGate = new Operator("~");
-                                openParen = new Parentheses("(");
-                                variable = variable.Remove(variable.IndexOf('(') - 1, 2);
-                                Output.Add(notGate);
-                            }
-                            else
-                            {
-                                openParen = new Parentheses("(");
-                                variable = variable.Remove(variable.IndexOf('('), 1);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            openParen = new Parentheses("(");
-                            variable = variable.Remove(variable.IndexOf('('), 1);
-                        }
-
-                        Output.Add(openParen);
-                    }
-
-                    while (variable.Contains(")"))
-                    {
-                        variable = variable.Remove(variable.IndexOf(')'), 1);
-                        closedParenCount++;
-                    }
-
-                    string newVariable = variable;
-                    //If it STILL contains a not gate. HACK.
-                    if (variable.Contains('~'))
-                    {
-                        newVariable = variable.Substring(1);
-                    }
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        IndependentVariable var = new IndependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else if (depVar != null)
-                    {
-                        DependentVariable var = new DependentVariable(variable, depVar.Value);
-                        Output.Add(var);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-
-                    for (int i = closedParenCount; i != 0; i--)
-                    {
-                        Parentheses closedParen = new Parentheses(")");
-                        Output.Add(closedParen);
-                    }
-                }
-                else if(variable.Contains('('))
-                {
-                    while (variable.Contains("("))
-                    {
-                        Parentheses openParen;
-                        try
-                        {
-                            if (variable[variable.IndexOf('(') - 1] == '~')
-                            {
-                                Operator notGate = new Operator("~");
-                                openParen = new Parentheses("(");
-                                variable = variable.Remove(variable.IndexOf('(') - 1, 2);
-                                Output.Add(notGate);
-                            }
-                            else
-                            {
-                                openParen = new Parentheses("(");
-                                variable = variable.Remove(variable.IndexOf('('), 1);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            openParen = new Parentheses("(");
-                            variable = variable.Remove(variable.IndexOf('('), 1);
-                        }
-
-                        Output.Add(openParen);
-                    }
-
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
-                    if (indVar != null)
-                    {
-
-                        IndependentVariable var = new IndependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else if (depVar != null)
-                    {
-
-                        DependentVariable var = new DependentVariable(variable, depVar.Value);
-                        Output.Add(var);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-                }
-                else if(variable.Contains(')'))
-                {
-                    int closedParenCount = 0;
-                    while (variable.Contains(")"))
-                    {
-                        variable = variable.Remove(variable.IndexOf(')'), 1);
-                        closedParenCount++;
-                    }
-
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        IndependentVariable var = new IndependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else if (depVar != null)
-                    {
-                        DependentVariable var = new DependentVariable(variable, depVar.Value);
-                        Output.Add(var);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-
-                    for (int i = closedParenCount; i != 0; i--)
-                    {
-                        Parentheses closedParen = new Parentheses(")");
-                        Output.Add(closedParen);
-                    }
-                }
-                else if(variable.Contains('~') && variable.Contains(';'))
-                {
-                    string newVariable = variable.Substring(1, variable.IndexOf(';'));
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        IndependentVariable var = new IndependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else if (depVar != null)
-                    {
-                        DependentVariable var = new DependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-                }
-                else
-                {
-                    if (variable.Contains(';'))
-                    {
-                        variable = variable.Substring(0, variable.IndexOf(';'));
-                    }
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
-
-                    if (indVar != null)
-                    {
-                        Output.Add(indVar);
-                    }
-                    else if (depVar != null)
-                    {
-                        Output.Add(depVar);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-                }
-            }
+            Output.AddRange(ExpressionSolver.GetOutput(Expression));
 
             //Add linefeed to output
             LineFeed lf = new LineFeed();

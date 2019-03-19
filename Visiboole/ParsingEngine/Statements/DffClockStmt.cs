@@ -35,22 +35,22 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// The full expression of the clock statement
         /// </summary>
-        private string FullExpression { get; set; }
+        private string FullExpression;
 
         /// <summary>
         /// The dependent of the clock statement
         /// </summary>
-        private string Dependent { get; set; }
+        private string Dependent;
 
         /// <summary>
         /// The delay of the clock statement
         /// </summary>
-        private string Delay { get; set; }
+        private string Delay;
 
         /// <summary>
         /// The expression of the clock statement
         /// </summary>
-        private string Expression { get; set; }
+        private string Expression;
 
         private bool clock_tick;
         private bool initial_run;
@@ -70,12 +70,12 @@ namespace VisiBoole.ParsingEngine.Statements
             Dependent = FullExpression.Substring(0, FullExpression.IndexOf('<')).Trim();
             Delay = Dependent + ".d";
             Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
+            Expression = Regex.Replace(Expression, @"\s+", " "); // Replace multiple spaces
 
             // Add dependency and set delay value
             // Globals.TabControl.SelectedTab.Design().Database.AddExpression(Delay, Expression);
             Globals.TabControl.SelectedTab.Design().Database.CreateDependenciesList(Delay);
-            Expression exp = new Expression();
-            bool delayValue = exp.Solve(Expression);
+            bool delayValue = ExpressionSolver.Solve(Expression);
             Globals.TabControl.SelectedTab.Design().Database.SetValue(Delay, delayValue);
         }
 
@@ -112,8 +112,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
             if (clock_tick)
             {
-                Expression exp = new Expression();
-                bool delayValue = exp.Solve(Expression);
+                bool delayValue = ExpressionSolver.Solve(Expression);
                 if (delayValue != delayVariable.Value)
                 {
                     Globals.TabControl.SelectedTab.Design().Database.SetValue(Delay, delayValue);
@@ -122,135 +121,11 @@ namespace VisiBoole.ParsingEngine.Statements
             }
             DependentVariable dv = new DependentVariable("<=", delayVariable.Value);
             Output.Add(dv);
-            MakeExpressionOutput();
+
+            Output.AddRange(ExpressionSolver.GetOutput(Expression));
 
             LineFeed lf = new LineFeed();
             Output.Add(lf);
-        }
-
-        private void MakeExpressionOutput()
-        {
-            string[] elements = Expression.Split(' ');
-            foreach (string item in elements)
-            {
-                string variable = item.Trim();
-
-                int closedParenCount = 0;
-
-                if (variable.Contains('('))
-                {
-                    while (variable.Contains("("))
-                    {
-                        Parentheses openParen;
-                        try
-                        {
-                            if (variable[variable.IndexOf('(') - 1] == '~')
-                            {
-                                Operator notGate = new Operator("~");
-                                openParen = new Parentheses("(");
-                                variable = variable.Remove(variable.IndexOf('(') - 1, 2);
-                                Output.Add(notGate);
-                            }
-                            else
-                            {
-                                openParen = new Parentheses("(");
-                                variable = variable.Remove(variable.IndexOf('('), 1);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            openParen = new Parentheses("(");
-                            variable = variable.Remove(variable.IndexOf('('), 1);
-                        }
-
-                        Output.Add(openParen);
-                    }
-                }
-
-                if (variable.Contains(')'))
-                {
-                    while (variable.Contains(")"))
-                    {
-                        variable = variable.Remove(variable.IndexOf(')'), 1);
-                        closedParenCount++;
-                    }
-                }
-
-                #region logic for a NOT sign, an statement end, or both
-                if (variable.Contains('~'))
-                {
-                    string newVariable = variable.Substring(1);
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        IndependentVariable var = new IndependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else if (depVar != null)
-                    {
-                        DependentVariable var = new DependentVariable(variable, depVar.Value);
-                        Output.Add(var);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-                }
-                else if (variable.Contains('~') && variable.Contains(';'))
-                {
-                    string newVariable = variable.Substring(1, variable.IndexOf(';'));
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(newVariable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(newVariable) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        IndependentVariable var = new IndependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else if (depVar != null)
-                    {
-                        DependentVariable var = new DependentVariable(variable, indVar.Value);
-                        Output.Add(var);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-                }
-                else
-                {
-                    if (variable.Contains(';'))
-                    {
-                        variable = variable.Substring(0, variable.IndexOf(';'));
-                    }
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(variable) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(variable) as DependentVariable;
-
-                    if (indVar != null)
-                    {
-                        Output.Add(indVar);
-                    }
-                    else if (depVar != null)
-                    {
-                        Output.Add(depVar);
-                    }
-                    else
-                    {
-                        Operator op = new Operator(variable);
-                        Output.Add(op);
-                    }
-                }
-                #endregion
-
-                for (int i = closedParenCount; i != 0; i--)
-                {
-
-                    Parentheses closedParen = new Parentheses(")");
-                    Output.Add(closedParen);
-                }
-            }
         }
     }
 }

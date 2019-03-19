@@ -19,40 +19,41 @@
  */
 
 using System;
-using System.Windows.Forms;
-using VisiBoole.ParsingEngine.Boolean;
-using VisiBoole.Views;
 
-namespace VisiBoole
+namespace VisiBoole.ParsingEngine.ObjectCode
 {
-	/// <summary>
-	/// Global variables for this application
-	/// </summary>
-	public static class Globals
+    /// <summary>
+    /// A discrete element of output representing a mathematical operator
+    /// </summary>
+	public class Constant : IObjectCodeElement
 	{
+        private bool? Value = false;
         /// <summary>
-        /// The different display types for the UserControl displays that are hosted by the MainWindow
+        /// The string representation of this output element
         /// </summary>
-        public enum DisplayType
+		public string ObjCodeText { get { return ConstantText; } }
+
+        /// <summary>
+        /// The boolean value of this output element, null
+        /// </summary>
+		public bool? ObjCodeValue { get { return Value; } set { Value = value; } }
+
+        /// <summary>
+        /// The string representation of this element
+        /// </summary>
+		public string ConstantText { get; set; }
+
+        public int Match { get; set; }
+        public int MatchingIndex { get; set; }
+
+        /// <summary>
+        /// Constructs an instance of Operator 
+        /// </summary>
+        /// <param name="opChar">The string representation of this element</param>
+		public Constant(string constantText)
 		{
-			EDIT,
-			RUN,
-            NONE
-		}
-
-        /// <summary>
-        /// Dialog box for the application.
-        /// </summary>
-        public static DialogBox Dialog = new DialogBox();
-
-        /// <summary>
-        /// Error logging for the application.
-        /// </summary>
-        public static ErrorDialog Logger = new ErrorDialog();
-
-        /// <summary>
-        /// Tab Control
-        /// </summary>
-        public static TabControl TabControl = null;
-    }
+			ConstantText = constantText;
+            Value = Convert.ToInt32(constantText[2].ToString()) == 1;
+        }
+	}
 }

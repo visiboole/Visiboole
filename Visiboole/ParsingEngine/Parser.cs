@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -78,6 +79,12 @@ namespace VisiBoole.ParsingEngine
         private static Regex OperatorRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
         private static Regex SeperatorRegex = new Regex(SeperatorPattern, RegexOptions.Compiled);
         private static Regex InvalidRegex = new Regex(InvalidPattern, RegexOptions.Compiled);
+
+        /// <summary>
+        /// List of operators.
+        /// </summary>
+        public static readonly IList<string> OperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "|", "+", "-", "==", " ", "~"});
+        public static readonly IList<string> ExclusiveOperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "+", "-", "=="});
 
         /// <summary>
         /// The design being parsed.
@@ -242,22 +249,22 @@ namespace VisiBoole.ParsingEngine
                     else if (type == StatementType.Boolean || type == StatementType.Clock)
                     {
                         // Verify expressions
+                        string expression = line.Substring(line.IndexOf("=") + 1).Trim();
+                        expression = expression.TrimEnd(';');
+                        expression = String.Concat("(", expression, ")");
+
+                        if (!ValidateExpressionStatement(expression))
+                        {
+                            valid = false;
+                        }
+
+                        
                     }
                     else if (type == StatementType.FormatSpecifier)
                     {
                         // Verify formats
-                        if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({NamePattern})"))
+                        if (!ValidateFormatSpeciferStatement(line))
                         {
-                            // If line contains a variable outside {}
-                            Globals.Logger.Add($"Line {PreLineNumber}: Variables in a format specifier statement must be inside a format specifier.");
-                            valid = false;
-                        }
-
-                        // Check for formats inside formats or formats without variables
-                        MatchCollection formats = FormatSpecifierRegex.Matches(line);
-                        if (formats.Count != line.Count(c => c == '%'))
-                        {
-                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid format specifier.");
                             valid = false;
                         }
                     }
@@ -366,6 +373,161 @@ namespace VisiBoole.ParsingEngine
             {
                 return statements;
             }
+        }
+
+        /// <summary>
+        /// Validates an expression statement
+        /// </summary>
+        /// <param name="expression">Expression to validate</param>
+        /// <returns>Whether the expression is valid or not</returns>
+        private bool ValidateExpressionStatement(string expression)
+        {            
+            bool wasPreviousOperator = true;
+            List<StringBuilder> expressions = new List<StringBuilder>();
+            List<List<string>> expressionOperators = new List<List<string>>();
+            List<string> expressionExclusiveOperators = new List<string>();
+
+            // And operator: (?<=\w|\))\s+(?=[\w(~'])
+            MatchCollection matches = Regex.Matches(expression, @"([_a-zA-Z]\w{0,19})|([~^()|+-])|(==)|(?<=\w|\))\s+(?=[\w(~'])");
+            string token = "";
+            foreach (Match match in matches)
+            {
+                token = match.Value;
+                if (token == "(")
+                {
+                    // Add new level
+                    if (expressions.Count > 0)
+                    {
+                        expressions[expressions.Count - 1].Append("(");
+                    }
+                    expressions.Add(new StringBuilder());
+                    expressionOperators.Add(new List<string>());
+                    expressionExclusiveOperators.Add("");
+                    wasPreviousOperator = true;
+                }
+                else if (token == ")")
+                {
+                    string innerExpression = expressions[expressions.Count - 1].ToString();
+
+                    if (innerExpression.Length == 0)
+                    {
+                        Globals.Logger.Add($"Line {PreLineNumber}: Empty ().");
+                        return false;
+                    }
+
+                    // Remove previous level
+                    expressions.RemoveAt(expressions.Count - 1);
+                    expressionOperators.RemoveAt(expressionOperators.Count - 1);
+                    expressionExclusiveOperators.RemoveAt(expressionExclusiveOperators.Count - 1);
+                    if (expressions.Count > 0)
+                    {
+                        expressions[expressions.Count - 1].Append(")");
+                    }
+                    wasPreviousOperator = false;
+                }
+                else if (OperatorsList.Contains(token) || String.IsNullOrWhiteSpace(token))
+                {
+                    // Check operator for possible errors
+                    if (wasPreviousOperator && token != "~")
+                    {
+                        Globals.Logger.Add($"Line {PreLineNumber}: An operator is missing its operands.");
+                        return false;
+                    }
+
+                    // Check exclusive operator for errors
+                    string exclusiveOperator = expressionExclusiveOperators[expressionExclusiveOperators.Count - 1];
+                    if (exclusiveOperator == "")
+                    {
+                        // Currently no exclusive operator, check to add one
+                        if (ExclusiveOperatorsList.Contains(token))
+                        {
+                            List<string> pastOperators = expressionOperators[expressionOperators.Count - 1];
+
+                            // Check previous operators
+                            if (token == "^")
+                            {
+                                pastOperators = pastOperators.Where(o => o != "^").ToList();
+                            }
+                            else if (token == "==")
+                            {
+                                pastOperators = pastOperators.Where(o => o != "==").ToList();
+                            }
+                            else
+                            {
+                                pastOperators = pastOperators.Where(o => o != "+" && o != "-").ToList();
+                            }
+
+                            if (pastOperators.Count > 0)
+                            {
+                                if (token == "+" || token == "-")
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{token}' can only appear with '+' or '-' in its parentheses level.");
+                                }
+                                else
+                                {
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{token}' must be the only operator in its parentheses level.");
+                                }
+                                return false;
+                            }
+
+                            expressionExclusiveOperators[expressionExclusiveOperators.Count - 1] = token;
+                        }
+                    }
+                    else if (exclusiveOperator == "+" || exclusiveOperator == "-")
+                    {
+                        if (!(token == "+" || token == "-"))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{exclusiveOperator}' can only appear with '+' or '-' in its parentheses level.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (token != exclusiveOperator)
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
+                            return false;
+                        }
+                    }
+
+                    expressions[expressions.Count - 1].Append(token);
+                    expressionOperators[expressionOperators.Count - 1].Add(token);
+                    wasPreviousOperator = true;
+                }
+                else
+                {
+                    // Append non operator to current parentheses level
+                    expressions[expressions.Count - 1].Append(token);
+                    wasPreviousOperator = false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates a format specifier statement
+        /// </summary>
+        /// <param name="line">Line to validate</param>
+        /// <returns>Whether the line is valid or not</returns>
+        private bool ValidateFormatSpeciferStatement(string line)
+        {
+            if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({NamePattern})"))
+            {
+                // If line contains a variable outside {}
+                Globals.Logger.Add($"Line {PreLineNumber}: Variables in a format specifier statement must be inside a format specifier.");
+                return false;
+            }
+
+            // Check for formats inside formats or formats without variables
+            MatchCollection formats = FormatSpecifierRegex.Matches(line);
+            if (formats.Count != line.Count(c => c == '%'))
+            {
+                Globals.Logger.Add($"Line {PreLineNumber}: Invalid format specifier.");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

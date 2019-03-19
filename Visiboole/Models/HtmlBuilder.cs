@@ -62,6 +62,7 @@ namespace VisiBoole.Models
                             parenIndexes[fullLine.Length] = line.IndexOf(token, indexer);
                             indexer = line.IndexOf(token, indexer) + 1;
                         }
+
                         fullLine += token.ObjCodeText + " ";
                     }
 
@@ -83,8 +84,7 @@ namespace VisiBoole.Models
                                 startIndex = holdingIndex;
 
                                 outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                                Expression exp = new Expression();
-                                bool colorValue = exp.Solve(outermost);
+                                bool colorValue = ExpressionSolver.Solve(outermost);
 
                                 line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
                                 line[parenIndexes[startIndex]].MatchingIndex = startIndex;
@@ -252,9 +252,13 @@ namespace VisiBoole.Models
                                 {
                                     currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
                                 }
-                                else //if variable is independent
+                                else if (varType == typeof(IndependentVariable)) //if variable is independent
                                 {
                                     currentLine += "<font color=" + trueColor + " style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
+                                }
+                                else if (varType == typeof(Constant))
+                                {
+                                    currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
                                 }
                                 currentLine += " ";
                             }
@@ -268,10 +272,9 @@ namespace VisiBoole.Models
                                 {
                                     currentLine += "<font color=" + falseColor + " style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
                                 }
-                                else
+                                else if (varType == typeof(Constant))
                                 {
-                                    // Comments were here. Keep this in case something else ends up here. Note what does.
-                                    bool test = true;                                    
+                                    currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
                                 }
                                 currentLine += " ";
                             }
