@@ -60,7 +60,7 @@ namespace VisiBoole.ParsingEngine
         public static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d+)\.(?<Step>[1-9]\d*)?\.(?<RightBound>\d+)\])|(\[\])))";
         public static readonly string VariablePattern = $@"({NamePattern}|{VectorPattern})";
         public static readonly string ConstantPattern = @"((?<BitCount>\d{1,2})?\'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
-        public static readonly string AnyVariablePattern = $@"({NamePattern}|{VectorPattern}|{ConstantPattern})";
+        public static readonly string AnyVariablePattern = $@"({VectorPattern}|{NamePattern}|{ConstantPattern})";
         public static readonly string FormatSpecifierPattern = $@"(%(?<Format>[ubhdUBHD])\{{(?<Vars>{VariablePattern}(\s*{VariablePattern})*)\}})";
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
         public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<Color><#?[a-zA-Z0-9]+>)?(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
@@ -74,6 +74,7 @@ namespace VisiBoole.ParsingEngine
         public static Regex NameRegex = new Regex(String.Concat("^", NamePattern, "$"), RegexOptions.Compiled);
         public static Regex VectorRegex = new Regex(VectorPattern, RegexOptions.Compiled);
         public static Regex ConstantRegex = new Regex(String.Concat("^", ConstantPattern, "$"), RegexOptions.Compiled);
+        private static Regex ExpansionRegex = new Regex(String.Concat(VectorPattern, "|", ConstantPattern), RegexOptions.Compiled);
         public static Regex FormatSpecifierRegex = new Regex(FormatSpecifierPattern, RegexOptions.Compiled);
         public static Regex CommentRegex = new Regex(CommentPattern, RegexOptions.Compiled);
         private static Regex OperatorRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
@@ -104,7 +105,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Memo for vector expansions.
         /// </summary>
-        private Dictionary<string, List<string>> ExpansionMemo;
+        private static Dictionary<string, List<string>> ExpansionMemo = new Dictionary<string, List<string>>();
 
         /// <summary>
         /// Indicates whether the parser is ticking.
@@ -118,7 +119,7 @@ namespace VisiBoole.ParsingEngine
 
         public Parser()
         {
-            ExpansionMemo = new Dictionary<string, List<string>>();
+
         }
 
         /// <summary>
@@ -257,8 +258,6 @@ namespace VisiBoole.ParsingEngine
                         {
                             valid = false;
                         }
-
-                        
                     }
                     else if (type == StatementType.FormatSpecifier)
                     {
@@ -292,14 +291,13 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            bool needsExpansion = VectorRegex.IsMatch(line);
+                            bool needsExpansion = ExpansionRegex.IsMatch(line);
                             if (needsExpansion && line.Contains("="))
                             {
                                 // Vertical expansion needed
                                 string expansion = ExpandVertically(line);
                                 if (expansion == null)
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
                                     return null;
                                 }
 
@@ -314,20 +312,13 @@ namespace VisiBoole.ParsingEngine
                                     Match match = Regex.Matches(expandedLine, VectorPattern)[0]; // Get match
 
                                     string expanded;
-                                    if (String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
+                                    List<string> expansion = GetExpansion(match);
+                                    if (expansion == null)
                                     {
-                                        // Indicates vectorNameSpace[] syntax
-                                        expanded = String.Join(" ", Design.Database.GetVectorComponents(match.Groups["Name"].Value));
-                                    }
-                                    else if (ExpansionMemo.ContainsKey(match.Value))
-                                    {
-                                        expanded = String.Join(" ", ExpansionMemo[match.Value]);
-                                    }
-                                    else
-                                    {
-                                        expanded = String.Join(" ", ExpandHorizontally(match));
+                                        return null;
                                     }
 
+                                    expanded = String.Join(" ", expansion);
                                     expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
                                 }
 
@@ -544,6 +535,19 @@ namespace VisiBoole.ParsingEngine
             string currentLexeme;
             string newChar;
 
+            line = line.TrimEnd();
+
+            if (String.IsNullOrWhiteSpace(line))
+            {
+                return type;
+            }
+
+            if (line[line.Length - 1] != ';')
+            {
+                Globals.Logger.Add($"Line {PreLineNumber}: Missing ';'.");
+                return null;
+            }
+
             foreach (char c in line)
             {
                 newChar = c.ToString();
@@ -612,21 +616,16 @@ namespace VisiBoole.ParsingEngine
                         // Check for misplaced comma
                         if (groupings.Count == 0)
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: ',' must be in {{}} or () in a submodule statement.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: ',' can only be used inside the () in a submodule statement.");
                             return null;
                         }
                         else
                         {
                             char top = groupings.Peek();
 
-                            if (type == StatementType.Submodule && top != '(')
+                            if (!(type == StatementType.Submodule && top == '('))
                             {
-                                Globals.Logger.Add($"Line {PreLineNumber}: ',' must be in () in a submodule statement.");
-                                return null;
-                            }
-                            else if (type != StatementType.Submodule && top != '{')
-                            {
-                                Globals.Logger.Add($"Line {PreLineNumber}: ',' must be in {{}}.");
+                                Globals.Logger.Add($"Line {PreLineNumber}: ',' can only be used inside the () in a submodule statement.");
                                 return null;
                             }
                         }
@@ -641,7 +640,7 @@ namespace VisiBoole.ParsingEngine
                             {
                                 if (type != StatementType.Empty)
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used once in a boolean statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used after the dependent in a boolean statement.");
                                     return null;
                                 }
                                 else
@@ -653,7 +652,7 @@ namespace VisiBoole.ParsingEngine
                             {
                                 if (type != StatementType.Empty)
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used once in a clock statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used after the dependent in a clock statement.");
                                     return null;
                                 }
                                 else
@@ -689,13 +688,13 @@ namespace VisiBoole.ParsingEngine
                             {
                                 if (currentLexeme == "~" && c != '(' && c != '{')
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector, ( or {{ on the right side of a boolean statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector, ( or {{ on the right side of a boolean or clock statement.");
                                     return null;
                                 }
 
                                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector or parenthesis on the right side of a boolean statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '~' can only be used in front of a variable, vector or parenthesis on the right side of a boolean or clock statement.");
                                     return null;
                                 }
                             }
@@ -711,7 +710,7 @@ namespace VisiBoole.ParsingEngine
                             {
                                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used in a boolean or clock statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' operator can only be used in a boolean or clock statement.");
                                     return null;
                                 }
                             }
@@ -719,7 +718,7 @@ namespace VisiBoole.ParsingEngine
                             {
                                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                                 {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: Constants can only be used on the right side of a boolean or statement.");
+                                    Globals.Logger.Add($"Line {PreLineNumber}: Constants can only be used on the right side of a boolean or clock statement.");
                                     return null;
                                 }
                             }
@@ -743,7 +742,7 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (c == '(' || c == ')')
                     {
-                        if (type != StatementType.Submodule && type != StatementType.Boolean)
+                        if (!(type == StatementType.Submodule || type == StatementType.Boolean))
                         {
                             Globals.Logger.Add($"Line {PreLineNumber}: '{c}' must be part of a submodule or boolean statement.");
                             return null;
@@ -751,21 +750,15 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (c == ';')
                     {
-                        if (tokens.Count == 0)
+                        if (tokens.Count == 0 || tokens.Contains(";"))
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: ';' cannot start a statement.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: ';' can only be used to end a statement.");
                             return null;
                         }
 
-                        if (tokens.Contains(";"))
+                        if (tokens.Last() == " ")
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid ';'.");
-                            return null;
-                        }
-
-                        if (tokens.Last().Equals(" "))
-                        {
-                            Globals.Logger.Add($"Line {PreLineNumber}: Spaces cannot be before ';'.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: Spaces cannot occur before ';'.");
                             return null;
                         }
                     }
@@ -789,7 +782,7 @@ namespace VisiBoole.ParsingEngine
                         // Check for constant bit count inside {}
                         if (groupings.Count > 0 && groupings.Peek() == '{' && (String.IsNullOrEmpty(currentLexeme) || !currentLexeme.All(ch => Char.IsDigit(ch))))
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: Constants in concat fields must specify bit count.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: Constants in concatenation fields must specify bit count.");
                             return null;
                         }
                     }
@@ -810,20 +803,6 @@ namespace VisiBoole.ParsingEngine
                 return type;
             }
 
-            // Check for unparsed lexeme
-            if (lexeme.Length > 0)
-            {
-                Globals.Logger.Add($"Line {PreLineNumber}: Invalid '{lexeme}'.");
-                return null;
-            }
-
-            // Check if all tokens are only whitespace
-            if (!tokens.Any(token => !token.Equals(" ")))
-            {
-                // If only whitespace tokens return
-                return type;
-            }
-
             // At this point, if type is Empty & a non whitespace token exists => type should be set to VariableList
             if (type == StatementType.Empty)
             {
@@ -837,13 +816,6 @@ namespace VisiBoole.ParsingEngine
                 {
                     Globals.Logger.Add($"Line {PreLineNumber}: '{grouping}' is not matched.");
                 }
-                return null;
-            }
-
-            // Check for ending ;
-            if (!tokens.Contains(";"))
-            {
-                Globals.Logger.Add($"Line {PreLineNumber}: Line must end with a ';'.");
                 return null;
             }
 
@@ -949,14 +921,6 @@ namespace VisiBoole.ParsingEngine
                     return false;
                 }
 
-                // (If necessary) reformat vector so leftBound is most significant bit
-                /*
-                if (leftBound < rightBound)
-                {
-                    lexeme = String.Concat(lexeme.Substring(0, lexeme.IndexOf("[") + 1), match.Groups["RightBound"].Value, ".", match.Groups["Step"].Value, ".", match.Groups["LeftBound"].Value, "]");
-                }
-                */
-
                 if (Init)
                 {
                     // Check if namespace is used by a variable
@@ -967,7 +931,9 @@ namespace VisiBoole.ParsingEngine
                     }
 
                     // Check for existing vector namespace
-                    string vector = (lexeme.Contains('~') || lexeme.Contains('~')) ? lexeme.Substring(lexeme.IndexOf(lexeme.First(c => Regex.IsMatch(c.ToString(), @"[_a-zA-Z]")))) : lexeme; // Remove all ~ or all *
+                    string vector = (lexeme.Contains('~') || lexeme.Contains('~'))
+                        ? lexeme.Substring(lexeme.IndexOf(lexeme.First(c => Regex.IsMatch(c.ToString(), @"[_a-zA-Z]"))))
+                        : lexeme; // Remove all ~ or all *
                     List<string> expandedList = new List<string>();
                     if (leftBound != -1)
                     {
@@ -1123,28 +1089,117 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Expands vector to its variable list
+        /// Returns the expansion of a provided match
         /// </summary>
-        /// <param name="match">The Vector Match</param>
-        /// <returns>The expanded string</returns>
+        /// <param name="match">Vector expansion or constant expansion match</param>
+        /// <returns>Expansion of the provided match</returns>
+        private List<string> GetExpansion(Match match)
+        {
+            if (match.Value.Contains("[") && String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
+            {
+                List<string> components = Design.Database.GetVectorComponents(match.Groups["Name"].Value);
+                if (match.Value.Contains("~") && !components[0].Contains("~"))
+                {
+                    for (int i = 0; i < components.Count; i++)
+                    {
+                        components[i] = String.Concat("~", components[i]);
+                    }
+                }
+                return components;
+            }
+            else
+            {
+                if (ExpansionMemo.ContainsKey(match.Value))
+                {
+                    return ExpansionMemo[match.Value];
+                }
+                else
+                {
+                    return ExpandHorizontally(match);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Expands vectors or constants into their variable list or bits.
+        /// </summary>
+        /// <param name="match">The expansion match</param>
+        /// <returns>The components</returns>
         private List<string> ExpandHorizontally(Match match)
         {
             List<string> expansion = new List<string>();
 
-            // Get vector name, bounds and step
-            string name = (match.Value.Contains("*") || match.Value.Contains("~")) ? String.Concat(match.Value[0], match.Groups["Name"].Value) : match.Groups["Name"].Value;
-            int leftBound = Convert.ToInt32(match.Groups["LeftBound"].Value);
-            int rightBound = Convert.ToInt32(match.Groups["RightBound"].Value);
-            int step = (leftBound < rightBound)
-                    ? (String.IsNullOrEmpty(match.Groups["Step"].Value) ? 1 : Convert.ToInt32(match.Groups["Step"].Value))
-                    : (String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : -Convert.ToInt32(match.Groups["Step"].Value));
-
-            // Expand vector
-            int i = leftBound;
-            while ((step > 0 && i <= rightBound) || (step < 0 && i >= rightBound))
+            if (!match.Value.Contains("'"))
             {
-                expansion.Add(String.Concat(name, i));
-                i += step;
+                // Expand vector
+                // Get vector name, bounds and step
+                string name = (match.Value.Contains("*") || match.Value.Contains("~"))
+                    ? String.Concat(match.Value[0], match.Groups["Name"].Value)
+                    : match.Groups["Name"].Value;
+                int leftBound = Convert.ToInt32(match.Groups["LeftBound"].Value);
+                int rightBound = Convert.ToInt32(match.Groups["RightBound"].Value);
+                if (leftBound < rightBound)
+                {
+                    // Flips bounds so MSB is the leftBound
+                    leftBound = leftBound + rightBound;
+                    rightBound = leftBound - rightBound;
+                    leftBound = leftBound - rightBound;
+                }
+                int step = String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : -Convert.ToInt32(match.Groups["Step"].Value);
+
+                // Expand vector
+                for (int i = leftBound; i >= rightBound; i += step)
+                {
+                    expansion.Add(String.Concat(name, i));
+                }
+            }
+            else
+            {
+                // Expand constant
+                char[] charBits; // Converted binary bits as chars
+                int[] bits; // Converted binary bits
+                string outputBinary;
+
+                if (match.Groups["Format"].Value == "h" || match.Groups["Format"].Value == "H")
+                {
+                    outputBinary = Convert.ToString(Convert.ToInt32(match.Groups["Value"].Value, 16), 2);
+                    charBits = outputBinary.ToCharArray();
+                }
+                else if (match.Groups["Format"].Value == "d" || match.Groups["Format"].Value == "D")
+                {
+                    outputBinary = Convert.ToString(Convert.ToInt32(match.Groups["Value"].Value, 10), 2);
+                    charBits = outputBinary.ToCharArray();
+                }
+                else
+                {
+                    charBits = match.Groups["Value"].Value.ToCharArray();
+                }
+
+                bits = Array.ConvertAll(charBits, bit => (int)Char.GetNumericValue(bit));
+
+                int specifiedBitCount = String.IsNullOrEmpty(match.Groups["BitCount"].Value)
+                    ? -1
+                    : Convert.ToInt32(match.Groups["BitCount"].Value);
+
+                if (specifiedBitCount != -1 && specifiedBitCount < bits.Length)
+                {
+                    // Error
+                    Globals.Logger.Add($"Line {PreLineNumber}: {match.Value} doesn't specify enough bits.");
+                    return null;
+                }
+                else if (specifiedBitCount > bits.Length)
+                {
+                    // Adding padding
+                    for (int i = 0; i < specifiedBitCount - bits.Length; i++)
+                    {
+                        expansion.Add("'b0");
+                    }
+                }
+
+                foreach (int bit in bits)
+                {
+                    expansion.Add(String.Concat("'b", bit));
+                }
             }
 
             // Save expansion
@@ -1166,124 +1221,107 @@ namespace VisiBoole.ParsingEngine
             string expanded = String.Empty;
 
             Regex regex = new Regex (
-                @"("                                            // Begin Group
-                    + VectorPattern                             // Any Vector Type
-                    + @"(?![^{}]*\})"                           // Not Inside {}
-                + @")"                                          // End Group
-                + @"|"                                          // Or
-                + @"("                                          // Begin Group
-                    + @"\{"                                     // {
-                    + AnyVariablePattern                        // Any Variable Type
-                    + @"("                                      // Begin Optional Group
-                        + @"\,\s*"                              // Comma & Any Number of Whitespace
-                        + AnyVariablePattern                    // Any Variable Type
-                    + @")*"                                     // End Optional Group
-                    + @"\}"                                     // }
-                + @")"                                          // End Group
+                @"(" + VectorPattern + @"(?![^{}]*\}))"             // Any Vector Not Inside {}
+                + @"|"                                              // Or
+                + @"(" + ConstantPattern + @"(?![^{}]*\}))"         // Any Constant Not Inside {}
+                + @"|"                                              // Or
+                + @"(\{"                                            // {
+                    + AnyVariablePattern                            // Any Variable Type
+                    + @"(\s+" + AnyVariablePattern + @")*"          // Any Other Variables Seperated By Whitespace
+                + @"\})"                                            // }
             );
-            MatchCollection matches = regex.Matches(line);
 
-            // Expand all variables
-            List<List<string>> variables = new List<List<string>>();
+            // Get dependent and expression
+            string dependent = !line.Contains("<")
+                ? line.Substring(0, line.IndexOf("=")).TrimEnd()
+                : line.Substring(0, line.IndexOf("<")).TrimEnd();
+            string expression = line.Substring(line.IndexOf("=") + 1).TrimStart();
+
+            // Expand dependent
+            List<string> dependentExpansion = new List<string>();
+            Match dependentMatch = VectorRegex.Match(dependent);
+            if (dependentMatch.Success)
+            {
+                dependentExpansion.AddRange(GetExpansion(dependentMatch));
+            }
+            else
+            {
+                dependentExpansion.Add(dependent);
+            }
+
+            // Expand expression
+            List<List<string>> expressionExpansions = new List<List<string>>();
+            MatchCollection matches = regex.Matches(expression);
             foreach (Match match in matches)
             {
+                string[] vars;
+
+                // Get vars
                 if (!match.Value.Contains("{"))
                 {
-                    if (String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
-                    {
-                        // Indicates vectorNameSpace[] syntax
-                        List<string> components = Design.Database.GetVectorComponents(match.Groups["Name"].Value);
-                        if (match.Value.Contains("~") && !components[0].Contains("~"))
-                        {
-                            for (int i = 0; i < components.Count; i++)
-                            {
-                                components[i] = String.Concat("~", components[i]);
-                            }
-                        }
-                        variables.Add(components);
-                    }
-                    else if (ExpansionMemo.ContainsKey(match.Value))
-                    {
-                        variables.Add(ExpansionMemo[match.Value]);
-                    }
-                    else
-                    {
-                        variables.Add(ExpandHorizontally(match));
-                    }
+                    vars = new string[] { match.Value };
                 }
                 else
                 {
                     // Get concat and split into vars
-                    string concat = Regex.Replace(match.Value, @"[{\s*}]", string.Empty);
-                    string[] vars = concat.Split(','); // Split variables by commas
-
-                    List<string> concatVars = new List<string>();
-                    foreach (string var in vars)
-                    {
-                        Match vector = Regex.Match(var, VectorPattern);
-                        if (vector.Success) // Come back to here
-                        {
-                            List<string> components = new List<string>();
-                            if (String.IsNullOrEmpty(vector.Groups["LeftBound"].Value))
-                            {
-                                // Indicates vectorNameSpace[] syntax
-                                List<string> namespaceComponents = Design.Database.GetVectorComponents(vector.Groups["Name"].Value);
-                                foreach (string component in namespaceComponents)
-                                {
-                                    if (var.Contains("~"))
-                                    {
-                                        components.Add(String.Concat("~", component));
-                                    }
-                                    else
-                                    {
-                                        components.Add(component);
-                                    }
-                                }
-                            }
-                            else if (ExpansionMemo.ContainsKey(var))
-                            {
-                                components = ExpansionMemo[var];
-                            }
-                            else
-                            {
-                                components = ExpandHorizontally(vector);
-                            }
-
-                            foreach (string component in components)
-                            {
-                                concatVars.Add(component);
-                            }
-                        }
-                        else
-                        {
-                            concatVars.Add(var);
-                        }
-                    }
-
-                    variables.Add(concatVars);
+                    string concat = Regex.Replace(match.Value, @"[{}]", string.Empty);
+                    vars = Regex.Split(concat, @"\s+"); // Split variables by whitespace
                 }
+
+                // Create current expansion
+                List<string> currentExpansion = new List<string>();
+                foreach (string var in vars)
+                {
+                    Match currentMatch = Regex.Match(var, AnyVariablePattern);
+
+                    if (var.Contains("[") || var.Contains("'"))
+                    {
+                        // Vectors and constants
+                        List<string> expansion = GetExpansion(currentMatch);
+                        if (expansion == null)
+                        {
+                            return null;
+                        }
+                        currentExpansion.AddRange(expansion);
+                    }
+                    else
+                    {
+                        // Variables
+                        currentExpansion.Add(var);
+                    }
+                }
+
+                expressionExpansions.Add(currentExpansion);
             }
 
-            // Error checking
-            foreach (List<string> list in variables)
+            // Verify expansions
+            foreach (List<string> expressionExpansion in expressionExpansions)
             {
-                if (list.Count != variables[0].Count)
+                if (dependentExpansion.Count != expressionExpansion.Count)
                 {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
                     return null;
                 }
             }
 
+            // Combine expansions
+            List<List<string>> expansions = new List<List<string>>();
+            expansions.Add(dependentExpansion);
+            expansions.AddRange(expressionExpansions);
+
             // Expand lines 
-            for (int i = 0; i < variables[0].Count; i++)
+            for (int i = 0; i < dependentExpansion.Count; i++)
             {
                 string newLine = line;
-                int j = 0;
+                newLine = newLine.Replace(dependent, expansions[0][i]); // Replace dependent
+                int j = 1;
                 foreach (Match match in matches)
                 {
-                    newLine = newLine.Replace(match.Value, variables[j++][i]);
+                    newLine = newLine.Replace(match.Value, expansions[j++][i]); // Replace expression parts
                 }
                 expanded += String.Concat(newLine, "\n");
             }
+
             return expanded;
         }
     }
