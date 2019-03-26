@@ -38,6 +38,7 @@ namespace VisiBoole.ParsingEngine
     /// </summary>
     public enum StatementType
     {
+        Module,
         Submodule,
         Boolean,
         Clock,
@@ -250,12 +251,21 @@ namespace VisiBoole.ParsingEngine
                     else if (type == StatementType.Boolean || type == StatementType.Clock)
                     {
                         // Verify expressions
+                        string dependent = line.Contains("<")
+                            ? line.Substring(0, line.IndexOf('<')).Trim()
+                            : line.Substring(0, line.IndexOf('=')).Trim();
                         string expression = line.Substring(line.IndexOf("=") + 1).Trim();
                         expression = expression.TrimEnd(';');
                         expression = String.Concat("(", expression, ")");
 
                         if (!ValidateExpressionStatement(expression))
                         {
+                            valid = false;
+                        }
+
+                        if (expression.Contains(dependent) && expression.Contains("=="))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Circular Dependency Found.");
                             valid = false;
                         }
                     }
@@ -284,6 +294,10 @@ namespace VisiBoole.ParsingEngine
                                 line = String.Concat(match.Groups["Spacing"].Value, match.Groups["Color"].Value, match.Groups["Comment"].Value); // Remove + or -
                                 statements.Add(new CommentStmt(PostLineNumber++, line));
                             }
+                        }
+                        else if (type == StatementType.Module)
+                        {
+                            statements.Add(new ModuleDeclarationStmt(PostLineNumber++, line));
                         }
                         else if (type == StatementType.Submodule)
                         {

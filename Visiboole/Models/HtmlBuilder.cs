@@ -84,7 +84,7 @@ namespace VisiBoole.Models
                                 startIndex = holdingIndex;
 
                                 outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                                bool colorValue = ExpressionSolver.Solve(outermost);
+                                bool colorValue = ExpressionSolver.Solve(outermost) == 1;
 
                                 line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
                                 line[parenIndexes[startIndex]].MatchingIndex = startIndex;

@@ -75,7 +75,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
         public void Evaluate()
         {
-            bool dependentValue = ExpressionSolver.Solve(Expression);
+            bool dependentValue = ExpressionSolver.Solve(Expression) == 1;
             bool currentValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(Dependent) == 1;
             if (dependentValue != currentValue)
             {

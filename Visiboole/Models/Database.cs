@@ -118,7 +118,7 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (match.Value.Equals(variableName))
                     {
-                        bool dependentValue = ExpressionSolver.Solve(expression);
+                        bool dependentValue = ExpressionSolver.Solve(expression) == 1;
                         bool currentValue = TryGetValue(dependent) == 1;
                         if (dependentValue != currentValue)
                         {

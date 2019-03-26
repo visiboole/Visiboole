@@ -39,9 +39,9 @@ namespace VisiBoole.ParsingEngine.Boolean
         /// </summary>
         /// <param name="expression">Expression to solve</param>
         /// <returns>Value of the expression</returns>
-        public static bool Solve(string expression)
+        public static int Solve(string expression)
         {
-            Stack<bool> valueStack = new Stack<bool>();
+            Stack<int> valueStack = new Stack<int>();
             Stack<string> operatorStack = new Stack<string>();
 
             // Push start of expression parenthesis
@@ -67,7 +67,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                     if (operatorStack.Peek() == "~")
                     {
                         operatorStack.Pop();
-                        valueStack.Push(!valueStack.Pop());
+                        valueStack.Push(Convert.ToInt32(!Convert.ToBoolean(valueStack.Pop())));
                     }
                 }
                 else if (match.Value == "(" || Parser.OperatorsList.Contains(match.Value))
@@ -87,11 +87,11 @@ namespace VisiBoole.ParsingEngine.Boolean
                 {
                     // Process var
                     string var = match.Value;
-                    bool value = false;
+                    int value = 0;
 
                     if (var[0] == '\'')
                     {
-                        value = Convert.ToInt32(match.Value[2].ToString()) == 1;
+                        value = Convert.ToInt32(match.Value[2].ToString());
                     }
                     else
                     {
@@ -102,10 +102,10 @@ namespace VisiBoole.ParsingEngine.Boolean
                             var = var.Substring(1);
                         }
 
-                        value = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(var) == 1;
+                        value = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(var);
                         if (containsNot)
                         {
-                            value = !value;
+                            value = Convert.ToInt32(!Convert.ToBoolean(value));
                         }
                     }
 
@@ -130,34 +130,34 @@ namespace VisiBoole.ParsingEngine.Boolean
         /// </summary>
         /// <param name="valueStack"></param>
         /// <param name="operatorStack"></param>
-        private static void ExecuteOperation(ref Stack<bool> valueStack, ref Stack<string> operatorStack)
+        private static void ExecuteOperation(ref Stack<int> valueStack, ref Stack<string> operatorStack)
         {
             string operation = operatorStack.Pop();
 
-            bool rightOperand = valueStack.Pop();
-            bool leftOperand = false;
+            int rightValue = valueStack.Pop();
+            int leftValue = 0;
             if (operation != "~")
             {
-                leftOperand = valueStack.Pop();
+                leftValue = valueStack.Pop();
             }
 
-            bool result = false;
+            int result = 0;
             switch (operation)
             {
                 case "~":
-                    result = !rightOperand;
+                    result = Convert.ToInt32(!Convert.ToBoolean(rightValue));
                     break;
                 case " ":
-                    result = leftOperand && rightOperand;
+                    result = Convert.ToInt32(Convert.ToBoolean(leftValue) && Convert.ToBoolean(rightValue));
                     break;
                 case "|":
-                    result = leftOperand || rightOperand;
+                    result = Convert.ToInt32(Convert.ToBoolean(leftValue) || Convert.ToBoolean(rightValue));
                     break;
                 case "^":
-                    result = leftOperand ^ rightOperand;
+                    result = Convert.ToInt32(Convert.ToBoolean(leftValue) ^ Convert.ToBoolean(rightValue));
                     break;
                 case "==":
-                    result = leftOperand == rightOperand;
+                    result = Convert.ToInt32(Convert.ToBoolean(leftValue) == Convert.ToBoolean(rightValue));
                     break;
             }
 

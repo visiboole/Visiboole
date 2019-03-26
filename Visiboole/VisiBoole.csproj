@@ -97,6 +97,7 @@
     <Compile Include="ParsingEngine\ObjectCode\IndependentVariable.cs" />
     <Compile Include="Models\InputParser.cs" />
     <Compile Include="ParsingEngine\ObjectCode\LineFeed.cs" />
+    <Compile Include="ParsingEngine\Statements\LibraryStmt.cs" />
     <Compile Include="ParsingEngine\Statements\ModuleDeclarationStmt.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Operator.cs" />
     <Compile Include="Models\OutputParser.cs" />

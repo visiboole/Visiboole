@@ -75,7 +75,7 @@ namespace VisiBoole.ParsingEngine.Statements
             // Add dependency and set delay value
             // Globals.TabControl.SelectedTab.Design().Database.AddExpression(Delay, Expression);
             Globals.TabControl.SelectedTab.Design().Database.CreateDependenciesList(Delay);
-            bool delayValue = ExpressionSolver.Solve(Expression);
+            bool delayValue = ExpressionSolver.Solve(Expression) == 1;
             Globals.TabControl.SelectedTab.Design().Database.SetValue(Delay, delayValue);
         }
 
@@ -112,7 +112,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
             if (clock_tick)
             {
-                bool delayValue = ExpressionSolver.Solve(Expression);
+                bool delayValue = ExpressionSolver.Solve(Expression) == 1;
                 if (delayValue != delayVariable.Value)
                 {
                     Globals.TabControl.SelectedTab.Design().Database.SetValue(Delay, delayValue);
