@@ -38,6 +38,7 @@ namespace VisiBoole.ParsingEngine
     /// </summary>
     public enum StatementType
     {
+        Library,
         Module,
         Submodule,
         Boolean,
@@ -65,9 +66,10 @@ namespace VisiBoole.ParsingEngine
         public static readonly string FormatSpecifierPattern = $@"(%(?<Format>[ubhdUBHD])\{{(?<Vars>{VariablePattern}(\s*{VariablePattern})*)\}})";
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
         public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<Color><#?[a-zA-Z0-9]+>)?(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
+        private static readonly string LibraryPattern = @"^(#library\s(?<Name>.+);)$";
         private static readonly string OperatorPattern = @"^(([=+^|-])|(<=)|(~+)|(==))$";
         private static readonly string SeperatorPattern = @"[\s{}(),;]";
-        private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]";
+        private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~%^*()=+[\]{}|;'#<>,.-]";
 
         /// <summary>
         /// Compiled regexs for parsing.
@@ -78,6 +80,7 @@ namespace VisiBoole.ParsingEngine
         private static Regex ExpansionRegex = new Regex(String.Concat(VectorPattern, "|", ConstantPattern), RegexOptions.Compiled);
         public static Regex FormatSpecifierRegex = new Regex(FormatSpecifierPattern, RegexOptions.Compiled);
         public static Regex CommentRegex = new Regex(CommentPattern, RegexOptions.Compiled);
+        private static Regex LibraryRegex = new Regex(LibraryPattern, RegexOptions.Compiled);
         private static Regex OperatorRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
         private static Regex SeperatorRegex = new Regex(SeperatorPattern, RegexOptions.Compiled);
         private static Regex InvalidRegex = new Regex(InvalidPattern, RegexOptions.Compiled);
@@ -87,6 +90,8 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         public static readonly IList<string> OperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "|", "+", "-", "==", " ", "~"});
         public static readonly IList<string> ExclusiveOperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "+", "-", "=="});
+
+        private List<string> Libraries;
 
         /// <summary>
         /// The design being parsed.
@@ -120,7 +125,7 @@ namespace VisiBoole.ParsingEngine
 
         public Parser()
         {
-
+            Libraries = new List<string>();
         }
 
         /// <summary>
@@ -247,6 +252,43 @@ namespace VisiBoole.ParsingEngine
                     if (type == null)
                     {
                         valid = false;
+                    }
+                    else if (type == StatementType.Library)
+                    {
+                        string library = LibraryRegex.Match(line).Groups["Name"].Value;
+                        try
+                        {
+                            // Insert slash if not present
+                            if (library[0] != '.' && library[0] != '\\' && library[0] != '/')
+                            {
+                                library = library.Insert(0, "\\");
+                            }
+
+                            string path = Path.GetFullPath(Design.FileSource.DirectoryName + library);
+                            if (Directory.Exists(path))
+                            {
+                                Libraries.Add(path);
+                                continue;
+                            }
+                            else
+                            {
+                                Globals.Logger.Add($"Line {PreLineNumber}: Library '{path}' doesn't exist or is invalid.");
+                                valid = false;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: Invalid library name '{library}'.");
+                            valid = false;
+                        }              
+                    }
+                    else if (type == StatementType.Submodule)
+                    {
+
+                    }
+                    else if (type == StatementType.Module)
+                    {
+
                     }
                     else if (type == StatementType.Boolean || type == StatementType.Clock)
                     {
@@ -565,15 +607,18 @@ namespace VisiBoole.ParsingEngine
             foreach (char c in line)
             {
                 newChar = c.ToString();
+                currentLexeme = lexeme.ToString();
 
-                if (type == StatementType.Comment)
+                if (type == StatementType.Comment || type == StatementType.Library)
                 {
                     lexeme.Append(c);
                 }
+                else if (currentLexeme == "#library")
+                {
+                    type = StatementType.Library;
+                }
                 else if (c == '"')
                 {
-                    currentLexeme = lexeme.ToString();
-
                     if (!Regex.IsMatch(currentLexeme, @"^(<#?[a-zA-Z0-9]+>[+-]?)$"))
                     {
                         // If not possible color/color code: do normal comment checks
@@ -595,8 +640,6 @@ namespace VisiBoole.ParsingEngine
                 }
                 else if (SeperatorRegex.IsMatch(newChar))
                 {
-                    currentLexeme = lexeme.ToString();
-
                     // Ending characters
                     if (c == '{' || c == '(')
                     {
@@ -630,16 +673,16 @@ namespace VisiBoole.ParsingEngine
                         // Check for misplaced comma
                         if (groupings.Count == 0)
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: ',' can only be used inside the () in a submodule statement.");
+                            Globals.Logger.Add($"Line {PreLineNumber}: ',' can only be used inside the () in a submodule or module statement.");
                             return null;
                         }
                         else
                         {
                             char top = groupings.Peek();
 
-                            if (!(type == StatementType.Submodule && top == '('))
+                            if (!((type == StatementType.Submodule || type == StatementType.Module) && top == '('))
                             {
-                                Globals.Logger.Add($"Line {PreLineNumber}: ',' can only be used inside the () in a submodule statement.");
+                                Globals.Logger.Add($"Line {PreLineNumber}: ',' can only be used inside the () in a submodule or module statement.");
                                 return null;
                             }
                         }
@@ -684,18 +727,6 @@ namespace VisiBoole.ParsingEngine
                                 else if (type == StatementType.Empty)
                                 {
                                     type = StatementType.FormatSpecifier;
-                                }
-                            }
-                            else if (currentLexeme.Contains("@"))
-                            {
-                                if (type != StatementType.Empty)
-                                {
-                                    Globals.Logger.Add($"Line {PreLineNumber}: '{lexeme}' can only be used in a submodule statement.");
-                                    return null;
-                                }
-                                else
-                                {
-                                    type = StatementType.Submodule;
                                 }
                             }
                             else if (currentLexeme.Contains("~"))
@@ -756,9 +787,14 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (c == '(' || c == ')')
                     {
-                        if (!(type == StatementType.Submodule || type == StatementType.Boolean))
+                        if (currentLexeme == Design.FileSourceName.Split('.')[0])
                         {
-                            Globals.Logger.Add($"Line {PreLineNumber}: '{c}' must be part of a submodule or boolean statement.");
+                            type = StatementType.Module;
+                        }
+
+                        if (!(type == StatementType.Submodule || type == StatementType.Boolean || type == StatementType.Module))
+                        {
+                            Globals.Logger.Add($"Line {PreLineNumber}: '{c}' must be part of a module, submodule, boolean or clock statement.");
                             return null;
                         }
                     }
@@ -788,8 +824,6 @@ namespace VisiBoole.ParsingEngine
                 else
                 {
                     // Appending characters
-                    currentLexeme = lexeme.ToString();
-
                     // Check for constant inside {}
                     if (c == '\'')
                     {
@@ -815,6 +849,19 @@ namespace VisiBoole.ParsingEngine
                 }
 
                 return type;
+            }
+
+            if (type == StatementType.Library)
+            {
+                if (LibraryRegex.IsMatch(line))
+                {
+                    return type;
+                }
+                else
+                {
+                    Globals.Logger.Add($"Line {PreLineNumber}: Invalid Library Statement.");
+                    return null;
+                }
             }
 
             // At this point, if type is Empty & a non whitespace token exists => type should be set to VariableList
