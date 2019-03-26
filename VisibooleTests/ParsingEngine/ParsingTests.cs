@@ -15,17 +15,26 @@ namespace VisibooleTests.ParsingEngine
     [TestClass()]
     public class ParsingTests
     {
-        [TestMethod()]
-        public void TestEmptySubdesign()
+        private bool TestDesign(string name)
         {
-            string filename = "EmptyTestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
+            string path = Directory.GetParent(Environment.CurrentDirectory).Parent.FullName;
+            string fileName = Path.Combine(path, "Resources", "Testing Files", name);
+            Design design = new Design(fileName, delegate { });
             Parser parser = new Parser();
             try
             {
-                parser.Parse(subDesign, null, false);
+                return parser.Parse(design, null, false) != null;
             }
-            catch(Exception e)
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        [TestMethod()]
+        public void TestEmptyDesign()
+        {
+            if (!TestDesign("Empty.vbi"))
             {
                 Assert.Fail();
             }
@@ -34,14 +43,7 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestBasicVariableList()
         {
-            string filename = "BasicVarListTestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("BasicVarList.vbi"))
             {
                 Assert.Fail();
             }
@@ -50,14 +52,7 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestBasicBooleanExpression()
         {
-            string filename = "BasicBoolExpTestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("BasicBoolExp.vbi"))
             {
                 Assert.Fail();
             }
@@ -66,46 +61,16 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestBasicClockExpression()
         {
-            string filename = "BasicClockTestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("BasicClockExp.vbi"))
             {
                 Assert.Fail();
             }
         }
 
         [TestMethod()]
-        public void TestComplexBooleanExpression0()
+        public void TestComplexBooleanExpression()
         {
-            string filename = "Comp0TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
-            {
-                Assert.Fail();
-            }
-        }
-
-        [TestMethod()]
-        public void TestComplexBooleanExpression1()
-        {
-            string filename = "Comp1TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp.vbi"))
             {
                 Assert.Fail();
             }
@@ -114,14 +79,7 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestComplexBooleanExpression2()
         {
-            string filename = "Comp2TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp2.vbi"))
             {
                 Assert.Fail();
             }
@@ -130,14 +88,7 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestComplexBooleanExpression3()
         {
-            string filename = "Comp3TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp3.vbi"))
             {
                 Assert.Fail();
             }
@@ -146,14 +97,7 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestComplexBooleanExpression4()
         {
-            string filename = "Comp4TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp4.vbi"))
             {
                 Assert.Fail();
             }
@@ -162,14 +106,7 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestComplexBooleanExpression5()
         {
-            string filename = "Comp5TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp5.vbi"))
             {
                 Assert.Fail();
             }
@@ -178,29 +115,16 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestComplexBooleanExpression6()
         {
-            string filename = "Comp6TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp6.vbi"))
             {
                 Assert.Fail();
             }
         }
+
         [TestMethod()]
         public void TestComplexBooleanExpression7()
         {
-            string filename = "Comp7TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
-            {
-                parser.Parse(subDesign, null, new bool());
-            }
-            catch (Exception e)
+            if (!TestDesign("CompBoolExp7.vbi"))
             {
                 Assert.Fail();
             }
@@ -208,14 +132,15 @@ namespace VisibooleTests.ParsingEngine
         [TestMethod()]
         public void TestComplexBooleanExpression8()
         {
-            string filename = "Comp8TestingVisiboole.vbi";
-            Design subDesign = new Design(filename, delegate { });
-            Parser parser = new Parser();
-            try
+            if (!TestDesign("CompBoolExp8.vbi"))
             {
-                parser.Parse(subDesign, null, new bool());
+                Assert.Fail();
             }
-            catch (Exception e)
+        }
+        [TestMethod()]
+        public void TestComplexBooleanExpression9()
+        {
+            if (!TestDesign("CompBoolExp9.vbi"))
             {
                 Assert.Fail();
             }

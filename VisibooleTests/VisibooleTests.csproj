@@ -62,6 +62,12 @@
       <Name>VisiBoole</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Testing Files\BasicBoolExp.vbi" />
+    <None Include="Resources\Testing Files\BasicClockExp.vbi" />
+    <None Include="Resources\Testing Files\BasicVarList.vbi" />
+    <None Include="Resources\Testing Files\Empty.vbi" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

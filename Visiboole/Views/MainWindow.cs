@@ -585,7 +585,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SyntaxDocumentationMenuClick(object sender, EventArgs e)
         {
-            HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
+            HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
             hw.Show();
         }
 
