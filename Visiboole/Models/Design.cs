@@ -37,6 +37,11 @@ namespace VisiBoole.Models
         public string FileSourceName { get; set; }
 
         /// <summary>
+        /// Short filename that doesn't include the extension.
+        /// </summary>
+        public string FileName { get; set; }
+
+        /// <summary>
         /// Delegate for updating the display
         /// </summary>
         private DisplayLoader UpdateDisplay;
@@ -74,6 +79,7 @@ namespace VisiBoole.Models
 
             FileSource = new FileInfo(filename);
             FileSourceName = FileSource.Name;
+            FileName = FileSourceName.Split('.')[0];
             UpdateDisplay = update;
 
             if (!File.Exists(filename))

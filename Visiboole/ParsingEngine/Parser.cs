@@ -67,6 +67,7 @@ namespace VisiBoole.ParsingEngine
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
         public static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<Color><#?[a-zA-Z0-9]+>)?(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
         private static readonly string LibraryPattern = @"^(#library\s(?<Name>.+);)$";
+        private static readonly string InstantiationPattern = @"^(?<Design>\w+)\.(?<Name>\w+)$";
         private static readonly string OperatorPattern = @"^(([=+^|-])|(<=)|(~+)|(==))$";
         private static readonly string SeperatorPattern = @"[\s{}(),;]";
         private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~%^*()=+[\]{}|;'#<>,.-]";
@@ -81,6 +82,7 @@ namespace VisiBoole.ParsingEngine
         public static Regex FormatSpecifierRegex = new Regex(FormatSpecifierPattern, RegexOptions.Compiled);
         public static Regex CommentRegex = new Regex(CommentPattern, RegexOptions.Compiled);
         private static Regex LibraryRegex = new Regex(LibraryPattern, RegexOptions.Compiled);
+        private static Regex InstantiationRegex = new Regex(InstantiationPattern, RegexOptions.Compiled);
         private static Regex OperatorRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
         private static Regex SeperatorRegex = new Regex(SeperatorPattern, RegexOptions.Compiled);
         private static Regex InvalidRegex = new Regex(InvalidPattern, RegexOptions.Compiled);
@@ -92,6 +94,8 @@ namespace VisiBoole.ParsingEngine
         public static readonly IList<string> ExclusiveOperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "+", "-", "=="});
 
         private List<string> Libraries;
+
+        private Dictionary<string, string> SubModules;
 
         /// <summary>
         /// The design being parsed.
@@ -126,6 +130,7 @@ namespace VisiBoole.ParsingEngine
         public Parser()
         {
             Libraries = new List<string>();
+            SubModules = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -770,7 +775,12 @@ namespace VisiBoole.ParsingEngine
                         }
                         else
                         {
-                            return null;
+                            if (!(type == StatementType.Empty && c == '(' && InstantiationRegex.IsMatch(currentLexeme)))
+                            {
+                                // If token is not valid and is not an instantiation
+                                Globals.Logger.Add($"Line {PreLineNumber}: Invalid '{currentLexeme}'.");
+                                return null;
+                            }
                         }
 
                         tokens.Add(currentLexeme);
@@ -787,9 +797,69 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (c == '(' || c == ')')
                     {
-                        if (currentLexeme == Design.FileSourceName.Split('.')[0])
+                        if (currentLexeme == Design.FileName)
                         {
+                            // Come back
                             type = StatementType.Module;
+                        }
+                        else if (InstantiationRegex.IsMatch(currentLexeme))
+                        {
+                            Match match = InstantiationRegex.Match(currentLexeme);
+                            string designName = match.Groups["Design"].Value;
+
+                            if (designName == Design.FileName)
+                            {
+                                Globals.Logger.Add($"Line {PreLineNumber}: You cannot instantiate from the current design.");
+                                return null;
+                            }
+
+                            // Find design (First look in current design directory, then libraries)
+                            try
+                            {
+                                bool foundDecleration = false;
+                                string[] files = Directory.GetFiles(Design.FileSource.DirectoryName, String.Concat(designName, ".vbi"));
+                                if (files.Length > 0)
+                                {
+                                    // Check for module decleration
+                                    foundDecleration = DesignHasModuleDecleration(files[0]);
+                                }
+
+                                if (!foundDecleration)
+                                {
+                                    // Move this
+                                    for (int i = 0; i < Libraries.Count; i++)
+                                    {
+                                        files = Directory.GetFiles(Libraries[i], String.Concat(designName, ".vbi"));
+                                        if (files.Length > 0)
+                                        {
+                                            // Check for module decleration
+                                            foundDecleration = DesignHasModuleDecleration(files[0]);
+                                            if (foundDecleration)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if (!foundDecleration)
+                                    {
+                                        // Not found
+                                        Globals.Logger.Add($"Line {PreLineNumber}: Unable to find '{designName}'.");
+                                        return null;
+                                    }
+                                }
+
+                                // At this point, the design was found
+                                SubModules.Add(designName, files[0]); // Add to dictionary: key = name, value = path
+                            }
+                            catch (Exception)
+                            {
+                                Globals.Logger.Add($"Line {PreLineNumber}: Error locating '{Design}'.");
+                                return null;
+                            }
+                            
+
+                            type = StatementType.Submodule;
                         }
 
                         if (!(type == StatementType.Submodule || type == StatementType.Boolean || type == StatementType.Module))
@@ -918,7 +988,6 @@ namespace VisiBoole.ParsingEngine
             else
             {
                 // Not sure what lexeme is
-                Globals.Logger.Add($"Line {PreLineNumber}: Invalid '{lexeme}'.");
                 return false;
             }
         }
@@ -1067,6 +1136,30 @@ namespace VisiBoole.ParsingEngine
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Returns whether the design contains a module decleration.
+        /// </summary>
+        /// <param name="path">Path of the design</param>
+        /// <returns>Whether the design contains a module decleration</returns>
+        private bool DesignHasModuleDecleration(string path)
+        {
+            FileInfo fileInfo = new FileInfo(path);
+            string name = fileInfo.Name.Split('.')[0];
+            using (StreamReader reader = fileInfo.OpenText())
+            {
+                string nextLine = string.Empty;
+                while ((nextLine = reader.ReadLine()) != null)
+                {
+                    if (Regex.IsMatch(nextLine, $@"{name}\(.+\);"))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
