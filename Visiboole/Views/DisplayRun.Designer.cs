@@ -35,9 +35,12 @@ namespace VisiBoole.Views
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.btnMultiTick = new System.Windows.Forms.Button();
             this.btnTick = new System.Windows.Forms.Button();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.BrowserTabControl = new System.Windows.Forms.TabControl();
             this.pnlMain.SuspendLayout();
             this.pnlOutputControls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+            this.BrowserTabControl.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlMain
@@ -47,6 +50,7 @@ namespace VisiBoole.Views
             this.pnlMain.ColumnCount = 1;
             this.pnlMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.pnlMain.Controls.Add(this.pnlOutputControls, 0, 0);
+            this.pnlMain.Controls.Add(this.BrowserTabControl, 0, 1);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMain.Location = new System.Drawing.Point(0, 0);
             this.pnlMain.Margin = new System.Windows.Forms.Padding(0);
@@ -54,6 +58,7 @@ namespace VisiBoole.Views
             this.pnlMain.RowCount = 3;
             this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 27F));
             this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 0F));
             this.pnlMain.Size = new System.Drawing.Size(800, 600);
             this.pnlMain.TabIndex = 1;
             // 
@@ -125,6 +130,27 @@ namespace VisiBoole.Views
             this.btnTick.UseVisualStyleBackColor = true;
             this.btnTick.Click += new System.EventHandler(this.btnTick_Click);
             // 
+            // tabPage1
+            // 
+            this.tabPage1.Location = new System.Drawing.Point(4, 29);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(786, 534);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "tabPage1";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // BrowserTabControl
+            // 
+            this.BrowserTabControl.Controls.Add(this.tabPage1);
+            this.BrowserTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BrowserTabControl.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.BrowserTabControl.Location = new System.Drawing.Point(3, 30);
+            this.BrowserTabControl.Name = "BrowserTabControl";
+            this.BrowserTabControl.SelectedIndex = 0;
+            this.BrowserTabControl.Size = new System.Drawing.Size(794, 567);
+            this.BrowserTabControl.TabIndex = 1;
+            // 
             // DisplayRun
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -135,6 +161,7 @@ namespace VisiBoole.Views
             this.pnlMain.ResumeLayout(false);
             this.pnlOutputControls.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
+            this.BrowserTabControl.ResumeLayout(false);
             this.ResumeLayout(false);
 
 		}
@@ -146,5 +173,7 @@ namespace VisiBoole.Views
         private NumericUpDown numericUpDown1;
         private Button btnMultiTick;
         private Button btnTick;
+        private TabControl BrowserTabControl;
+        private TabPage tabPage1;
     }
 }

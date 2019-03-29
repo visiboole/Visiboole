@@ -81,9 +81,14 @@ namespace VisiBoole.Views
 
             if (!(browser == null))
 			{
-				this.pnlMain.Controls.Add(browser, 0, 1);
-				browser.Dock = DockStyle.Fill;
-			}
+                pnlMain.Controls.Add(BrowserTabControl, 0, 1);
+                BrowserTabControl.Dock = DockStyle.Fill;
+
+                BrowserTabControl.SelectedTab.Controls.Add(browser);
+                browser.Dock = DockStyle.Fill;
+
+                BrowserTabControl.SelectedTab.Text = Globals.TabControl.SelectedTab.Text;
+            }
 		}
 
         /// <summary>
