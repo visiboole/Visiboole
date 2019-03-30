@@ -1,1 +1,0 @@
-Q[7..0] <= st0 ~start Q[7..0] + st0 start Dn[7..0] + st1 Qs[7..0] + st2 Q[7..0];

@@ -35,13 +35,13 @@ namespace VisiBoole.Models
 	{
 		public string HtmlText = "";
 		public string currentLine = "";
+        private string trueColor = "'crimson'";
+        private string falseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
 
         public HtmlBuilder(Design sd, List<IObjectCodeElement> output)
         {
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
-            string trueColor = "'crimson'";
-            string falseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
 
             foreach (List<IObjectCodeElement> line in newOutput)
             {
@@ -209,9 +209,13 @@ namespace VisiBoole.Models
                                 {
                                     currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop; text-decoration: overline;\">" + variable.Substring(1) + "</font>";
                                 }
-                                else //if variable is independent
+                                else if (varType == typeof(IndependentVariable)) //if variable is independent
                                 {
                                     currentLine += "<font color=" + falseColor + " style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                }
+                                else if (varType == typeof(Constant))
+                                {
+                                    currentLine += $"<font color={falseColor} style=\"cursor: no-drop; text-decoration: overline;\">{variable.Substring(1)}</font>";
                                 }
                                 currentLine += " ";
                             }
@@ -221,9 +225,13 @@ namespace VisiBoole.Models
                                 {
                                     currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
                                 }
-                                else //if variable is independent
+                                else if (varType == typeof(IndependentVariable)) //if variable is independent
                                 {
                                     currentLine += "<font color=" + trueColor + " style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
+                                }
+                                else if (varType == typeof(Constant))
+                                {
+                                    currentLine += $"<font color={trueColor} style=\"cursor: no-drop; text-decoration: overline;\">{variable.Substring(1)}</font>";
                                 }
                                 currentLine += " ";
                             }
@@ -333,6 +341,17 @@ namespace VisiBoole.Models
                 if (!isClosingTag)
                 {
                     color = match.Value.Substring(1, match.Length - 2); // Get color by removing <>
+
+                    // Check for true or false color
+                    if (color.Equals("true", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        color = trueColor.Replace("'", "");
+                    }
+                    else if (color.Equals("false", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        color = falseColor.Replace("'", "");
+                    }
+
                     isValidColor = IsValidHTMLColor(color); // Check whether the provided color is valid
 
                     if (isValidColor)

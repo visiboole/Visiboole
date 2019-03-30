@@ -34,6 +34,11 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class FormatSpecifierStmt : Statement
 	{
         /// <summary>
+        /// Regex for getting format specifier tokens (format specifiers and extra spacing).
+        /// </summary>
+        private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern2}|((?![^{{}}]*\}}){Parser.SpacingPattern}))");
+
+        /// <summary>
         /// Constructs an instance of FormatSpecifierStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on simulation mode</param>
@@ -49,7 +54,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Find format specifiers and extra spacing
-            MatchCollection matches = Regex.Matches(Text, $@"({Parser.FormatSpecifierPattern}|((?![^{{}}]*\}}){Parser.SpacingPattern}))");
+            MatchCollection matches = TokenRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 if (String.IsNullOrWhiteSpace(match.Value))

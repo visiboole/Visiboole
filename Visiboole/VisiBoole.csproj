@@ -97,7 +97,6 @@
     <Compile Include="ParsingEngine\ObjectCode\IndependentVariable.cs" />
     <Compile Include="Models\InputParser.cs" />
     <Compile Include="ParsingEngine\ObjectCode\LineFeed.cs" />
-    <Compile Include="ParsingEngine\Statements\ModuleDeclarationStmt.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Operator.cs" />
     <Compile Include="Models\OutputParser.cs" />
     <Compile Include="ParsingEngine\Parser.cs" />
@@ -192,19 +191,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Sample Files\8bitdivide.vbi" />
-    <None Include="Resources\Sample Files\8bitdivide2.vbi" />
-    <None Include="Resources\Sample Files\format_specifier.vbi" />
-    <None Include="Resources\Sample Files\format_specifier2.vbi" />
-    <None Include="Resources\Sample Files\format_specifier3.vbi" />
-    <None Include="Resources\Sample Files\format_specifier4.vbi" />
-    <None Include="Resources\Sample Files\format_specifier5.vbi" />
-    <None Include="Resources\Sample Files\newFile1.vbi" />
-    <None Include="Resources\Sample Files\newFile2.vbi" />
-    <None Include="Resources\Sample Files\newFile3.vbi" />
-    <None Include="Resources\Sample Files\newFile4.vbi" />
-    <None Include="Resources\Sample Files\newFile5.vbi" />
-    <None Include="Resources\Sample Files\newFile6.vbi" />
-    <None Include="Resources\Sample Files\newFile7.vbi" />
+    <None Include="Resources\Sample Files\CLA.vbi" />
+    <None Include="Resources\Sample Files\CLU.vbi" />
+    <None Include="Resources\Sample Files\testing.vbi" />
     <None Include="Resources\VisiBooleIcon.ico" />
     <None Include="Resources\Letter V blue.ico" />
     <Content Include="license.txt" />

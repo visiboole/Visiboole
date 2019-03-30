@@ -35,8 +35,8 @@ namespace VisiBoole.Views
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.btnMultiTick = new System.Windows.Forms.Button();
             this.btnTick = new System.Windows.Forms.Button();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.BrowserTabControl = new System.Windows.Forms.TabControl();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.pnlMain.SuspendLayout();
             this.pnlOutputControls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -106,6 +106,7 @@ namespace VisiBoole.Views
             // 
             this.btnMultiTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnMultiTick.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnMultiTick.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.btnMultiTick.Location = new System.Drawing.Point(65, 2);
             this.btnMultiTick.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.btnMultiTick.MaximumSize = new System.Drawing.Size(60, 22);
@@ -120,6 +121,7 @@ namespace VisiBoole.Views
             // 
             this.btnTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnTick.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnTick.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.btnTick.Location = new System.Drawing.Point(2, 2);
             this.btnTick.Margin = new System.Windows.Forms.Padding(0);
             this.btnTick.MaximumSize = new System.Drawing.Size(60, 22);
@@ -130,26 +132,27 @@ namespace VisiBoole.Views
             this.btnTick.UseVisualStyleBackColor = true;
             this.btnTick.Click += new System.EventHandler(this.btnTick_Click);
             // 
-            // tabPage1
-            // 
-            this.tabPage1.Location = new System.Drawing.Point(4, 29);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(786, 534);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
-            // 
             // BrowserTabControl
             // 
             this.BrowserTabControl.Controls.Add(this.tabPage1);
             this.BrowserTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.BrowserTabControl.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.BrowserTabControl.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.BrowserTabControl.ItemSize = new System.Drawing.Size(58, 20);
             this.BrowserTabControl.Location = new System.Drawing.Point(3, 30);
             this.BrowserTabControl.Name = "BrowserTabControl";
             this.BrowserTabControl.SelectedIndex = 0;
             this.BrowserTabControl.Size = new System.Drawing.Size(794, 567);
             this.BrowserTabControl.TabIndex = 1;
+            // 
+            // tabPage1
+            // 
+            this.tabPage1.Location = new System.Drawing.Point(4, 24);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(786, 539);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "tabPage1";
+            this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // DisplayRun
             // 

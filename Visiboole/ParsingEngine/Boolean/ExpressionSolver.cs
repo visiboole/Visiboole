@@ -44,12 +44,9 @@ namespace VisiBoole.ParsingEngine.Boolean
             Stack<int> valueStack = new Stack<int>();
             Stack<string> operatorStack = new Stack<string>();
 
-            // Push start of expression parenthesis
-            operatorStack.Push("(");
-
-            // And operator: (?<=\w|\))\s(?=[\w(~'])
-            // constant: (\'[bB][0-1])
-            MatchCollection matches = Regex.Matches(expression, @"(\~?(?<Name>[_a-zA-Z]\w{0,19}))|([~^()|+-])|(==)|(?<=\w|\))\s(?=[\w(~'])|(\'[bB][0-1])");
+            // Obtain scalars, constants and operators
+            expression = $"({expression})"; // Add () to expression
+            MatchCollection matches = Regex.Matches(expression, @"(~?(?<Name>[_a-zA-Z]\w{0,19}))|(~?'[bB][0-1])|([~^()|+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
             foreach (Match match in matches)
             {
                 if (match.Value == ")")
@@ -63,11 +60,11 @@ namespace VisiBoole.ParsingEngine.Boolean
                     // Pop (
                     operatorStack.Pop();
 
-                    // Check for not in front of (
-                    if (operatorStack.Peek() == "~")
+                    // Check for ~
+                    if (operatorStack.Count > 0 && operatorStack.Peek() == "~")
                     {
-                        operatorStack.Pop();
                         valueStack.Push(Convert.ToInt32(!Convert.ToBoolean(valueStack.Pop())));
+                        operatorStack.Pop();
                     }
                 }
                 else if (match.Value == "(" || Parser.OperatorsList.Contains(match.Value))
@@ -88,39 +85,31 @@ namespace VisiBoole.ParsingEngine.Boolean
                     // Process var
                     string var = match.Value;
                     int value = 0;
+                    bool containsNot = false;
 
-                    if (var[0] == '\'')
+                    if (var[0] == '~')
                     {
-                        value = Convert.ToInt32(match.Value[2].ToString());
+                        containsNot = true;
+                        var = var.Substring(1);
+                    }
+                    
+                    if (var.Contains("'"))
+                    {
+                        value = Convert.ToInt32(var[2].ToString());
                     }
                     else
                     {
-                        bool containsNot = false;
-                        if (var[0] == '~')
-                        {
-                            containsNot = true;
-                            var = var.Substring(1);
-                        }
-
                         value = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(var);
-                        if (containsNot)
-                        {
-                            value = Convert.ToInt32(!Convert.ToBoolean(value));
-                        }
+                    }
+
+                    if (containsNot)
+                    {
+                        value = Convert.ToInt32(!Convert.ToBoolean(value));
                     }
 
                     valueStack.Push(value);
                 }
             }
-
-            // Perform all operations until (
-            while (operatorStack.Peek() != "(")
-            {
-                ExecuteOperation(ref valueStack, ref operatorStack);
-            }
-
-            // Pop (
-            operatorStack.Pop();
 
             return valueStack.Pop();
         }
@@ -135,18 +124,11 @@ namespace VisiBoole.ParsingEngine.Boolean
             string operation = operatorStack.Pop();
 
             int rightValue = valueStack.Pop();
-            int leftValue = 0;
-            if (operation != "~")
-            {
-                leftValue = valueStack.Pop();
-            }
+            int leftValue = valueStack.Pop();
 
             int result = 0;
             switch (operation)
             {
-                case "~":
-                    result = Convert.ToInt32(!Convert.ToBoolean(rightValue));
-                    break;
                 case " ":
                     result = Convert.ToInt32(Convert.ToBoolean(leftValue) && Convert.ToBoolean(rightValue));
                     break;
@@ -172,7 +154,8 @@ namespace VisiBoole.ParsingEngine.Boolean
         public static List<IObjectCodeElement> GetOutput(string expression)
         {
             List<IObjectCodeElement> output = new List<IObjectCodeElement>();
-            MatchCollection matches = Regex.Matches(expression, @"(~?[_a-zA-Z]\w{0,19})|('[bB][01])|([~^()|+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
+
+            MatchCollection matches = Regex.Matches(expression, @"(~?(?<Name>[_a-zA-Z]\w{0,19}))|(~?'[bB][0-1])|([~^()|+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
             foreach (Match match in matches)
             {
                 string token = match.Value;
@@ -190,13 +173,13 @@ namespace VisiBoole.ParsingEngine.Boolean
                 }
                 else
                 {
+                    // Variable
                     string var = token;
                     if (var.Contains("~"))
                     {
                         var = token.Substring(1);
                     }
 
-                    // Variable
                     IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
                     DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
                     if (indVar != null)

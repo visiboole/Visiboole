@@ -32,6 +32,11 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class VariableListStmt : Statement
 	{
         /// <summary>
+        /// Regex for getting variable list tokens (extra spaces and scalars).
+        /// </summary>
+        private static Regex TokenRegex = new Regex($@"({Parser.ScalarPattern4}|{Parser.SpacingPattern})");
+
+        /// <summary>
         /// Constructs an instance of VariableListStmt
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on simulation mode</param>
@@ -47,7 +52,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Clean content and make format string
-            MatchCollection matches = Regex.Matches(Text, $@"({Parser.NamePattern}|{Parser.SpacingPattern})");
+            MatchCollection matches = TokenRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 if (String.IsNullOrWhiteSpace(match.Value))

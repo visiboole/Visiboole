@@ -125,7 +125,9 @@ namespace VisiBoole.Controllers
         public DisplayController(IDisplay edit, IDisplay run)
 		{
 			tabControl = new TabControl();
-			browser = new WebBrowser();
+            tabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+
+            browser = new WebBrowser();
 			parseOut = new OutputParser();
 
             ImageList il = new ImageList();

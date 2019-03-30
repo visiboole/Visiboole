@@ -53,7 +53,7 @@ namespace VisiBoole.ParsingEngine.ObjectCode
 		public Constant(string constantText)
 		{
 			ConstantText = constantText;
-            Value = Convert.ToInt32(constantText[2].ToString()) == 1;
+            Value = Convert.ToInt32(constantText[constantText.Length - 1].ToString()) == 1;
         }
 	}
 }
