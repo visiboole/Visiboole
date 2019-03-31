@@ -1,0 +1,9 @@
+*a *b *c d e f;
+g = ~d e | f;
+h = ~a e | f;
+i = ~d b | f;
+j = ~d e | c;
+k = ~a b | f;
+l = ~a e | c;
+m = ~d b | c;
+n = ~a b | c;

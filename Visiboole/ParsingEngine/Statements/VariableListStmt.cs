@@ -66,8 +66,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     string var = (match.Value[0] == '*') ? match.Value.Substring(1) : match.Value;
 
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+                    IndependentVariable indVar = Parser.Design.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+                    DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
                     if (indVar != null)
                     {
                         Output.Add(indVar);

@@ -77,35 +77,35 @@ namespace VisiBoole.Views
         /// <param name="current"></param>
         public void UpdateControls(IDisplay display)
         {
-            openIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            openToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            newIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            newToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT);
-            saveIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            saveAllIcon.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            runModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            editModeToggle.Enabled = (display.TypeOfDisplay == Globals.DisplayType.RUN);
-            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            closeAllDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            openIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
+            openToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
+            newIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
+            newToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
+            saveIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAllIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            runModeToggle.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            editModeToggle.Enabled = (display.TypeOfDisplay == DisplayType.RUN);
+            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            closeAllDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
             increaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
             decreaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
-            selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == Globals.DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
 
             if (NavTree.Nodes[0].Nodes.Count > 0)
             {
                 MainWindowController.SetFontSize();
             }
 
-            if (display.TypeOfDisplay == Globals.DisplayType.EDIT && Globals.TabControl.SelectedTab != null)
+            if (display.TypeOfDisplay == DisplayType.EDIT && Globals.TabControl.SelectedTab != null)
             {
-                undoToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().EditHistory.Count > 0;
-                undoToolStripMenuItem1.Enabled = Globals.TabControl.SelectedTab.Design().EditHistory.Count > 0;
-                redoToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().UndoHistory.Count > 0;
-                redoToolStripMenuItem1.Enabled = Globals.TabControl.SelectedTab.Design().UndoHistory.Count > 0;
-                cutToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().SelectedText.Length > 0;
-                copyToolStripMenuItem.Enabled = Globals.TabControl.SelectedTab.Design().SelectedText.Length > 0;
+                undoToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().EditHistory.Count > 0;
+                undoToolStripMenuItem1.Enabled = MainWindowController.GetActiveDesign().EditHistory.Count > 0;
+                redoToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().UndoHistory.Count > 0;
+                redoToolStripMenuItem1.Enabled = MainWindowController.GetActiveDesign().UndoHistory.Count > 0;
+                cutToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().SelectedText.Length > 0;
+                copyToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().SelectedText.Length > 0;
                 pasteToolStripMenuItem.Enabled = Clipboard.ContainsText();
             }
             else
@@ -525,7 +525,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void UndoTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.Design().UndoTextMenuClick(sender, e);
+            MainWindowController.GetActiveDesign().UndoTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void RedoTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.Design().RedoTextMenuClick(sender, e);
+            MainWindowController.GetActiveDesign().RedoTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -545,7 +545,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CutTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.Design().CutTextMenuClick(sender, e);
+            MainWindowController.GetActiveDesign().CutTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -555,7 +555,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CopyTextMenuClick(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.Design().CopyTextMenuClick(sender, e);
+            MainWindowController.GetActiveDesign().CopyTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -565,7 +565,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void PasteTextEvent(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.Design().PasteTextMenuClick(sender, e);
+            MainWindowController.GetActiveDesign().PasteTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -575,7 +575,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SelectAllTextEvent(object sender, EventArgs e)
         {
-            Globals.TabControl.SelectedTab.Design().SelectAllTextMenuClick(sender, e);
+            MainWindowController.GetActiveDesign().SelectAllTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -620,7 +620,7 @@ namespace VisiBoole.Views
                 RemoveNavTreeNode(name);
                 if (NavTree.Nodes[0].Nodes.Count == 0)
                 {
-                    MainWindowController.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+                    MainWindowController.LoadDisplay(DisplayType.EDIT); // Switches to default view
                 }
             }
         }
@@ -661,7 +661,7 @@ namespace VisiBoole.Views
 
                 if (NavTree.Nodes[0].Nodes.Count == 0)
                 {
-                    MainWindowController.LoadDisplay(Globals.DisplayType.EDIT); // Switches to default view
+                    MainWindowController.LoadDisplay(DisplayType.EDIT); // Switches to default view
                 }
             }
         }

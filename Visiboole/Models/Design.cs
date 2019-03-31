@@ -9,7 +9,7 @@ using VisiBoole.ParsingEngine;
 
 namespace VisiBoole.Models
 {
-    public delegate void DisplayLoader(Globals.DisplayType dType); // Delegate for LoadDisplay Method
+    public delegate void DisplayLoader(DisplayType dType); // Delegate for LoadDisplay Method
 
     /// <summary>
     /// A User-Created Design
@@ -307,7 +307,7 @@ namespace VisiBoole.Models
             {
                 UpdateDirty();
             }
-            UpdateDisplay(Globals.DisplayType.EDIT);
+            UpdateDisplay(DisplayType.EDIT);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace VisiBoole.Models
                 {
                     UpdateDirty();
                 }
-                UpdateDisplay(Globals.DisplayType.EDIT);
+                UpdateDisplay(DisplayType.EDIT);
             }
         }
 
@@ -429,7 +429,7 @@ namespace VisiBoole.Models
             {
                 UpdateDirty();
             }
-            UpdateDisplay(Globals.DisplayType.EDIT);
+            UpdateDisplay(DisplayType.EDIT);
         }
 
         /// <summary>

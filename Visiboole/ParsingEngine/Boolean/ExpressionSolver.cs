@@ -99,7 +99,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                     }
                     else
                     {
-                        value = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(var);
+                        value = Parser.Design.Database.TryGetValue(var);
                     }
 
                     if (containsNot)
@@ -180,8 +180,8 @@ namespace VisiBoole.ParsingEngine.Boolean
                         var = token.Substring(1);
                     }
 
-                    IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                    DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+                    IndependentVariable indVar = Parser.Design.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+                    DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
                     if (indVar != null)
                     {
                         output.Add(new IndependentVariable(token, indVar.Value));

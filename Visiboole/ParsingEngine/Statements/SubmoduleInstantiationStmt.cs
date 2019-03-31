@@ -21,6 +21,7 @@
 using System;
 using System.Text.RegularExpressions;
 using VisiBoole.Models;
+using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -31,28 +32,73 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public class SubmoduleInstantiationStmt : Statement
 	{
-	    /// <summary>
-	    /// The identifying pattern that can be used to identify and extract this statement from raw text
-	    /// </summary>
-        public static Regex Regex { get; } = new Regex(@"^@\w{1,20}\(.*:.*:.*\);$");
+        /// <summary>
+        /// Name of the design being instantiated
+        /// </summary>
+        private string DesignName;
+
+        /// <summary>
+        /// Path of the design being instantiated
+        /// </summary>
+        private string DesignPath;
+
+        /// <summary>
+        /// Regex for getting format specifier tokens (format specifiers and extra spacing).
+        /// </summary>
+        private static Regex TokenRegex = new Regex($@"({Parser.VariablePattern}|{Parser.ConcatenationPattern})");
 
         /// <summary>
         /// Constructs an instance of SubmoduleInstantiationStmt at given linenumber with txt string input
         /// </summary>
         /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
         /// <param name="txt">The raw, unparsed text of this statement</param>
-		public SubmoduleInstantiationStmt(int lnNum, string txt) : base(lnNum, txt)
+		public SubmoduleInstantiationStmt(int lnNum, string txt, string designName, string designPath) : base(lnNum, txt)
 		{
-
+            DesignName = designName;
+            DesignPath = designPath;
 		}
 
-	    /// <summary>
-	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-	    /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
-	    /// </summary>
+        /// <summary>
+        /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
+        /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
+        /// </summary>
         public override void Parse()
-		{
-			throw new NotImplementedException();
-		}
+        {
+            // Add padding if present to output
+            Match padding = Regex.Match(Text, @"\s+");
+            if (padding.Success)
+            {
+                for (int i = 0; i < padding.Value.Length; i++)
+                {
+                    Output.Add(new SpaceFeed());
+                }
+            }
+
+            // Add instantiation to output
+            Match instantiation = Regex.Match(Text, Parser.InstantiationNotationPattern);
+            Output.Add(new Instantiation(instantiation.Value, DesignName, DesignPath));
+
+            // Add variables and concatenations to output
+            MatchCollection matches = TokenRegex.Matches(Text);
+            foreach (Match match in matches)
+            {
+                /*
+                // Variables and concatenations
+                string[] var;
+                if (!match.Value.Contains("{"))
+                {
+                    var = new string[] { match.Value };
+                }
+                else
+                {
+                    var = Regex.Split(match.Groups["Vars"].Value, @"\s+");
+                }
+
+                // Output vars
+                */
+            }
+
+            Output.Add(new LineFeed());
+        }
 	}
 }

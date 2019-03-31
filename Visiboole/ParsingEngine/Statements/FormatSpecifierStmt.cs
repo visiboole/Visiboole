@@ -72,7 +72,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     foreach (string var in variables)
                     {
                         // Add value of each variable to output values
-                        values.Add(Globals.TabControl.SelectedTab.Design().Database.TryGetValue(var));
+                        values.Add(Parser.Design.Database.TryGetValue(var));
                     }
 
                     // Output Format Specifier

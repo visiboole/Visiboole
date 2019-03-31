@@ -49,7 +49,7 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// No-split view that is hosted by the MainWindow
 		/// </summary>
-		private Dictionary<Globals.DisplayType, IDisplay> allDisplays;
+		private Dictionary<DisplayType, IDisplay> allDisplays;
 
 		/// <summary>
 		/// Handle to the controller for the MainWindow
@@ -65,11 +65,6 @@ namespace VisiBoole.Controllers
 		/// The WebBrowser that shows the output that is shared amongst the displays that are hosted by the MainWindow
 		/// </summary>
 		public WebBrowser browser;
-
-		/// <summary>
-		/// Handle to the output parser that parses the output that is viewed by the user
-		/// </summary>
-		private OutputParser parseOut;
 
 		/// <summary>
 		/// The display that was hosted by the MainWindow before the current one
@@ -103,13 +98,13 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		/// <param name="dType">The type of the display to return</param>
 		/// <returns>Returns a handle to the display of the matching type</returns>
-		public IDisplay GetDisplayOfType(Globals.DisplayType dType)
+		public IDisplay GetDisplayOfType(DisplayType dType)
         {
             switch (dType)
             {
-                case Globals.DisplayType.EDIT:
+                case DisplayType.EDIT:
                     return edit;
-                case Globals.DisplayType.RUN:
+                case DisplayType.RUN:
                     return run;
                 default: return null;
             }
@@ -128,7 +123,6 @@ namespace VisiBoole.Controllers
             tabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
 
             browser = new WebBrowser();
-			parseOut = new OutputParser();
 
             ImageList il = new ImageList();
             il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
@@ -137,19 +131,19 @@ namespace VisiBoole.Controllers
 			this.edit = edit;
 			this.run = run;
 
-			allDisplays = new Dictionary<Globals.DisplayType, IDisplay>();
-			allDisplays.Add(Globals.DisplayType.EDIT, edit);
-			allDisplays.Add(Globals.DisplayType.RUN, run);
+			allDisplays = new Dictionary<DisplayType, IDisplay>();
+			allDisplays.Add(DisplayType.EDIT, edit);
+			allDisplays.Add(DisplayType.RUN, run);
 
 			CurrentDisplay = edit;
             Globals.TabControl = tabControl;
         }
 
-		/// <summary>
-		/// Saves the handle to the controller for the MainWindow
-		/// </summary>
-		/// <param name="mwController"></param>
-		public void AttachMainWindowController(IMainWindowController mwController)
+        /// <summary>
+        /// Saves the handle to the controller for the MainWindow
+        /// </summary>
+        /// <param name="mwController"></param>
+        public void AttachMainWindowController(IMainWindowController mwController)
 		{
 			this.mwController = mwController;
 		}
@@ -215,8 +209,7 @@ namespace VisiBoole.Controllers
 		public void Run()
         {
             Design design = tabControl.SelectedTab.Design();
-            Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(design, null, false);
+            List<IObjectCodeElement> output = Parser.Parse(design, null, false);
             if (output == null)
             {
                 return;
@@ -234,7 +227,7 @@ namespace VisiBoole.Controllers
 
             if (CurrentDisplay is DisplayEdit)
             {
-                mwController.LoadDisplay(Globals.DisplayType.RUN);
+                mwController.LoadDisplay(DisplayType.RUN);
             }
         }
 
@@ -249,8 +242,7 @@ namespace VisiBoole.Controllers
 
             for (int i = 0; i < count; i++)
             {
-                Parser p = new Parser();
-                List<IObjectCodeElement> output = p.Parse(design, null, true);
+                List<IObjectCodeElement> output = Parser.Parse(design, null, true);
                 HtmlBuilder html = new HtmlBuilder(design, output);
                 string htmlOutput = html.GetHTML();
                 html.DisplayHtml(htmlOutput, browser);
@@ -260,7 +252,7 @@ namespace VisiBoole.Controllers
 
             if (CurrentDisplay is DisplayEdit)
             {
-                mwController.LoadDisplay(Globals.DisplayType.RUN);
+                mwController.LoadDisplay(DisplayType.RUN);
             }
         }
 
@@ -271,8 +263,7 @@ namespace VisiBoole.Controllers
         public void Variable_Click(string variableName)
         {
             Design design = tabControl.SelectedTab.Design();
-            Parser p = new Parser();
-            List<IObjectCodeElement> output = p.Parse(design, variableName, false);
+            List<IObjectCodeElement> output = Parser.Parse(design, variableName, false);
             if (output == null)
             {
                 return;
@@ -293,8 +284,54 @@ namespace VisiBoole.Controllers
 
             if (CurrentDisplay is DisplayEdit)
             {
-                mwController.LoadDisplay(Globals.DisplayType.RUN);
+                mwController.LoadDisplay(DisplayType.RUN);
             }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user clicks on an instantiation
+        /// </summary>
+        /// <param name="instantiation">The instantiation that was clicked by the user</param>
+        public void Instantiation_Click(string instantiation, string designName, string designPath)
+        {
+            // Decode path
+            designPath = designPath.Replace("&amp;", "&").Replace("&back;", "\\").Replace("&apos;", "'");
+
+            Design design = new Design(designPath, delegate { });
+            List<IObjectCodeElement> output = Parser.Parse(design, null, false);
+            if (output == null)
+            {
+                return;
+            }
+
+            HtmlBuilder html = new HtmlBuilder(design, output);
+            if (html.HtmlText == null)
+            {
+                return;
+            }
+            string htmlOutput = html.GetHTML();
+
+
+
+            /*
+            HtmlBuilder html = new HtmlBuilder(design, output);
+            if (html.HtmlText == null)
+            {
+                return;
+            }
+            string htmlOutput = html.GetHTML();
+
+            browser.ObjectForScripting = this;
+            int position = browser.Document.Body.ScrollTop;
+            html.DisplayHtml(htmlOutput, browser);
+
+            browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
+
+            if (CurrentDisplay is DisplayEdit)
+            {
+                mwController.LoadDisplay(DisplayType.RUN);
+            }
+            */
         }
 
         /// <summary>

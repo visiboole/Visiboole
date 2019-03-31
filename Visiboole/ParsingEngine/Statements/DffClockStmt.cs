@@ -73,16 +73,16 @@ namespace VisiBoole.ParsingEngine.Statements
             Expression = Regex.Replace(Expression, @"\s+", " "); // Replace multiple spaces
 
             // Add dependency and set delay value
-            // Globals.TabControl.SelectedTab.Design().Database.AddExpression(Delay, Expression);
-            Globals.TabControl.SelectedTab.Design().Database.CreateDependenciesList(Delay);
+            // Parser.Design.Database.AddExpression(Delay, Expression);
+            Parser.Design.Database.CreateDependenciesList(Delay);
             bool delayValue = ExpressionSolver.Solve(Expression) == 1;
-            Globals.TabControl.SelectedTab.Design().Database.SetValue(Delay, delayValue);
+            Parser.Design.Database.SetValue(Delay, delayValue);
         }
 
         public void Tick()
         {
-            DependentVariable delayVariable = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-            Globals.TabControl.SelectedTab.Design().Database.SetValue(Dependent, delayVariable.Value);
+            DependentVariable delayVariable = Parser.Design.Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+            Parser.Design.Database.SetValue(Dependent, delayVariable.Value);
         }
 
         public override void Parse()
@@ -96,9 +96,9 @@ namespace VisiBoole.ParsingEngine.Statements
             }
 
             // Get output variables
-            DependentVariable delayVariable = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-            IndependentVariable dependentInd = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(Dependent) as IndependentVariable;
-            DependentVariable dependentDep = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
+            DependentVariable delayVariable = Parser.Design.Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+            IndependentVariable dependentInd = Parser.Design.Database.TryGetVariable<IndependentVariable>(Dependent) as IndependentVariable;
+            DependentVariable dependentDep = Parser.Design.Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
 
             // Create output
             if (dependentInd != null)
@@ -115,8 +115,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 bool delayValue = ExpressionSolver.Solve(Expression) == 1;
                 if (delayValue != delayVariable.Value)
                 {
-                    Globals.TabControl.SelectedTab.Design().Database.SetValue(Delay, delayValue);
-                    delayVariable = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+                    Parser.Design.Database.SetValue(Delay, delayValue);
+                    delayVariable = Parser.Design.Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
                 }
             }
             DependentVariable dv = new DependentVariable("<=", delayVariable.Value);

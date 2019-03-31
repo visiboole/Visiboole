@@ -141,7 +141,7 @@ namespace VisiBoole.Controllers
         /// Loads into the MainWindow the display of the given type
         /// </summary>
         /// <param name="dType">The type of display that should be loaded</param>
-        public void LoadDisplay(Globals.DisplayType dType)
+        public void LoadDisplay(DisplayType dType)
         {
             try
             {
@@ -164,13 +164,22 @@ namespace VisiBoole.Controllers
             {
                 if (displayController.CurrentDisplay is DisplayRun)
                 {
-                    LoadDisplay(Globals.DisplayType.EDIT);
+                    LoadDisplay(DisplayType.EDIT);
                 }
             }
             catch (Exception)
             {
                 Globals.Dialog.New("Error", "An unexpected error has occured while switching the display type.", DialogType.Ok);
             }
+        }
+
+        /// <summary>
+        /// Returns the active design.
+        /// </summary>
+        /// <returns></returns>
+        public Design GetActiveDesign()
+        {
+            return designController.GetActiveDesign();
         }
 
         /// <summary>

@@ -82,6 +82,7 @@
     <Compile Include="Globals.cs" />
     <Compile Include="ParsingEngine\Boolean\ExpressionSolver.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
+    <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\SpaceFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Parentheses.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />
@@ -95,10 +96,8 @@
     <Compile Include="Models\HtmlBuilder.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IObjectCodeElement.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IndependentVariable.cs" />
-    <Compile Include="Models\InputParser.cs" />
     <Compile Include="ParsingEngine\ObjectCode\LineFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Operator.cs" />
-    <Compile Include="Models\OutputParser.cs" />
     <Compile Include="ParsingEngine\Parser.cs" />
     <Compile Include="ParsingEngine\Statements\Statement.cs" />
     <Compile Include="Models\Design.cs">

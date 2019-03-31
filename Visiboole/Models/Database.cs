@@ -99,8 +99,8 @@ namespace VisiBoole.ParsingEngine
 
         public void SetValues(string variableName, bool value)
         {
-            IndependentVariable indVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
-            DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
+            IndependentVariable indVar = Parser.Design.Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
+            DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
             if (indVar != null)
             {
                 IndVars[variableName].Value = value;

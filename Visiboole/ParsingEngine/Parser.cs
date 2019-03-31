@@ -53,7 +53,7 @@ namespace VisiBoole.ParsingEngine
     /// The main class of the parsing engine. This class is the brains of the parsing engine and 
     /// communicates with the calling classes.
     /// </summary>
-	public class Parser
+	public static class Parser
 	{
         /// <summary>
         /// Pattern for identifying scalars (when creating tokens)
@@ -163,7 +163,12 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying submodule instantiations
         /// </summary>
-        private static readonly string InstantiationPattern = @"^(?<Design>\w+)\.(?<Name>\w+)$";
+        public static readonly string InstantiationNotationPattern = @"(?<Design>\w+)\.(?<Name>\w+)";
+
+        /// <summary>
+        /// Pattern for identifying submodule instantiations
+        /// </summary>
+        public static readonly string InstantiationPattern = $@"^{InstantiationNotationPattern}$";
 
         /// <summary>
         /// Pattern for identifying operators (when creating tokens)
@@ -183,32 +188,32 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying scalars (when creating tokens)
         /// </summary>
-        public static Regex ScalarRegex = new Regex(ScalarPattern, RegexOptions.Compiled);
+        public static Regex ScalarRegex { get; } = new Regex(ScalarPattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying scalars (when initializing variables)
         /// </summary>
-        public static Regex ScalarRegex2 = new Regex(ScalarPattern4, RegexOptions.Compiled);
+        public static Regex ScalarRegex2 { get; } = new Regex(ScalarPattern4, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying vectors (when creating tokens)
         /// </summary>
-        public static Regex VectorRegex = new Regex(VectorPattern, RegexOptions.Compiled);
+        public static Regex VectorRegex { get; } = new Regex(VectorPattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying vectors (no ~ or *)
         /// </summary>
-        public static Regex VectorRegex2 = new Regex(VectorPattern2, RegexOptions.Compiled);
+        public static Regex VectorRegex2 { get; } = new Regex(VectorPattern2, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying vectors (with optional *)
         /// </summary>
-        public static Regex VectorRegex3 = new Regex(VectorPattern4, RegexOptions.Compiled);
+        public static Regex VectorRegex3 { get; } = new Regex(VectorPattern4, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying constants (when creating tokens)
         /// </summary>
-        public static Regex ConstantRegex = new Regex(ConstantPattern);
+        public static Regex ConstantRegex { get; } = new Regex(ConstantPattern);
 
         /// <summary>
         /// Regex for identifying scalars, vectors and constants
@@ -228,12 +233,12 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying entire format specifiers
         /// </summary>
-        public static Regex FormatSpecifierRegex2 = new Regex(FormatSpecifierPattern2);
+        public static Regex FormatSpecifierRegex2 { get; } = new Regex(FormatSpecifierPattern2);
 
         /// <summary>
         /// Regex for identifying comment statements
         /// </summary>
-        public static Regex CommentRegex = new Regex(CommentPattern);
+        public static Regex CommentRegex { get; } = new Regex(CommentPattern);
 
         /// <summary>
         /// Regex for identifying library statements
@@ -269,27 +274,27 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// List of libraries included for this instance.
         /// </summary>
-        private List<string> Libraries;
+        private static List<string> Libraries;
 
         /// <summary>
         /// Dictionary of submodules included for this instance.
         /// </summary>
-        private Dictionary<string, string> SubModules;
+        private static Dictionary<string, string> SubModules;
 
         /// <summary>
         /// The design being parsed.
         /// </summary>
-        private Design Design;
+        public static Design Design { get; private set; }
 
         /// <summary>
         /// Line number of the design being parsed. (Used for errors)
         /// </summary>
-        private int PreLineNumber;
+        private static int PreLineNumber;
 
         /// <summary>
         /// Line number of the parsed output. (Used for statements)
         /// </summary>
-        private int PostLineNumber;
+        private static int PostLineNumber;
 
         /// <summary>
         /// Memo for vector expansions.
@@ -299,18 +304,12 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Indicates whether the parser is ticking.
         /// </summary>
-        private bool Tick;
+        private static bool Tick;
 
         /// <summary>
         /// Indicates whether the parser is initializing.
         /// </summary>
-        private bool Init;
-
-        public Parser()
-        {
-            Libraries = new List<string>();
-            SubModules = new Dictionary<string, string>();
-        }
+        private static bool Init;
 
         /// <summary>
         /// The entry method of the parsing engine. This method acts as "main" for the parsing engine.
@@ -318,9 +317,11 @@ namespace VisiBoole.ParsingEngine
         /// <param name="sd">The subdesign containing the text to parse</param>
         /// <param name="variableName">The clicked variable if it exists, else the empty string</param>
         /// <returns>Returns a list of parsed elements containing the text and value of each unit in the given expression</returns>
-		public List<IObjectCodeElement> Parse(Design sd, string variableName, bool tick)
+		public static List<IObjectCodeElement> Parse(Design design, string variableName, bool tick)
 		{
-            Design = sd;
+            Design = design;
+            Libraries = new List<string>();
+            SubModules = new Dictionary<string, string>();
             Tick = tick;
             Globals.Logger.Start();
 
@@ -413,7 +414,7 @@ namespace VisiBoole.ParsingEngine
         /// Returns a list of statements from parsed source code.
         /// </summary>
         /// <returns>List of statements</returns>
-        private List<Statement> ParseStatements()
+        private static List<Statement> ParseStatements()
         {
             bool valid = true;
             List<Statement> statements = new List<Statement>();
@@ -528,7 +529,9 @@ namespace VisiBoole.ParsingEngine
                         }
                         else if (type == StatementType.Submodule)
                         {
-                            statements.Add(new SubmoduleInstantiationStmt(PostLineNumber++, line));
+                            string designName = Regex.Match(line, InstantiationNotationPattern).Groups["Design"].Value;
+                            string designPath = SubModules[designName];
+                            statements.Add(new SubmoduleInstantiationStmt(PostLineNumber++, line, designName, designPath));
                         }
                         else
                         {
@@ -612,7 +615,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="expression">Expression to validate</param>
         /// <returns>Whether the expression is valid or not</returns>
-        private bool ValidateExpressionStatement(string expression)
+        private static bool ValidateExpressionStatement(string expression)
         {            
             bool wasPreviousOperator = true;
             List<StringBuilder> expressions = new List<StringBuilder>();
@@ -742,7 +745,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="line">Line to validate</param>
         /// <returns>Whether the line is valid or not</returns>
-        private bool ValidateFormatSpeciferStatement(string line)
+        private static bool ValidateFormatSpeciferStatement(string line)
         {
             if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({VariablePattern})"))
             {
@@ -762,7 +765,7 @@ namespace VisiBoole.ParsingEngine
             return true;
         }
 
-        private bool ValidateModuleDeclaration(string declaration)
+        private static bool ValidateModuleDeclaration(string declaration)
         {
             return true;
         }
@@ -772,7 +775,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="line">Line to interpret</param>
         /// <returns>Type of statement</returns>
-        private StatementType? GetStatementType(string line)
+        private static StatementType? GetStatementType(string line)
         {
             StatementType? type = StatementType.Empty;
             List<string> tokens = new List<string>();
@@ -1152,7 +1155,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a token</returns>
-        private bool IsToken(string lexeme)
+        private static bool IsToken(string lexeme)
         {
             if (IsScalar(lexeme))
             {
@@ -1191,7 +1194,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a scalar</returns>
-        private bool IsScalar(string lexeme)
+        private static bool IsScalar(string lexeme)
         {
             Match match = ScalarRegex.Match(lexeme);
             if (match.Success)
@@ -1222,7 +1225,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a vector</returns>
-        private bool IsVector(string lexeme)
+        private static bool IsVector(string lexeme)
         {
             Match match = VectorRegex.Match(lexeme);
             if (match.Success)
@@ -1318,7 +1321,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a constant</returns>
-        private bool IsConstant(string lexeme)
+        private static bool IsConstant(string lexeme)
         {
             Match match = ConstantRegex.Match(lexeme);
             if (match.Success)
@@ -1342,7 +1345,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="path">Path of the design</param>
         /// <returns>Whether the design contains a module Declaration</returns>
-        private bool DesignHasModuleDeclaration(string path)
+        private static bool DesignHasModuleDeclaration(string path)
         {
             FileInfo fileInfo = new FileInfo(path);
             string name = fileInfo.Name.Split('.')[0];
@@ -1368,7 +1371,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="type">Type of statement</param>
         /// <param name="line">Line</param>
         /// <returns>Whether the operation was successful</returns>
-        private bool InitVariables(StatementType? type, string line)
+        private static bool InitVariables(StatementType? type, string line)
         {
             MatchCollection matches = ScalarRegex2.Matches(line);
             foreach (Match match in matches)
@@ -1447,7 +1450,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="match">Vector expansion or constant expansion match</param>
         /// <returns>Expansion of the provided match</returns>
-        private List<string> GetExpansion(Match match)
+        private static List<string> GetExpansion(Match match)
         {
             if (match.Value.Contains("[") && String.IsNullOrEmpty(match.Groups["LeftBound"].Value))
             {
@@ -1479,7 +1482,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="match">The expansion match</param>
         /// <returns>The components</returns>
-        private List<string> ExpandHorizontally(Match match)
+        private static List<string> ExpandHorizontally(Match match)
         {
             List<string> expansion = new List<string>();
 
@@ -1571,7 +1574,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="line">Line to expand</param>
         /// <returns>Expanded line</returns>
-        private string ExpandVertically(string line)
+        private static string ExpandVertically(string line)
         {
             string expanded = String.Empty;
 

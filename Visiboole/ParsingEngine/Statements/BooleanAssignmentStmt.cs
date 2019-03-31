@@ -66,8 +66,8 @@ namespace VisiBoole.ParsingEngine.Statements
             Expression = Regex.Replace(Expression, @"\s+", " "); // Replace multiple spaces
 
             // Add expression and dependency to the database
-            Globals.TabControl.SelectedTab.Design().Database.AddExpression(Dependent, Expression);
-            Globals.TabControl.SelectedTab.Design().Database.CreateDependenciesList(Dependent);
+            Parser.Design.Database.AddExpression(Dependent, Expression);
+            Parser.Design.Database.CreateDependenciesList(Dependent);
 
             // Update variable value
             Evaluate();
@@ -76,10 +76,10 @@ namespace VisiBoole.ParsingEngine.Statements
         public void Evaluate()
         {
             bool dependentValue = ExpressionSolver.Solve(Expression) == 1;
-            bool currentValue = Globals.TabControl.SelectedTab.Design().Database.TryGetValue(Dependent) == 1;
+            bool currentValue = Parser.Design.Database.TryGetValue(Dependent) == 1;
             if (dependentValue != currentValue)
             {
-                Globals.TabControl.SelectedTab.Design().Database.SetValues(Dependent, dependentValue);
+                Parser.Design.Database.SetValues(Dependent, dependentValue);
             }
         }
 
@@ -98,7 +98,7 @@ namespace VisiBoole.ParsingEngine.Statements
             }
 
             // Update variable value
-            DependentVariable depVar = Globals.TabControl.SelectedTab.Design().Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
+            DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
 
             //Add dependent to output
             Output.Add(depVar);

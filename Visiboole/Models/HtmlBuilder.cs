@@ -245,6 +245,13 @@ namespace VisiBoole.Models
                             {
                                 currentLine += "&nbsp;";
                             }
+                            else if (varType == typeof(Instantiation))
+                            {
+                                Instantiation instantiation = (Instantiation)token;
+                                string encodedPath = instantiation.DesignPath.Replace("&", "&amp;").Replace("\\", "&back;").Replace("'", "&apos;");
+                                currentLine += $"<font color='black' style=\"cursor: hand;\" onclick=\"window.external.Instantiation_Click('{variable}', '{instantiation.DesignName}', '{encodedPath}')\">{variable}</font>";
+                                currentLine += " ";
+                            }
                             else
                             {
                                 currentLine += "<font color='black' style=\"cursor: no-drop;\" >" + variable + "</font>";

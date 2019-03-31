@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RicherTextBox">
+      <HintPath>..\Visiboole\RicherTextBox.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
@@ -51,9 +54,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Models\HtmlBuilderTests.cs" />
-    <Compile Include="Models\InputParserTests.cs" />
-    <Compile Include="ParsingEngine\ParsingTests.cs" />
+    <Compile Include="DesignTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -63,10 +64,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Testing Files\BasicBoolExp.vbi" />
-    <None Include="Resources\Testing Files\BasicClockExp.vbi" />
-    <None Include="Resources\Testing Files\BasicVarList.vbi" />
+    <None Include="Resources\Testing Files\BasicAnd.vbi" />
+    <None Include="Resources\Testing Files\BasicAssignment.vbi" />
+    <None Include="Resources\Testing Files\BasicEqualTo.vbi" />
+    <None Include="Resources\Testing Files\BasicNot.vbi" />
+    <None Include="Resources\Testing Files\BasicOr.vbi" />
+    <None Include="Resources\Testing Files\BasicXor.vbi" />
     <None Include="Resources\Testing Files\Empty.vbi" />
+    <None Include="Resources\Testing Files\HorizontalExpansion.vbi" />
+    <None Include="Resources\Testing Files\OperationPrecedence.vbi" />
+    <None Include="Resources\Testing Files\OperationPrecedence2.vbi" />
+    <None Include="Resources\Testing Files\OperationPrecedence3.vbi" />
+    <None Include="Resources\Testing Files\OperationPrecedence4.vbi" />
+    <None Include="Resources\Testing Files\VarList.vbi" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

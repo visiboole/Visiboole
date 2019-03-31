@@ -25,21 +25,21 @@ using VisiBoole.Views;
 
 namespace VisiBoole
 {
-	/// <summary>
-	/// Global variables for this application
-	/// </summary>
-	public static class Globals
-	{
-        /// <summary>
-        /// The different display types for the UserControl displays that are hosted by the MainWindow
-        /// </summary>
-        public enum DisplayType
-		{
-			EDIT,
-			RUN,
-            NONE
-		}
+    /// <summary>
+    /// The different display types for the UserControl displays that are hosted by the MainWindow
+    /// </summary>
+    public enum DisplayType
+    {
+        EDIT,
+        RUN,
+        NONE
+    }
 
+    /// <summary>
+    /// Global variables for this application
+    /// </summary>
+    public static class Globals
+	{
         /// <summary>
         /// Dialog box for the application.
         /// </summary>

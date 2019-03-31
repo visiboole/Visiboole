@@ -44,7 +44,7 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		/// <param name="dType">The type of the display to return</param>
 		/// <returns>Returns a handle to the display of the matching type</returns>
-		IDisplay GetDisplayOfType(Globals.DisplayType dType);
+		IDisplay GetDisplayOfType(DisplayType dType);
 
 		/// <summary>
 		/// Saves the handle to the controller for the MainWindow

@@ -1,0 +1,17 @@
+*a *b *c *d e f g h;
+i = e f g | h;
+j = a f g | h;
+k = e b g | h;
+l = e f c | h;
+m = e f g | d;
+n = a b g | h;
+o = a f c | h;
+p = a f g | d;
+q = e b c | h;
+r = e b g | d;
+s = e f c | d;
+t = a b c | h;
+u = e b c | d;
+v = a b g | d;
+w = a f c | d;
+x = a b c | d;

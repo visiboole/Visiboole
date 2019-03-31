@@ -19,6 +19,7 @@
  */
 
 using System.Collections.Generic;
+using VisiBoole.Models;
 using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
@@ -55,12 +56,18 @@ namespace VisiBoole.Controllers
         /// Loads into the MainWindow the display of the given type
         /// </summary>
         /// <param name="dType">The type of display that should be loaded</param>
-        void LoadDisplay(Globals.DisplayType dType);
+        void LoadDisplay(DisplayType dType);
 
         /// <summary>
         /// Switch display mode
         /// </summary>
         void SwitchDisplay();
+
+        /// <summary>
+        /// Returns the active design.
+        /// </summary>
+        /// <returns></returns>
+        Design GetActiveDesign();
 
         /// <summary>
         /// Selects the file at the specified index.

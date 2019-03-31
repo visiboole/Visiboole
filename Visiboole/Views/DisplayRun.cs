@@ -37,11 +37,11 @@ namespace VisiBoole.Views
 		/// <summary>
 		/// Returns the type of this display
 		/// </summary>
-		public Globals.DisplayType TypeOfDisplay
+		public DisplayType TypeOfDisplay
 		{
 			get
 			{
-                return Globals.DisplayType.RUN;
+                return DisplayType.RUN;
 			}
 		}
 
