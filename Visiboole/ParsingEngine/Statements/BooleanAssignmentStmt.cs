@@ -28,91 +28,62 @@ using VisiBoole.Models;
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// The Boolean assignment statement is the primary type of statement used to
-    /// create digital designs. Assignment statements specify the value of a Boolean variable as a
-    /// (digital logic) function of other Boolean variables. Its format is a variable name followed by
-    /// either an equal sign or a less-than equal pair followed by a Boolean logic expression.Each such
-    /// statement represents a network of logic gates and wires.
+    /// An expression statement that assigns the value of an expression to a dependent.
     /// </summary>
-	public class BooleanAssignmentStmt : Statement
+	public class BooleanAssignmentStmt : ExpressionStatement
 	{
         /// <summary>
-        /// The full expression of the boolean statement
+        /// Constructs a BooleanAssignemntStmt instance.
         /// </summary>
-        private string FullExpression;
-
-        /// <summary>
-        /// The dependent of the boolean statement
-        /// </summary>
-        private string Dependent;
-
-        /// <summary>
-        /// The expression of the boolean statement
-        /// </summary>
-        private string Expression;
-
-        /// <summary>
-        /// Constructs an instance of BooleanAssignmentStmt
-        /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-		public BooleanAssignmentStmt(int lnNum, string txt) : base(lnNum, txt)
-		{
-            // Get the dependent and the expression
-            int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
-            FullExpression = Text.Substring(start, (Text.IndexOf(';') - start));
-            Dependent = FullExpression.Substring(0, FullExpression.IndexOf('=')).Trim();
-            Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
-            Expression = Regex.Replace(Expression, @"\s+", " "); // Replace multiple spaces
-
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+		public BooleanAssignmentStmt(Database database, string text) : base(database, text)
+        { 
             // Add expression and dependency to the database
-            Parser.Design.Database.AddExpression(Dependent, Expression);
-            Parser.Design.Database.CreateDependenciesList(Dependent);
+            Database.AddExpression(Dependent, Expression);
+            Database.CreateDependenciesList(Dependent);
 
             // Update variable value
             Evaluate();
         }
 
+        /// <summary>
+        /// Evaluates the expression and assigns the value to the dependent.
+        /// </summary>
         public void Evaluate()
         {
-            bool dependentValue = ExpressionSolver.Solve(Expression) == 1;
-            bool currentValue = Parser.Design.Database.TryGetValue(Dependent) == 1;
+            bool dependentValue = ExpressionSolver.Solve(Database, Expression) == 1;
+            bool currentValue = Database.TryGetValue(Dependent) == 1;
             if (dependentValue != currentValue)
             {
-                Parser.Design.Database.SetValues(Dependent, dependentValue);
+                Database.SetValues(Dependent, dependentValue);
             }
         }
 
-	    /// <summary>
-	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-	    /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
-	    /// </summary>
+        /// <summary>
+        /// Parses the text of this statement into a list of output elements.
+        /// </summary>
         public override void Parse()
         {
-            // Get index of first non whitespace character and pad spaces in front
+            // Output padding (if present)
             int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
             for (int i = 0; i < start; i++)
             {
-                SpaceFeed space = new SpaceFeed();
-                Output.Add(space);
+                Output.Add(new SpaceFeed());
             }
 
-            // Update variable value
-            DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
-
-            //Add dependent to output
+            // Update and output dependent
+            DependentVariable depVar = Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
             Output.Add(depVar);
 
-            //Add sign to output
-            Operator sign = new Operator("=");
-            Output.Add(sign);
+            // Output equals
+            OutputOperator("=");
 
-            //Add expression variables to output
-            Output.AddRange(ExpressionSolver.GetOutput(Expression));
+            // Output expression
+            base.Parse();
 
-            //Add linefeed to output
-            LineFeed lf = new LineFeed();
-            Output.Add(lf);
+            // Output newline
+            Output.Add(new LineFeed());
         }
     }
 }

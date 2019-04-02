@@ -28,41 +28,86 @@ using VisiBoole.ParsingEngine.ObjectCode;
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// The base class for Visiboole statements. Visiboole statements represent the various
-    /// different expressions that one can encounter within Visiboole HDL syntax.
+    /// Base class for Visiboole statements.
     /// </summary>
 	public abstract class Statement
 	{
         /// <summary>
-        /// The line number that this statement is located on within edit mode - not simulation mode
+        /// Database of the parsed design.
         /// </summary>
-		public int LineNumber { get; set; }
+        public Database Database { get; private set; }
 
         /// <summary>
-        /// The raw, unparsed text of this statement
+        /// Ttext of the statement.
         /// </summary>
 		public string Text { get; set; }
 
         /// <summary>
-        /// A list of discrete output elements that comprise this statement
+        /// List of output elements that comprise this statement.
         /// </summary>
 		public List<IObjectCodeElement> Output { get; set; } = new List<IObjectCodeElement>();
 
         /// <summary>
-        /// Constructs an instance of this Statement with given line number and text representation
+        /// Constructs a Statement instance.
         /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-		protected Statement(int lnNum, string txt)
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+		protected Statement(Database database, string text)
 		{
-			LineNumber = lnNum;
-			Text = txt;
+            Database = database;
+			Text = text;
 		}
 
         /// <summary>
-        /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-        /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
+        /// Parses the text of this statement into a list of output elements.
         /// </summary>
 		public abstract void Parse();
+
+        /// <summary>
+        /// Outputs the provided variable to the output list.
+        /// </summary>
+        /// <param name="var">Variable to output</param>
+        protected void OutputVariable(string var)
+        {
+            string name = var.TrimStart('~');
+            IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
+            DependentVariable depVar = Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
+            if (indVar != null)
+            {
+                if (!var.Contains("~"))
+                {
+                    Output.Add(indVar);
+                }
+                else
+                {
+                    Output.Add(new IndependentVariable(var, indVar.Value));
+                }
+            }
+            else if (depVar != null)
+            {
+                if (!var.Contains("~"))
+                {
+                    Output.Add(depVar);
+                }
+                else
+                {
+                    Output.Add(new DependentVariable(var, depVar.Value));
+                }
+            }
+            else
+            {
+                // Error
+            }
+        }
+
+        /// <summary>
+        /// Outputs the provided operator to the output list.
+        /// </summary>
+        /// <param name="text">Text of operator</param>
+        protected void OutputOperator(string text)
+        {
+            Operator op = new Operator(text);
+            Output.Add(op);
+        }
     }
 }

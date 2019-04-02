@@ -30,77 +30,64 @@ using VisiBoole.Models;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
-    public class DffClockStmt : Statement
+    /// <summary>
+    /// An expression statement that assigns the value of an expression to a dependent on a clock tick.
+    /// </summary>
+    public class DffClockStmt : ExpressionStatement
     {
         /// <summary>
-        /// The full expression of the clock statement
-        /// </summary>
-        private string FullExpression;
-
-        /// <summary>
-        /// The dependent of the clock statement
-        /// </summary>
-        private string Dependent;
-
-        /// <summary>
-        /// The delay of the clock statement
+        /// Delay of the clock statement.
         /// </summary>
         private string Delay;
 
         /// <summary>
-        /// The expression of the clock statement
+        /// Whether the clock is being ticked.
         /// </summary>
-        private string Expression;
+        private bool TickClock;
 
-        private bool clock_tick;
-        private bool initial_run;
-
-        public DffClockStmt(int lnNum, string txt, bool tick, bool init) : base(lnNum, txt)
+        /// <summary>
+        /// Constructs a DffClockStmt instance.
+        /// </summary>
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+        /// <param name="tick">Whether the clock is being ticked</param>
+        public DffClockStmt(Database database, string text, bool tick) : base(database, text)
         {
-            clock_tick = tick;
-            initial_run = init;
-
-            // Get FullExpression, Dependent, Delay and Expression
-            int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
-            FullExpression = Text.Substring(start); // Start expression with first non whitespace character
-            if (FullExpression.Contains(';'))
-            {
-                FullExpression = FullExpression.Substring(0, FullExpression.IndexOf(';'));
-            }
-            Dependent = FullExpression.Substring(0, FullExpression.IndexOf('<')).Trim();
+            TickClock = tick;
             Delay = Dependent + ".d";
-            Expression = FullExpression.Substring(FullExpression.IndexOf('=') + 1).Trim();
-            Expression = Regex.Replace(Expression, @"\s+", " "); // Replace multiple spaces
 
             // Add dependency and set delay value
             // Parser.Design.Database.AddExpression(Delay, Expression);
-            Parser.Design.Database.CreateDependenciesList(Delay);
-            bool delayValue = ExpressionSolver.Solve(Expression) == 1;
-            Parser.Design.Database.SetValue(Delay, delayValue);
+            Database.CreateDependenciesList(Delay);
+            bool delayValue = ExpressionSolver.Solve(Database, Expression) == 1;
+            Database.SetValue(Delay, delayValue);
         }
 
+        /// <summary>
+        /// Ticks the statement (dependent value is set to the delay value)
+        /// </summary>
         public void Tick()
         {
-            DependentVariable delayVariable = Parser.Design.Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-            Parser.Design.Database.SetValue(Dependent, delayVariable.Value);
+            DependentVariable delayVariable = Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+            Database.SetValue(Dependent, delayVariable.Value);
         }
 
+        /// <summary>
+        /// Parses the text of this statement into a list of output elements.
+        /// </summary>
         public override void Parse()
         {
-            // Get index of first non whitespace character and pad spaces in front 
+            // Output padding (if present)
             int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
             for (int i = 0; i < start; i++)
             {
-                SpaceFeed space = new SpaceFeed();
-                Output.Add(space);
+                Output.Add(new SpaceFeed());
             }
 
-            // Get output variables
-            DependentVariable delayVariable = Parser.Design.Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-            IndependentVariable dependentInd = Parser.Design.Database.TryGetVariable<IndependentVariable>(Dependent) as IndependentVariable;
-            DependentVariable dependentDep = Parser.Design.Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
-
-            // Create output
+            // Output dependent
+            DependentVariable delayVariable = Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+            IndependentVariable dependentInd = Database.TryGetVariable<IndependentVariable>(Dependent) as IndependentVariable;
+            DependentVariable dependentDep = Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
             if (dependentInd != null)
             {
                 Output.Add(dependentInd);
@@ -110,22 +97,24 @@ namespace VisiBoole.ParsingEngine.Statements
                 Output.Add(dependentDep);
             }
 
-            if (clock_tick)
+            // Tick (if necessary) and output delay
+            if (TickClock)
             {
-                bool delayValue = ExpressionSolver.Solve(Expression) == 1;
+                bool delayValue = ExpressionSolver.Solve(Database, Expression) == 1;
                 if (delayValue != delayVariable.Value)
                 {
-                    Parser.Design.Database.SetValue(Delay, delayValue);
-                    delayVariable = Parser.Design.Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
+                    Database.SetValue(Delay, delayValue);
+                    delayVariable = Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
                 }
             }
             DependentVariable dv = new DependentVariable("<=", delayVariable.Value);
             Output.Add(dv);
 
-            Output.AddRange(ExpressionSolver.GetOutput(Expression));
+            // Output expression
+            base.Parse();
 
-            LineFeed lf = new LineFeed();
-            Output.Add(lf);
+            // Output newline
+            Output.Add(new LineFeed());
         }
     }
 }

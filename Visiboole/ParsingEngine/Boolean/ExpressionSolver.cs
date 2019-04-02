@@ -30,16 +30,17 @@ using VisiBoole.ParsingEngine.ObjectCode;
 namespace VisiBoole.ParsingEngine.Boolean
 {
     /// <summary>
-    /// Boolean expression object
+    /// Boolean expression solver.
     /// </summary>
     public static class ExpressionSolver
     {
         /// <summary>
         /// Solves an expression for its value.
         /// </summary>
+        /// <param name="database">Database of design</param>
         /// <param name="expression">Expression to solve</param>
         /// <returns>Value of the expression</returns>
-        public static int Solve(string expression)
+        public static int Solve(Database database, string expression)
         {
             Stack<int> valueStack = new Stack<int>();
             Stack<string> operatorStack = new Stack<string>();
@@ -99,7 +100,7 @@ namespace VisiBoole.ParsingEngine.Boolean
                     }
                     else
                     {
-                        value = Parser.Design.Database.TryGetValue(var);
+                        value = database.TryGetValue(var);
                     }
 
                     if (containsNot)
@@ -144,60 +145,6 @@ namespace VisiBoole.ParsingEngine.Boolean
             }
 
             valueStack.Push(result);
-        }
-
-        /// <summary>
-        /// Gets the object code output of a provided expression.
-        /// </summary>
-        /// <param name="expression">Expression to generate output for</param>
-        /// <returns>Object code output</returns>
-        public static List<IObjectCodeElement> GetOutput(string expression)
-        {
-            List<IObjectCodeElement> output = new List<IObjectCodeElement>();
-
-            MatchCollection matches = Regex.Matches(expression, @"(~?(?<Name>[_a-zA-Z]\w{0,19}))|(~?'[bB][0-1])|([~^()|+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
-            foreach (Match match in matches)
-            {
-                string token = match.Value;
-                if (token == "(" || token == ")")
-                {
-                    output.Add(new Parentheses(token));
-                }
-                else if (Parser.OperatorsList.Contains(token))
-                {
-                    output.Add(new Operator(token));
-                }
-                else if (token.Contains("'"))
-                {
-                    output.Add(new Constant(token));
-                }
-                else
-                {
-                    // Variable
-                    string var = token;
-                    if (var.Contains("~"))
-                    {
-                        var = token.Substring(1);
-                    }
-
-                    IndependentVariable indVar = Parser.Design.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                    DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        output.Add(new IndependentVariable(token, indVar.Value));
-                    }
-                    else if (depVar != null)
-                    {
-                        output.Add(new DependentVariable(token, depVar.Value));
-                    }
-                    else
-                    {
-                        // Error
-                    }
-                }
-            }
-
-            return output;
         }
     }
 }

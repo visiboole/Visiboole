@@ -27,7 +27,7 @@ using VisiBoole.Models;
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// A list of visiboole independent variables that can be interacted with by the user
+    /// A variable list statement that can be interacted with by the user.
     /// </summary>
 	public class VariableListStmt : Statement
 	{
@@ -37,18 +37,17 @@ namespace VisiBoole.ParsingEngine.Statements
         private static Regex TokenRegex = new Regex($@"({Parser.ScalarPattern4}|{Parser.SpacingPattern})");
 
         /// <summary>
-        /// Constructs an instance of VariableListStmt
+        /// Constructs a VariableListStmt instance.
         /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-		public VariableListStmt(int lnNum, string txt) : base(lnNum, txt)
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+		public VariableListStmt(Database database, string text) : base(database, text)
 		{
 		}
 
-	    /// <summary>
-	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-	    /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
-	    /// </summary>
+        /// <summary>
+        /// Parses the text of this statement into a list of output elements.
+        /// </summary>
         public override void Parse()
 		{
             // Clean content and make format string
@@ -64,21 +63,12 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else
                 {
-                    string var = (match.Value[0] == '*') ? match.Value.Substring(1) : match.Value;
-
-                    IndependentVariable indVar = Parser.Design.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                    DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
-                    if (indVar != null)
-                    {
-                        Output.Add(indVar);
-                    }
-                    else
-                    {
-                        Output.Add(depVar);
-                    }
+                    string var = match.Value.TrimStart('*');
+                    OutputVariable(var);
                 }
             }
 
+            // Output newline
             Output.Add(new LineFeed());
         }
 	}

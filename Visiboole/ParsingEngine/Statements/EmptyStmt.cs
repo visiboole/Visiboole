@@ -18,31 +18,30 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
-using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// Represents an empty line or a line with only whitespace in the user visibool source code
+    /// An empty statement that provides line spacing.
     /// </summary>
 	public class EmptyStmt : Statement
 	{
         /// <summary>
-        /// Constructs an instance of EmptyStmt
+        /// Constructs a EmptyStmt instance.
         /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-        public EmptyStmt(int lnNum, string txt) : base(lnNum, txt)
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+        public EmptyStmt(Database database, string text) : base(database, text)
 		{
 		}
 
-	    /// <summary>
-	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-	    /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
-	    /// </summary>
+        /// <summary>
+        /// Parses the text of this statement into a list of output elements.
+        /// </summary>
         public override void Parse()
 		{
+            // Output newline
 			Output.Add(new LineFeed());
 		}
 	}

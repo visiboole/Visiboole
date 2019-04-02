@@ -38,7 +38,7 @@ namespace VisiBoole.Models
         private string trueColor = "'crimson'";
         private string falseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
 
-        public HtmlBuilder(Design sd, List<IObjectCodeElement> output)
+        public HtmlBuilder(Design design, List<IObjectCodeElement> output)
         {
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
@@ -84,7 +84,7 @@ namespace VisiBoole.Models
                                 startIndex = holdingIndex;
 
                                 outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                                bool colorValue = ExpressionSolver.Solve(outermost) == 1;
+                                bool colorValue = ExpressionSolver.Solve(design.Database, outermost) == 1;
 
                                 line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
                                 line[parenIndexes[startIndex]].MatchingIndex = startIndex;

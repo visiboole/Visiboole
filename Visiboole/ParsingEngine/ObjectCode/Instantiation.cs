@@ -40,6 +40,11 @@ namespace VisiBoole.ParsingEngine.ObjectCode
         public int MatchingIndex { get; set; }
 
         /// <summary>
+        /// Name of the instantiation
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
         /// Name of the design being instantiated
         /// </summary>
         public string DesignName { get; private set; }
@@ -50,13 +55,15 @@ namespace VisiBoole.ParsingEngine.ObjectCode
         public string DesignPath { get; private set; }
 
         /// <summary>
-        /// Constructs an instance of Instantiation
+        /// Constructs an instantiation instance
         /// </summary>
-        /// <param name="opChar">The string representation of this element</param>
-		public Instantiation(string instantiation, string designName, string designPath)
+        /// <param name="instantiation">Text of instantiation</param>
+        /// <param name="designPath">Path to design being instantiated</param>
+		public Instantiation(string instantiation, string designPath)
 		{
 			ObjCodeText = instantiation;
-            DesignName = designName;
+            DesignName = instantiation.Split('.')[0];
+            Name = instantiation.Split('.')[1];
             DesignPath = designPath;
             Value = null;
 		}

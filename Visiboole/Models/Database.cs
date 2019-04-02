@@ -99,8 +99,8 @@ namespace VisiBoole.ParsingEngine
 
         public void SetValues(string variableName, bool value)
         {
-            IndependentVariable indVar = Parser.Design.Database.TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
-            DependentVariable depVar = Parser.Design.Database.TryGetVariable<DependentVariable>(variableName) as DependentVariable;
+            IndependentVariable indVar = TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
+            DependentVariable depVar = TryGetVariable<DependentVariable>(variableName) as DependentVariable;
             if (indVar != null)
             {
                 IndVars[variableName].Value = value;
@@ -114,11 +114,11 @@ namespace VisiBoole.ParsingEngine
             {
                 string dependent = kv.Key;
                 string expression = kv.Value;
-                foreach (Match match in Regex.Matches(expression, @"[_a-zA-Z]\w{0,19}"))
+                foreach (Match match in Parser.ScalarRegex2.Matches(expression))
                 {
                     if (match.Value.Equals(variableName))
                     {
-                        bool dependentValue = ExpressionSolver.Solve(expression) == 1;
+                        bool dependentValue = ExpressionSolver.Solve(this, expression) == 1;
                         bool currentValue = TryGetValue(dependent) == 1;
                         if (dependentValue != currentValue)
                         {
@@ -259,7 +259,7 @@ namespace VisiBoole.ParsingEngine
             bool value = IndVars[name].Value;
             IndVars.Remove(name);
             AllVars.Remove(name);
-            AddVariable<DependentVariable>(new DependentVariable(name, value));
+            AddVariable(new DependentVariable(name, value));
         }
 
         /// <summary>
@@ -282,7 +282,10 @@ namespace VisiBoole.ParsingEngine
                 if (depVar.Value) return 1;
                 else return 0;
             }
-            else return -1; // If variable doesn't exist
+            else
+            {
+                return -1; // If variable doesn't exist
+            }
         }
 
         #endregion
@@ -331,12 +334,10 @@ namespace VisiBoole.ParsingEngine
             if (IndVars.ContainsKey(variableName))
             {
                 IndVars[variableName].Value = value;
-                return;
             }
             else if (DepVars.ContainsKey(variableName))
             {
                 DepVars[variableName].Value = value;
-                return;
             }
             else
             {

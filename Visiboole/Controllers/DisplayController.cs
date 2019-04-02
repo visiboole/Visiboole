@@ -209,7 +209,8 @@ namespace VisiBoole.Controllers
 		public void Run()
         {
             Design design = tabControl.SelectedTab.Design();
-            List<IObjectCodeElement> output = Parser.Parse(design, null, false);
+            Parser parser = new Parser();
+            List<IObjectCodeElement> output = parser.Parse(design);
             if (output == null)
             {
                 return;
@@ -240,9 +241,10 @@ namespace VisiBoole.Controllers
             browser.ObjectForScripting = this;
             int position = browser.Document.Body.ScrollTop;
 
+            Parser parser = new Parser();
             for (int i = 0; i < count; i++)
             {
-                List<IObjectCodeElement> output = Parser.Parse(design, null, true);
+                List<IObjectCodeElement> output = parser.ParseTick(design);
                 HtmlBuilder html = new HtmlBuilder(design, output);
                 string htmlOutput = html.GetHTML();
                 html.DisplayHtml(htmlOutput, browser);
@@ -263,7 +265,8 @@ namespace VisiBoole.Controllers
         public void Variable_Click(string variableName)
         {
             Design design = tabControl.SelectedTab.Design();
-            List<IObjectCodeElement> output = Parser.Parse(design, variableName, false);
+            Parser parser = new Parser();
+            List<IObjectCodeElement> output = parser.ParseClick(design, variableName);
             if (output == null)
             {
                 return;
@@ -295,10 +298,15 @@ namespace VisiBoole.Controllers
         public void Instantiation_Click(string instantiation, string designName, string designPath)
         {
             // Decode path
+            /*
             designPath = designPath.Replace("&amp;", "&").Replace("&back;", "\\").Replace("&apos;", "'");
 
             Design design = new Design(designPath, delegate { });
-            List<IObjectCodeElement> output = Parser.Parse(design, null, false);
+
+            Design current = mwController.GetActiveDesign();
+            List<Variable> inputs = new List<Variable>(); // Add inputs here
+            Parser parser = new Parser();
+            List<IObjectCodeElement> output = parser.ParseWithInput(design, inputs);
             if (output == null)
             {
                 return;
@@ -310,7 +318,7 @@ namespace VisiBoole.Controllers
                 return;
             }
             string htmlOutput = html.GetHTML();
-
+            */
 
 
             /*

@@ -26,27 +26,34 @@ using VisiBoole.ParsingEngine.ObjectCode;
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// Comment statements provide a way to document either just the code
-    /// or to label the screen during simulation.
+    /// A description statement that provides a way to document code or label the screen.
     /// </summary>
 	public class CommentStmt : Statement, IObjectCodeElement
 	{
+        #region IObjectCodeElement attributes
+
+        public bool? ObjCodeValue { get; set; } = false;
+        public string ObjCodeText { get { return Text; } set { } }
+        public int Match { get; set; }
+        public int MatchingIndex { get; set; }
+
+        #endregion
+
         /// <summary>
-        /// Constructs an instance of CommentStmt
+        /// Constructs a CommentStmt instance.
         /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-        public CommentStmt(int lnNum, string txt) : base(lnNum, txt)
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+        public CommentStmt(Database database, string text) : base(database, text)
 		{
 		}
 
-	    /// <summary>
-	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-	    /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
-	    /// </summary>
+        /// <summary>
+        /// Parses the text of this statement into a list of output elements.
+        /// </summary>
         public override void Parse()
 		{
-            // Output front padding
+            // Output padding (if present)
             Match comment = Parser.CommentRegex.Match(Text);
             foreach (char space in comment.Groups["Spacing"].Value)
             {
@@ -56,18 +63,9 @@ namespace VisiBoole.ParsingEngine.Statements
             // Remove "" and ;
             Text = String.Concat(comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3));
 
-            // Output comment and line feed
+            // Output comment and newline
             Output.Add(this);
             Output.Add(new LineFeed());
 		}
-
-		#region IObjectCodeElement attributes
-
-		public bool? ObjCodeValue { get; set; } = false;
-		public string ObjCodeText { get { return Text; } set { } } 
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
-
-		#endregion
 	}
 }

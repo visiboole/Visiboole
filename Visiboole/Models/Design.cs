@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic;
 using VisiBoole.ParsingEngine;
@@ -144,17 +145,22 @@ namespace VisiBoole.Models
         private string GetFileText()
         {
             string text = string.Empty;
-            
+
             using (StreamReader reader = FileSource.OpenText())
             {
                 string nextLine = string.Empty;
 
                 while ((nextLine = reader.ReadLine()) != null)
                 {
+                    // Clean line
+                    nextLine = nextLine.Replace("\t", new string(' ', 8));
+                    nextLine = nextLine.TrimEnd();
+
+                    // Append line to text
                     text += nextLine + "\n";
                 }
             }
-            return text.Replace("\t", new string(' ', 8));
+            return text;
         }
 
         /// <summary>

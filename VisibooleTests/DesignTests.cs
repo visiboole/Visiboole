@@ -26,7 +26,8 @@ namespace VisibooleTests
             Design design = new Design(fileName, delegate { });
             try
             {
-                List <IObjectCodeElement> output = Parser.Parse(design, null, false);
+                Parser parser = new Parser();
+                List <IObjectCodeElement> output = parser.Parse(design);
                 if (output == null)
                 {
                     return null;

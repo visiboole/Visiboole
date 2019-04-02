@@ -26,45 +26,37 @@ using VisiBoole.ParsingEngine.ObjectCode;
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// The format of a submodule instantiation statement is identical to the module declaration statement except they
-    /// are preceded by the commercial at(@) and give a numeric value to parameters. They create an
-    /// instance of a module described in another file(with the same name) as part of the current design
+    /// An instance creation statement that creates an instance of design that has defined a module.
     /// </summary>
 	public class SubmoduleInstantiationStmt : Statement
 	{
         /// <summary>
-        /// Name of the design being instantiated
+        /// Instantiation object.
         /// </summary>
-        private string DesignName;
+        private Instantiation Instantiation;
 
         /// <summary>
-        /// Path of the design being instantiated
+        /// Regex for getting instantiation tokens (variables and concatenations).
         /// </summary>
-        private string DesignPath;
+        private static Regex TokenRegex = new Regex($@"({Parser.ConcatenationPattern}|{Parser.VariablePattern})");
 
         /// <summary>
-        /// Regex for getting format specifier tokens (format specifiers and extra spacing).
+        /// Constructs a SubmoduleInstatiationStmt instance.
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.VariablePattern}|{Parser.ConcatenationPattern})");
-
-        /// <summary>
-        /// Constructs an instance of SubmoduleInstantiationStmt at given linenumber with txt string input
-        /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on within edit mode - not simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-		public SubmoduleInstantiationStmt(int lnNum, string txt, string designName, string designPath) : base(lnNum, txt)
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+        /// <param name="instantiation">Instantiation object</param>
+		public SubmoduleInstantiationStmt(Database database, string text, Instantiation instantiation) : base(database, text)
 		{
-            DesignName = designName;
-            DesignPath = designPath;
-		}
+            Instantiation = instantiation;
+        }
 
         /// <summary>
-        /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-        /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
+        /// Parses the text of this statement into a list of output elements.
         /// </summary>
         public override void Parse()
         {
-            // Add padding if present to output
+            // Output padding (if present)
             Match padding = Regex.Match(Text, @"\s+");
             if (padding.Success)
             {
@@ -74,30 +66,59 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
-            // Add instantiation to output
-            Match instantiation = Regex.Match(Text, Parser.InstantiationNotationPattern);
-            Output.Add(new Instantiation(instantiation.Value, DesignName, DesignPath));
+            // Output instantiation
+            Output.Add(Instantiation);
+
+            /*
+            // Output seperator
+            OutputOperator(":");
 
             // Add variables and concatenations to output
-            MatchCollection matches = TokenRegex.Matches(Text);
-            foreach (Match match in matches)
+            string instantiationVariables = Regex.Match(Text.Substring(Text.IndexOf('(')), $@"({Parser.ScalarPattern2}(\s+{Parser.ScalarPattern2})*)(,\s+({Parser.ScalarPattern2}(\s+{Parser.ScalarPattern2})*))*").Value;
+            string[] variableLists = Regex.Split(instantiationVariables, @",\s+");
+            for (int i = 0; i < variableLists.Length; i++)
             {
-                /*
-                // Variables and concatenations
-                string[] var;
-                if (!match.Value.Contains("{"))
+                string variableList = variableLists[i];
+
+                MatchCollection matches = Parser.ScalarRegex2.Matches(variableList);
+                if (matches.Count > 1)
                 {
-                    var = new string[] { match.Value };
+                    // Output {
+                    OutputOperator("{");
                 }
-                else
+                foreach (Match match in matches)
                 {
-                    var = Regex.Split(match.Groups["Vars"].Value, @"\s+");
+                    if (match.Value == "NC")
+                    {
+                        OutputOperator("NC");
+                    }
+                    else
+                    {
+                        IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(match.Value) as IndependentVariable;
+                        DependentVariable depVar = Database.TryGetVariable<DependentVariable>(match.Value) as DependentVariable;
+                        if (indVar != null)
+                        {
+                            Output.Add(indVar);
+                        }
+                        else
+                        {
+                            Output.Add(depVar);
+                        }
+                    }
+                }
+                if (matches.Count > 1)
+                {
+                    OutputOperator("}");
                 }
 
-                // Output vars
-                */
+                if (i < variableLists.Length - 1)
+                {
+                    OutputOperator(",");
+                }
             }
+            */
 
+            // Output newline
             Output.Add(new LineFeed());
         }
 	}

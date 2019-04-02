@@ -27,9 +27,7 @@ using VisiBoole.ParsingEngine.ObjectCode;
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
-    /// A formatted field is a way of displaying multiple Boolean variables as a single numeric
-    /// value. A formatted field begins with a percent sign followed by a radix specifier followed by the
-    /// list of variables enclosed in braces. The supported radix specifiers are: b, h, d, and u
+    /// A format statement that outputs variables in binary, decimal, unsigned and hex.
     /// </summary>
 	public class FormatSpecifierStmt : Statement
 	{
@@ -39,18 +37,17 @@ namespace VisiBoole.ParsingEngine.Statements
         private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern2}|((?![^{{}}]*\}}){Parser.SpacingPattern}))");
 
         /// <summary>
-        /// Constructs an instance of FormatSpecifierStmt
+        /// Constructs a FormatSpecifierStmt instance.
         /// </summary>
-        /// <param name="lnNum">The line number that this statement is located on simulation mode</param>
-        /// <param name="txt">The raw, unparsed text of this statement</param>
-        public FormatSpecifierStmt(int lnNum, string txt) : base(lnNum, txt)
+        /// <param name="database">Database of the parsed design</param>
+        /// <param name="text">Text of the statement</param>
+        public FormatSpecifierStmt(Database database, string text) : base(database, text)
 		{
 		}
 
-	    /// <summary>
-	    /// Parses the Text of this statement into a list of discrete IObjectCodeElement elements
-	    /// to be used by the html parser to generate formatted output to be displayed in simulation mode.
-	    /// </summary>
+        /// <summary>
+        /// Parses the text of this statement into a list of output elements.
+        /// </summary>
         public override void Parse()
 		{
             // Find format specifiers and extra spacing
@@ -72,7 +69,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     foreach (string var in variables)
                     {
                         // Add value of each variable to output values
-                        values.Add(Parser.Design.Database.TryGetValue(var));
+                        values.Add(Database.TryGetValue(var));
                     }
 
                     // Output Format Specifier
@@ -82,6 +79,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
+            // Output newline
             Output.Add(new LineFeed());
         }
 
