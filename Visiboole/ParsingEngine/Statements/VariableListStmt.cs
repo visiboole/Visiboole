@@ -34,7 +34,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting variable list tokens (extra spaces and scalars).
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.ScalarPattern4}|{Parser.SpacingPattern})");
+        private static Regex TokenRegex = new Regex($@"({Parser.ScalarPattern2}|{Parser.SpacingPattern})");
 
         /// <summary>
         /// Constructs a VariableListStmt instance.

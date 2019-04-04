@@ -38,7 +38,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting instantiation tokens (variables and concatenations).
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.ConcatenationPattern}|{Parser.VariablePattern})");
+        private static Regex TokenRegex = new Regex($@"({Parser.ConcatenationPattern}|{Parser.VariablePattern1})");
 
         /// <summary>
         /// Constructs a SubmoduleInstatiationStmt instance.

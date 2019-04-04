@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -67,41 +66,28 @@ namespace VisiBoole.Models
                     }
 
                     #region Indexes which positions will be assigned which color in html
-                    string outermost = "";
-                    if (fullLine.Contains("(") && fullLine.Contains(")"))
+                    if (fullLine.Contains("("))
                     {
-                        int startIndex = fullLine.IndexOf('(');
-                        int endIndex = fullLine.IndexOf(')');
-                        List<int> previousStartingIndexes = new List<int>();
-
-                        while (startIndex < endIndex)
+                        Stack<int> parenthesis = new Stack<int>();
+                        for (int i = 0; i < fullLine.Length; i++)
                         {
-                            int holdingIndex = startIndex;
-                            startIndex = fullLine.IndexOf('(', startIndex + 1);
-
-                            if (startIndex == -1 || previousStartingIndexes.Contains(startIndex))
+                            char c = fullLine[i];
+                            if (c == '(')
                             {
-                                startIndex = holdingIndex;
+                                parenthesis.Push(i); // Push index
+                            }
+                            else if (c == ')')
+                            {
+                                int start = parenthesis.Pop();
+                                string inner = fullLine.Substring(start, i - start + 1);
+                                bool colorValue = ExpressionSolver.Solve(design.Database, inner) == 1;
 
-                                outermost = fullLine.Substring(startIndex, endIndex - startIndex + 1);
-                                bool colorValue = ExpressionSolver.Solve(design.Database, outermost) == 1;
-
-                                line[parenIndexes[startIndex]].ObjCodeValue = colorValue;
-                                line[parenIndexes[startIndex]].MatchingIndex = startIndex;
-                                line[parenIndexes[startIndex]].Match = endIndex;
-                                line[parenIndexes[endIndex]].ObjCodeValue = colorValue;
-                                line[parenIndexes[endIndex]].Match = startIndex;
-                                line[parenIndexes[endIndex]].MatchingIndex = endIndex;
-
-                                previousStartingIndexes.Add(startIndex);
-
-                                endIndex = fullLine.IndexOf(')', endIndex + 1);
-                                startIndex = 0;
-
-                                if (endIndex == -1)
-                                {
-                                    break;
-                                }
+                                line[parenIndexes[start]].ObjCodeValue = colorValue;
+                                line[parenIndexes[start]].MatchingIndex = start;
+                                line[parenIndexes[start]].Match = i;
+                                line[parenIndexes[i]].ObjCodeValue = colorValue;
+                                line[parenIndexes[i]].Match = start;
+                                line[parenIndexes[i]].MatchingIndex = i;
                             }
                         }
                     }

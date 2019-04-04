@@ -107,6 +107,7 @@
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
+    <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Views\ErrorDialog.cs">
       <SubType>Form</SubType>

@@ -82,11 +82,6 @@ namespace VisiBoole.ParsingEngine
             return IndVars;
         }
 
-        public Dictionary<string, List<string>> GetVectorNamespaces()
-        {
-            return VectorNamespaces;
-        }
-
         public void SetOutput(List<IObjectCodeElement> list)
         {
             ObjectCode = list;
@@ -114,7 +109,7 @@ namespace VisiBoole.ParsingEngine
             {
                 string dependent = kv.Key;
                 string expression = kv.Value;
-                foreach (Match match in Parser.ScalarRegex2.Matches(expression))
+                foreach (Match match in Parser.ScalarRegex1.Matches(expression))
                 {
                     if (match.Value.Equals(variableName))
                     {
@@ -149,23 +144,70 @@ namespace VisiBoole.ParsingEngine
             return VectorNamespaces.ContainsKey(name);
         }
 
+        private string PadNumbers(string input)
+        {
+            return Regex.Replace(input, @"\d+", match => match.Value.PadLeft(2, '0'));
+        }
+
         /// <summary>
-        /// Adds a vector namespace that doesn't already exist.
+        /// Adds a vector namespace that doesn't already exist or appends new components to the existing namespace.
         /// </summary>
         /// <param name="name">Namespace to create</param>
         /// <param name="components">Expanded vector</param>
-        /// <returns>Whether the vector namespace was created</returns>
-        public bool AddVectorNamespace(string name, List<string> components)
+        public void AddVectorNamespace(string name, IEnumerable<string> components)
         {
             if (!HasVectorNamespace(name))
             {
                 // Add Namespace and its values to the dictionary
-                VectorNamespaces.Add(name, components);
-                return true;
+                VectorNamespaces.Add(name, components.ToList());
             }
             else
             {
-                return false; // Namespace already exists
+                // Check to add new components
+                bool wasComponentAdded = false;
+                foreach (string component in components)
+                {
+                    if (!VectorNamespaces[name].Contains(component))
+                    {
+                        VectorNamespaces[name].Add(component);
+                        wasComponentAdded = true;
+                    }
+                }
+
+                // Order components from MSB to LSB
+                if (wasComponentAdded)
+                {
+                    VectorNamespaces[name] = VectorNamespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
+
+                    wasComponentAdded = false;
+                    for (int i = 0; i < VectorNamespaces[name].Count; i++)
+                    {
+                        if (i < VectorNamespaces[name].Count - 1)
+                        {
+                            Match currentMatch = Parser.ScalarRegex.Match(VectorNamespaces[name][i]);
+                            Match nextMatch = Parser.ScalarRegex.Match(VectorNamespaces[name][i+1]);
+
+                            int currentBit = Convert.ToInt32(currentMatch.Groups["Bit"].Value);
+                            int nextBit = Convert.ToInt32(nextMatch.Groups["Bit"].Value);
+
+                            // Check to add missing bits
+                            if (currentBit - 1 != nextBit)
+                            {
+                                for (int newBit = currentBit - 1; newBit > nextBit; newBit--)
+                                {
+                                    VectorNamespaces[name].Add(String.Concat(name, newBit));
+                                }
+                                wasComponentAdded = true;
+                            }
+                        }
+                    }
+
+                    // Resort components
+                    if (wasComponentAdded)
+                    {
+                        VectorNamespaces[name] = VectorNamespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
+                    }
+                }
             }
         }
 

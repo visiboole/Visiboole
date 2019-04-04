@@ -88,18 +88,6 @@ namespace VisiBoole.Views
                 browser.Dock = DockStyle.Fill;
 
                 BrowserTabControl.SelectedTab.Text = Globals.TabControl.SelectedTab.Design().FileSourceName;
-
-                // Hide tab control
-                BrowserTabControl.Appearance = TabAppearance.FlatButtons;
-                BrowserTabControl.ItemSize = new System.Drawing.Size(0, 1);
-                BrowserTabControl.SizeMode = TabSizeMode.Fixed;
-
-                // Unhides tab control
-                /*
-                BrowserTabControl.Appearance = TabAppearance.Normal;
-                BrowserTabControl.SizeMode = TabSizeMode.Normal;
-                BrowserTabControl.ItemSize = new System.Drawing.Size(BrowserTabControl.ItemSize.Width, 20);
-                */
             }
 		}
 

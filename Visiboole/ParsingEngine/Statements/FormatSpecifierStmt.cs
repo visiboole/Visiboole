@@ -34,7 +34,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting format specifier tokens (format specifiers and extra spacing).
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern2}|((?![^{{}}]*\}}){Parser.SpacingPattern}))");
+        private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern}|((?![^{{}}]*\}}){Parser.SpacingPattern}))");
 
         /// <summary>
         /// Constructs a FormatSpecifierStmt instance.

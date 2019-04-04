@@ -11,21 +11,13 @@
 
 +"4. Click Tick Untill <false>AnsRdy</> changes to <true>AnsRdy</>";
         AnsRdy;
-                    
+
 +"Quotient:";
         %u{Q[7..0]};
 
 +"Remainder:";
         %u{R[7..0]};
 
-
-
--"vv These are needed for design to run";
-tc[3..0];
-A[8..0];
-B[8..0];
-C[8..0];
--"^^ These are needed for design to run";
 
 s1 <= st1 tc3 | st2 start;
 s0 <= st0 start | st1 ~tc3;
