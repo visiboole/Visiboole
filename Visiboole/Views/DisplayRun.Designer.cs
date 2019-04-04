@@ -135,8 +135,10 @@ namespace VisiBoole.Views
             // BrowserTabControl
             // 
             this.BrowserTabControl.Controls.Add(this.tabPage1);
+            this.BrowserTabControl.Cursor = System.Windows.Forms.Cursors.Default;
             this.BrowserTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.BrowserTabControl.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.BrowserTabControl.HotTrack = true;
             this.BrowserTabControl.ItemSize = new System.Drawing.Size(58, 20);
             this.BrowserTabControl.Location = new System.Drawing.Point(3, 30);
             this.BrowserTabControl.Name = "BrowserTabControl";

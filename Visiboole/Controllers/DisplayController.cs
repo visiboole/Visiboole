@@ -123,6 +123,9 @@ namespace VisiBoole.Controllers
             tabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
 
             browser = new WebBrowser();
+            browser.IsWebBrowserContextMenuEnabled = false;
+            browser.AllowWebBrowserDrop = false;
+           
 
             ImageList il = new ImageList();
             il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
