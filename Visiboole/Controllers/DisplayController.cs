@@ -90,6 +90,7 @@ namespace VisiBoole.Controllers
 				value.LoadTabControl(tabControl);
 				value.LoadWebBrowser(browser);
 				currentDisplay = value;
+                
 			}
 		}
 
@@ -125,6 +126,7 @@ namespace VisiBoole.Controllers
             browser = new WebBrowser();
             browser.IsWebBrowserContextMenuEnabled = false;
             browser.AllowWebBrowserDrop = false;
+            browser.WebBrowserShortcutsEnabled = false;
            
 
             ImageList il = new ImageList();
@@ -228,6 +230,7 @@ namespace VisiBoole.Controllers
 
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
+            
 
             if (CurrentDisplay is DisplayEdit)
             {
@@ -259,6 +262,7 @@ namespace VisiBoole.Controllers
             {
                 mwController.LoadDisplay(DisplayType.RUN);
             }
+            
         }
 
         /// <summary>

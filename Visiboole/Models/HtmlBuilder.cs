@@ -461,6 +461,7 @@ namespace VisiBoole.Models
         public void DisplayHtml(string html, WebBrowser browser)
 		{
             browser.Refresh();
+            
             browser.Navigate("about:blank");
 
 			if (browser.Document != null)
@@ -471,6 +472,7 @@ namespace VisiBoole.Models
             string styles = "<html><head><style type=\"text/css\"> p { margin: 0;} </style ></head >";
             html = styles + html;
             browser.DocumentText = html;
+           
         }
 	}
 }

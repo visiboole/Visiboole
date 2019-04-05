@@ -86,6 +86,7 @@ namespace VisiBoole.Views
 
                 BrowserTabControl.SelectedTab.Controls.Add(browser);
                 browser.Dock = DockStyle.Fill;
+                pnlMain.Focus();
 
                 BrowserTabControl.SelectedTab.Text = Globals.TabControl.SelectedTab.Design().FileSourceName;
             }
