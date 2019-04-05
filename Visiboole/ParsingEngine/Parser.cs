@@ -147,9 +147,14 @@ namespace VisiBoole.ParsingEngine
         private static Regex ExpansionRegex1 = new Regex($@"((?<!{FormatSpecifierNotationPattern}){ConcatenationPattern})|{VectorPattern2}|{ConstantNotationPattern}", RegexOptions.Compiled);
 
         /// <summary>
+        /// Regex for identifying whether expansion is necessary. (Concat, Vectors)
+        /// </summary>
+        private static Regex ExpansionRegex2 = new Regex($@"((?<!{FormatSpecifierNotationPattern}){ConcatenationPattern})|{VectorPattern2}", RegexOptions.Compiled);
+
+        /// <summary>
         /// Regex used in expansion to preserve scalars. 
         /// </summary>
-        private static Regex ExpansionRegex2 = new Regex($@"(({AnyTypePattern}(?![^{{}}]*\}}))|{ConcatenationPattern})", RegexOptions.Compiled);
+        private static Regex ExpansionRegex3 = new Regex($@"(({AnyTypePattern}(?![^{{}}]*\}}))|{ConcatenationPattern})", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying entire format specifiers.
@@ -467,7 +472,7 @@ namespace VisiBoole.ParsingEngine
                         else
                         {
                             bool needsExpansion = ExpansionRegex1.IsMatch(line);
-                            if (needsExpansion && line.Contains("="))
+                            if (needsExpansion && line.Contains("=") && !line.Contains("+") && !line.Contains("-"))
                             {
                                 // Vertical expansion needed
                                 line = ExpandVertically(line);
@@ -595,11 +600,16 @@ namespace VisiBoole.ParsingEngine
         private bool VerifyExpressionStatement(string expression)
         {
             bool wasPreviousOperator = true;
+            bool mathematicalExpression = false;
             List<StringBuilder> expressions = new List<StringBuilder>();
             List<List<string>> expressionOperators = new List<List<string>>();
             List<string> expressionExclusiveOperators = new List<string>();
 
-            // And operator: ((?<=[\w)}])\s+(?=[\w({~'])(?![^{}]*\}))
+            // matches contains:
+            // Name: ([_a-zA-Z]\w{0,19})
+            // Operators (~, ^, (, ), |, +, -): ([~^()|+-])
+            // Equal To Operator: (==)
+            // And Operator: ((?<=[\w)}])\s+(?=[\w({~'])(?![^{}]*\}))
             MatchCollection matches = Regex.Matches(expression, @"([_a-zA-Z]\w{0,19})|([~^()|+-])|(==)|((?<=[\w)}])\s+(?=[\w({~'])(?![^{}]*\}))");
             string token = "";
             foreach (Match match in matches)
@@ -646,59 +656,56 @@ namespace VisiBoole.ParsingEngine
                         return false;
                     }
 
-                    // Check exclusive operator for errors
-                    string exclusiveOperator = expressionExclusiveOperators[expressionExclusiveOperators.Count - 1];
-                    if (exclusiveOperator == "")
+                    // Check operator and mathematical expression status for error
+                    if (mathematicalExpression && !(token == "+" || token == "-"))
                     {
-                        // Currently no exclusive operator, check to add one
-                        if (ExclusiveOperatorsList.Contains(token))
+                        Globals.Logger.Add($"Line {LineNumber}: '+' and '-' can't appear with boolean operators.");
+                        return false;
+                    }
+
+                    // Check for mathematical expression
+                    if (!mathematicalExpression && (token == "+" || token == "-"))
+                    {
+                        mathematicalExpression = true;
+                    }
+
+                    // Check exclusive operator for errors
+                    if (!mathematicalExpression)
+                    {
+                        string exclusiveOperator = expressionExclusiveOperators[expressionExclusiveOperators.Count - 1];
+                        if (exclusiveOperator == "")
                         {
-                            List<string> pastOperators = expressionOperators[expressionOperators.Count - 1];
+                            // Currently no exclusive operator, check to add one
+                            if (ExclusiveOperatorsList.Contains(token))
+                            {
+                                List<string> pastOperators = expressionOperators[expressionOperators.Count - 1];
 
-                            // Check previous operators
-                            if (token == "^")
-                            {
-                                pastOperators = pastOperators.Where(o => o != "^").ToList();
-                            }
-                            else if (token == "==")
-                            {
-                                pastOperators = pastOperators.Where(o => o != "==").ToList();
-                            }
-                            else
-                            {
-                                pastOperators = pastOperators.Where(o => o != "+" && o != "-").ToList();
-                            }
-
-                            if (pastOperators.Count > 0)
-                            {
-                                if (token == "+" || token == "-")
+                                // Check previous operators
+                                if (token == "^")
                                 {
-                                    Globals.Logger.Add($"Line {LineNumber}: '{token}' can only appear with '+' or '-' in its parentheses level.");
+                                    pastOperators = pastOperators.Where(o => o != "^").ToList();
                                 }
-                                else
+                                else if (token == "==")
+                                {
+                                    pastOperators = pastOperators.Where(o => o != "==").ToList();
+                                }
+
+                                if (pastOperators.Count > 0)
                                 {
                                     Globals.Logger.Add($"Line {LineNumber}: '{token}' must be the only operator in its parentheses level.");
+                                    return false;
                                 }
+
+                                expressionExclusiveOperators[expressionExclusiveOperators.Count - 1] = token;
+                            }
+                        }
+                        else
+                        {
+                            if (token != exclusiveOperator)
+                            {
+                                Globals.Logger.Add($"Line {LineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
                                 return false;
                             }
-
-                            expressionExclusiveOperators[expressionExclusiveOperators.Count - 1] = token;
-                        }
-                    }
-                    else if (exclusiveOperator == "+" || exclusiveOperator == "-")
-                    {
-                        if (!(token == "+" || token == "-"))
-                        {
-                            Globals.Logger.Add($"Line {LineNumber}: '{exclusiveOperator}' can only appear with '+' or '-' in its parentheses level.");
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        if (token != exclusiveOperator)
-                        {
-                            Globals.Logger.Add($"Line {LineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
-                            return false;
                         }
                     }
 
@@ -947,31 +954,54 @@ namespace VisiBoole.ParsingEngine
         {
             string expandedLine = line;
 
-            // Expand all expansions
-            while (ExpansionRegex1.IsMatch(expandedLine))
+            if (line.Contains("+") || line.Contains("-"))
             {
-                Match match = ExpansionRegex1.Match(expandedLine);
-
-                // Get expansion
-                List<string> expansion;
-                if (!match.Value.Contains("{"))
+                // Expand to concats
+                while (VectorRegex1.IsMatch(expandedLine))
                 {
-                    expansion = ExpandToken(match);
-                }
-                else
-                {
-                    expansion = GetExpansion(match);
-                }
+                    Match match = VectorRegex1.Match(expandedLine);
 
-                // Check and combine expansion
-                if (expansion == null)
-                {
-                    return null;
-                }
-                string expanded = String.Join(" ", expansion);
+                    // Get expansion
+                    List<string> expansion = GetExpansion(match);
 
-                // Replace with expansion
-                expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
+                    // Check and combine expansion
+                    if (expansion == null)
+                    {
+                        return null;
+                    }
+                    string expanded = String.Join(" ", expansion);
+                    expanded = String.Concat("{", expanded, "}");
+
+                    expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
+                }
+            }
+            else
+            {
+                // Expand all expansions
+                while (ExpansionRegex2.IsMatch(expandedLine))
+                {
+                    Match match = ExpansionRegex2.Match(expandedLine);
+
+                    // Get expansion
+                    List<string> expansion;
+                    if (!match.Value.Contains("{"))
+                    {
+                        expansion = ExpandToken(match);
+                    }
+                    else
+                    {
+                        expansion = GetExpansion(match);
+                    }
+
+                    // Check and combine expansion
+                    if (expansion == null)
+                    {
+                        return null;
+                    }
+                    string expanded = String.Join(" ", expansion);
+
+                    expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
+                }
             }
 
             return expandedLine;
@@ -995,7 +1025,7 @@ namespace VisiBoole.ParsingEngine
 
             // Expand dependent
             List<string> dependentExpansion = new List<string>();
-            Match dependentMatch = ExpansionRegex2.Match(dependent);
+            Match dependentMatch = ExpansionRegex3.Match(dependent);
             if (dependentMatch.Value.Contains("{"))
             {
                 dependentExpansion.AddRange(GetExpansion(dependentMatch));

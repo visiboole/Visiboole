@@ -48,6 +48,54 @@ namespace VisiBoole.ParsingEngine.Statements
         }
 
         /// <summary>
+        /// Gets the value of the provided token
+        /// </summary>
+        /// <param name="token">Token to evaluate</param>
+        /// <returns>Value of the token</returns>
+        public int GetValue(string token)
+        {
+            if (token.Contains("{"))
+            {
+                token = token.Substring(1, token.Length - 2);
+                string[] vars = Regex.Split(token, @"\s+");
+
+                // Get binary value
+                StringBuilder binary = new StringBuilder();
+                foreach (string var in vars)
+                {
+                    binary.Append(Database.TryGetValue(Parser.ScalarRegex1.Match(var).Value));
+                }
+
+                return Convert.ToInt32(binary.ToString(), 2);
+            }
+            else if (token.Contains("'"))
+            {
+                Match constant = Parser.ConstantRegex.Match(token);
+
+                // Get binary bits from format type
+                string outputBinary;
+                if (constant.Groups["Format"].Value == "h" || constant.Groups["Format"].Value == "H")
+                {
+                    outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 16), 2);
+                }
+                else if (constant.Groups["Format"].Value == "d" || constant.Groups["Format"].Value == "D")
+                {
+                    outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 10), 2);
+                }
+                else
+                {
+                    outputBinary = constant.Groups["Value"].Value;
+                }
+
+                return Convert.ToInt32(outputBinary, 2);
+            }
+            else
+            {
+                return Database.TryGetValue(token);
+            }
+        }
+
+        /// <summary>
         /// Parses the expression text of this statement into a list of output elements.
         /// </summary>
         public override void Parse()

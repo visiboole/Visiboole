@@ -117,7 +117,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying constants. (Optional ~)
         /// </summary>
-        private static Regex ConstantRegex { get; } = new Regex(ConstantPattern);
+        public static Regex ConstantRegex { get; } = new Regex(ConstantPattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying format specifiers.

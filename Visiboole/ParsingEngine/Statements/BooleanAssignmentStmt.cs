@@ -24,6 +24,7 @@ using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.ParsingEngine.Boolean;
 using System;
 using VisiBoole.Models;
+using System.Text;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -52,11 +53,43 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public void Evaluate()
         {
-            bool dependentValue = ExpressionSolver.Solve(Database, Expression) == 1;
-            bool currentValue = Database.TryGetValue(Dependent) == 1;
-            if (dependentValue != currentValue)
+            int expressionValue = ExpressionSolver.Solve(Database, Expression);
+            int dependentValue = GetValue(Dependent);
+
+            if (dependentValue != expressionValue)
             {
-                Database.SetValues(Dependent, dependentValue);
+                if (!Dependent.Contains("{"))
+                {
+                    Database.SetValues(Dependent, expressionValue == 1);
+                }
+                else
+                {
+                    string variables = Dependent.Substring(1, Dependent.Length - 2);
+                    string[] vars = Regex.Split(variables, @"\s+");
+                    if (vars.Length > 1)
+                    {
+                        vars = vars.Reverse().ToArray(); // a3 a2 a1 a0
+                    }
+                    string binary = Convert.ToString(expressionValue, 2);
+                    if (binary.Length < vars.Length)
+                    {
+                        binary = binary.PadLeft(vars.Length - binary.Length, '0');
+                    }
+                    if (binary.Length > 1)
+                    {
+                        char[] reverseBinary = binary.ToCharArray();
+                        Array.Reverse(reverseBinary);
+                        binary = new string(reverseBinary); // 0 0 0 1
+                    }
+
+                    // Get binary value
+                    for (int i = 0; i < vars.Length; i++)
+                    {
+                        string var = vars[i];
+                        int val = int.Parse(binary[i].ToString());
+                        Database.SetValues(var, val == 1);
+                    }
+                }
             }
         }
 

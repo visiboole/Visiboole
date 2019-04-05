@@ -47,7 +47,7 @@ namespace VisiBoole.ParsingEngine.Boolean
 
             // Obtain scalars, constants and operators
             expression = $"({expression})"; // Add () to expression
-            MatchCollection matches = Regex.Matches(expression, @"(~?(?<Name>[_a-zA-Z]\w{0,19}))|(~?'[bB][0-1])|([~^()|+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
+            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatenationPattern}|(~?(?<Name>[_a-zA-Z]\w{{0,19}}))|(~?'[bB][0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
             foreach (Match match in matches)
             {
                 if (match.Value == ")")
@@ -83,29 +83,61 @@ namespace VisiBoole.ParsingEngine.Boolean
                 }
                 else
                 {
-                    // Process var
-                    string var = match.Value;
+                    // Process variable
+                    string variable = match.Value;
                     int value = 0;
                     bool containsNot = false;
 
-                    if (var[0] == '~')
+                    if (variable.Contains("{"))
                     {
-                        containsNot = true;
-                        var = var.Substring(1);
-                    }
-                    
-                    if (var.Contains("'"))
-                    {
-                        value = Convert.ToInt32(var[2].ToString());
+                        variable = variable.Substring(1, variable.Length - 2);
+                        string[] vars = Regex.Split(variable, @"\s+");
+
+                        // Get binary value
+                        StringBuilder binary = new StringBuilder();
+                        foreach (string var in vars)
+                        {
+                            binary.Append(database.TryGetValue(Parser.ScalarRegex1.Match(var).Value));
+                        }
+                        value = Convert.ToInt32(binary.ToString(), 2);
                     }
                     else
                     {
-                        value = database.TryGetValue(var);
-                    }
+                        if (variable[0] == '~')
+                        {
+                            containsNot = true;
+                            variable = variable.Substring(1);
+                        }
 
-                    if (containsNot)
-                    {
-                        value = Convert.ToInt32(!Convert.ToBoolean(value));
+                        if (variable.Contains("'"))
+                        {
+                            Match constant = Parser.ConstantRegex.Match(variable);
+
+                            // Get binary bits from format type
+                            string outputBinary;
+                            if (constant.Groups["Format"].Value == "h" || constant.Groups["Format"].Value == "H")
+                            {
+                                outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 16), 2);
+                            }
+                            else if (constant.Groups["Format"].Value == "d" || constant.Groups["Format"].Value == "D")
+                            {
+                                outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 10), 2);
+                            }
+                            else
+                            {
+                                outputBinary = constant.Groups["Value"].Value;
+                            }
+                            value = Convert.ToInt32(outputBinary, 2);
+                        }
+                        else
+                        {
+                            value = database.TryGetValue(variable);
+                        }
+
+                        if (containsNot)
+                        {
+                            value = Convert.ToInt32(!Convert.ToBoolean(value));
+                        }
                     }
 
                     valueStack.Push(value);
@@ -141,6 +173,12 @@ namespace VisiBoole.ParsingEngine.Boolean
                     break;
                 case "==":
                     result = Convert.ToInt32(Convert.ToBoolean(leftValue) == Convert.ToBoolean(rightValue));
+                    break;
+                case "+":
+                    result = leftValue + rightValue;
+                    break;
+                case "-":
+                    result = leftValue - rightValue;
                     break;
             }
 
