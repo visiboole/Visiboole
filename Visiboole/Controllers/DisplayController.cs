@@ -27,6 +27,7 @@ using VisiBoole.Views;
 using VisiBoole.ParsingEngine.ObjectCode;
 using System.Drawing;
 using System.Threading;
+using System;
 
 namespace VisiBoole.Controllers
 {
@@ -132,7 +133,6 @@ namespace VisiBoole.Controllers
             browser.IsWebBrowserContextMenuEnabled = false;
             browser.AllowWebBrowserDrop = false;
             browser.WebBrowserShortcutsEnabled = false;
-           
 
             ImageList il = new ImageList();
             il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
@@ -230,7 +230,11 @@ namespace VisiBoole.Controllers
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
 
-            browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
+            browser.DocumentCompleted += (sender, e) => {
+                browser.Document.Body.ScrollTop = position;
+                browser.Document.Body.Click += (sender2, e2) => { mwController.RetrieveFocus(); };
+                mwController.RetrieveFocus();
+            };
 
             if (CurrentDisplay is DisplayEdit)
             {
@@ -261,12 +265,6 @@ namespace VisiBoole.Controllers
             {
                 List<IObjectCodeElement> output = mwController.Tick();
                 DisplayOutput(output, position);
-                /* Attempt at pause
-                if (i < count - 1)
-                {
-                    Thread.Sleep(1000);
-                }
-                */
             }
         }
 

@@ -48,9 +48,9 @@ namespace VisiBoole.ParsingEngine
         public Dictionary<string, Variable> AllVars;
 
         /// <summary>
-        /// List of vector namespaces
+        /// List of variable namespaces.
         /// </summary>
-        private Dictionary<string, List<string>> VectorNamespaces;
+        private Dictionary<string, List<string>> Namespaces;
 
         /// <summary>
         /// Dictionary of the expressions in the design.
@@ -69,19 +69,19 @@ namespace VisiBoole.ParsingEngine
             IndVars = new Dictionary<string, IndependentVariable>();
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
-            VectorNamespaces = new Dictionary<string, List<string>>();
+            Namespaces = new Dictionary<string, List<string>>();
             Expressions = new Dictionary<int, ExpressionStatement>();
             LastExpressionIndex = -1;
         }
 
         /// <summary>
-        /// Checks whether a vector namespace can be created.
+        /// Checks whether a variable namespace can be created.
         /// </summary>
-        /// <param name="name">Namespace of the vector</param>
+        /// <param name="name">Namespace of the variable</param>
         /// <returns>Whether the namespace already exists or not</returns>
-        public bool HasVectorNamespace(string name)
+        public bool HasNamespace(string name)
         {
-            return VectorNamespaces.ContainsKey(name);
+            return Namespaces.ContainsKey(name);
         }
 
         private string PadNumbers(string input)
@@ -90,16 +90,23 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Adds a vector namespace that doesn't already exist or appends new components to the existing namespace.
+        /// Adds a variable namespace that doesn't already exist or appends new components to the existing namespace.
         /// </summary>
         /// <param name="name">Namespace to create</param>
-        /// <param name="components">Expanded vector</param>
-        public void AddVectorNamespace(string name, IEnumerable<string> components)
+        /// <param name="components">Expanded components</param>
+        public void AddNamespace(string name, IEnumerable<string> components)
         {
-            if (!HasVectorNamespace(name))
+            if (!HasNamespace(name))
             {
                 // Add Namespace and its values to the dictionary
-                VectorNamespaces.Add(name, components.ToList());
+                if (components != null)
+                {
+                    Namespaces.Add(name, components.ToList());
+                }
+                else
+                {
+                    Namespaces.Add(name, null);
+                }
             }
             else
             {
@@ -107,9 +114,9 @@ namespace VisiBoole.ParsingEngine
                 bool wasComponentAdded = false;
                 foreach (string component in components)
                 {
-                    if (!VectorNamespaces[name].Contains(component))
+                    if (!Namespaces[name].Contains(component))
                     {
-                        VectorNamespaces[name].Add(component);
+                        Namespaces[name].Add(component);
                         wasComponentAdded = true;
                     }
                 }
@@ -117,15 +124,15 @@ namespace VisiBoole.ParsingEngine
                 // Order components from MSB to LSB
                 if (wasComponentAdded)
                 {
-                    VectorNamespaces[name] = VectorNamespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
+                    Namespaces[name] = Namespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
 
                     wasComponentAdded = false;
-                    for (int i = 0; i < VectorNamespaces[name].Count; i++)
+                    for (int i = 0; i < Namespaces[name].Count; i++)
                     {
-                        if (i < VectorNamespaces[name].Count - 1)
+                        if (i < Namespaces[name].Count - 1)
                         {
-                            Match currentMatch = Parser.ScalarRegex.Match(VectorNamespaces[name][i]);
-                            Match nextMatch = Parser.ScalarRegex.Match(VectorNamespaces[name][i+1]);
+                            Match currentMatch = Parser.ScalarRegex.Match(Namespaces[name][i]);
+                            Match nextMatch = Parser.ScalarRegex.Match(Namespaces[name][i+1]);
 
                             int currentBit = Convert.ToInt32(currentMatch.Groups["Bit"].Value);
                             int nextBit = Convert.ToInt32(nextMatch.Groups["Bit"].Value);
@@ -135,7 +142,7 @@ namespace VisiBoole.ParsingEngine
                             {
                                 for (int newBit = currentBit - 1; newBit > nextBit; newBit--)
                                 {
-                                    VectorNamespaces[name].Add(String.Concat(name, newBit));
+                                    Namespaces[name].Add(String.Concat(name, newBit));
                                 }
                                 wasComponentAdded = true;
                             }
@@ -145,22 +152,22 @@ namespace VisiBoole.ParsingEngine
                     // Resort components
                     if (wasComponentAdded)
                     {
-                        VectorNamespaces[name] = VectorNamespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
+                        Namespaces[name] = Namespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Returns a list of components for the specified vector namespace.
+        /// Returns a list of components for the specified namespace.
         /// </summary>
-        /// <param name="name">Namepsace of the vector</param>
-        /// <returns>List of components that belong to the vector namespace</returns>
-        public List<string> GetVectorComponents(string name)
+        /// <param name="name">Namespace of the variable</param>
+        /// <returns>List of components that belong to the namespace</returns>
+        public List<string> GetComponents(string name)
         {
-            if (HasVectorNamespace(name))
+            if (HasNamespace(name))
             {
-                return VectorNamespaces[name];
+                return Namespaces[name];
             }
             else
             {
@@ -311,14 +318,22 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         public void ReevaluateExpressions()
         {
+            List<int> noReevaluation = new List<int>();
             for (int i = 0; i <= LastExpressionIndex; i++)
             {
                 if (Expressions.ContainsKey(i))
                 {
-                    var expression = Expressions[i];
-                    if (expression.Evaluate() && !(expression.Expression.Contains("+") || expression.Expression.Contains("-")))
+                    if (!noReevaluation.Contains(i))
                     {
-                        i = -1; // Reset loop if reevaluated
+                        var expression = Expressions[i];
+                        if (expression.Evaluate())
+                        {
+                            if (expression.Expression.Contains("==") || expression.Expression.Contains("+") || expression.Expression.Contains("-"))
+                            {
+                                noReevaluation.Add(i);
+                            }
+                            i = -1; // Reset loop if reevaluated
+                        }
                     }
                 }
             }
@@ -331,13 +346,13 @@ namespace VisiBoole.ParsingEngine
         /// <param name="expression">Expression to add</param>
         public void AddExpression(int lineNumber, ExpressionStatement expression)
         {
-            //ReevaluateExpressions();
+            ReevaluateExpressions();
             Expressions.Add(lineNumber, expression);
             if (lineNumber > LastExpressionIndex)
             {
                 LastExpressionIndex = lineNumber;
             }
-            ReevaluateExpressions();
+            //ReevaluateExpressions();
         }
 
         /// <summary>

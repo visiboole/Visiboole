@@ -207,6 +207,14 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Focuses the main window.
+        /// </summary>
+        public void RetrieveFocus()
+        {
+            view.RetrieveFocus();
+        }
+
+        /// <summary>
 		/// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
 		/// </summary>
 		/// <param name="path">The new file path to save the active file to</param>

@@ -86,6 +86,11 @@ namespace VisiBoole.Controllers
 		void SaveFiles();
 
         /// <summary>
+        /// Focuses the main window.
+        /// </summary>
+        void RetrieveFocus();
+
+        /// <summary>
         /// Handles the event that occurs when the user runs the active design.
         /// </summary>
         void Run();

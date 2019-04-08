@@ -53,19 +53,24 @@ namespace VisiBoole.Models
 		public bool IsDirty { get; private set; }
 
         /// <summary>
-        /// Previous text of the Design
+        /// Previous text of the design.
         /// </summary>
         private string LastText;
 
         /// <summary>
-        /// Edit history of the Design
+        /// Edit history of the design.
         /// </summary>
         public Stack EditHistory { get; private set; }
 
         /// <summary>
-        /// Undo history of the Design
+        /// Undo history of the design.
         /// </summary>
         public Stack UndoHistory { get; private set; }
+
+        /// <summary>
+        /// Module declaration of the design. (if exists)
+        /// </summary>
+        public string ModuleDeclaration { get; set; }
 
         /// <summary>
         /// Constructs a new Design object
@@ -382,24 +387,38 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         private void Design_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Z && e.Control)
+            if (e.Control)
             {
-                if (EditHistory.Count > 0) UndoTextMenuClick(sender, e);
-            }
-            else if (e.KeyCode == Keys.Y && e.Control)
-            {
-                if (UndoHistory.Count > 0) RedoTextMenuClick(sender, e);
-            }
-            else if (e.KeyCode == Keys.A && e.Control)
-            {
-                SelectAllTextMenuClick(sender, e);
-            }
-            else if (e.KeyCode == Keys.OemQuotes && e.Control)
-            {
-                if (Text.Length > 0)
+                if (e.KeyCode == Keys.Z && EditHistory.Count > 0)
+                {
+                    UndoTextMenuClick(sender, e);
+                }
+                else if (e.KeyCode == Keys.Y && UndoHistory.Count > 0)
+                {
+                    RedoTextMenuClick(sender, e);
+                }
+                else if (e.KeyCode == Keys.A)
+                {
+                    SelectAllTextMenuClick(sender, e);
+                }
+                else if (e.KeyCode == Keys.C && SelectedText.Length > 0)
+                {
+                    CopyTextMenuClick(sender, e);
+                }
+                else if (e.KeyCode == Keys.X && SelectedText.Length > 0)
+                {
+                    CutTextMenuClick(sender, e);
+                }
+                else if (e.KeyCode == Keys.V && Clipboard.ContainsText())
+                {
+                    PasteTextMenuClick(sender, e);
+                }
+                else if (e.KeyCode == Keys.OemQuotes && Text.Length > 0)
                 {
                     MakeComments(); // Comment out line(s)
                 }
+
+                e.Handled = true;
             }
         }
 
@@ -477,7 +496,8 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         public void CutTextMenuClick(object sender, EventArgs e)
         {
-            Cut();
+            Clipboard.SetText(SelectedText);
+            SelectedText = "";
         }
 
         /// <summary>
@@ -510,6 +530,10 @@ namespace VisiBoole.Models
         /// <param name="e"></param>
         public void SelectAllTextMenuClick(object sender, EventArgs e)
         {
+            if (!Focused)
+            {
+                Focus();
+            }
             SelectAll();
         }
 

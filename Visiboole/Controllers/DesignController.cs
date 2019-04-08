@@ -46,7 +46,7 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// The active Design.
         /// </summary>
-        public static Design ActiveDesign { get; private set; }
+        public static Design ActiveDesign { get; set; }
 
         /// <summary>
         /// Parser used to parse designs.
@@ -124,7 +124,16 @@ namespace VisiBoole.Controllers
         /// <returns>The Design created</returns>
         public Design CreateDesign(string name)
         {
-            Design newDesign = new Design(name, mwController.LoadDisplay);
+            Design newDesign;
+            if (mwController != null)
+            {
+                newDesign = new Design(name, mwController.LoadDisplay);
+            }
+            else
+            {
+                newDesign = new Design(name, delegate { }); // used for testing
+            }
+            
             if (!Designs.ContainsKey(newDesign.FileSourceName))
             {
                 Designs.Add(newDesign.FileSourceName, newDesign);

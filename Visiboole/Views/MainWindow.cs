@@ -78,27 +78,28 @@ namespace VisiBoole.Views
         public void UpdateControls(IDisplay display)
         {
             openIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
-            openToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
-            newIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
-            newToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT);
+            openToolStripMenuItem.Enabled = openIcon.Enabled;
+            newIcon.Enabled = openIcon.Enabled;
+            newToolStripMenuItem.Enabled = openIcon.Enabled;
             saveIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            saveAllIcon.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            saveToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            saveAsToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            runModeToggle.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            saveAllIcon.Enabled = saveIcon.Enabled;
+            saveToolStripMenuItem.Enabled = saveIcon.Enabled;
+            saveAsToolStripMenuItem.Enabled = saveIcon.Enabled;
+            runModeToggle.Enabled = saveIcon.Enabled;
+            newStateToolStripMenuItem.Enabled = saveIcon.Enabled;
             editModeToggle.Enabled = (display.TypeOfDisplay == DisplayType.RUN);
-            closeDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
-            closeAllDesignToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            closeDesignToolStripMenuItem.Enabled = saveIcon.Enabled;
+            closeAllDesignToolStripMenuItem.Enabled = saveIcon.Enabled;
             increaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
-            decreaseFontToolStripMenuItem.Enabled = (NavTree.Nodes[0].Nodes.Count > 0);
-            selectAllToolStripMenuItem.Enabled = (display.TypeOfDisplay == DisplayType.EDIT && NavTree.Nodes[0].Nodes.Count > 0);
+            decreaseFontToolStripMenuItem.Enabled = decreaseFontToolStripMenuItem.Enabled;
+            selectAllToolStripMenuItem.Enabled = saveIcon.Enabled;
 
             if (NavTree.Nodes[0].Nodes.Count > 0)
             {
                 MainWindowController.SetFontSize();
             }
 
-            if (display.TypeOfDisplay == DisplayType.EDIT && Globals.TabControl.SelectedTab != null)
+            if (display.TypeOfDisplay == DisplayType.EDIT && DesignController.ActiveDesign != null)
             {
                 undoToolStripMenuItem.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
                 undoToolStripMenuItem1.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
@@ -245,6 +246,14 @@ namespace VisiBoole.Views
             {
                 Globals.Dialog.New("Failure", "File save failed.", DialogType.Ok);
             }
+        }
+
+        /// <summary>
+        /// Focuses this window.
+        /// </summary>
+        public void RetrieveFocus()
+        {
+            NavTree.Focus(); // This foucs will allow all shortcut keys to work
         }
 
         /// <summary>
@@ -401,6 +410,8 @@ namespace VisiBoole.Views
 
             MainWindowController.ProcessNewFile(openFileDialog1.FileName);
             openFileDialog1.FileName = string.Empty;
+
+            previousStateToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
@@ -419,6 +430,8 @@ namespace VisiBoole.Views
 
             MainWindowController.ProcessNewFile(saveFileDialog1.FileName, true);
             saveFileDialog1.FileName = "newFile1.vbi";
+
+            previousStateToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
@@ -435,6 +448,8 @@ namespace VisiBoole.Views
                 MainWindowController.ProcessNewFile(openFileDialog1.FileName);
                 openFileDialog1.FileName = string.Empty;
             }
+
+            previousStateToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
@@ -492,6 +507,11 @@ namespace VisiBoole.Views
         private void RunButtonClick(object sender, EventArgs e)
         {
             MainWindowController.Run();
+            if (runModeToggle.DropDown.Visible)
+            {
+                runModeToggle.HideDropDown();
+            }
+            previousStateToolStripMenuItem.Enabled = true;
         }
 
         /// <summary>
@@ -714,6 +734,56 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
+        /// Handles the event that occurs when the user presses a key on the keyboard.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control)
+            {
+                if (e.KeyCode == Keys.N)
+                {
+                    NewFileMenuClick(sender, e);
+                    return;
+                }
+                else if (e.KeyCode == Keys.O)
+                {
+                    OpenFileMenuClick(sender, e);
+                    return;
+                }
+
+                if (NavTree.Nodes[0].Nodes.Count > 0)
+                {
+                    if (e.KeyCode == Keys.S)
+                    {
+                        SaveFileMenuClick(sender, e);
+                    }
+                    else if (e.KeyCode == Keys.E && editModeToggle.Enabled)
+                    {
+                        EditButtonClick(sender, e);
+                    }
+                    else if (e.KeyCode == Keys.R && runModeToggle.Enabled)
+                    {
+                        RunButtonClick(sender, e);
+                    }
+                    else if (e.KeyCode == Keys.Add || e.KeyCode == Keys.Oemplus)
+                    {
+                        IncreaseFontMenuClick(sender, e);
+                    }
+                    else if (e.KeyCode == Keys.Subtract || e.KeyCode == Keys.OemMinus)
+                    {
+                        DecreaseFontMenuClick(sender, e);
+                    }
+                    else if (e.KeyCode == Keys.A && runModeToggle.Enabled)
+                    {
+                        SelectAllTextEvent(sender, e);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Handles the event when the form is closing
         /// </summary>
         /// <param name="sender"></param>
@@ -758,5 +828,27 @@ namespace VisiBoole.Views
         }
 
         #endregion
+
+        private void runModeToggle_MouseHover(object sender, EventArgs e)
+        {
+            runModeToggle.ShowDropDown();
+        }
+
+        private void runModeToggle_DropDownClosed(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = (ToolStripMenuItem)sender;
+            menu.ForeColor = Color.White;
+        }
+
+        private void previousStateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MainWindowController.RefreshOutput();
+        }
+
+        private void runModeToggle_DropDownOpening(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = (ToolStripMenuItem)sender;
+            menu.ForeColor = Color.Black;
+        }
     }
 }

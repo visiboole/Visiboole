@@ -200,6 +200,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="design">Design to parse</param>
         public Parser(Design design) : base(design)
         {
+            ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModuleNotationPattern}\);$");
         }
 
         #region Parsing Methods
@@ -246,7 +247,6 @@ namespace VisiBoole.ParsingEngine
         public List<IObjectCodeElement> Parse()
         {
             // Init parser
-            Init = true;
             Globals.Logger.Start();
 
             // Get statements for parsing
@@ -271,7 +271,6 @@ namespace VisiBoole.ParsingEngine
         public List<IObjectCodeElement> ParseClick(string variableName)
         {
             // Init parser
-            Init = false;
             Globals.Logger.Start();
 
             // Flip value of variable clicked and reevlaute expressions
@@ -290,7 +289,6 @@ namespace VisiBoole.ParsingEngine
         public List<IObjectCodeElement> ParseTick()
         {
             // Init parser
-            Init = false;
             Globals.Logger.Start();
 
             // Tick clock statements and reevaluate expressions
@@ -316,7 +314,6 @@ namespace VisiBoole.ParsingEngine
         public List<IObjectCodeElement> ParseWithInput(List<Variable> inputs)
         {
             // Init parser
-            Init = true;
             Globals.Logger.Start();
 
             // Get statements for parsing
@@ -353,13 +350,11 @@ namespace VisiBoole.ParsingEngine
         {
             bool valid = true;
             List<Statement> statements = new List<Statement>();
-            ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModuleNotationPattern}\);$");
-            string moduleDeclaration = "";
-
             byte[] bytes = Encoding.UTF8.GetBytes(Design.Text);
             MemoryStream stream = new MemoryStream(bytes);
             using (StreamReader reader = new StreamReader(stream))
             {
+                Design.ModuleDeclaration = null;
                 LineNumber = 0;
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -400,7 +395,7 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (type == StatementType.Module)
                     {
-                        if (!String.IsNullOrEmpty(moduleDeclaration))
+                        if (!String.IsNullOrEmpty(Design.ModuleDeclaration))
                         {
                             Globals.Logger.Add($"Line {LineNumber}: A module declaration already exists.");
                             valid = false;
@@ -409,11 +404,12 @@ namespace VisiBoole.ParsingEngine
                         {
                             if (!ModuleRegex.IsMatch(line))
                             {
+                                Globals.Logger.Add($"Line {LineNumber}: Invalid module declaration notation.");
                                 valid = false;
                             }
                             else
                             {
-                                moduleDeclaration = line;
+                                Design.ModuleDeclaration = line;
                             }
                         }
 
@@ -485,7 +481,7 @@ namespace VisiBoole.ParsingEngine
                             string[] lines = line.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (string source in lines)
                             {
-                                if (Init && !InitVariables(type, source))
+                                if (!InitVariables(type, source))
                                 {
                                     // Unable to initialize variables
                                     valid = false;
@@ -514,12 +510,10 @@ namespace VisiBoole.ParsingEngine
             }
 
             // If module declaration verify
-            /*
-            if (!String.IsNullOrEmpty(moduleDeclaration) && !VerifyModuleDeclarationStatement(moduleDeclaration))
+            if (!String.IsNullOrEmpty(Design.ModuleDeclaration) && !VerifyModuleDeclarationStatement())
             {
                 valid = false;
             }
-            */
 
             if (!valid)
             {
@@ -772,6 +766,44 @@ namespace VisiBoole.ParsingEngine
             }
         }
 
+        /// <summary>
+        /// Verifies a module declaration statement
+        /// </summary>
+        /// <param name="declaration">Declaration to verifiy</param>
+        /// <returns>Whether the declaration is valid or not</returns>
+        private bool VerifyModuleDeclarationStatement()
+        {
+            // Get input and output variables
+            Match module = ModuleRegex.Match(Design.ModuleDeclaration);
+            string[] inputVars = Regex.Split(module.Groups["Inputs"].Value, @",\s+");
+
+            // Check input variables
+            foreach (string input in inputVars)
+            {
+                List<string> vars;
+                if (!input.Contains("{") && !input.Contains("["))
+                {
+                    vars = new List<string>();
+                    vars.Add(input);
+                }
+                else
+                {
+                    vars = GetExpansion(ExpansionRegex2.Match(input));
+                }
+
+                foreach (string var in vars)
+                {
+                    if (Design.Database.TryGetVariable<IndependentVariable>(var) == null)
+                    {
+                        Globals.Logger.AddTop($"'{var}' must be an independent variable to be used as an input in a module declaration statement.");
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         #endregion
 
         /// <summary>
@@ -804,15 +836,8 @@ namespace VisiBoole.ParsingEngine
 
                         if (line.Contains("<"))
                         {
-                            // Create delay or alternate clock variable
-                            if (!line.Contains("@"))
-                            {
-                                var += ".d";
-                            }
-                            else
-                            {
-                                var += ".a";
-                            }
+                            // Create delay variable
+                            var += ".d";
 
                             if (Design.Database.TryGetVariable<Variable>(var) == null)
                             {
@@ -862,7 +887,7 @@ namespace VisiBoole.ParsingEngine
         {
             if (token.Value.Contains("[") && String.IsNullOrEmpty(token.Groups["LeftBound"].Value))
             {
-                List<string> components = Design.Database.GetVectorComponents(token.Groups["Name"].Value);
+                List<string> components = Design.Database.GetComponents(token.Groups["Name"].Value);
                 if (token.Value.Contains("~") && !components[0].Contains("~"))
                 {
                     for (int i = 0; i < components.Count; i++)

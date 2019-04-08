@@ -30,7 +30,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Designs:");
+            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Designs:");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -75,8 +75,10 @@ namespace VisiBoole.Views
             this.saveAllIcon = new System.Windows.Forms.ToolStripMenuItem();
             this.undoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.redoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.editModeToggle = new System.Windows.Forms.ToolStripMenuItem();
+            this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
+            this.previousStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -121,7 +123,7 @@ namespace VisiBoole.Views
             // 
             this.newToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
+            this.newToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+N";
             this.newToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.newToolStripMenuItem.Text = "&New";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.NewFileMenuClick);
@@ -130,7 +132,7 @@ namespace VisiBoole.Views
             // 
             this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+            this.openToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+O";
             this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "&Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenFileMenuClick);
@@ -145,7 +147,7 @@ namespace VisiBoole.Views
             this.saveToolStripMenuItem.Enabled = false;
             this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.saveToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+S";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveFileMenuClick);
@@ -297,7 +299,6 @@ namespace VisiBoole.Views
             this.increaseFontToolStripMenuItem.Enabled = false;
             this.increaseFontToolStripMenuItem.Name = "increaseFontToolStripMenuItem";
             this.increaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+";
-            this.increaseFontToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Oemplus)));
             this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.increaseFontToolStripMenuItem.Text = "Increase Font";
             this.increaseFontToolStripMenuItem.Click += new System.EventHandler(this.IncreaseFontMenuClick);
@@ -307,7 +308,6 @@ namespace VisiBoole.Views
             this.decreaseFontToolStripMenuItem.Enabled = false;
             this.decreaseFontToolStripMenuItem.Name = "decreaseFontToolStripMenuItem";
             this.decreaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl-";
-            this.decreaseFontToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.OemMinus)));
             this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.decreaseFontToolStripMenuItem.Text = "Decrease Font";
             this.decreaseFontToolStripMenuItem.Click += new System.EventHandler(this.DecreaseFontMenuClick);
@@ -403,13 +403,13 @@ namespace VisiBoole.Views
             this.NavTree.Location = new System.Drawing.Point(1, 1);
             this.NavTree.Margin = new System.Windows.Forms.Padding(1);
             this.NavTree.Name = "NavTree";
-            treeNode4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            treeNode4.ForeColor = System.Drawing.Color.DodgerBlue;
-            treeNode4.Name = "Explorer";
-            treeNode4.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            treeNode4.Text = "Designs:";
+            treeNode9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            treeNode9.ForeColor = System.Drawing.Color.DodgerBlue;
+            treeNode9.Name = "Explorer";
+            treeNode9.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            treeNode9.Text = "Designs:";
             this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode4});
+            treeNode9});
             this.NavTree.ShowLines = false;
             this.NavTree.ShowPlusMinus = false;
             this.NavTree.ShowRootLines = false;
@@ -524,20 +524,6 @@ namespace VisiBoole.Views
             this.redoToolStripMenuItem1.ToolTipText = "Redo (Ctrl+Y)";
             this.redoToolStripMenuItem1.Click += new System.EventHandler(this.RedoTextMenuClick);
             // 
-            // runModeToggle
-            // 
-            this.runModeToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
-            this.runModeToggle.Enabled = false;
-            this.runModeToggle.ForeColor = System.Drawing.Color.White;
-            this.runModeToggle.Image = ((System.Drawing.Image)(resources.GetObject("runModeToggle.Image")));
-            this.runModeToggle.Name = "runModeToggle";
-            this.runModeToggle.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
-            this.runModeToggle.ShowShortcutKeys = false;
-            this.runModeToggle.Size = new System.Drawing.Size(56, 20);
-            this.runModeToggle.Text = "Run";
-            this.runModeToggle.ToolTipText = "Run (Ctrl+R)";
-            this.runModeToggle.Click += new System.EventHandler(this.RunButtonClick);
-            // 
             // editModeToggle
             // 
             this.editModeToggle.Enabled = false;
@@ -545,12 +531,47 @@ namespace VisiBoole.Views
             this.editModeToggle.Image = global::VisiBoole.Properties.Resources.Stop;
             this.editModeToggle.Margin = new System.Windows.Forms.Padding(40, 0, 0, 0);
             this.editModeToggle.Name = "editModeToggle";
-            this.editModeToggle.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
             this.editModeToggle.ShowShortcutKeys = false;
             this.editModeToggle.Size = new System.Drawing.Size(55, 20);
             this.editModeToggle.Text = "Edit";
             this.editModeToggle.ToolTipText = "Edit (Ctrl+E)";
             this.editModeToggle.Click += new System.EventHandler(this.EditButtonClick);
+            // 
+            // runModeToggle
+            // 
+            this.runModeToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
+            this.runModeToggle.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newStateToolStripMenuItem,
+            this.previousStateToolStripMenuItem});
+            this.runModeToggle.Enabled = false;
+            this.runModeToggle.ForeColor = System.Drawing.Color.White;
+            this.runModeToggle.Image = ((System.Drawing.Image)(resources.GetObject("runModeToggle.Image")));
+            this.runModeToggle.Name = "runModeToggle";
+            this.runModeToggle.ShowShortcutKeys = false;
+            this.runModeToggle.Size = new System.Drawing.Size(56, 20);
+            this.runModeToggle.Text = "Run";
+            this.runModeToggle.ToolTipText = "Run (Ctrl+R)";
+            this.runModeToggle.DropDownClosed += new System.EventHandler(this.runModeToggle_DropDownClosed);
+            this.runModeToggle.DropDownOpening += new System.EventHandler(this.runModeToggle_DropDownOpening);
+            this.runModeToggle.Click += new System.EventHandler(this.RunButtonClick);
+            this.runModeToggle.MouseHover += new System.EventHandler(this.runModeToggle_MouseHover);
+            // 
+            // previousStateToolStripMenuItem
+            // 
+            this.previousStateToolStripMenuItem.Enabled = false;
+            this.previousStateToolStripMenuItem.Name = "previousStateToolStripMenuItem";
+            this.previousStateToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.previousStateToolStripMenuItem.Text = "Previous State";
+            this.previousStateToolStripMenuItem.Click += new System.EventHandler(this.previousStateToolStripMenuItem_Click);
+            // 
+            // newStateToolStripMenuItem
+            // 
+            this.newStateToolStripMenuItem.Enabled = false;
+            this.newStateToolStripMenuItem.Name = "newStateToolStripMenuItem";
+            this.newStateToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+R";
+            this.newStateToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.newStateToolStripMenuItem.Text = "New State";
+            this.newStateToolStripMenuItem.Click += new System.EventHandler(this.RunButtonClick);
             // 
             // MainWindow
             // 
@@ -571,6 +592,7 @@ namespace VisiBoole.Views
             this.Text = "VisiBoole - Visualizing HDL";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindowFormClosingEvent);
             this.Load += new System.EventHandler(this.MainWindowFormLoadEvent);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainWindow_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.MainLayoutPanel.ResumeLayout(false);
@@ -629,5 +651,7 @@ namespace VisiBoole.Views
         private ToolStripMenuItem simulationCommentsToolStripMenuItem;
         private ToolStripMenuItem closeAllDesignToolStripMenuItem;
         private ToolStripMenuItem editModeToggle;
+        private ToolStripMenuItem previousStateToolStripMenuItem;
+        private ToolStripMenuItem newStateToolStripMenuItem;
     }
 }

@@ -71,7 +71,14 @@ namespace VisiBoole.ParsingEngine.Statements
             }
             else
             {
-                Operation = "<=";
+                if (!Expression.Contains("@"))
+                {
+                    Operation = "<=";
+                }
+                else
+                {
+                    Operation = Regex.Match(Expression, @"<=@[^\s]+").Value;
+                }
                 Delay = Expression.Substring(0, Expression.IndexOf('<')).Trim();
                 Dependent = Delay + ".d";
             }
@@ -101,7 +108,14 @@ namespace VisiBoole.ParsingEngine.Statements
             }
             else
             {
-                Output.Add(new DependentVariable("<=", DesignController.ActiveDesign.Database.TryGetValue(Dependent) == 1));
+                if (!Operation.Contains("@"))
+                {
+                    Output.Add(new DependentVariable(Operation, DesignController.ActiveDesign.Database.TryGetValue(Dependent) == 1));
+                }
+                else
+                {
+                    Output.Add(new DependentVariable(Operation, DesignController.ActiveDesign.Database.TryGetValue(Operation.Substring(Operation.IndexOf("@") + 1)) == 1));
+                }
             }
 
             // Output expression

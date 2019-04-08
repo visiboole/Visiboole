@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VisiBoole.Controllers;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine;
 using VisiBoole.ParsingEngine.ObjectCode;
@@ -21,13 +22,14 @@ namespace VisibooleTests
         /// <returns>Whether the provided design successfully parses and outputs its html</returns>
         private Design TestDesign(string name)
         {
-            string path = Directory.GetParent(Environment.CurrentDirectory).Parent.FullName;
-            string fileName = Path.Combine(path, "Resources", "Testing Files", name);
-            Design design = new Design(fileName, delegate { });
             try
             {
-                Parser parser = new Parser(design);
-                List <IObjectCodeElement> output = parser.Parse();
+                string path = Directory.GetParent(Environment.CurrentDirectory).Parent.FullName;
+                string fileName = Path.Combine(path, "Resources", "Testing Files", name);
+
+                DesignController designController = new DesignController();
+                Design design = designController.CreateDesign(fileName);
+                List<IObjectCodeElement> output = designController.Parse();
                 if (output == null)
                 {
                     return null;

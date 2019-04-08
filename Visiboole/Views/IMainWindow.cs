@@ -59,6 +59,11 @@ namespace VisiBoole.Views
 		void SaveFileSuccess(bool fileSaved);
 
         /// <summary>
+        /// Focuses this window.
+        /// </summary>
+        void RetrieveFocus();
+
+        /// <summary>
         /// Confrims whether the user wants to close the selected Design
         /// </summary>
         /// <param name="isDirty">True if the Design being closed has been modified since last save</param>

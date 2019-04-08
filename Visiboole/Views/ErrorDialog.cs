@@ -75,6 +75,11 @@ namespace VisiBoole.Views
             Log.Add(line);
         }
 
+        public void AddTop(string line)
+        {
+            Log.Insert(0, line);
+        }
+
         public void Display()
         {
             uxRichTextBoxLog.Text = String.Join("\n", Log);

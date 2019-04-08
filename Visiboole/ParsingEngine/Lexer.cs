@@ -92,7 +92,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying operators.
         /// </summary>
-        private static readonly string OperatorPattern = @"^(([=+^|-])|(<=)|(~+)|(==))$";
+        private static readonly string OperatorPattern = $@"^(([=+^|-])|(<=(@{ScalarNotationPattern})?)|(~+)|(==))$";
 
         /// <summary>
         /// Pattern for identifying seperators.
@@ -102,7 +102,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying invalid characters.
         /// </summary>
-        private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~%^*()=+[\]{}|;'#<>,.-]";
+        private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]";
 
         /// <summary>
         /// Regex for identifying scalars. (With ~ or *)
@@ -150,11 +150,6 @@ namespace VisiBoole.ParsingEngine
         /// Line number of the design being parsed.
         /// </summary>
         protected int LineNumber;
-
-        /// <summary>
-        /// Indicates whether the parser is initializing.
-        /// </summary>
-        protected bool Init;
 
         /// <summary>
         /// The design being parsed.
@@ -403,10 +398,30 @@ namespace VisiBoole.ParsingEngine
                     return false;
                 }
 
-                // Check to add scalar to vector namespace
-                if (bit != -1)
+                // Check to add scalar to namespaces
+                if (bit == -1)
                 {
-                    Design.Database.AddVectorNamespace(name, new List<string>(new string[] { String.Concat(name, bit) }));
+                    if (Design.Database.GetComponents(name) != null)
+                    {
+                        Globals.Logger.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a vector.");
+                        return false;
+                    }
+                    else if (!Design.Database.HasNamespace(name))
+                    {
+                        Design.Database.AddNamespace(name, null);
+                    }
+                }
+                else
+                {
+                    if (Design.Database.GetComponents(name) == null & Design.Database.HasNamespace(name))
+                    {
+                        Globals.Logger.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a scalar.");
+                        return false;
+                    }
+                    else
+                    {
+                        Design.Database.AddNamespace(name, new List<string>(new string[] { String.Concat(name, bit) }));
+                    }
                 }
 
                 return true;
@@ -445,33 +460,30 @@ namespace VisiBoole.ParsingEngine
                     return false;
                 }
 
-                if (Init)
+                // Check if namespace is used by a scalar
+                if (Design.Database.GetComponents(vectorNamespace) == null && Design.Database.HasNamespace(vectorNamespace))
                 {
-                    // Check if namespace is used by a scalar
-                    if (Design.Database.TryGetVariable<Variable>(vectorNamespace) != null)
-                    {
-                        Globals.Logger.Add($"Line {LineNumber}: A scalar with the name '{vectorNamespace}' already exists.");
-                        return false;
-                    }
+                    Globals.Logger.Add($"Line {LineNumber}: A scalar with the name '{vectorNamespace}' already exists.");
+                    return false;
+                }
 
-                    if (!Design.Database.HasVectorNamespace(vectorNamespace) && leftBound == -1)
-                    {
-                        Globals.Logger.Add($"Line {LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
-                        return false;
-                    }
+                if (!Design.Database.HasNamespace(vectorNamespace) && leftBound == -1)
+                {
+                    Globals.Logger.Add($"Line {LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
+                    return false;
+                }
 
-                    if (leftBound != -1)
+                if (leftBound != -1)
+                {
+                    // Adds all variables in the range
+                    string initVector = $"{vectorNamespace}[{leftBound}..{rightBound}]";
+                    if (ExpansionMemo.ContainsKey(initVector))
                     {
-                        // Adds all variables in the range
-                        string initVector = $"{vectorNamespace}[{leftBound}..{rightBound}]";
-                        if (ExpansionMemo.ContainsKey(initVector))
-                        {
-                            Design.Database.AddVectorNamespace(vectorNamespace, ExpansionMemo[initVector]);
-                        }
-                        else
-                        {
-                            Design.Database.AddVectorNamespace(vectorNamespace, ExpandVector(VectorRegex.Match(initVector)));
-                        }
+                        Design.Database.AddNamespace(vectorNamespace, ExpansionMemo[initVector]);
+                    }
+                    else
+                    {
+                        Design.Database.AddNamespace(vectorNamespace, ExpandVector(VectorRegex.Match(initVector)));
                     }
                 }
 
