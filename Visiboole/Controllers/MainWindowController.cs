@@ -24,6 +24,7 @@ using VisiBoole.Views;
 using System.IO;
 using VisiBoole.Models;
 using System.Windows.Forms;
+using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.Controllers
 {
@@ -174,15 +175,6 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Returns the active design.
-        /// </summary>
-        /// <returns></returns>
-        public Design GetActiveDesign()
-        {
-            return designController.GetActiveDesign();
-        }
-
-        /// <summary>
         /// Selects the file at the specified index.
         /// </summary>
         /// <param name="index">The index of the file</param>
@@ -253,19 +245,51 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Run mode.
+        /// Handles the event that occurs when the user runs the active design.
         /// </summary>
         public void Run()
         {
             try
             {
-                displayController.Run();
+                List<IObjectCodeElement> output = designController.Parse();
+                if (output == null)
+                {
+                    return;
+                }
+                displayController.DisplayOutput(output);
             }
             catch (Exception exception)
             {
                 Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
                 // Leave this error message for debugging purposes
             }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the browser needs to be refreshed.
+        /// </summary>
+        public void RefreshOutput()
+        {
+            displayController.RefreshOutput();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user ticks the active design.
+        /// </summary>
+        /// <returns>Output list of the ticked design</returns>
+        public List<IObjectCodeElement> Tick()
+        {
+            return designController.ParseTick();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user clicks on an independent variable.
+        /// </summary>
+        /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        /// <returns></returns>
+        public List<IObjectCodeElement> Variable_Click(string variableName)
+        {
+            return designController.ParseVariableClick(variableName);
         }
 
         /// <summary>
@@ -313,8 +337,7 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                Design design = designController.GetActiveDesign();
-                return CloseFile(design.FileSourceName);
+                return CloseFile(DesignController.ActiveDesign.FileSourceName);
             }
             catch (Exception)
             {

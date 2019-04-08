@@ -28,23 +28,13 @@ namespace VisiBoole.ParsingEngine.Statements
     /// <summary>
     /// A description statement that provides a way to document code or label the screen.
     /// </summary>
-	public class CommentStmt : Statement, IObjectCodeElement
+	public class CommentStmt : Statement
 	{
-        #region IObjectCodeElement attributes
-
-        public bool? ObjCodeValue { get; set; } = false;
-        public string ObjCodeText { get { return Text; } set { } }
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
-
-        #endregion
-
         /// <summary>
         /// Constructs a CommentStmt instance.
         /// </summary>
-        /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-        public CommentStmt(Database database, string text) : base(database, text)
+        public CommentStmt(string text) : base(text)
 		{
 		}
 
@@ -60,11 +50,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 Output.Add(new SpaceFeed());
             }
 
-            // Remove "" and ;
-            Text = String.Concat(comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3));
-
             // Output comment and newline
-            Output.Add(this);
+            Output.Add(new Comment(String.Concat(comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3))));
             Output.Add(new LineFeed());
 		}
 	}

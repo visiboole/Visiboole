@@ -21,51 +21,34 @@
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// A discrete element of output representing an instantiation
+    /// A discrete element of output representing a submodule instantiation.
     /// </summary>
 	public class Instantiation : IObjectCodeElement
 	{
-        private bool? Value = false;
         /// <summary>
-        /// The string representation of this output element
+        /// String representation of this output element.
         /// </summary>
 		public string ObjCodeText { get; private set; }
 
         /// <summary>
-        /// The boolean value of this output element, null
+        /// Boolean value of this output element.
         /// </summary>
-		public bool? ObjCodeValue { get { return Value; } set { this.Value = value; } }
-
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
+		public bool? ObjCodeValue { get; private set; }
 
         /// <summary>
-        /// Name of the instantiation
+        /// Indicates whether this output element contains a negation.
         /// </summary>
-        public string Name { get; private set; }
+        public bool ObjHasNegation { get; private set; }
 
         /// <summary>
-        /// Name of the design being instantiated
+        /// Constructs an instantiation instance with the provided text.
         /// </summary>
-        public string DesignName { get; private set; }
-
-        /// <summary>
-        /// Path to the instantiation module
-        /// </summary>
-        public string DesignPath { get; private set; }
-
-        /// <summary>
-        /// Constructs an instantiation instance
-        /// </summary>
-        /// <param name="instantiation">Text of instantiation</param>
-        /// <param name="designPath">Path to design being instantiated</param>
-		public Instantiation(string instantiation, string designPath)
+        /// <param name="text">String representation of this output element</param>
+		public Instantiation(string text)
 		{
-			ObjCodeText = instantiation;
-            DesignName = instantiation.Split('.')[0];
-            Name = instantiation.Split('.')[1];
-            DesignPath = designPath;
-            Value = null;
+			ObjCodeText = text;
+            ObjCodeValue = null;
+            ObjHasNegation = false;
 		}
 	}
 }

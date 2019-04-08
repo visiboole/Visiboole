@@ -31,11 +31,6 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class SubmoduleInstantiationStmt : Statement
 	{
         /// <summary>
-        /// Instantiation object.
-        /// </summary>
-        private Instantiation Instantiation;
-
-        /// <summary>
         /// Regex for getting instantiation tokens (variables and concatenations).
         /// </summary>
         private static Regex TokenRegex = new Regex($@"({Parser.ConcatenationPattern}|{Parser.VariablePattern1})");
@@ -46,9 +41,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
         /// <param name="instantiation">Instantiation object</param>
-		public SubmoduleInstantiationStmt(Database database, string text, Instantiation instantiation) : base(database, text)
+		public SubmoduleInstantiationStmt(string text) : base(text)
 		{
-            Instantiation = instantiation;
         }
 
         /// <summary>
@@ -57,7 +51,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
         {
             // Output padding (if present)
-            Match padding = Regex.Match(Text, @"\s+");
+            Match padding = Parser.WhitespaceRegex.Match(Text);
             if (padding.Success)
             {
                 for (int i = 0; i < padding.Value.Length; i++)
@@ -67,7 +61,6 @@ namespace VisiBoole.ParsingEngine.Statements
             }
 
             // Output instantiation
-            Output.Add(Instantiation);
 
             /*
             // Output seperator

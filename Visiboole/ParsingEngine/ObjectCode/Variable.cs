@@ -21,17 +21,17 @@
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// The base class for independent and dependent variables
+    /// Base class for independent and dependent variables.
     /// </summary>
 	public abstract class Variable
 	{
         /// <summary>
-        /// The string representation of this variable
+        /// String representation of this variable.
         /// </summary>
 		public string Name { get; set; }
 
         /// <summary>
-        /// The boolean valuable of this variable
+        /// Boolean value of this variable.
         /// </summary>
 		public bool Value { get; set; }
 	}

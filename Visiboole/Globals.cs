@@ -20,7 +20,6 @@
 
 using System;
 using System.Windows.Forms;
-using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.Views;
 
 namespace VisiBoole

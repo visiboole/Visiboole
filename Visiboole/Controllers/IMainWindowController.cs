@@ -19,7 +19,7 @@
  */
 
 using System.Collections.Generic;
-using VisiBoole.Models;
+using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
@@ -64,12 +64,6 @@ namespace VisiBoole.Controllers
         void SwitchDisplay();
 
         /// <summary>
-        /// Returns the active design.
-        /// </summary>
-        /// <returns></returns>
-        Design GetActiveDesign();
-
-        /// <summary>
         /// Selects the file at the specified index.
         /// </summary>
         /// <param name="index">The index of the file</param>
@@ -92,9 +86,27 @@ namespace VisiBoole.Controllers
 		void SaveFiles();
 
         /// <summary>
-        /// Run mode.
+        /// Handles the event that occurs when the user runs the active design.
         /// </summary>
         void Run();
+
+        /// <summary>
+        /// Handles the event that occurs when the browser needs to be refreshed.
+        /// </summary>
+        void RefreshOutput();
+
+        /// <summary>
+        /// Handles the event that occurs when the user ticks the active design.
+        /// </summary>
+        /// <returns>Output list of the ticked design</returns>
+        List<IObjectCodeElement> Tick();
+
+        /// <summary>
+        /// Handles the event that occurs when the user clicks on an independent variable.
+        /// </summary>
+        /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        /// <returns></returns>
+        List<IObjectCodeElement> Variable_Click(string variableName);
 
         /// <summary>
         /// Closes the selected open file

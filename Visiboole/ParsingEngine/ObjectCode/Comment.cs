@@ -21,23 +21,34 @@
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// A discrete element of output consumed by the html parser.
+    /// A discrete element of output representing text to display.
     /// </summary>
-	public interface IObjectCodeElement
+	public class Comment : IObjectCodeElement
 	{
         /// <summary>
         /// String representation of this output element.
         /// </summary>
-		string ObjCodeText { get; }
+		public string ObjCodeText { get; private set; }
 
         /// <summary>
         /// Boolean value of this output element.
         /// </summary>
-		bool? ObjCodeValue { get; }
+		public bool? ObjCodeValue { get; private set; }
 
         /// <summary>
         /// Indicates whether this output element contains a negation.
         /// </summary>
-        bool ObjHasNegation { get; }
-    }
+        public bool ObjHasNegation { get; private set; }
+
+        /// <summary>
+        /// Constructs a comment instance with the provided text.
+        /// </summary>
+        /// <param name="text">String representation of this output element</param>
+		public Comment(string text)
+		{
+            ObjCodeText = text;
+            ObjCodeValue = null;
+            ObjHasNegation = false;
+		}
+	}
 }

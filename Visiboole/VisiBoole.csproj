@@ -80,11 +80,11 @@
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
-    <Compile Include="ParsingEngine\Boolean\ExpressionSolver.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
+    <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
     <Compile Include="ParsingEngine\ObjectCode\SpaceFeed.cs" />
-    <Compile Include="ParsingEngine\ObjectCode\Parentheses.cs" />
+    <Compile Include="ParsingEngine\ObjectCode\Parenthesis.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />
     <Compile Include="ParsingEngine\Statements\CommentStmt.cs" />
     <Compile Include="Models\Database.cs" />

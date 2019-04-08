@@ -21,31 +21,34 @@
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// A variable that is assigned an expression; e.g. to the left of the "=" sign
+    /// Variable whose value depends on the value of another expression. (Left of an "=" sign)
     /// </summary>
 	public class DependentVariable : Variable, IObjectCodeElement
 	{
         /// <summary>
-        /// The boolean value of this variable to be added to the statement's Output
+        /// String representation of this output element.
         /// </summary>
-		public bool? ObjCodeValue { get { return Value; } set { } }
+		public string ObjCodeText { get { return Name; } private set { } }
 
         /// <summary>
-        /// The string representation of this variable to be added to the statement's Output
+        /// Boolean value of this output element.
         /// </summary>
-		public string ObjCodeText { get { return Name; } set { } }
-
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
+		public bool? ObjCodeValue { get { return Value; } private set { } }
 
         /// <summary>
-        /// Constructs an instance of DependentVariable with name and value
+        /// Indicates whether this output element contains a negation.
         /// </summary>
-        /// <param name="name">The string name of this variable</param>
-        /// <param name="value">The boolean value of this variable</param>
+        public bool ObjHasNegation { get; private set; }
+
+        /// <summary>
+        /// Constructs a dependent variable instance with the provided name and value.
+        /// </summary>
+        /// <param name="name">String representation of this variable</param>
+        /// <param name="value">Boolean value of this variable</param>
 		public DependentVariable(string name, bool value)
 		{
-			Name = name;
+            ObjHasNegation = name[0] == '~';
+            Name = (ObjHasNegation) ? name.Substring(1) : name;
 			Value = value;
 		}
 	}

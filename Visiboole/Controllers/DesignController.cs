@@ -25,6 +25,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using VisiBoole.Models;
+using VisiBoole.ParsingEngine;
+using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
@@ -42,9 +44,14 @@ namespace VisiBoole.Controllers
         private Dictionary<string, Design> Designs;
 
         /// <summary>
-        /// The active Design
+        /// The active Design.
         /// </summary>
-        private Design ActiveDesign;
+        public static Design ActiveDesign { get; private set; }
+
+        /// <summary>
+        /// Parser used to parse designs.
+        /// </summary>
+        private Parser Parser;
 
         /// <summary>
         /// Constructs design controller
@@ -53,6 +60,7 @@ namespace VisiBoole.Controllers
         {
             Designs = new Dictionary<string, Design>();
             ActiveDesign = null;
+            Parser = null;
         }
 
         /// <summary>
@@ -87,15 +95,6 @@ namespace VisiBoole.Controllers
         public string[] GetDesigns()
         {
             return Designs.Keys.ToArray();
-        }
-
-        /// <summary>
-        /// Returns the active Design.
-        /// </summary>
-        /// <returns>Active Design</returns>
-        public Design GetActiveDesign()
-        {
-            return ActiveDesign;
         }
 
         /// <summary>
@@ -212,6 +211,35 @@ namespace VisiBoole.Controllers
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Parses the active design.
+        /// </summary>
+        /// <returns>Output of the parsed design</returns>
+        public List<IObjectCodeElement> Parse()
+        {
+            Parser = new Parser(ActiveDesign);
+            return Parser.Parse();
+        }
+
+        /// <summary>
+        /// Parses a tick for the active design.
+        /// </summary>
+        /// <returns>Output of the tick for the parsed design</returns>
+        public List<IObjectCodeElement> ParseTick()
+        {
+            return Parser.ParseTick();
+        }
+
+        /// <summary>
+        /// Parses a variable click for the active design.
+        /// </summary>
+        /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        /// <returns>Output of the tick for the parsed design</returns>
+        public List<IObjectCodeElement> ParseVariableClick(string variableName)
+        {
+            return Parser.ParseClick(variableName);
         }
 
         /// <summary>

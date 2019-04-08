@@ -21,8 +21,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using VisiBoole.Controllers;
 using VisiBoole.Models;
-using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
@@ -32,11 +32,6 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public abstract class Statement
 	{
-        /// <summary>
-        /// Database of the parsed design.
-        /// </summary>
-        public Database Database { get; private set; }
-
         /// <summary>
         /// Ttext of the statement.
         /// </summary>
@@ -52,9 +47,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-		protected Statement(Database database, string text)
+		protected Statement(string text)
 		{
-            Database = database;
 			Text = text;
 		}
 
@@ -69,34 +63,57 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="var">Variable to output</param>
         protected void OutputVariable(string var)
         {
-            string name = var.TrimStart('~');
-            IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
-            DependentVariable depVar = Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
-            if (indVar != null)
+            string[] variables;
+            if (!var.Contains("{"))
             {
-                if (!var.Contains("~"))
-                {
-                    Output.Add(indVar);
-                }
-                else
-                {
-                    Output.Add(new IndependentVariable(var, indVar.Value));
-                }
-            }
-            else if (depVar != null)
-            {
-                if (!var.Contains("~"))
-                {
-                    Output.Add(depVar);
-                }
-                else
-                {
-                    Output.Add(new DependentVariable(var, depVar.Value));
-                }
+                variables = new string[] { var };
             }
             else
             {
-                // Error
+                variables = Parser.WhitespaceRegex.Split(var.Substring(1, var.Length - 2));
+            }
+
+            if (variables.Length > 1)
+            {
+                OutputOperator("{");
+            }
+
+            foreach (string variable in variables)
+            {
+                string name = variable.TrimStart('~');
+                IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
+                DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
+                if (indVar != null)
+                {
+                    if (!var.Contains("~"))
+                    {
+                        Output.Add(indVar);
+                    }
+                    else
+                    {
+                        Output.Add(new IndependentVariable(var, indVar.Value));
+                    }
+                }
+                else if (depVar != null)
+                {
+                    if (!var.Contains("~"))
+                    {
+                        Output.Add(depVar);
+                    }
+                    else
+                    {
+                        Output.Add(new DependentVariable(var, depVar.Value));
+                    }
+                }
+                else
+                {
+                    // Error
+                }
+            }
+
+            if (variables.Length > 1)
+            {
+                OutputOperator("}");
             }
         }
 

@@ -23,37 +23,34 @@ using System;
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// A discrete element of output representing a mathematical operator
+    /// A discrete element of output representing a constant value.
     /// </summary>
 	public class Constant : IObjectCodeElement
 	{
-        private bool? Value = false;
         /// <summary>
-        /// The string representation of this output element
+        /// String representation of this output element.
         /// </summary>
-		public string ObjCodeText { get { return ConstantText; } }
+		public string ObjCodeText { get; private set; }
 
         /// <summary>
-        /// The boolean value of this output element, null
+        /// Boolean value of this output element.
         /// </summary>
-		public bool? ObjCodeValue { get { return Value; } set { Value = value; } }
+		public bool? ObjCodeValue { get; private set; }
 
         /// <summary>
-        /// The string representation of this element
+        /// Indicates whether this output element contains a negation.
         /// </summary>
-		public string ConstantText { get; set; }
-
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
+        public bool ObjHasNegation { get; private set; }
 
         /// <summary>
-        /// Constructs an instance of Operator 
+        /// Constructs a constant instance with the provided text.
         /// </summary>
-        /// <param name="opChar">The string representation of this element</param>
-		public Constant(string constantText)
+        /// <param name="text">String representation of this output element</param>
+		public Constant(string text)
 		{
-			ConstantText = constantText;
-            Value = Convert.ToInt32(constantText[constantText.Length - 1].ToString()) == 1;
+            ObjHasNegation = text[0] == '~';
+            ObjCodeText = (ObjHasNegation) ? text.Substring(1) : text;
+            ObjCodeValue = Convert.ToInt32(ObjCodeText[ObjCodeText.Length - 1].ToString()) == 1;
         }
 	}
 }

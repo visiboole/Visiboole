@@ -20,10 +20,10 @@
 
 using System;
 using System.Collections.Generic;
-using VisiBoole.ParsingEngine.Boolean;
 using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.ObjectCode;
 using System.Linq;
+using VisiBoole.ParsingEngine.Statements;
 
 namespace VisiBoole.ParsingEngine
 {
@@ -52,77 +52,17 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         private Dictionary<string, List<string>> VectorNamespaces;
 
-        // Dependencies - List of all variables in the expression that 
-        //                relates to the dependent variable for the expression
+        /// <summary>
+        /// Dictionary of the expressions in the design.
+        /// </summary>
+        private Dictionary<int, ExpressionStatement> Expressions;
 
         /// <summary>
-        /// List of all variables in the expression that relates to the dependent variable for the expression
+        /// Index of the last expression in the design.
         /// </summary>
-        public Dictionary<string, List<string>> Dependencies;
-
-        /// <summary>
-        /// expression that relates to the dependent variable for the expression
-        /// </summary>
-        public Dictionary<string, string> Expressions;
-
-        /// <summary>
-        /// list of "compiled" VisiBoole Object Code. Each item has text and value to be interpreted by the HTML parser
-        /// </summary>
-		private List<IObjectCodeElement> ObjectCode { get; set; }
+        private int LastExpressionIndex;
 
 	    #region Accessor methods
-
-        public Dictionary<string, DependentVariable> GetDepVars()
-        {
-            return DepVars;
-        }
-
-        public Dictionary<string, IndependentVariable> GetIndVars()
-        {
-            return IndVars;
-        }
-
-        public void SetOutput(List<IObjectCodeElement> list)
-        {
-            ObjectCode = list;
-        }
-
-        public List<IObjectCodeElement> GetOutput()
-        {
-            return ObjectCode;
-        }
-
-        public void SetValues(string variableName, bool value)
-        {
-            IndependentVariable indVar = TryGetVariable<IndependentVariable>(variableName) as IndependentVariable;
-            DependentVariable depVar = TryGetVariable<DependentVariable>(variableName) as DependentVariable;
-            if (indVar != null)
-            {
-                IndVars[variableName].Value = value;
-            }
-            else
-            {
-                DepVars[variableName].Value = value;
-            }
-
-            foreach (KeyValuePair<string,string> kv in Expressions.Reverse())
-            {
-                string dependent = kv.Key;
-                string expression = kv.Value;
-                foreach (Match match in Parser.ScalarRegex1.Matches(expression))
-                {
-                    if (match.Value.Equals(variableName))
-                    {
-                        bool dependentValue = ExpressionSolver.Solve(this, expression) == 1;
-                        bool currentValue = TryGetValue(dependent) == 1;
-                        if (dependentValue != currentValue)
-                        {
-                            SetValues(dependent, dependentValue);
-                        }
-                    }
-                }
-            }
-        }
 
         public Database()
         {
@@ -130,8 +70,8 @@ namespace VisiBoole.ParsingEngine
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
             VectorNamespaces = new Dictionary<string, List<string>>();
-            Dependencies = new Dictionary<string, List<string>>();
-            Expressions = new Dictionary<string, string>();
+            Expressions = new Dictionary<int, ExpressionStatement>();
+            LastExpressionIndex = -1;
         }
 
         /// <summary>
@@ -336,33 +276,11 @@ namespace VisiBoole.ParsingEngine
         /// Toggles the value of the given variable in its corresponding collections
         /// </summary>
         /// <param name="variableName">The name of the variable to search for</param>
-        public void VariableClicked(string variableName)
+        public void FlipValue(string variableName)
         {
             if(IndVars.ContainsKey(variableName))
             {
-                if(IndVars[variableName].Value.Equals(true))
-                {
-                    IndVars[variableName].Value = false;
-                    return;
-                }
-                else
-                {
-                    IndVars[variableName].Value = true;
-                    return;
-                }
-            }
-            if(DepVars.ContainsKey(variableName))
-            {
-                if (DepVars[variableName].Value.Equals(true))
-                {
-                    DepVars[variableName].Value = false;
-                    return;
-                }
-                else
-                {
-                    DepVars[variableName].Value = true;
-                    return;
-                }
+                IndVars[variableName].Value = !IndVars[variableName].Value;
             }
         }
 
@@ -389,48 +307,47 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Creates a list containing the expression associated with the dependent variable
+        /// Reevaluates all expressions till all variables are the correct value.
         /// </summary>
-        /// <param name="dependentName"></param>
-        public void CreateDependenciesList(string dependentName)
+        public void ReevaluateExpressions()
         {
-            if(!Dependencies.ContainsKey(dependentName))
+            for (int i = 0; i <= LastExpressionIndex; i++)
             {
-                Dependencies.Add(dependentName, new List<string>());
-            }
-        }
-
-        /// <summary>
-        /// Adds the given variable name to the list of dependencies it is associated with
-        /// </summary>
-        /// <param name="dependentName">The name of the dependent variable containing the expression</param>
-        /// <param name="ExpressionVariableName">The name of the variable to add to the dependency list</param>
-        public void AddDependencies(string dependentName, string ExpressionVariableName)
-        {
-            if(!Dependencies[dependentName].Contains(ExpressionVariableName))
-            {
-                Dependencies[dependentName].Add(ExpressionVariableName);
-            }
-        }
-
-        /// <summary>
-        /// Adds the expression to the collection of expressions associated with the given dependent variable
-        /// </summary>
-        /// <param name="dependentName">The name of the variable containing the expression</param>
-        /// <param name="expressionValue">The expression to add to the collection of expressions associated with the given dependent variable</param>
-        public void AddExpression(string dependentName, string expressionValue)
-        {
-            if (Expressions.ContainsKey(dependentName))
-            {
-                if (!Expressions[dependentName].Contains(expressionValue))
+                if (Expressions.ContainsKey(i))
                 {
-                    Expressions[dependentName] = expressionValue;
+                    var expression = Expressions[i];
+                    if (expression.Evaluate() && !(expression.Expression.Contains("+") || expression.Expression.Contains("-")))
+                    {
+                        i = -1; // Reset loop if reevaluated
+                    }
                 }
             }
-            else
+        }
+
+        /// <summary>
+        /// Updates all expression values then adds the expression to the expressions dictionary.
+        /// </summary>
+        /// <param name="lineNumber">Line number of expression statement</param>
+        /// <param name="expression">Expression to add</param>
+        public void AddExpression(int lineNumber, ExpressionStatement expression)
+        {
+            //ReevaluateExpressions();
+            Expressions.Add(lineNumber, expression);
+            if (lineNumber > LastExpressionIndex)
             {
-                Expressions.Add(dependentName, expressionValue);
+                LastExpressionIndex = lineNumber;
             }
+            ReevaluateExpressions();
+        }
+
+        /// <summary>
+        /// Returns the expression statement at the provided line number.
+        /// </summary>
+        /// <param name="lineNumber">Line number of the expression statement</param>
+        /// <returns>Expression statement at the provided line number</returns>
+        public ExpressionStatement GetExpression(int lineNumber)
+        {
+            return Expressions[lineNumber];
         }
     }
 }

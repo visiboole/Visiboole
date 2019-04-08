@@ -167,25 +167,30 @@ namespace VisiBoole.ParsingEngine
         protected List<string> Libraries;
 
         /// <summary>
-        /// List of instantiations for this instance.
+        /// Dictionary of submodules for this instance.
         /// </summary>
-        protected List<string> Instantiations;
+        protected Dictionary<string, string> Subdesigns;
 
         /// <summary>
-        /// Dictionary of submodules.
+        /// Dictionary of instantiations for this instance.
         /// </summary>
-        protected Dictionary<string, Design> Submodules;
+        protected Dictionary<string, string> Instantiations;
 
         /// <summary>
         /// Memo for vector expansions.
         /// </summary>
         protected static Dictionary<string, List<string>> ExpansionMemo = new Dictionary<string, List<string>>();
 
-        protected Lexer()
+        /// <summary>
+        /// Constructs a lexer to verify the design.
+        /// </summary>
+        /// <param name="design">Design to parse</param>
+        protected Lexer(Design design)
         {
+            Design = design;
             Libraries = new List<string>();
-            Submodules = new Dictionary<string, Design>();
-            Instantiations = new List<string>();
+            Subdesigns = new Dictionary<string, string>();
+            Instantiations = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -658,14 +663,14 @@ namespace VisiBoole.ParsingEngine
                         return false;
                     }
 
-                    if (Instantiations.Contains(instantiationName))
+                    if (Instantiations.ContainsKey(instantiationName))
                     {
                         Globals.Logger.Add($"Line {LineNumber}: Instantiation name '{instantiationName}' is already being used.");
                         return false;
                     }
                     else
                     {
-                        Instantiations.Add(instantiationName);
+                        Instantiations.Add(instantiationName, line);  // Come back
                     }
 
                     type = StatementType.Submodule;

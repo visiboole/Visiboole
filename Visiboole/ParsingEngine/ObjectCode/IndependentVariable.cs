@@ -21,33 +21,35 @@
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// A variable whose value does not depend on that of any other; e.g to the right of the "=" sign
+    /// Variable whose value does not depend on that of any other. (Right of an "=" sign)
     /// </summary>
     public class IndependentVariable : Variable, IObjectCodeElement
 	{
-
-	    /// <summary>
-	    /// The boolean value of this variable to be added to the statement's Output
-	    /// </summary>
-	    public bool? ObjCodeValue { get { return Value; } set { } }
-
-	    /// <summary>
-	    /// The string representation of this variable to be added to the statement's Output
-	    /// </summary>
-	    public string ObjCodeText { get { return Name; } set { } }
-
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
+        /// <summary>
+        /// String representation of this output element.
+        /// </summary>
+        public string ObjCodeText { get { return Name; } private set { } }
 
         /// <summary>
-        /// Constructs an instance of IndependentVariable with given name and value
+        /// Boolean value of this output element.
         /// </summary>
-        /// <param name="name">The string name of this variable</param>
-        /// <param name="value">The boolean value of this variable</param>
-        public IndependentVariable(string name, bool value)
-		{
-			Name = name;
-			Value = value;
-		}
-	}
+		public bool? ObjCodeValue { get { return Value; } private set { } }
+
+        /// <summary>
+        /// Indicates whether this output element contains a negation.
+        /// </summary>
+        public bool ObjHasNegation { get; private set; }
+
+        /// <summary>
+        /// Constructs a independent variable instance with the provided name and value.
+        /// </summary>
+        /// <param name="name">String representation of this variable</param>
+        /// <param name="value">Boolean value of this variable</param>
+		public IndependentVariable(string name, bool value)
+        {
+            ObjHasNegation = name[0] == '~';
+            Name = (ObjHasNegation) ? name.Substring(1) : name;
+            Value = value;
+        }
+    }
 }

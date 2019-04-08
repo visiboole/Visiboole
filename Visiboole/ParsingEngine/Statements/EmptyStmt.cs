@@ -30,9 +30,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Constructs a EmptyStmt instance.
         /// </summary>
-        /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-        public EmptyStmt(Database database, string text) : base(database, text)
+        public EmptyStmt(string text) : base(text)
 		{
 		}
 

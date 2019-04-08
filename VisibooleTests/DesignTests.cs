@@ -26,14 +26,14 @@ namespace VisibooleTests
             Design design = new Design(fileName, delegate { });
             try
             {
-                Parser parser = new Parser();
-                List <IObjectCodeElement> output = parser.Parse(design);
+                Parser parser = new Parser(design);
+                List <IObjectCodeElement> output = parser.Parse();
                 if (output == null)
                 {
                     return null;
                 }
 
-                HtmlBuilder html = new HtmlBuilder(design, output);
+                HtmlBuilder html = new HtmlBuilder(output);
                 if (html.HtmlText == null)
                 {
                     return null;
@@ -113,12 +113,6 @@ namespace VisibooleTests
             // Test variable types and values
             if (!TestVariable<DependentVariable>(design, "a", false)) Assert.Fail();
             if (!TestVariable<IndependentVariable>(design, "b", false)) Assert.Fail();
-
-            // Test expressions
-            if (design.Database.Expressions.Count != 1 || !design.Database.Expressions.ContainsKey("a") || design.Database.Expressions["a"] != "b")
-            {
-                Assert.Fail();
-            }
         }
 
         [TestMethod()]

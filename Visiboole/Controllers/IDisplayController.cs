@@ -18,8 +18,10 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using System.Collections.Generic;
 using System.Windows.Forms;
 using VisiBoole.Models;
+using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
@@ -71,14 +73,21 @@ namespace VisiBoole.Controllers
 		void SelectTabPage(int index);
 
         /// <summary>
-        /// Handles the event that occurs when the user runs the parser
+        /// Displays the provided output to the browser.
         /// </summary>
-        void Run();
+        /// <param name="output">Output of the parsed design</param>
+        /// <param name="position">Scroll position of the browser</param>
+        void DisplayOutput(List<IObjectCodeElement> output, int position = 0);
 
         /// <summary>
-        /// Handles the event that occurs when the user ticks
+        /// Handles the event that occurs when the browser needs to be refreshed.
         /// </summary>
-        /// <param name="count">The number of times to tick</param>
+        void RefreshOutput();
+
+        /// <summary>
+        /// Handles the event that occurs when the user ticks.
+        /// </summary>
+        /// <param name="count">Number of times to tick</param>
         void Tick(int count);
 
         /// <summary>

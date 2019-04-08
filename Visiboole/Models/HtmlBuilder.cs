@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.ParsingEngine.Statements;
 
@@ -37,7 +36,7 @@ namespace VisiBoole.Models
         private string trueColor = "'crimson'";
         private string falseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
 
-        public HtmlBuilder(Design design, List<IObjectCodeElement> output)
+        public HtmlBuilder(List<IObjectCodeElement> output)
         {
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
             int lineNumber = 0;
@@ -47,56 +46,6 @@ namespace VisiBoole.Models
                 lineNumber++;
                 currentLine = "<p style=\"font-size:" + (Properties.Settings.Default.FontSize + 6) + "px\">";
 
-                if (!(line.Count == 1 && line[0] is CommentStmt))
-                {
-                    // Do all this if not a comment statement
-                    Dictionary<int, int> parenIndexes = new Dictionary<int, int>();
-
-                    string fullLine = "";
-                    int indexer = 0;
-                    foreach (var token in line)
-                    {
-                        if (token.ObjCodeText == "(" || token.ObjCodeText == ")")
-                        {
-                            parenIndexes[fullLine.Length] = line.IndexOf(token, indexer);
-                            indexer = line.IndexOf(token, indexer) + 1;
-                        }
-
-                        fullLine += token.ObjCodeText + " ";
-                    }
-
-                    #region Indexes which positions will be assigned which color in html
-                    if (fullLine.Contains("("))
-                    {
-                        Stack<int> parenthesis = new Stack<int>();
-                        for (int i = 0; i < fullLine.Length; i++)
-                        {
-                            char c = fullLine[i];
-                            if (c == '(')
-                            {
-                                parenthesis.Push(i); // Push index
-                            }
-                            else if (c == ')')
-                            {
-                                int start = parenthesis.Pop();
-                                string inner = fullLine.Substring(start, i - start + 1);
-                                bool colorValue = ExpressionSolver.Solve(design.Database, inner) == 1;
-
-                                line[parenIndexes[start]].ObjCodeValue = colorValue;
-                                line[parenIndexes[start]].MatchingIndex = start;
-                                line[parenIndexes[start]].Match = i;
-                                line[parenIndexes[i]].ObjCodeValue = colorValue;
-                                line[parenIndexes[i]].Match = start;
-                                line[parenIndexes[i]].MatchingIndex = i;
-                            }
-                        }
-                    }
-                    #endregion
-                }
-
-                bool nextLineOverBarForParentheses = false;
-                List<int> overBarList = new List<int>();
-
                 if(line.Count == 0)
                 {
                     currentLine += "<br>>";
@@ -104,184 +53,56 @@ namespace VisiBoole.Models
 
                 foreach (IObjectCodeElement token in line)
                 {
-                    if (token is CommentStmt)
+                    if (token is Comment)
                     {
                         // Add coloring tags to comment
                         currentLine += String.Concat(ColorComment(token.ObjCodeText), " ");
                         continue;
                     }
 
-                    #region Checks for bars to be put over parenthesis, and what color to assign them
-
                     string variable = token.ObjCodeText;
-                    if (variable.Contains(';'))
-                    {
-                        variable = variable.Substring(0, variable.IndexOf(';'));
-                    }
                     bool? value = token.ObjCodeValue;
+                    bool hasNegation = token.ObjHasNegation;
                     Type varType = token.GetType();
 
-                    if (variable.Contains('('))
+                    string template = "<font color={0} style=\"cursor: {1};{2}\"{3}>{4}</font>";
+                    if (value == null)
                     {
-                        if(nextLineOverBarForParentheses == true && token.ObjCodeValue == true)
+                        if (variable == "&nbsp;")
                         {
-                            overBarList.Add(token.MatchingIndex);
-                            currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
-                            currentLine += " ";
-                            nextLineOverBarForParentheses = false;
-                        }
-                        else if (nextLineOverBarForParentheses == true && token.ObjCodeValue == false)
-                        {
-                            overBarList.Add(token.MatchingIndex);
-                            currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
-                            currentLine += " ";
-                            nextLineOverBarForParentheses = false;
-                        }
-                        else if(token.ObjCodeValue == true)
-                        {
-                            currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                            currentLine += " ";
+                            currentLine += variable;
                         }
                         else
                         {
-                            currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                            currentLine += " ";
-                        }
-                        continue;
-                    }
+                            bool isInstantiation = varType == typeof(IndependentVariable);
+                            string color = "'black'";
+                            string cursor = isInstantiation ? "hand" : "no-drop";
+                            string decoration = "";
+                            string action = isInstantiation ? $" onclick=\"window.external.Instantiation_Click('{variable}')\"" : "";
 
-                    if (variable.Contains(')'))
-                    {
-                        if (overBarList.Contains(token.Match) && token.ObjCodeValue == true)
-                        {
-                            currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
+                            currentLine += string.Format(template, color, cursor, decoration, action, variable);
                             currentLine += " ";
-                        }
-                        else if(overBarList.Contains(token.Match) && token.ObjCodeValue == false)
-                        {
-                            currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop; text-decoration: overline;\" >" + variable + "</font>";
-                            currentLine += " ";
-                        }
-                        else if (token.ObjCodeValue == true)
-                        {
-                            currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                            currentLine += " ";
-                        }
-                        else
-                        {
-                            currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                            currentLine += " ";
-                        }
-                        continue;
-                    }
-
-                    if(variable == "~")
-                    {
-                        nextLineOverBarForParentheses = true;
-                        continue;
-                    }
-
-                    if (variable.Contains('~'))
-                    {
-                        if (value.Equals(null))
-                        {
-                            currentLine += "<font color='black' style=\"cursor: no-drop;\" >" + variable + "</font>";
-                        }
-                        else
-                        {
-                            if (value.Equals(true))
-                            {
-                                if (varType == typeof(DependentVariable)) //if variable is dependent
-                                {
-                                    currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop; text-decoration: overline;\">" + variable.Substring(1) + "</font>";
-                                }
-                                else if (varType == typeof(IndependentVariable)) //if variable is independent
-                                {
-                                    currentLine += "<font color=" + falseColor + " style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
-                                }
-                                else if (varType == typeof(Constant))
-                                {
-                                    currentLine += $"<font color={falseColor} style=\"cursor: no-drop; text-decoration: overline;\">{variable.Substring(1)}</font>";
-                                }
-                                currentLine += " ";
-                            }
-                            else
-                            {
-                                if (varType == typeof(DependentVariable)) //if variable is dependent
-                                {
-                                    currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop; text-decoration: overline;\" >" + variable.Substring(1) + "</font>";
-                                }
-                                else if (varType == typeof(IndependentVariable)) //if variable is independent
-                                {
-                                    currentLine += "<font color=" + trueColor + " style=\"cursor: hand; text-decoration: overline;\" onclick=\"window.external.Variable_Click('" + variable.Substring(1) + "')\" >" + variable.Substring(1) + "</font>";
-                                }
-                                else if (varType == typeof(Constant))
-                                {
-                                    currentLine += $"<font color={trueColor} style=\"cursor: no-drop; text-decoration: overline;\">{variable.Substring(1)}</font>";
-                                }
-                                currentLine += " ";
-                            }
                         }
                     }
                     else
                     {
-                        if (value.Equals(null))
+                        bool isIndependentVariable = varType == typeof(IndependentVariable);
+                        string color;
+                        if (!hasNegation)
                         {
-                            if (variable.Equals("&nbsp"))
-                            {
-                                currentLine += "&nbsp;";
-                            }
-                            else if (varType == typeof(Instantiation))
-                            {
-                                Instantiation instantiation = (Instantiation)token;
-                                string encodedPath = instantiation.DesignPath.Replace("&", "&amp;").Replace("\\", "&back;").Replace("'", "&apos;");
-                                currentLine += $"<font color='black' style=\"cursor: hand;\" onclick=\"window.external.Instantiation_Click('{variable}', '{instantiation.DesignName}', '{encodedPath}')\">{variable}</font>";
-                                currentLine += " ";
-                            }
-                            else
-                            {
-                                currentLine += "<font color='black' style=\"cursor: no-drop;\" >" + variable + "</font>";
-                                currentLine += " ";
-                            }
-                            
+                            color = ((bool)value) ? trueColor : falseColor;
                         }
                         else
                         {
-                            if (value.Equals(true))
-                            {
-                                if (varType == typeof(DependentVariable)) //if variable is dependent
-                                {
-                                    currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                                }
-                                else if (varType == typeof(IndependentVariable)) //if variable is independent
-                                {
-                                    currentLine += "<font color=" + trueColor + " style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
-                                }
-                                else if (varType == typeof(Constant))
-                                {
-                                    currentLine += "<font color=" + trueColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                                }
-                                currentLine += " ";
-                            }
-                            else
-                            {
-                                if (varType == typeof(DependentVariable)) //if variable is dependent
-                                {
-                                    currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                                }
-                                else if (varType == typeof(IndependentVariable))
-                                {
-                                    currentLine += "<font color=" + falseColor + " style=\"cursor: hand;\" onclick=\"window.external.Variable_Click('" + variable + "')\" >" + variable + "</font>";
-                                }
-                                else if (varType == typeof(Constant))
-                                {
-                                    currentLine += "<font color=" + falseColor + " style=\"cursor: no-drop;\" >" + variable + "</font>";
-                                }
-                                currentLine += " ";
-                            }
+                            color = ((bool)value) ? falseColor : trueColor;
                         }
+                        string cursor = isIndependentVariable ? "hand" : "no-drop";
+                        string decoration = hasNegation ? " text-decoration: overline;" : "";
+                        string action = isIndependentVariable ? $" onclick=\"window.external.Variable_Click('{variable}')\"" : "";
+
+                        currentLine += string.Format(template, color, cursor, decoration, action, variable);
+                        currentLine += " ";
                     }
-                    #endregion
                 }
 
                 currentLine = currentLine.Substring(0, currentLine.Length - 1);

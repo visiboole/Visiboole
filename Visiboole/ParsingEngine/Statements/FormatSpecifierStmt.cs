@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using VisiBoole.Controllers;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
@@ -41,7 +42,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-        public FormatSpecifierStmt(Database database, string text) : base(database, text)
+        public FormatSpecifierStmt(string text) : base(text)
 		{
 		}
 
@@ -64,12 +65,12 @@ namespace VisiBoole.ParsingEngine.Statements
                 else
                 {
                     // Get variables and values
-                    string[] variables = Regex.Split(match.Groups["Vars"].Value, @"\s+"); // Split variables by whitespace
+                    string[] variables = Parser.WhitespaceRegex.Split(match.Groups["Vars"].Value); // Split variables by whitespace
                     List<int> values = new List<int>(); // Values of variables
                     foreach (string var in variables)
                     {
                         // Add value of each variable to output values
-                        values.Add(Database.TryGetValue(var));
+                        values.Add(DesignController.ActiveDesign.Database.TryGetValue(var));
                     }
 
                     // Output Format Specifier

@@ -28,16 +28,18 @@ namespace VisiBoole.ParsingEngine.ObjectCode
 	public class SpaceFeed : IObjectCodeElement
 	{
         /// <summary>
-        /// The text representation of this outpute element, a space character
+        /// String representation of this output element.
         /// </summary>
-		public string ObjCodeText { get { return "&nbsp"; } set { } }
+		public string ObjCodeText { get { return "&nbsp;"; } }
 
         /// <summary>
-        /// The value of this element is null as it is a newline character, not a variable
+        /// Boolean value of this output element.
         /// </summary>
-		public bool? ObjCodeValue { get { return null; }set { } }
+		public bool? ObjCodeValue { get { return null; } }
 
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
+        /// <summary>
+        /// Indicates whether this output element contains a negation.
+        /// </summary>
+        public bool ObjHasNegation { get { return false; } }
     }
 }

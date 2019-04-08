@@ -39,9 +39,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Constructs a VariableListStmt instance.
         /// </summary>
-        /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-		public VariableListStmt(Database database, string text) : base(database, text)
+		public VariableListStmt(string text) : base(text)
 		{
 		}
 

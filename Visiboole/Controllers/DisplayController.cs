@@ -26,6 +26,7 @@ using VisiBoole.ParsingEngine;
 using VisiBoole.Views;
 using VisiBoole.ParsingEngine.ObjectCode;
 using System.Drawing;
+using System.Threading;
 
 namespace VisiBoole.Controllers
 {
@@ -66,10 +67,15 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		public WebBrowser browser;
 
-		/// <summary>
-		/// The display that was hosted by the MainWindow before the current one
-		/// </summary>
-		public IDisplay PreviousDisplay { get; set; }
+        /// <summary>
+        /// Last output of the browser.
+        /// </summary>
+        private List<IObjectCodeElement> LastOutput;
+
+        /// <summary>
+        /// The display that was hosted by the MainWindow before the current one
+        /// </summary>
+        public IDisplay PreviousDisplay { get; set; }
 
 		/// <summary>
 		/// The display that is currently hosted by the MainWindow
@@ -90,7 +96,6 @@ namespace VisiBoole.Controllers
 				value.LoadTabControl(tabControl);
 				value.LoadWebBrowser(browser);
 				currentDisplay = value;
-                
 			}
 		}
 
@@ -209,19 +214,13 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-		/// Handles the event that occurs when the user runs the parser
-		/// </summary>
-		public void Run()
+        /// Displays the provided output to the browser.
+        /// </summary>
+        /// <param name="output">Output of the parsed design</param>
+        /// <param name="position">Scroll position of the browser</param>
+		public void DisplayOutput(List<IObjectCodeElement> output, int position = 0)
         {
-            Design design = tabControl.SelectedTab.Design();
-            Parser parser = new Parser();
-            List<IObjectCodeElement> output = parser.Parse(design);
-            if (output == null)
-            {
-                return;
-            }
-
-            HtmlBuilder html = new HtmlBuilder(design, output);
+            HtmlBuilder html = new HtmlBuilder(output);
             if (html.HtmlText == null)
             {
                 return;
@@ -230,31 +229,6 @@ namespace VisiBoole.Controllers
 
             browser.ObjectForScripting = this;
             html.DisplayHtml(htmlOutput, browser);
-            
-
-            if (CurrentDisplay is DisplayEdit)
-            {
-                mwController.LoadDisplay(DisplayType.RUN);
-            }
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the user ticks
-        /// </summary>
-        public void Tick(int count)
-        {
-            Design design = tabControl.SelectedTab.Design();
-            browser.ObjectForScripting = this;
-            int position = browser.Document.Body.ScrollTop;
-
-            Parser parser = new Parser();
-            for (int i = 0; i < count; i++)
-            {
-                List<IObjectCodeElement> output = parser.ParseTick(design);
-                HtmlBuilder html = new HtmlBuilder(design, output);
-                string htmlOutput = html.GetHTML();
-                html.DisplayHtml(htmlOutput, browser);
-            }
 
             browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
 
@@ -262,47 +236,56 @@ namespace VisiBoole.Controllers
             {
                 mwController.LoadDisplay(DisplayType.RUN);
             }
-            
+
+            LastOutput = output;
         }
 
         /// <summary>
-        /// Handles the event that occurs when the user clicks on an independent variable
+        /// Handles the event that occurs when the browser needs to be refreshed.
+        /// </summary>
+        public void RefreshOutput()
+        {
+            DisplayOutput(LastOutput);
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user ticks.
+        /// </summary>
+        /// <param name="count">Number of times to tick</param>
+        public void Tick(int count)
+        {
+            browser.ObjectForScripting = this;
+            int position = browser.Document.Body.ScrollTop;
+
+            for (int i = 0; i < count; i++)
+            {
+                List<IObjectCodeElement> output = mwController.Tick();
+                DisplayOutput(output, position);
+                /* Attempt at pause
+                if (i < count - 1)
+                {
+                    Thread.Sleep(1000);
+                }
+                */
+            }
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user clicks on an independent variable.
         /// </summary>
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
         public void Variable_Click(string variableName)
         {
-            Design design = tabControl.SelectedTab.Design();
-            Parser parser = new Parser();
-            List<IObjectCodeElement> output = parser.ParseClick(design, variableName);
-            if (output == null)
-            {
-                return;
-            }
-
-            HtmlBuilder html = new HtmlBuilder(design, output);
-            if (html.HtmlText == null)
-            {
-                return;
-            }
-            string htmlOutput = html.GetHTML();
-
             browser.ObjectForScripting = this;
             int position = browser.Document.Body.ScrollTop;
-            html.DisplayHtml(htmlOutput, browser);
-
-            browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
-
-            if (CurrentDisplay is DisplayEdit)
-            {
-                mwController.LoadDisplay(DisplayType.RUN);
-            }
+            DisplayOutput(mwController.Variable_Click(variableName), position);
         }
 
         /// <summary>
-        /// Handles the event that occurs when the user clicks on an instantiation
+        /// Handles the event that occurs when the user clicks on an instantiation.
         /// </summary>
         /// <param name="instantiation">The instantiation that was clicked by the user</param>
-        public void Instantiation_Click(string instantiation, string designName, string designPath)
+        public void Instantiation_Click(string instantiation)
         {
             // Decode path
             /*

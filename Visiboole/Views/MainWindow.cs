@@ -100,12 +100,12 @@ namespace VisiBoole.Views
 
             if (display.TypeOfDisplay == DisplayType.EDIT && Globals.TabControl.SelectedTab != null)
             {
-                undoToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().EditHistory.Count > 0;
-                undoToolStripMenuItem1.Enabled = MainWindowController.GetActiveDesign().EditHistory.Count > 0;
-                redoToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().UndoHistory.Count > 0;
-                redoToolStripMenuItem1.Enabled = MainWindowController.GetActiveDesign().UndoHistory.Count > 0;
-                cutToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().SelectedText.Length > 0;
-                copyToolStripMenuItem.Enabled = MainWindowController.GetActiveDesign().SelectedText.Length > 0;
+                undoToolStripMenuItem.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
+                undoToolStripMenuItem1.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
+                redoToolStripMenuItem.Enabled = DesignController.ActiveDesign.UndoHistory.Count > 0;
+                redoToolStripMenuItem1.Enabled = DesignController.ActiveDesign.UndoHistory.Count > 0;
+                cutToolStripMenuItem.Enabled = DesignController.ActiveDesign.SelectedText.Length > 0;
+                copyToolStripMenuItem.Enabled = DesignController.ActiveDesign.SelectedText.Length > 0;
                 pasteToolStripMenuItem.Enabled = Clipboard.ContainsText();
             }
             else
@@ -337,7 +337,7 @@ namespace VisiBoole.Views
 
             if (editModeToggle.Enabled)
             {
-                MainWindowController.Run();
+                MainWindowController.RefreshOutput();
             }
         }
 
@@ -355,7 +355,7 @@ namespace VisiBoole.Views
 
                 if (editModeToggle.Enabled)
                 {
-                    MainWindowController.Run();
+                    MainWindowController.RefreshOutput();
                 }
             }
         }
@@ -371,7 +371,7 @@ namespace VisiBoole.Views
 
             if (editModeToggle.Enabled)
             {
-                MainWindowController.Run();
+                MainWindowController.RefreshOutput();
             }
         }
 
@@ -525,7 +525,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void UndoTextMenuClick(object sender, EventArgs e)
         {
-            MainWindowController.GetActiveDesign().UndoTextMenuClick(sender, e);
+            DesignController.ActiveDesign.UndoTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void RedoTextMenuClick(object sender, EventArgs e)
         {
-            MainWindowController.GetActiveDesign().RedoTextMenuClick(sender, e);
+            DesignController.ActiveDesign.RedoTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -545,7 +545,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CutTextMenuClick(object sender, EventArgs e)
         {
-            MainWindowController.GetActiveDesign().CutTextMenuClick(sender, e);
+            DesignController.ActiveDesign.CutTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -555,7 +555,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CopyTextMenuClick(object sender, EventArgs e)
         {
-            MainWindowController.GetActiveDesign().CopyTextMenuClick(sender, e);
+            DesignController.ActiveDesign.CopyTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -565,7 +565,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void PasteTextEvent(object sender, EventArgs e)
         {
-            MainWindowController.GetActiveDesign().PasteTextMenuClick(sender, e);
+            DesignController.ActiveDesign.PasteTextMenuClick(sender, e);
         }
 
         /// <summary>
@@ -575,7 +575,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SelectAllTextEvent(object sender, EventArgs e)
         {
-            MainWindowController.GetActiveDesign().SelectAllTextMenuClick(sender, e);
+            DesignController.ActiveDesign.SelectAllTextMenuClick(sender, e);
         }
 
         /// <summary>

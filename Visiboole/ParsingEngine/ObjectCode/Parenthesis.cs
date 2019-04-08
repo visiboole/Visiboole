@@ -26,34 +26,37 @@ using System.Threading.Tasks;
 
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
-    public class Parentheses: IObjectCodeElement
+    /// <summary>
+    /// A discrete element of output representing a parenthesis.
+    /// </summary>
+    public class Parenthesis: IObjectCodeElement
     {
-        public bool? Value;
-
-        public string ObjCodeText { get { return OperatorChar; } }
+        /// <summary>
+        /// String representation of this output element.
+        /// </summary>
+		public string ObjCodeText { get; private set; }
 
         /// <summary>
-        /// The boolean value of this output element, null
+        /// Boolean value of this output element.
         /// </summary>
-		public bool? ObjCodeValue { get { return this.Value; } set { this.Value = value; } }
+		public bool? ObjCodeValue { get; private set; }
 
         /// <summary>
-        /// The string representation of this element
+        /// Indicates whether this output element contains a negation.
         /// </summary>
-		public string OperatorChar { get; set; }
-
-        public int Match { get; set; }
-
-        public int MatchingIndex { get; set; }
+        public bool ObjHasNegation { get; private set; }
 
         /// <summary>
-        /// Constructs an instance of Operator 
+        /// Constructs a parenthesis instance with the provided text, value and has negation value.
         /// </summary>
-        /// <param name="opChar">The string representation of this element</param>
-		public Parentheses(string opChar)
+        /// <param name="text">String representation of this output element</param>
+        /// <param name="value">Boolean value of this variable</param>
+        /// <param name="hasNegation">Whether the parenthesis has a negation</param>
+		public Parenthesis(string text, bool value, bool hasNegation)
         {
-            OperatorChar = opChar;
-            this.Value = false;
+            ObjCodeText = text;
+            ObjCodeValue = value;
+            ObjHasNegation = hasNegation;
         }
     }
 }

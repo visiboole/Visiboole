@@ -23,21 +23,23 @@ using System;
 namespace VisiBoole.ParsingEngine.ObjectCode
 {
     /// <summary>
-    /// A discrete element of output representing a linefeed
+    /// A discrete element of output representing a new line.
     /// </summary>
 	public class LineFeed : IObjectCodeElement
 	{
         /// <summary>
-        /// The text representation of this outpute element, a newline character
+        /// String representation of this output element.
         /// </summary>
-		public string ObjCodeText { get { return Environment.NewLine; } set { } }
+		public string ObjCodeText { get { return Environment.NewLine; } }
 
         /// <summary>
-        /// The value of this element is null as it is a newline character, not a variable
+        /// Boolean value of this output element.
         /// </summary>
-		public bool? ObjCodeValue { get { return null; }set { } }
+		public bool? ObjCodeValue { get { return null; } }
 
-        public int Match { get; set; }
-        public int MatchingIndex { get; set; }
+        /// <summary>
+        /// Indicates whether this output element contains a negation.
+        /// </summary>
+        public bool ObjHasNegation { get { return false; } }
     }
 }

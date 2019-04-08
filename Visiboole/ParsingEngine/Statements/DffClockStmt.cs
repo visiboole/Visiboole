@@ -25,8 +25,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.ObjectCode;
-using VisiBoole.ParsingEngine.Boolean;
 using VisiBoole.Models;
+using VisiBoole.Controllers;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -36,40 +36,30 @@ namespace VisiBoole.ParsingEngine.Statements
     public class DffClockStmt : ExpressionStatement
     {
         /// <summary>
-        /// Delay of the clock statement.
-        /// </summary>
-        private string Delay;
-
-        /// <summary>
-        /// Whether the clock is being ticked.
-        /// </summary>
-        private bool TickClock;
-
-        /// <summary>
         /// Constructs a DffClockStmt instance.
         /// </summary>
-        /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-        /// <param name="tick">Whether the clock is being ticked</param>
-        public DffClockStmt(Database database, string text, bool tick) : base(database, text)
+        /// <param name="lineNumber">Line number of the expression statement</param>
+        public DffClockStmt(string text, int lineNumber) : base(text, lineNumber)
         {
-            TickClock = tick;
-            Delay = Dependent + ".d";
+            // Update variable value (delay)
+            Evaluate();
 
-            // Add dependency and set delay value
-            // Parser.Design.Database.AddExpression(Delay, Expression);
-            Database.CreateDependenciesList(Delay);
-            bool delayValue = ExpressionSolver.Solve(Database, Expression) == 1;
-            Database.SetValue(Delay, delayValue);
+            // Add expression to the database
+            DesignController.ActiveDesign.Database.AddExpression(lineNumber, this);
         }
 
         /// <summary>
-        /// Ticks the statement (dependent value is set to the delay value)
+        /// Ticks the statement (delay value is set to its dependent value)
         /// </summary>
         public void Tick()
         {
-            DependentVariable delayVariable = Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-            Database.SetValue(Dependent, delayVariable.Value);
+            int delayValue = GetValue(Delay);
+            int dependentValue = GetValue(Dependent);
+            if (delayValue != dependentValue)
+            {
+                DesignController.ActiveDesign.Database.SetValue(Delay, dependentValue == 1);
+            }
         }
 
         /// <summary>
@@ -77,44 +67,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
-            // Output padding (if present)
-            int start = Text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
-            for (int i = 0; i < start; i++)
-            {
-                Output.Add(new SpaceFeed());
-            }
-
-            // Output dependent
-            DependentVariable delayVariable = Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-            IndependentVariable dependentInd = Database.TryGetVariable<IndependentVariable>(Dependent) as IndependentVariable;
-            DependentVariable dependentDep = Database.TryGetVariable<DependentVariable>(Dependent) as DependentVariable;
-            if (dependentInd != null)
-            {
-                Output.Add(dependentInd);
-            }
-            else
-            {
-                Output.Add(dependentDep);
-            }
-
-            // Tick (if necessary) and output delay
-            if (TickClock)
-            {
-                bool delayValue = ExpressionSolver.Solve(Database, Expression) == 1;
-                if (delayValue != delayVariable.Value)
-                {
-                    Database.SetValue(Delay, delayValue);
-                    delayVariable = Database.TryGetVariable<DependentVariable>(Delay) as DependentVariable;
-                }
-            }
-            DependentVariable dv = new DependentVariable("<=", delayVariable.Value);
-            Output.Add(dv);
-
-            // Output expression
             base.Parse();
-
-            // Output newline
-            Output.Add(new LineFeed());
         }
     }
 }
