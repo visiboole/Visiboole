@@ -187,7 +187,7 @@ namespace VisiBoole.Controllers
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while selecting a tab page.", DialogType.Ok);
+                //Globals.Dialog.New("Error", "An unexpected error has occured while selecting a tab page.", DialogType.Ok);
             }
         }
 

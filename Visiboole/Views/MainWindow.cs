@@ -47,6 +47,8 @@ namespace VisiBoole.Views
         {
             InitializeComponent();
             NavTree.NodeMouseClick += (sender, args) => NavTree.SelectedNode = args.Node;
+            NavTree.HideSelection = true;
+            NavTree.SelectedNode = null;
             Globals.TabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
             Globals.TabControl.SelectedIndexChanged += (sender, e) => {
                 MainWindowController.SelectFile(Globals.TabControl.SelectedIndex);
@@ -134,6 +136,8 @@ namespace VisiBoole.Views
                 this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
                 this.NavTree.BackColor = System.Drawing.Color.DodgerBlue;
                 this.NavTree.ForeColor = System.Drawing.Color.Black;
+                this.NavTree.HideSelection = true;
+                NavTree.SelectedNode = null;
                 this.BackColor = System.Drawing.Color.AliceBlue;
                 this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
 
@@ -148,6 +152,8 @@ namespace VisiBoole.Views
                 this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
                 this.NavTree.BackColor = System.Drawing.Color.FromArgb(48, 48, 48);
                 this.NavTree.ForeColor = System.Drawing.Color.DodgerBlue;
+                this.NavTree.HideSelection = true;
+                NavTree.SelectedNode = null;
                 this.BackColor = System.Drawing.Color.FromArgb(66, 66, 66);
                 this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
 
@@ -254,6 +260,7 @@ namespace VisiBoole.Views
         public void RetrieveFocus()
         {
             NavTree.Focus(); // This foucs will allow all shortcut keys to work
+            NavTree.SelectedNode = null;
         }
 
         /// <summary>
