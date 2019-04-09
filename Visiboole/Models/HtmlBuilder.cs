@@ -44,9 +44,9 @@ namespace VisiBoole.Models
             foreach (List<IObjectCodeElement> line in newOutput)
             {
                 lineNumber++;
-                currentLine = "<p style=\"font-size:" + (Properties.Settings.Default.FontSize + 6) + "px\">";
+                currentLine = "<p style=\"font-family:consolas; font-size:" + Properties.Settings.Default.FontSize + "pt\">";
 
-                if(line.Count == 0)
+                if (line.Count == 0)
                 {
                     currentLine += "<br>>";
                 }

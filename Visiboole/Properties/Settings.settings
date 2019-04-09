@@ -9,7 +9,7 @@
       <Value Profile="(Default)">Dark</Value>
     </Setting>
     <Setting Name="FontSize" Type="System.Single" Scope="User">
-      <Value Profile="(Default)">12</Value>
+      <Value Profile="(Default)">13</Value>
     </Setting>
     <Setting Name="Colorblind" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

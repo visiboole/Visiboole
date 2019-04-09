@@ -443,7 +443,6 @@ namespace VisiBoole.ParsingEngine
 
                             if (match.Groups["DoInclude"].Value != "-" && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value == "+"))
                             {
-                                line = String.Concat(match.Groups["Spacing"].Value, match.Groups["Comment"].Value); // Remove + or -
                                 statements.Add(new CommentStmt(line));
                             }
                         }

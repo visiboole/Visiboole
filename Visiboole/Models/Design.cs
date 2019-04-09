@@ -140,7 +140,7 @@ namespace VisiBoole.Models
         /// </summary>
         public void SetFontSize()
         {
-            Font = new Font(DefaultFont.FontFamily, Properties.Settings.Default.FontSize);
+            Font = new Font("Consolas", Properties.Settings.Default.FontSize);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace VisiBoole.Models
                 while ((nextLine = reader.ReadLine()) != null)
                 {
                     // Clean line
-                    nextLine = nextLine.Replace("\t", new string(' ', 8));
+                    nextLine = nextLine.Replace("\t", new string(' ', 4));
                     nextLine = nextLine.TrimEnd();
 
                     // Append line to text
@@ -207,9 +207,9 @@ namespace VisiBoole.Models
                     if (edit == "\t")
                     {
                         Text = Text.Remove(loc, 1); // Remove tab
-                        edit = new string(' ', 8);
+                        edit = new string(' ', 4);
                         Text = Text.Insert(loc, edit); // Insert spaces for tab
-                        SelectionStart = loc + 8; // Restore cursor location
+                        SelectionStart = loc + 4; // Restore cursor location
                     }
                     else if (edit == "\"")
                     {
@@ -519,7 +519,7 @@ namespace VisiBoole.Models
         {
             if (Clipboard.ContainsText())
             {
-                SelectedText = Clipboard.GetText(TextDataFormat.Text).ToString();
+                SelectedText = (string)Clipboard.GetData("Text");
             }
         }
 

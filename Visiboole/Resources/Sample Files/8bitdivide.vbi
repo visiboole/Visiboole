@@ -1,22 +1,22 @@
 +"1. Select Dividend:";
-        Dn[7..0];
-                                    %u{Dn[7..0]};
+   Dn[7..0];
+                  %u{Dn[7..0]};
 
 +"2. Select Divisor:";
-        Dr[7..0];
-                            %u{Dr[7..0]};
+   Dr[7..0];
+                  %u{Dr[7..0]};
 
 +"3. Select Start:";
-        start;
+   start;
 
 +"4. Click Tick Untill <false>AnsRdy</> changes to <true>AnsRdy</>";
-        AnsRdy;
+   AnsRdy;
 
 +"Quotient:";
-        %u{Q[7..0]};
+   %u{Q[7..0]};
 
 +"Remainder:";
-        %u{R[7..0]};
+   %u{R[7..0]};
 
 
 s1 <= st1 tc3 | st2 start;

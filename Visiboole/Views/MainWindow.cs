@@ -357,7 +357,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void DecreaseFontMenuClick(object sender, EventArgs e)
         {
-            if (Properties.Settings.Default.FontSize > 6)
+            if (Properties.Settings.Default.FontSize > 7)
             {
                 Properties.Settings.Default.FontSize -= 3;
                 MainWindowController.SetFontSize();
