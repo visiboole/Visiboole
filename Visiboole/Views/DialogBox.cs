@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace VisiBoole.Views
@@ -24,8 +17,8 @@ namespace VisiBoole.Views
         public DialogBox()
         {
             InitializeComponent();
-            this.uxPanelTop.MouseDown += new MouseEventHandler(DialogBoxMouseDown);
-            this.uxLabelTitle.MouseDown += new MouseEventHandler(DialogBoxMouseDown);
+            uxPanelTop.MouseDown += new MouseEventHandler(DialogBoxMouseDown);
+            uxLabelTitle.MouseDown += new MouseEventHandler(DialogBoxMouseDown);
         }
 
         [System.Runtime.InteropServices.DllImportAttribute("user32.dll")]
@@ -47,7 +40,6 @@ namespace VisiBoole.Views
             }
         }
 
-
         /// <summary>
         /// Constructs a new dialog box with the provided title, message and appropriate buttons.
         /// </summary>
@@ -59,20 +51,20 @@ namespace VisiBoole.Views
         {
             if (message.Length < 90)
             {
-                uxLabelMessage.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                uxLabelMessage.Font = new Font("Segoe UI", 14F, FontStyle.Regular, GraphicsUnit.Point, 0);
             }
             else if (message.Length < 180)
             {
-                uxLabelMessage.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                uxLabelMessage.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             }
             else
             {
-                uxLabelMessage.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                uxLabelMessage.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             }
 
-            this.uxLabelTitle.Text = title;
-            this.uxLabelMessage.Text = message;
-            this.uxButton1.Select();
+            uxLabelTitle.Text = title;
+            uxLabelMessage.Text = message;
+            uxButton1.Select();
 
             if (type == DialogType.YesNoCancel)
             {
@@ -108,7 +100,7 @@ namespace VisiBoole.Views
                 uxButtonExit.DialogResult = DialogResult.OK;
             }
 
-            return this.ShowDialog();
+            return ShowDialog();
         }
 
         /// <summary>
@@ -119,8 +111,8 @@ namespace VisiBoole.Views
         private void DialogBoxPaint(object sender, PaintEventArgs e)
         {
             Color color = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
-            e.Graphics.DrawRectangle(new Pen(color, 4), this.DisplayRectangle);
-            this.uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
+            e.Graphics.DrawRectangle(new Pen(color, 4), DisplayRectangle);
+            uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
         }
     }
 }

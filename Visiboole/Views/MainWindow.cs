@@ -49,15 +49,6 @@ namespace VisiBoole.Views
             NavTree.NodeMouseClick += (sender, args) => NavTree.SelectedNode = args.Node;
             NavTree.HideSelection = true;
             NavTree.SelectedNode = null;
-            Globals.TabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
-            Globals.TabControl.SelectedIndexChanged += (sender, e) => {
-                MainWindowController.SelectFile(Globals.TabControl.SelectedIndex);
-                IDisplay display = MainWindowController.GetDisplay();
-                if (display != null)
-                {
-                    UpdateControls(display);
-                }
-            };
         }
 
         /// <summary>
@@ -66,7 +57,7 @@ namespace VisiBoole.Views
         /// <param name="MainWindowController">The handle to the MainWindowController for this view</param>
         public void AttachMainWindowController(IMainWindowController controller)
         {
-            this.MainWindowController = controller;
+            MainWindowController = controller;
         }
 
         #endregion
@@ -132,38 +123,34 @@ namespace VisiBoole.Views
             if (theme == "Light" || theme == "light")
             {
                 Properties.Settings.Default.Theme = "Light";
-                this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
-                this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
-                this.NavTree.BackColor = System.Drawing.Color.DodgerBlue;
-                this.NavTree.ForeColor = System.Drawing.Color.Black;
-                this.NavTree.HideSelection = true;
+                menuStrip1.BackColor = Color.FromArgb(33, 33, 33);
+                menuStrip2.BackColor = Color.FromArgb(33, 33, 33);
+                NavTree.BackColor = Color.DodgerBlue;
+                NavTree.ForeColor = Color.Black;
+                NavTree.HideSelection = true;
                 NavTree.SelectedNode = null;
-                this.BackColor = System.Drawing.Color.AliceBlue;
-                this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
+                BackColor = Color.AliceBlue;
+                OpenFileLinkLabel.LinkColor = Color.DodgerBlue;
 
-                this.MainWindowController.SetTheme();
-                Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");
-                Globals.TabControl.TabPages.Remove(Globals.TabControl.TabPages[Globals.TabControl.TabPages.Count - 1]);
-            }
-            else if (theme == "Dark" || theme == "dark")
-            {
-                Properties.Settings.Default.Theme = "Dark";
-                this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
-                this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(33, 33, 33);
-                this.NavTree.BackColor = System.Drawing.Color.FromArgb(48, 48, 48);
-                this.NavTree.ForeColor = System.Drawing.Color.DodgerBlue;
-                this.NavTree.HideSelection = true;
-                NavTree.SelectedNode = null;
-                this.BackColor = System.Drawing.Color.FromArgb(66, 66, 66);
-                this.OpenFileLinkLabel.LinkColor = System.Drawing.Color.DodgerBlue;
-
-                this.MainWindowController.SetTheme();
+                MainWindowController.SetTheme();
                 Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");
                 Globals.TabControl.TabPages.Remove(Globals.TabControl.TabPages[Globals.TabControl.TabPages.Count - 1]);
             }
             else
             {
-                Globals.Dialog.New("Error", "An error has occured while setting the theme.", DialogType.Ok);
+                Properties.Settings.Default.Theme = "Dark";
+                menuStrip1.BackColor = Color.FromArgb(33, 33, 33);
+                menuStrip2.BackColor = Color.FromArgb(33, 33, 33);
+                NavTree.BackColor = Color.FromArgb(48, 48, 48);
+                NavTree.ForeColor = Color.DodgerBlue;
+                NavTree.HideSelection = true;
+                NavTree.SelectedNode = null;
+                BackColor = Color.FromArgb(66, 66, 66);
+                OpenFileLinkLabel.LinkColor = Color.DodgerBlue;
+
+                MainWindowController.SetTheme();
+                Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");
+                Globals.TabControl.TabPages.Remove(Globals.TabControl.TabPages[Globals.TabControl.TabPages.Count - 1]);
             }
         }
 
@@ -184,10 +171,12 @@ namespace VisiBoole.Views
             contextMenu.MenuItems.Add("Close All Designs", new EventHandler(CloseAllMenuClick));
             fileNode.ContextMenu = contextMenu;
 
+            /*
             if (NavTree.Nodes.ContainsKey(fileName))
             {
                 Globals.Dialog.New("Error", "Node " + fileName + " already exists in Desings.", DialogType.Ok);
             }
+            */
 
             NavTree.Nodes[0].Nodes.Add(fileNode);
             NavTree.ExpandAll();
@@ -200,6 +189,10 @@ namespace VisiBoole.Views
         public void RemoveNavTreeNode(string name)
         {
             NavTree.Nodes[0].Nodes.RemoveByKey(name);
+            if (NavTree.Nodes[0].Nodes.Count == 0)
+            {
+                MainWindowController.LoadDisplay(DisplayType.EDIT); // Switches to default view
+            }
         }
 
         /// <summary>
@@ -209,49 +202,33 @@ namespace VisiBoole.Views
         /// <param name="current">The display to be loaded</param>
         public void LoadDisplay(IDisplay previous, IDisplay current)
         {
-            if (!this.MainLayoutPanel.Controls.Contains((Control)previous))
+            if (!MainLayoutPanel.Controls.Contains((Control)previous))
             {
                 // No files have been opened
-                this.MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
+                MainLayoutPanel.Controls.Remove(OpenFileLinkLabel);
             }
             else
             {
                 if ((previous == current) ^ (NavTree.Nodes[0].Nodes.Count > 0))
                 {
                     // If either display is same or files have been opened
-                    this.MainLayoutPanel.Controls.Remove((Control)previous);
+                    MainLayoutPanel.Controls.Remove((Control)previous);
 
                     if (NavTree.Nodes[0].Nodes.Count == 0)
                     {
-                        this.MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
+                        MainLayoutPanel.Controls.Add(OpenFileLinkLabel, 1, 0);
                     }
                 }
             }
 
-            if (!this.MainLayoutPanel.Controls.Contains(OpenFileLinkLabel) && !this.MainLayoutPanel.Controls.Contains((Control)current))
+            if (!MainLayoutPanel.Controls.Contains(OpenFileLinkLabel) && !MainLayoutPanel.Controls.Contains((Control)current))
             {
                 Control currentControls = (Control)current;
                 currentControls.Dock = DockStyle.Fill;
-                this.MainLayoutPanel.Controls.Add(currentControls);
+                MainLayoutPanel.Controls.Add(currentControls);
             }
 
             UpdateControls(current); // Change controls to match the new display
-        }
-
-        /// <summary>
-        /// Displays file-save success message to the user
-        /// </summary>
-        /// <param name="fileSaved">True if the file was saved successfully</param>
-        public void SaveFileSuccess(bool fileSaved)
-        {
-            if (fileSaved == true)
-            {
-                Globals.Dialog.New("Success", "File save successful.", DialogType.Ok);
-            }
-            else
-            {
-                Globals.Dialog.New("Failure", "File save failed.", DialogType.Ok);
-            }
         }
 
         /// <summary>
@@ -261,60 +238,6 @@ namespace VisiBoole.Views
         {
             NavTree.Focus(); // This foucs will allow all shortcut keys to work
             NavTree.SelectedNode = null;
-        }
-
-        /// <summary>
-        /// Confrims whether the user wants to close the selected Design
-        /// </summary>
-        /// <param name="isDirty">True if the Design being closed has been modified since last save</param>
-        /// <returns>Whether the selected Design will be closed</returns>
-        public bool ConfirmClose(bool isDirty)
-        {
-            if (isDirty == true)
-            {
-                System.Media.SystemSounds.Asterisk.Play();
-                DialogResult response = Globals.Dialog.New("Confirm", "You have made changes to the file you are trying to close - do you wish to continue?", DialogType.YesNo);
-
-                if (response == DialogResult.Yes)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Confirms exit with the user if the application is dirty.
-        /// </summary>
-        /// <param name="isDirty">True if any open Designs have been modified since last save</param>
-        /// <returns>Indicates whether the user wants to close</returns>
-        public bool ConfirmExit(bool isDirty)
-        {
-            if (isDirty == true)
-            {
-                System.Media.SystemSounds.Asterisk.Play();
-                DialogResult response = Globals.Dialog.New("Confirm", "You have made changes that have not been saved - do you wish to continue?", DialogType.YesNo);
-
-                if (response == DialogResult.Yes)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return true;
-            }
         }
 
         #endregion
@@ -408,15 +331,36 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void OpenFileLinkClick(object sender, LinkLabelLinkClickedEventArgs e)
         {
+            OpenFiles();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when a open file menu is clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenFileMenuClick(object sender, EventArgs e)
+        {
+            OpenFiles();
+        }
+
+        /// <summary>
+        /// Opens the files selected by the open file dialog.
+        /// </summary>
+        private void OpenFiles()
+        {
             DialogResult response = openFileDialog1.ShowDialog();
 
-            if (response != DialogResult.OK)
+            if (response == DialogResult.OK)
             {
-                return;
-            }
+                string[] files = openFileDialog1.FileNames;
+                foreach (string file in files)
+                {
+                    MainWindowController.ProcessNewFile(file);
+                }
 
-            MainWindowController.ProcessNewFile(openFileDialog1.FileName);
-            openFileDialog1.FileName = string.Empty;
+                openFileDialog1.FileName = "";
+            }
 
             previousStateToolStripMenuItem.Enabled = false;
         }
@@ -429,7 +373,6 @@ namespace VisiBoole.Views
         private void NewFileMenuClick(object sender, EventArgs e)
         {
             DialogResult response = saveFileDialog1.ShowDialog();
-
             if (response != DialogResult.OK)
             {
                 return;
@@ -437,24 +380,6 @@ namespace VisiBoole.Views
 
             MainWindowController.ProcessNewFile(saveFileDialog1.FileName, true);
             saveFileDialog1.FileName = "newFile1.vbi";
-
-            previousStateToolStripMenuItem.Enabled = false;
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when a open file menu is clicked.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OpenFileMenuClick(object sender, EventArgs e)
-        {
-            DialogResult response = openFileDialog1.ShowDialog();
-
-            if (response == DialogResult.OK)
-            {
-                MainWindowController.ProcessNewFile(openFileDialog1.FileName);
-                openFileDialog1.FileName = string.Empty;
-            }
 
             previousStateToolStripMenuItem.Enabled = false;
         }
@@ -617,39 +542,13 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
-        /// Checks whether the user is trying to close a tab
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TabMouseDownEvent(object sender, MouseEventArgs e)
-        {
-            if (Globals.TabControl.SelectedIndex != -1)
-            {
-                Rectangle current = Globals.TabControl.GetTabRect(Globals.TabControl.SelectedIndex);
-                Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
-                if (close.Contains(e.Location))
-                {
-                    CloseFileMenuClick(sender, e);
-                }
-            }
-        }
-
-        /// <summary>
         /// Handles the event that occurs when a close file menu is clicked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void CloseFileMenuClick(object sender, EventArgs e)
         {
-            string name = MainWindowController.CloseActiveFile();
-            if (name != null)
-            {
-                RemoveNavTreeNode(name);
-                if (NavTree.Nodes[0].Nodes.Count == 0)
-                {
-                    MainWindowController.LoadDisplay(DisplayType.EDIT); // Switches to default view
-                }
-            }
+            MainWindowController.CloseActiveFile();
         }
 
         /// <summary>
@@ -659,15 +558,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CloseAllExceptMenuClick(object sender, EventArgs e)
         {
-            List<string> closedFiles = MainWindowController.CloseFilesExceptFor(NavTree.SelectedNode.Name);
-
-            if (closedFiles != null && closedFiles.Count > 0)
-            {
-                foreach (string file in closedFiles)
-                {
-                    RemoveNavTreeNode(file);
-                }
-            }
+            MainWindowController.CloseFilesExceptFor(NavTree.SelectedNode.Name);
         }
 
         /// <summary>
@@ -677,20 +568,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CloseAllMenuClick(object sender, EventArgs e)
         {
-            List<string> closedFiles = MainWindowController.CloseFiles();
-
-            if (closedFiles != null && closedFiles.Count > 0)
-            {
-                foreach (string file in closedFiles)
-                {
-                    RemoveNavTreeNode(file);
-                }
-
-                if (NavTree.Nodes[0].Nodes.Count == 0)
-                {
-                    MainWindowController.LoadDisplay(DisplayType.EDIT); // Switches to default view
-                }
-            }
+            MainWindowController.CloseFiles();
         }
 
         /// <summary>
@@ -700,15 +578,7 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void ExitApplicationMenuClick(object sender, EventArgs e)
         {
-            List<string> closedFiles = MainWindowController.ExitApplication();
-
-            if (closedFiles != null && closedFiles.Count > 0)
-            {
-                foreach (string file in closedFiles)
-                {
-                    RemoveNavTreeNode(file);
-                }
-            }
+            MainWindowController.CloseFiles();
 
             if (NavTree.Nodes[0].Nodes.Count == 0)
             {
@@ -799,15 +669,7 @@ namespace VisiBoole.Views
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                List<string> closedFiles = MainWindowController.ExitApplication();
-
-                if (closedFiles != null && closedFiles.Count > 0)
-                {
-                    foreach (string file in closedFiles)
-                    {
-                        RemoveNavTreeNode(file);
-                    }
-                }
+                MainWindowController.CloseFiles();
 
                 if (NavTree.Nodes[0].Nodes.Count == 0)
                 {

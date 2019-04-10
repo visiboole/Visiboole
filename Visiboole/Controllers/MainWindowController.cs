@@ -36,31 +36,43 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// Handle to the MainWindow which is the view for this controller
 		/// </summary>
-		private IMainWindow view;
+		private IMainWindow MainWindow;
 
 		/// <summary>
 		/// Handle to the controller for the displays that are hosted by the MainWindow
 		/// </summary>
-		private IDisplayController displayController;
+		private IDisplayController DisplayController;
 
         /// <summary>
         /// Handle to the controller for the designs that are viewed by the MainWindow
         /// </summary>
-        private IDesignController designController;
+        private IDesignController DesignController;
 
         /// <summary>
-        /// Constructs an instance of MainWindowController with handles to its view and the display controller
+        /// Dialog box for user prompts.
         /// </summary>
-        /// <param name="view">Handle to the MainWindow which is the view for this controller</param>
+        private DialogBox DialogBox;
+
+        /// <summary>
+        /// Error dialog box for design errors.
+        /// </summary>
+        private ErrorDialogBox ErrorDialogBox;
+
+        /// <summary>
+        /// Constructs an instance of MainWindowController with handles to its view and the controllers
+        /// </summary>
+        /// <param name="mainWindow">Handle to the MainWindow which is the view for this controller</param>
         /// <param name="displayController">Handle to the controller for the displays that are hosted by the MainWindow</param>
         /// <param name="designController">Handle to the controller for the designs that are viewed by the MainWindow</param>
-        public MainWindowController(IMainWindow view, IDisplayController displayController, IDesignController designController)
+        public MainWindowController(IMainWindow mainWindow, IDisplayController displayController, IDesignController designController)
 		{
-			this.view = view;
-			view.AttachMainWindowController(this);
-			this.displayController = displayController;
-            this.designController = designController;
-		}
+			MainWindow = mainWindow;
+			MainWindow.AttachMainWindowController(this);
+			DisplayController = displayController;
+            DesignController = designController;
+            DialogBox = new DialogBox();
+            ErrorDialogBox = new ErrorDialogBox();
+        }
 
         /// <summary>
         /// Gets the display of the main window.
@@ -70,42 +82,98 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                return displayController.CurrentDisplay;
+                return DisplayController.CurrentDisplay;
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while retrieving the current display type.", DialogType.Ok);
+                DialogBox.New("Error", "An unexpected error has occured while retrieving the current display type.", DialogType.Ok);
                 return null;
             }
         }
 
         /// <summary>
-        /// Set theme of Designs
+        /// Loads into the MainWindow the display of the given type
         /// </summary>
-        public void SetTheme()
+        /// <param name="dType">The type of display that should be loaded</param>
+        public void LoadDisplay(DisplayType dType)
         {
             try
             {
-                designController.SetThemes();
+                DisplayController.PreviousDisplay = DisplayController.CurrentDisplay;
+                DisplayController.CurrentDisplay = DisplayController.GetDisplayOfType(dType);
+                MainWindow.LoadDisplay(DisplayController.PreviousDisplay, DisplayController.CurrentDisplay);
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while setting the themes of the designs.", DialogType.Ok);
+                DialogBox.New("Error", "An unexpected error has occured while loading the display.", DialogType.Ok);
             }
         }
 
         /// <summary>
-        /// Update font sizes
+        /// Used to check if the display is the output, if it is, change it to editor.
         /// </summary>
-        public void SetFontSize()
+        public void SwitchDisplay()
         {
             try
             {
-                designController.SetDesignFontSizes();
+                if (DisplayController.CurrentDisplay is DisplayRun)
+                {
+                    LoadDisplay(DisplayType.EDIT);
+                }
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while setting the font sizes of the designs.", DialogType.Ok);
+                DialogBox.New("Error", "An unexpected error has occured while switching the display type.", DialogType.Ok);
+            }
+        }
+
+        /// <summary>
+        /// Focuses the main window.
+        /// </summary>
+        public void RetrieveFocus()
+        {
+            MainWindow.RetrieveFocus();
+        }
+
+        /// <summary>
+        /// Displays file-save success message to the user
+        /// </summary>
+        /// <param name="fileSaved">True if the file was saved successfully</param>
+        private void SaveFileSuccess(bool fileSaved)
+        {
+            if (fileSaved == true)
+            {
+                DialogBox.New("Success", "File save successful.", DialogType.Ok);
+            }
+            else
+            {
+                DialogBox.New("Failure", "File save failed.", DialogType.Ok);
+            }
+        }
+
+        /// <summary>
+        /// Displays the provided error log to the user.
+        /// </summary>
+        /// <param name="errorLog">Error log to display</param>
+        public void DisplayErrors(List<string> errorLog)
+        {
+            ErrorDialogBox.Display(errorLog);
+        }
+
+        /// <summary>
+        /// Selects the file at the specified index.
+        /// </summary>
+        /// <param name="index">The index of the file</param>
+        public void SelectFile(int index)
+        {
+            try
+            {
+                string designName = DisplayController.SelectTabPage(index);
+                DesignController.SelectDesign(designName);
+            }
+            catch (Exception)
+            {
+                //DialogBox.New("Error", "An unexpected error has occured while selecting a tab page.", DialogType.Ok);
             }
         }
 
@@ -123,71 +191,18 @@ namespace VisiBoole.Controllers
                     File.Delete(path);
                 }
 
-                Design sd = designController.CreateDesign(path);
+                Design design = DesignController.CreateDesign(path);
 
-                if (displayController.CreateNewTab(sd) == true)
+                if (DisplayController.CreateNewTab(design) == true)
                 {
-                    view.AddNavTreeNode(sd.FileSourceName);
+                    MainWindow.AddNavTreeNode(design.FileSourceName);
                 }
 
-                LoadDisplay(displayController.CurrentDisplay.TypeOfDisplay);
+                LoadDisplay(DisplayController.CurrentDisplay.TypeOfDisplay);
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while processing a new file.", DialogType.Ok);
-            }
-        }
-
-        /// <summary>
-        /// Loads into the MainWindow the display of the given type
-        /// </summary>
-        /// <param name="dType">The type of display that should be loaded</param>
-        public void LoadDisplay(DisplayType dType)
-        {
-            try
-            {
-                displayController.PreviousDisplay = displayController.CurrentDisplay;
-                displayController.CurrentDisplay = displayController.GetDisplayOfType(dType);
-                view.LoadDisplay(displayController.PreviousDisplay, displayController.CurrentDisplay);
-            }
-            catch (Exception)
-            {
-                Globals.Dialog.New("Error", "An unexpected error has occured while loading the display.", DialogType.Ok);
-            }
-        }
-
-        /// <summary>
-        /// Used to check if the display is the output, if it is, change it to editor.
-        /// </summary>
-        public void SwitchDisplay()
-        {
-            try
-            {
-                if (displayController.CurrentDisplay is DisplayRun)
-                {
-                    LoadDisplay(DisplayType.EDIT);
-                }
-            }
-            catch (Exception)
-            {
-                Globals.Dialog.New("Error", "An unexpected error has occured while switching the display type.", DialogType.Ok);
-            }
-        }
-
-        /// <summary>
-        /// Selects the file at the specified index.
-        /// </summary>
-        /// <param name="index">The index of the file</param>
-        public void SelectFile(int index)
-        {
-            try
-            {
-                displayController.SelectTabPage(index);
-                designController.SelectDesign(index);
-            }
-            catch (Exception)
-            {
-                //Globals.Dialog.New("Error", "An unexpected error has occured while selecting a tab page.", DialogType.Ok);
+                DialogBox.New("Error", "An unexpected error has occured while processing a new file.", DialogType.Ok);
             }
         }
 
@@ -198,42 +213,34 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                view.SaveFileSuccess(designController.SaveActiveDesign());
+                SaveFileSuccess(DesignController.SaveActiveDesign());
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while saving a file.", DialogType.Ok);
+                DialogBox.New("Error", "An unexpected error has occured while saving a file.", DialogType.Ok);
             }
         }
 
         /// <summary>
-        /// Focuses the main window.
+        /// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
         /// </summary>
-        public void RetrieveFocus()
-        {
-            view.RetrieveFocus();
-        }
-
-        /// <summary>
-		/// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
-		/// </summary>
-		/// <param name="path">The new file path to save the active file to</param>
-		public void SaveFileAs(string path)
+        /// <param name="path">The new file path to save the active file to</param>
+        public void SaveFileAs(string path)
         {
             try
             {
                 // Write the contents of the active tab in a new file at location of the selected path
-                string content = displayController.GetActiveTabPage().Design().Text;
+                string content = DisplayController.GetActiveTabPage().Design().Text;
                 File.WriteAllText(Path.ChangeExtension(path, ".vbi"), content);
 
                 // Process the new file as usual
                 ProcessNewFile(path);
-                view.SaveFileSuccess(true);
+                SaveFileSuccess(true);
             }
             catch (Exception)
             {
-                view.SaveFileSuccess(false);
-                Globals.Dialog.New("Error", "An unexpected error has occured during a save as file operation.", DialogType.Ok);
+                SaveFileSuccess(false);
+                DialogBox.New("Error", "An unexpected error has occured during a save as file operation.", DialogType.Ok);
             }
         }
 
@@ -244,70 +251,12 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                view.SaveFileSuccess(designController.SaveDesigns());
+                SaveFileSuccess(DesignController.SaveDesigns());
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while saving all files.", DialogType.Ok);
+                DialogBox.New("Error", "An unexpected error has occured while saving all files.", DialogType.Ok);
             }
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the user runs the active design.
-        /// </summary>
-        public void Run()
-        {
-            try
-            {
-                List<IObjectCodeElement> output = designController.Parse();
-                if (output == null)
-                {
-                    return;
-                }
-                displayController.DisplayOutput(output);
-            }
-            catch (Exception exception)
-            {
-                Globals.Dialog.New("Error", exception.ToString(), DialogType.Ok);
-                // Leave this error message for debugging purposes
-            }
-        }
-
-        /// <summary>
-        /// Runs a subdesign from the provided instantiation.
-        /// </summary>
-        /// <param name="instantiation">Instantiation to run</param>
-        /// <returns>Output of the parsed instantiation</returns>
-        public List<IObjectCodeElement> RunSubdesign(string instantiation)
-        {
-            return designController.ParseSubdesign(instantiation);
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the browser needs to be refreshed.
-        /// </summary>
-        public void RefreshOutput()
-        {
-            displayController.RefreshOutput();
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the user ticks the active design.
-        /// </summary>
-        /// <returns>Output list of the ticked design</returns>
-        public List<IObjectCodeElement> Tick()
-        {
-            return designController.ParseTick();
-        }
-
-        /// <summary>
-        /// Handles the event that occurs when the user clicks on an independent variable.
-        /// </summary>
-        /// <param name="variableName">The name of the variable that was clicked by the user</param>
-        /// <returns></returns>
-        public List<IObjectCodeElement> Variable_Click(string variableName)
-        {
-            return designController.ParseVariableClick(variableName);
         }
 
         /// <summary>
@@ -317,7 +266,7 @@ namespace VisiBoole.Controllers
         /// <returns>The name of the file closed</returns>
         private string CloseFile(string name)
         {
-            Design design = designController.GetDesign(name);
+            Design design = DesignController.GetDesign(name);
 
             if (design != null)
             {
@@ -325,7 +274,7 @@ namespace VisiBoole.Controllers
 
                 if (design.IsDirty)
                 {
-                    DialogResult result = Globals.Dialog.New("Confirm", $"{name} has unsaved changes. Would you like to save these changes?", DialogType.YesNoCancel);
+                    DialogResult result = DialogBox.New("Confirm", $"{name} has unsaved changes. Would you like to save these changes?", DialogType.YesNoCancel);
                     if (result == DialogResult.No)
                     {
                         save = false;
@@ -337,8 +286,9 @@ namespace VisiBoole.Controllers
                 }
 
                 // Otherwise close file
-                displayController.CloseTab(design.TabPageIndex);
-                designController.CloseDesign(name, save);
+                DisplayController.CloseTab(design.TabPageIndex);
+                DesignController.CloseDesign(name, save);
+                MainWindow.RemoveNavTreeNode(design.FileSourceName);
                 return design.FileSourceName;
             }
             else
@@ -350,50 +300,39 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Closes the selected open file
         /// </summary>
-        /// <returns>The name of the file closed</returns>
-        public string CloseActiveFile()
+        public void CloseActiveFile()
         {
             try
             {
-                return CloseFile(DesignController.ActiveDesign.FileSourceName);
+                CloseFile(Controllers.DesignController.ActiveDesign.FileSourceName);
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while closing a file.", DialogType.Ok);
-                return null;
+                DialogBox.New("Error", "An unexpected error has occured while closing a file.", DialogType.Ok);
             }
         }
 
         /// <summary>
         /// Closes all files.
         /// </summary>
-        /// <returns>List of closed files</returns>
-        public List<string> CloseFiles()
+        public void CloseFiles()
         {
             try
             {
-                List<string> closedFiles = new List<string>();
-                string[] files = designController.GetDesigns();
+                string[] files = DesignController.GetDesigns();
 
                 // Try to close all files
                 for (int i = 0; i < files.Length; i++)
                 {
                     if (CloseFile(files[i]) == null)
                     {
-                        return closedFiles; // File wasn't closed
-                    }
-                    else
-                    {
-                        closedFiles.Add(files[i]); // Add to list of closed files
+                        return; // File wasn't closed
                     }
                 }
-
-                return closedFiles;
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while closing all files.", DialogType.Ok);
-                return null;
+                DialogBox.New("Error", "An unexpected error has occured while closing all files.", DialogType.Ok);
             }
         }
 
@@ -401,14 +340,11 @@ namespace VisiBoole.Controllers
         /// Closes all files except for the provided file name.
         /// </summary>
         /// <param name="name">Name of the file to keep open</param>
-        /// <returns>List of closed files</returns>
-        public List<string> CloseFilesExceptFor(string name)
+        public void CloseFilesExceptFor(string name)
         {
             try
             {
-                //string name = designController.GetActiveDesign().FileSourceName;
-                List<string> closedFiles = new List<string>();
-                string[] files = designController.GetDesigns();
+                string[] files = DesignController.GetDesigns();
 
                 for (int i = 0; i < files.Length; i++)
                 {
@@ -416,39 +352,92 @@ namespace VisiBoole.Controllers
                     {
                         if (CloseFile(files[i]) == null)
                         {
-                            return closedFiles;
-                        }
-                        else
-                        {
-                            closedFiles.Add(files[i]);
+                            return; // File wasn't closed
                         }
                     }
                 }
-
-                return closedFiles;
             }
             catch (Exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while closing all files.", DialogType.Ok);
-                return null;
+                DialogBox.New("Error", "An unexpected error has occured while closing all files.", DialogType.Ok);
             }
         }
 
         /// <summary>
-        /// Attempts to close all files.
+        /// Set theme of Designs
         /// </summary>
-        /// <returns>List of closed files</returns>
-        public List<string> ExitApplication()
-		{
+        public void SetTheme()
+        {
+            DesignController.SetThemes();
+        }
+
+        /// <summary>
+        /// Update font sizes
+        /// </summary>
+        public void SetFontSize()
+        {
+            DesignController.SetDesignFontSizes();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user runs the active design.
+        /// </summary>
+        public void Run()
+        {
             try
             {
-                return CloseFiles();
+                List<string> errorLog;
+                List<IObjectCodeElement> output = DesignController.Parse(out errorLog);
+                if (output == null)
+                {
+                    DisplayErrors(errorLog);
+                    return;
+                }
+                DisplayController.DisplayOutput(output);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                Globals.Dialog.New("Error", "An unexpected error has occured while closing the application.", DialogType.Ok);
-                return null;
+                DialogBox.New("Error", exception.ToString(), DialogType.Ok);
+                // Leave this error message for debugging purposes
             }
-		}
+        }
+
+        /// <summary>
+        /// Runs a subdesign from the provided instantiation.
+        /// </summary>
+        /// <param name="instantiation">Instantiation to run</param>
+        /// <param name="errorLog">Log of errors (if any) from parsing</param>
+        /// <returns>Output of the parsed instantiation</returns>
+        public List<IObjectCodeElement> RunSubdesign(string instantiation, out List<string> errorLog)
+        {
+            return DesignController.ParseSubdesign(instantiation, out errorLog);
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the browser needs to be refreshed.
+        /// </summary>
+        public void RefreshOutput()
+        {
+            DisplayController.RefreshOutput();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user ticks the active design.
+        /// </summary>
+        /// <returns>Output list of the ticked design</returns>
+        public List<IObjectCodeElement> Tick()
+        {
+            return DesignController.ParseTick();
+        }
+
+        /// <summary>
+        /// Handles the event that occurs when the user clicks on an independent variable.
+        /// </summary>
+        /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        /// <returns></returns>
+        public List<IObjectCodeElement> Variable_Click(string variableName)
+        {
+            return DesignController.ParseVariableClick(variableName);
+        }
 	}
 }

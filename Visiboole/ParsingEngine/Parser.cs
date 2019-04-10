@@ -244,22 +244,20 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Parsers the current design text into output.
         /// </summary>
-        public List<IObjectCodeElement> Parse()
+        /// <param name="errorLog">Log of errors if any</param>
+        public List<IObjectCodeElement> Parse(out List<string> errorLog)
         {
-            // Init parser
-            Globals.Logger.Start();
-
             // Get statements for parsing
             Design.Database = new Database();
             Statements = ParseStatements();
+            errorLog = ErrorLog;
             if (Statements == null)
             {
-                Globals.Logger.Display();
                 return null;
             }
-            UpdateExpressionStatements();
 
             // Get output
+            UpdateExpressionStatements();
             return GetParsedOutput();
         }
 
@@ -270,9 +268,6 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Parsed output</returns>
         public List<IObjectCodeElement> ParseClick(string variableName)
         {
-            // Init parser
-            Globals.Logger.Start();
-
             // Flip value of variable clicked and reevlaute expressions
             Design.Database.FlipValue(variableName);
             Design.Database.ReevaluateExpressions();
@@ -288,9 +283,6 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Parsed output</returns>
         public List<IObjectCodeElement> ParseTick()
         {
-            // Init parser
-            Globals.Logger.Start();
-
             // Tick clock statements and reevaluate expressions
             foreach (Statement stmt in Statements)
             {
@@ -313,9 +305,6 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Parsed output</returns>
         public List<IObjectCodeElement> ParseWithInput(List<Variable> inputs)
         {
-            // Init parser
-            Globals.Logger.Start();
-
             // Get statements for parsing
             Design.Database = new Database();
             foreach (Variable var in inputs)
@@ -333,7 +322,6 @@ namespace VisiBoole.ParsingEngine
             Statements = ParseStatements();
             if (Statements == null)
             {
-                Globals.Logger.Display();
                 return null;
             }
             UpdateExpressionStatements();
@@ -371,7 +359,7 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (line[line.Length - 1] != ';')
                         {
-                            Globals.Logger.Add($"Line {LineNumber}: Missing ';'.");
+                            ErrorLog.Add($"Line {LineNumber}: Missing ';'.");
                             valid = false;
                         }
                     }
@@ -397,14 +385,14 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (!String.IsNullOrEmpty(Design.ModuleDeclaration))
                         {
-                            Globals.Logger.Add($"Line {LineNumber}: A module declaration already exists.");
+                            ErrorLog.Add($"Line {LineNumber}: A module declaration already exists.");
                             valid = false;
                         }
                         else
                         {
                             if (!ModuleRegex.IsMatch(line))
                             {
-                                Globals.Logger.Add($"Line {LineNumber}: Invalid module declaration notation.");
+                                ErrorLog.Add($"Line {LineNumber}: Invalid module declaration notation.");
                                 valid = false;
                             }
                             else
@@ -555,7 +543,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!CommentRegex.IsMatch(line))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Invalid comment statement.");
+                    ErrorLog.Add($"Line {LineNumber}: Invalid comment statement.");
                     return false;
                 }
             }
@@ -614,7 +602,7 @@ namespace VisiBoole.ParsingEngine
 
                     if (innerExpression.Length == 0)
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: Empty ().");
+                        ErrorLog.Add($"Line {LineNumber}: Empty ().");
                         return false;
                     }
 
@@ -633,14 +621,14 @@ namespace VisiBoole.ParsingEngine
                     // Check operator for possible errors
                     if (wasPreviousOperator && token != "~")
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: An operator is missing its operands.");
+                        ErrorLog.Add($"Line {LineNumber}: An operator is missing its operands.");
                         return false;
                     }
 
                     // Check operator and mathematical expression status for error
                     if (mathematicalExpression && !(token == "+" || token == "-"))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: '+' and '-' can't appear with boolean operators.");
+                        ErrorLog.Add($"Line {LineNumber}: '+' and '-' can't appear with boolean operators.");
                         return false;
                     }
 
@@ -673,7 +661,7 @@ namespace VisiBoole.ParsingEngine
 
                                 if (pastOperators.Count > 0)
                                 {
-                                    Globals.Logger.Add($"Line {LineNumber}: '{token}' must be the only operator in its parentheses level.");
+                                    ErrorLog.Add($"Line {LineNumber}: '{token}' must be the only operator in its parentheses level.");
                                     return false;
                                 }
 
@@ -684,7 +672,7 @@ namespace VisiBoole.ParsingEngine
                         {
                             if (token != exclusiveOperator)
                             {
-                                Globals.Logger.Add($"Line {LineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
+                                ErrorLog.Add($"Line {LineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
                                 return false;
                             }
                         }
@@ -715,7 +703,7 @@ namespace VisiBoole.ParsingEngine
             if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({VariablePattern2})"))
             {
                 // If line contains a variable outside {}
-                Globals.Logger.Add($"Line {LineNumber}: Scalars and vectors in a format specifier statement must be inside a format specifier.");
+                ErrorLog.Add($"Line {LineNumber}: Scalars and vectors in a format specifier statement must be inside a format specifier.");
                 return false;
             }
 
@@ -723,7 +711,7 @@ namespace VisiBoole.ParsingEngine
             MatchCollection formats = FormatSpecifierRegex.Matches(line);
             if (formats.Count != line.Count(c => c == '%'))
             {
-                Globals.Logger.Add($"Line {LineNumber}: Invalid format specifier.");
+                ErrorLog.Add($"Line {LineNumber}: Invalid format specifier.");
                 return false;
             }
 
@@ -754,13 +742,13 @@ namespace VisiBoole.ParsingEngine
                 }
                 else
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Library '{path}' doesn't exist or is invalid.");
+                    ErrorLog.Add($"Line {LineNumber}: Library '{path}' doesn't exist or is invalid.");
                     return false;
                 }
             }
             catch (Exception)
             {
-                Globals.Logger.Add($"Line {LineNumber}: Invalid library name '{library}'.");
+                ErrorLog.Add($"Line {LineNumber}: Invalid library name '{library}'.");
                 return false;
             }
         }
@@ -794,7 +782,7 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (Design.Database.TryGetVariable<IndependentVariable>(var) == null)
                     {
-                        Globals.Logger.AddTop($"'{var}' must be an independent variable to be used as an input in a module declaration statement.");
+                        ErrorLog.Insert(0, $"'{var}' must be an independent variable to be used as an input in a module declaration statement.");
                         return false;
                     }
                 }
@@ -866,7 +854,7 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (type == StatementType.VariableList)
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: {var} has already been declared.");
+                        ErrorLog.Add($"Line {LineNumber}: {var} has already been declared.");
                         return false; // You cannot declare a variable twice
                     }
                 }
@@ -1085,7 +1073,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (dependentExpansion.Count != expressionExpansion.Count)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
+                    ErrorLog.Add($"Line {LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
                     return null;
                 }
             }

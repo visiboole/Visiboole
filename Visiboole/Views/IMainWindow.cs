@@ -52,29 +52,9 @@ namespace VisiBoole.Views
 		/// <param name="current">The display to be loaded</param>
 		void LoadDisplay(IDisplay previous, IDisplay current);
 
-		/// <summary>
-		/// Displays file-save success message to the user
-		/// </summary>
-		/// <param name="fileSaved">True if the file was saved successfully</param>
-		void SaveFileSuccess(bool fileSaved);
-
         /// <summary>
         /// Focuses this window.
         /// </summary>
         void RetrieveFocus();
-
-        /// <summary>
-        /// Confrims whether the user wants to close the selected Design
-        /// </summary>
-        /// <param name="isDirty">True if the Design being closed has been modified since last save</param>
-        /// <returns>Whether the selected Design will be closed</returns>
-		bool ConfirmClose(bool isDirty);
-
-        /// <summary>
-        /// Confirms exit with the user if the application is dirty
-        /// </summary>
-        /// <param name="isDirty">True if any open Designs have been modified since last save</param>
-        /// <returns>Indicates whether the user wants to close</returns>
-        bool ConfirmExit(bool isDirty);
     }
 }

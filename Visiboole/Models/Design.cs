@@ -126,7 +126,7 @@ namespace VisiBoole.Models
                 NumberBackground1 = SystemColors.ControlLightLight;
                 NumberBackground2 = SystemColors.ControlLightLight;
             }
-            else if (Properties.Settings.Default.Theme == "Dark")
+            else
             {
                 BackColor = Color.FromArgb(48, 48, 48);
                 ForeColor = SystemColors.ControlLightLight;

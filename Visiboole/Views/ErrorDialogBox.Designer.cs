@@ -1,6 +1,6 @@
 ﻿namespace VisiBoole.Views
 {
-    partial class ErrorDialog
+    partial class ErrorDialogBox
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorDialogBox));
             this.uxButtonExit = new System.Windows.Forms.Button();
             this.uxPanelTop = new System.Windows.Forms.Panel();
             this.uxLabelTitle = new System.Windows.Forms.Label();

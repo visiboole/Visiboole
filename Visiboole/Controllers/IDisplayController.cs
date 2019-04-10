@@ -53,13 +53,6 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		void AttachMainWindowController(IMainWindowController mwController);
 
-		/// <summary>
-		/// Creates a new tab on the TabControl
-		/// </summary>
-		/// <param name="design">The Design that is displayed in the new tab</param>
-		/// <returns>Returns true if a new tab was successfully created</returns>
-		bool CreateNewTab(Design design);
-
         /// <summary>
         /// Returns the TabPage that is currently selected
         /// </summary>
@@ -70,7 +63,22 @@ namespace VisiBoole.Controllers
 		/// Selects the tab page with the given index.
 		/// </summary>
 		/// <param name="index">Index of tabpage to select</param>
-		void SelectTabPage(int index);
+        /// <returns>Design name that was selected</returns>
+		string SelectTabPage(int index);
+
+        /// <summary>
+		/// Creates a new tab on the TabControl
+		/// </summary>
+		/// <param name="design">The Design that is displayed in the new tab</param>
+		/// <returns>Returns true if a new tab was successfully created</returns>
+		bool CreateNewTab(Design design);
+
+        /// <summary>
+        /// Closes a specific tab in the tab control
+        /// </summary>
+        /// <param name="index">Index to close</param>
+        /// <returns>Whether the operation was successful</returns>
+        bool CloseTab(int index);
 
         /// <summary>
         /// Displays the provided output to the browser.
@@ -94,18 +102,5 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <param name="count">Number of times to tick</param>
         void Tick(int count);
-
-        /// <summary>
-        /// Closes a specific tab in the tab control
-        /// </summary>
-        /// <param name="index">Index to close</param>
-        /// <returns>Whether the operation was successful</returns>
-        bool CloseTab(int index);
-
-        /// <summary>
-		/// Closes the current tab
-		/// </summary>
-		/// <returns>Indicates whether the tab was closed</returns>
-        bool CloseActiveTab();
 	}
 }

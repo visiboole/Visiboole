@@ -40,16 +40,6 @@ namespace VisiBoole
     public static class Globals
 	{
         /// <summary>
-        /// Dialog box for the application.
-        /// </summary>
-        public static DialogBox Dialog = new DialogBox();
-
-        /// <summary>
-        /// Error logging for the application.
-        /// </summary>
-        public static ErrorDialog Logger = new ErrorDialog();
-
-        /// <summary>
         /// Tab Control
         /// </summary>
         public static TabControl TabControl = null;

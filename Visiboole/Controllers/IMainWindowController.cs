@@ -36,6 +36,68 @@ namespace VisiBoole.Controllers
         IDisplay GetDisplay();
 
         /// <summary>
+        /// Switch display mode
+        /// </summary>
+        void SwitchDisplay();
+
+        /// <summary>
+        /// Focuses the main window.
+        /// </summary>
+        void RetrieveFocus();
+
+        /// <summary>
+        /// Displays the provided error log to the user.
+        /// </summary>
+        /// <param name="errorLog">Error log to display</param>
+        void DisplayErrors(List<string> errorLog);
+
+        /// <summary>
+        /// Selects the file at the specified index.
+        /// </summary>
+        /// <param name="index">The index of the file</param>
+        void SelectFile(int index);
+
+        /// <summary>
+		/// Processes a new file that is created or opened by the user
+		/// </summary>
+		/// <param name="path">The path of the file that was created or opened by the user</param>
+		/// <param name="overwriteExisting">True if the file at the given path should be overwritten</param>
+		void ProcessNewFile(string path, bool overwriteExisting = false);
+
+        /// <summary>
+        /// Saves the file that is currently active in the selected tabpage
+        /// </summary>
+        void SaveFile();
+
+        /// <summary>
+        /// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
+        /// </summary>
+        /// <param name="path">The new file path to save the active file to</param>
+        void SaveFileAs(string filePath);
+
+        /// <summary>
+		/// Saves all files opened
+		/// </summary>
+		void SaveFiles();
+
+        /// <summary>
+        /// Closes the selected open file
+        /// </summary>
+        /// <returns>The name of the file closed</returns>
+        void CloseActiveFile();
+
+        /// <summary>
+        /// Closes all files.
+        /// </summary>
+        void CloseFiles();
+
+        /// <summary>
+        /// Closes all files except for the provided file name.
+        /// </summary>
+        /// <param name="name">Name of the file to keep open</param>
+        void CloseFilesExceptFor(string name);
+
+        /// <summary>
         /// Set theme of Designs
         /// </summary>
         void SetTheme();
@@ -46,49 +108,10 @@ namespace VisiBoole.Controllers
         void SetFontSize();
 
         /// <summary>
-		/// Processes a new file that is created or opened by the user
-		/// </summary>
-		/// <param name="path">The path of the file that was created or opened by the user</param>
-		/// <param name="overwriteExisting">True if the file at the given path should be overwritten</param>
-		void ProcessNewFile(string path, bool overwriteExisting = false);
-
-        /// <summary>
         /// Loads into the MainWindow the display of the given type
         /// </summary>
         /// <param name="dType">The type of display that should be loaded</param>
         void LoadDisplay(DisplayType dType);
-
-        /// <summary>
-        /// Switch display mode
-        /// </summary>
-        void SwitchDisplay();
-
-        /// <summary>
-        /// Selects the file at the specified index.
-        /// </summary>
-        /// <param name="index">The index of the file</param>
-        void SelectFile(int index);
-
-        /// <summary>
-        /// Saves the file that is currently active in the selected tabpage
-        /// </summary>
-        void SaveFile();
-
-		/// <summary>
-		/// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
-		/// </summary>
-		/// <param name="path">The new file path to save the active file to</param>
-		void SaveFileAs(string filePath);
-
-        /// <summary>
-		/// Saves all files opened
-		/// </summary>
-		void SaveFiles();
-
-        /// <summary>
-        /// Focuses the main window.
-        /// </summary>
-        void RetrieveFocus();
 
         /// <summary>
         /// Handles the event that occurs when the user runs the active design.
@@ -99,8 +122,9 @@ namespace VisiBoole.Controllers
         /// Runs a subdesign from the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instantiation to run</param>
+        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed instantiation</returns>
-        List<IObjectCodeElement> RunSubdesign(string instantiation);
+        List<IObjectCodeElement> RunSubdesign(string instantiation, out List<string> errorLog);
 
         /// <summary>
         /// Handles the event that occurs when the browser needs to be refreshed.
@@ -119,30 +143,5 @@ namespace VisiBoole.Controllers
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
         /// <returns></returns>
         List<IObjectCodeElement> Variable_Click(string variableName);
-
-        /// <summary>
-        /// Closes the selected open file
-        /// </summary>
-        /// <returns>The name of the file closed</returns>
-        string CloseActiveFile();
-
-        /// <summary>
-        /// Closes all files.
-        /// </summary>
-        /// <returns>List of closed files</returns>
-        List<string> CloseFiles();
-
-        /// <summary>
-        /// Closes all files except for the provided file name.
-        /// </summary>
-        /// <param name="name">Name of the file to keep open</param>
-        /// <returns>List of closed files</returns>
-        List<string> CloseFilesExceptFor(string name);
-
-        /// <summary>
-        /// Attempts to close all files.
-        /// </summary>
-        /// <returns>List of closed files</returns>
-        List<string> ExitApplication();
     }
 }

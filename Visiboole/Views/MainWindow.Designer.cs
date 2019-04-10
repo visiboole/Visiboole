@@ -441,6 +441,7 @@ namespace VisiBoole.Views
             // openFileDialog1
             // 
             this.openFileDialog1.Filter = "VisiBoole (*.vbi) File|*.vbi";
+            this.openFileDialog1.Multiselect = true;
             // 
             // saveFileDialog1
             // 

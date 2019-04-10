@@ -12,26 +12,20 @@ using System.Windows.Forms;
 namespace VisiBoole.Views
 {
     /// <summary>
-    /// Class for user prompts.
+    /// Class for error prompts.
     /// </summary>
-    public partial class ErrorDialog : Form
+    public partial class ErrorDialogBox : Form
     {
-        /// <summary>
-        /// The log of the error dialog.
-        /// </summary>
-        private List<string> Log;
-
         [System.Runtime.InteropServices.DllImportAttribute("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
         [System.Runtime.InteropServices.DllImportAttribute("user32.dll")]
         public static extern bool ReleaseCapture();
 
-        public ErrorDialog()
+        public ErrorDialogBox()
         {
             InitializeComponent();
-            this.uxPanelTop.MouseDown += new MouseEventHandler(ErrorDialogMouseDown);
-            this.uxLabelTitle.MouseDown += new MouseEventHandler(ErrorDialogMouseDown);
-            Clear(); // Init log
+            uxPanelTop.MouseDown += new MouseEventHandler(ErrorDialogMouseDown);
+            uxLabelTitle.MouseDown += new MouseEventHandler(ErrorDialogMouseDown);
         }
 
         /// <summary>
@@ -56,36 +50,17 @@ namespace VisiBoole.Views
         private void ErrorDialogPaint(object sender, PaintEventArgs e)
         {
             Color color = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
-            e.Graphics.DrawRectangle(new Pen(color, 4), this.DisplayRectangle);
+            e.Graphics.DrawRectangle(new Pen(color, 4), DisplayRectangle);
             uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
         }
 
-        private void Clear()
+        /// <summary>
+        /// Displays the provided error log to the user.
+        /// </summary>
+        /// <param name="log">Log to display</param>
+        public void Display(List<string> log)
         {
-            Log = new List<string>();
-        }
-
-        public void Start()
-        {
-            Clear();
-        }
-
-        public void Add(string line)
-        {
-            Log.Add(line);
-        }
-
-        public void AddTop(string line)
-        {
-            Log.Insert(0, line);
-        }
-
-        public void Display()
-        {
-            uxRichTextBoxLog.Text = String.Join("\n", Log);
-            //uxRichTextBoxLog.AppendText();
-
-            Clear(); // Clear log
+            uxRichTextBoxLog.Text = String.Join("\n", log);
             ShowDialog(); // Show form
         }
     }

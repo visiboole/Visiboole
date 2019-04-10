@@ -152,6 +152,11 @@ namespace VisiBoole.ParsingEngine
         protected int LineNumber;
 
         /// <summary>
+        /// List of errors from the parsing.
+        /// </summary>
+        protected List<string> ErrorLog;
+
+        /// <summary>
         /// The design being parsed.
         /// </summary>
         protected Design Design;
@@ -182,6 +187,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="design">Design to parse</param>
         protected Lexer(Design design)
         {
+            ErrorLog = new List<string>();
             Design = design;
             Libraries = new List<string>();
             Subdesigns = new Dictionary<string, string>();
@@ -220,14 +226,14 @@ namespace VisiBoole.ParsingEngine
                     // Make sure current lexeme is empty, + or -
                     if (!(currentLexeme == "+" || currentLexeme == "-" || currentLexeme == ""))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: Invalid '\"'.");
+                        ErrorLog.Add($"Line {LineNumber}: Invalid '\"'.");
                         return null;
                     }
 
                     // Make sure no other tokens exist
                     if (tokens.Any(token => token != " "))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: Invalid '\"'.");
+                        ErrorLog.Add($"Line {LineNumber}: Invalid '\"'.");
                         return null;
                     }
 
@@ -251,7 +257,7 @@ namespace VisiBoole.ParsingEngine
                             if (type != StatementType.Empty || c != '(' || !InstantiationRegex.IsMatch(currentLexeme))
                             {
                                 // If token is not valid and is not an instantiation
-                                Globals.Logger.Add($"Line {LineNumber}: Invalid '{currentLexeme}'.");
+                                ErrorLog.Add($"Line {LineNumber}: Invalid '{currentLexeme}'.");
                                 return null;
                             }
                         }
@@ -284,13 +290,13 @@ namespace VisiBoole.ParsingEngine
                             }
                             else
                             {
-                                Globals.Logger.Add($"Line {LineNumber}: '{top}' must be matched first.");
+                                ErrorLog.Add($"Line {LineNumber}: '{top}' must be matched first.");
                                 return null;
                             }
                         }
                         else
                         {
-                            Globals.Logger.Add($"Line {LineNumber}: Unmatched '{c}'.");
+                            ErrorLog.Add($"Line {LineNumber}: Unmatched '{c}'.");
                             return null;
                         }
                     }
@@ -300,7 +306,7 @@ namespace VisiBoole.ParsingEngine
                 else if (InvalidRegex.IsMatch(newChar))
                 {
                     // Invalid char
-                    Globals.Logger.Add($"Line {LineNumber}: Invalid character '{c}'.");
+                    ErrorLog.Add($"Line {LineNumber}: Invalid character '{c}'.");
                     return null;
                 }
                 else
@@ -312,7 +318,7 @@ namespace VisiBoole.ParsingEngine
                         // Check for constant bit count inside {}
                         if (groupings.Count > 0 && groupings.Peek() == '{' && (String.IsNullOrEmpty(currentLexeme) || !currentLexeme.All(ch => Char.IsDigit(ch))))
                         {
-                            Globals.Logger.Add($"Line {LineNumber}: Constants in concatenation fields must specify bit count.");
+                            ErrorLog.Add($"Line {LineNumber}: Constants in concatenation fields must specify bit count.");
                             return null;
                         }
                     }
@@ -326,7 +332,7 @@ namespace VisiBoole.ParsingEngine
             {
                 foreach (char grouping in groupings)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{grouping}' is not matched.");
+                    ErrorLog.Add($"Line {LineNumber}: '{grouping}' is not matched.");
                 }
                 return null;
             }
@@ -394,7 +400,7 @@ namespace VisiBoole.ParsingEngine
                 // Check scalar name has at least one letter
                 if (!name.Any(c => char.IsLetter(c)))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Invalid scalar name.");
+                    ErrorLog.Add($"Line {LineNumber}: Invalid scalar name.");
                     return false;
                 }
 
@@ -403,7 +409,7 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (Design.Database.GetComponents(name) != null)
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a vector.");
+                        ErrorLog.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a vector.");
                         return false;
                     }
                     else if (!Design.Database.HasNamespace(name))
@@ -415,7 +421,7 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (Design.Database.GetComponents(name) == null & Design.Database.HasNamespace(name))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a scalar.");
+                        ErrorLog.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a scalar.");
                         return false;
                     }
                     else
@@ -446,7 +452,7 @@ namespace VisiBoole.ParsingEngine
                 string vectorNamespace = match.Groups["Name"].Value;
                 if (Char.IsDigit(vectorNamespace[vectorNamespace.Length - 1]))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Vector namespaces cannot end in a number.");
+                    ErrorLog.Add($"Line {LineNumber}: Vector namespaces cannot end in a number.");
                     return false;
                 }
 
@@ -456,20 +462,20 @@ namespace VisiBoole.ParsingEngine
                 int rightBound = String.IsNullOrEmpty(match.Groups["RightBound"].Value) ? -1 : Convert.ToInt32(match.Groups["RightBound"].Value);
                 if (leftBound > 31 || rightBound > 31 || step > 31)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Vector bounds and step must be between 0 and 31.");
+                    ErrorLog.Add($"Line {LineNumber}: Vector bounds and step must be between 0 and 31.");
                     return false;
                 }
 
                 // Check if namespace is used by a scalar
                 if (Design.Database.GetComponents(vectorNamespace) == null && Design.Database.HasNamespace(vectorNamespace))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: A scalar with the name '{vectorNamespace}' already exists.");
+                    ErrorLog.Add($"Line {LineNumber}: A scalar with the name '{vectorNamespace}' already exists.");
                     return false;
                 }
 
                 if (!Design.Database.HasNamespace(vectorNamespace) && leftBound == -1)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
+                    ErrorLog.Add($"Line {LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
                     return false;
                 }
 
@@ -508,7 +514,7 @@ namespace VisiBoole.ParsingEngine
                 // Check bit count
                 if (!String.IsNullOrEmpty(match.Groups["BitCount"].Value) && Convert.ToInt32(match.Groups["BitCount"].Value) > 32)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Constant can have at most 32 bits.");
+                    ErrorLog.Add($"Line {LineNumber}: Constant can have at most 32 bits.");
                     return false;
                 }
                 return true;
@@ -539,7 +545,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{currentLexeme}' can only be used after the dependent in a boolean statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' can only be used after the dependent in a boolean statement.");
                     return false;
                 }
                 else
@@ -549,7 +555,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (line.Substring(0, line.IndexOf(currentLexeme)).Contains("*"))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
                     return false;
                 }
             }
@@ -557,7 +563,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{currentLexeme}' can only be used after the dependent in a clock statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' can only be used after the dependent in a clock statement.");
                     return false;
                 }
                 else
@@ -567,7 +573,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (line.Substring(0, line.IndexOf(currentLexeme)).Contains("*"))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
                     return false;
                 }
             }
@@ -575,7 +581,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{currentLexeme}' operator can only be used in a boolean or clock statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' operator can only be used in a boolean or clock statement.");
                     return false;
                 }
             }
@@ -583,7 +589,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty && type != StatementType.FormatSpecifier)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{currentLexeme}' can only be used in a format specifier statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' can only be used in a format specifier statement.");
                     return false;
                 }
                 else if (type == StatementType.Empty)
@@ -595,19 +601,19 @@ namespace VisiBoole.ParsingEngine
             {
                 if (currentLexeme == "~" && currentChar != '(' && currentChar != '{')
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '~' must be attached to a scalar, vector, constant, parenthesis or concatenation.");
+                    ErrorLog.Add($"Line {LineNumber}: '~' must be attached to a scalar, vector, constant, parenthesis or concatenation.");
                     return false;
                 }
 
                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '~' can only be used in on the right side of a boolean or clock statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '~' can only be used in on the right side of a boolean or clock statement.");
                     return false;
                 }
 
                 if (groupings.Count > 0 && groupings.Peek() == '{')
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '~' can't be used inside a concatenation field.");
+                    ErrorLog.Add($"Line {LineNumber}: '~' can't be used inside a concatenation field.");
                     return false;
                 }
             }
@@ -615,7 +621,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
                     return false;
                 }
             }
@@ -623,7 +629,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Constants can only be used on the right side of a boolean or clock statement.");
+                    ErrorLog.Add($"Line {LineNumber}: Constants can only be used on the right side of a boolean or clock statement.");
                     return false;
                 }
             }
@@ -647,7 +653,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (seperatorChar == '{' && groupings.Count > 0 && groupings.Peek() == '{')
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Concatenations can't be used inside of other concatenations.");
+                    ErrorLog.Add($"Line {LineNumber}: Concatenations can't be used inside of other concatenations.");
                     return false;
                 }
             }
@@ -655,7 +661,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (groupings.Count > 0 && groupings.Peek() == '{')
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{seperatorChar}' can't be used in a concatenation.");
+                    ErrorLog.Add($"Line {LineNumber}: '{seperatorChar}' can't be used in a concatenation.");
                     return false;
                 }
 
@@ -671,13 +677,13 @@ namespace VisiBoole.ParsingEngine
 
                     if (designName == Design.FileName)
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: You cannot instantiate from the current design.");
+                        ErrorLog.Add($"Line {LineNumber}: You cannot instantiate from the current design.");
                         return false;
                     }
 
                     if (Instantiations.ContainsKey(instantiationName))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: Instantiation name '{instantiationName}' is already being used.");
+                        ErrorLog.Add($"Line {LineNumber}: Instantiation name '{instantiationName}' is already being used.");
                         return false;
                     }
                     else
@@ -715,7 +721,7 @@ namespace VisiBoole.ParsingEngine
                                     if (file == null)
                                     {
                                         // Not found
-                                        Globals.Logger.Add($"Line {LineNumber}: Unable to find '{designName}'.");
+                                        ErrorLog.Add($"Line {LineNumber}: Unable to find '{designName}'.");
                                         return false;
                                     }
                                 }
@@ -730,7 +736,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         catch (Exception)
                         {
-                            Globals.Logger.Add($"Line {LineNumber}: Error locating '{designName}'.");
+                            ErrorLog.Add($"Line {LineNumber}: Error locating '{designName}'.");
                             return false;
                         }
                     }
@@ -740,7 +746,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (type == StatementType.FormatSpecifier || type == StatementType.Empty)
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: '{seperatorChar}' can't be used in a format specifier or variable list statement.");
+                    ErrorLog.Add($"Line {LineNumber}: '{seperatorChar}' can't be used in a format specifier or variable list statement.");
                     return false;
                 }
             }
@@ -748,13 +754,13 @@ namespace VisiBoole.ParsingEngine
             {
                 if (tokens.Count == 0 || tokens.Contains(";"))
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: ';' can only be used to end a statement.");
+                    ErrorLog.Add($"Line {LineNumber}: ';' can only be used to end a statement.");
                     return false;
                 }
 
                 if (tokens.Last() == " ")
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: Spaces cannot occur before ';'.");
+                    ErrorLog.Add($"Line {LineNumber}: Spaces cannot occur before ';'.");
                     return false;
                 }
             }
@@ -763,14 +769,14 @@ namespace VisiBoole.ParsingEngine
                 // Check for misplaced comma
                 if (groupings.Count == 0 || groupings.Peek() != '(')
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
+                    ErrorLog.Add($"Line {LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
                     return false;
                 }
                 else
                 {
                     if (!(type == StatementType.Submodule || type == StatementType.Module))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
+                        ErrorLog.Add($"Line {LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
                         return false;
                     }
                 }
@@ -779,21 +785,21 @@ namespace VisiBoole.ParsingEngine
             {
                 if (groupings.Count == 0 || groupings.Peek() != '(')
                 {
-                    Globals.Logger.Add($"Line {LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
+                    ErrorLog.Add($"Line {LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
                     return false;
                 }
                 else
                 {
                     if (!(type == StatementType.Module || type == StatementType.Submodule))
                     {
-                        Globals.Logger.Add($"Line {LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
+                        ErrorLog.Add($"Line {LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
                         return false;
                     }
                     else
                     {
                         if (tokens.Contains(":"))
                         {
-                            Globals.Logger.Add($"Line {LineNumber}: ':' can only be used once in a module or submodule statement.");
+                            ErrorLog.Add($"Line {LineNumber}: ':' can only be used once in a module or submodule statement.");
                             return false;
                         }
                     }
@@ -881,7 +887,7 @@ namespace VisiBoole.ParsingEngine
             if (specifiedBitCount != -1 && specifiedBitCount < bits.Length)
             {
                 // Error
-                Globals.Logger.Add($"Line {LineNumber}: {constant.Value} doesn't specify enough bits.");
+                ErrorLog.Add($"Line {LineNumber}: {constant.Value} doesn't specify enough bits.");
                 return null;
             }
             else if (specifiedBitCount > bits.Length)

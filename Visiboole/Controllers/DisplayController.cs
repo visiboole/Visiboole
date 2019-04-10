@@ -41,37 +41,27 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// No-split input view that is hosted by the MainWindow
 		/// </summary>
-		private IDisplay edit;
+		private IDisplay EditDisplay;
 
 		/// <summary>
 		/// Horizontal-split view that is hosted by the MainWindow
 		/// </summary>
-		private IDisplay run;
-
-		/// <summary>
-		/// No-split view that is hosted by the MainWindow
-		/// </summary>
-		private Dictionary<DisplayType, IDisplay> allDisplays;
+		private IDisplay RunDisplay;
 
 		/// <summary>
 		/// Handle to the controller for the MainWindow
 		/// </summary>
-		private IMainWindowController mwController;
+		private IMainWindowController MainWindowController;
 
 		/// <summary>
 		/// The TabControl that shows the input that is shared amongst the displays that are hosted by the MainWindow
 		/// </summary>
-		private TabControl tabControl;
+		private TabControl TabControl;
 
 		/// <summary>
 		/// The WebBrowser that shows the output that is shared amongst the displays that are hosted by the MainWindow
 		/// </summary>
-		public WebBrowser browser;
-
-        /// <summary>
-        /// Empty browser.
-        /// </summary>
-        private WebBrowser BrowserTemplate;
+		private WebBrowser Browser;
 
         /// <summary>
         /// Last output of the browser.
@@ -99,11 +89,64 @@ namespace VisiBoole.Controllers
 			}
 			set
 			{
-				value.AddTabControl(tabControl);
-                string currentDesign = tabControl.SelectedTab != null ? tabControl.SelectedTab.Name.TrimStart('*') : "";
-				value.AddBrowser(currentDesign, browser);
+				value.AddTabControl(TabControl);
+                string currentDesign = TabControl.SelectedTab != null ? TabControl.SelectedTab.Name.TrimStart('*') : "";
+				value.AddBrowser(currentDesign, Browser);
 				currentDisplay = value;
 			}
+		}
+
+        /// <summary>
+        /// Constructs an instance of DisplayController with a handle to the two displays.
+        /// </summary>
+        /// <param name="editDisplay">Handle to the edit display hosted by the MainWindow</param>
+        /// <param name="runDisplay">Handle to the run display hosted by the MainWindow</param>
+        public DisplayController(IDisplay editDisplay, IDisplay runDisplay)
+		{
+            // Init tab control
+			TabControl = new TabControl();
+
+            TabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+            ImageList il = new ImageList();
+            il.Images.Add("Close", Properties.Resources.Close);
+            TabControl.ImageList = il;
+
+            TabControl.SelectedIndexChanged += (sender, e) => {
+                MainWindowController.SelectFile(TabControl.SelectedIndex);
+                MainWindowController.LoadDisplay(DisplayType.EDIT);
+            };
+            TabControl.MouseDown += (sender, e) => {
+                if (TabControl.SelectedIndex != -1)
+                {
+                    Rectangle current = TabControl.GetTabRect(TabControl.SelectedIndex);
+                    Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
+                    if (close.Contains(e.Location))
+                    {
+                        MainWindowController.CloseActiveFile();
+                    }
+                }
+            };
+            Globals.TabControl = TabControl;
+
+            // Init browser
+            Browser = new WebBrowser();
+            Browser.IsWebBrowserContextMenuEnabled = false;
+            Browser.AllowWebBrowserDrop = false;
+            Browser.WebBrowserShortcutsEnabled = false;
+
+            // Init displays
+            EditDisplay = editDisplay;
+			RunDisplay = runDisplay;
+			CurrentDisplay = editDisplay;
+        }
+
+        /// <summary>
+        /// Saves the handle to the controller for the MainWindow
+        /// </summary>
+        /// <param name="mainWindowController"></param>
+        public void AttachMainWindowController(IMainWindowController mainWindowController)
+		{
+			MainWindowController = mainWindowController;
 		}
 
         /// <summary>
@@ -116,86 +159,10 @@ namespace VisiBoole.Controllers
             switch (dType)
             {
                 case DisplayType.EDIT:
-                    return edit;
+                    return EditDisplay;
                 case DisplayType.RUN:
-                    return run;
+                    return RunDisplay;
                 default: return null;
-            }
-        }
-
-        /// <summary>
-        /// Constructs an instance of DisplayController with a handle to the four displays
-        /// </summary>
-        /// <param name="single">Handle to the no-split input view hosted by the MainWindow</param>
-        /// <param name="horizontal">Handle to the horizontally-split view hosted by the MainWindow</param>
-        /// <param name="vertical">Handle to the vertically-split view hosted by the MainWindow</param>
-        /// <param name="singleOutput">Handle to the no-split output view hosted by the MainWindow</param>
-        public DisplayController(IDisplay edit, IDisplay run)
-		{
-			tabControl = new TabControl();
-            tabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-
-            browser = new WebBrowser();
-            browser.IsWebBrowserContextMenuEnabled = false;
-            browser.AllowWebBrowserDrop = false;
-            browser.WebBrowserShortcutsEnabled = false;
-            BrowserTemplate = browser;
-
-            ImageList il = new ImageList();
-            il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
-            tabControl.ImageList = il;
-
-            this.edit = edit;
-			this.run = run;
-
-			allDisplays = new Dictionary<DisplayType, IDisplay>();
-			allDisplays.Add(DisplayType.EDIT, edit);
-			allDisplays.Add(DisplayType.RUN, run);
-
-			CurrentDisplay = edit;
-            Globals.TabControl = tabControl;
-        }
-
-        /// <summary>
-        /// Saves the handle to the controller for the MainWindow
-        /// </summary>
-        /// <param name="mwController"></param>
-        public void AttachMainWindowController(IMainWindowController mwController)
-		{
-			this.mwController = mwController;
-		}
-
-        /// <summary>
-		/// Creates a new tab on the TabControl
-		/// </summary>
-		/// <param name="design">The Design that is displayed in the new tab</param>
-		/// <returns>Returns true if a new tab was successfully created</returns>
-		public bool CreateNewTab(Design design)
-        {
-            TabPage tab = new TabPage(design.FileSourceName);
-
-            tab.Name = design.FileSourceName;
-            tab.ImageKey = "Close";
-            tab.ImageIndex = 0;
-            tab.Controls.Add(design);
-            design.Dock = DockStyle.Fill;
-
-            if (tabControl.TabPages.ContainsKey(design.FileSourceName))
-            {
-                int index = tabControl.TabPages.IndexOfKey(design.FileSourceName);
-
-                tabControl.TabPages.RemoveByKey(design.FileSourceName);
-                tabControl.TabPages.Insert(index, tab);
-                design.TabPageIndex = tabControl.TabPages.IndexOf(tab);
-                tabControl.SelectTab(tab);
-                return false;
-            }
-            else
-            {
-                tabControl.TabPages.Add(tab);
-                design.TabPageIndex = tabControl.TabPages.IndexOf(tab);
-                tabControl.SelectTab(tab);
-                return true;
             }
         }
 
@@ -205,26 +172,95 @@ namespace VisiBoole.Controllers
 		/// <returns>Returns the TabPage that is currently selected</returns>
 		public TabPage GetActiveTabPage()
         {
-            return tabControl.SelectedTab;
+            return TabControl.SelectedTab;
         }
 
         /// <summary>
 		/// Selects the tab page with the given index.
 		/// </summary>
 		/// <param name="index">Index of tabpage to select</param>
-		public void SelectTabPage(int index)
+        /// <returns>Design name that was selected</returns>
+		public string SelectTabPage(int index)
         {
             if (index != -1)
             {
-                tabControl.SelectTab(index);
+                TabControl.SelectTab(index);
+                return TabControl.SelectedTab.Text;
+            }
+            else
+            {
+                return "";
             }
         }
 
         /// <summary>
-        /// Displays the provided output to the browser.
+		/// Creates a new tab on the TabControl
+		/// </summary>
+		/// <param name="design">The Design that is displayed in the new tab</param>
+		/// <returns>Returns true if a new tab was successfully created</returns>
+		public bool CreateNewTab(Design design)
+        {
+            TabPage tab = new TabPage(design.FileSourceName);
+            tab.Name = design.FileSourceName;
+            tab.ImageKey = "Close";
+            tab.ImageIndex = 0;
+            tab.Controls.Add(design);
+            design.Dock = DockStyle.Fill;
+
+            if (TabControl.TabPages.ContainsKey(design.FileSourceName))
+            {
+                int index = TabControl.TabPages.IndexOfKey(design.FileSourceName);
+
+                TabControl.TabPages.RemoveByKey(design.FileSourceName);
+                TabControl.TabPages.Insert(index, tab);
+                design.TabPageIndex = TabControl.TabPages.IndexOf(tab);
+                TabControl.SelectTab(tab);
+                return false;
+            }
+            else
+            {
+                TabControl.TabPages.Add(tab);
+                design.TabPageIndex = TabControl.TabPages.IndexOf(tab);
+                TabControl.SelectTab(tab);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Closes a specific tab in the tab control
+        /// </summary>
+        /// <param name="index">Index to close</param>
+        /// <returns>Whether the operation was successful</returns>
+        public bool CloseTab(int index)
+        {
+            TabPage tab = TabControl.TabPages[index];
+
+            if (tab != null)
+            {
+                if (TabControl.SelectedIndex != 0)
+                {
+                    TabControl.SelectedIndex -= 1;
+                }
+                else
+                {
+                    TabControl.SelectedIndex += 1;
+                }
+
+                TabControl.TabPages.Remove(tab); // Remove tab page
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Displays the provided output to the Browser.
         /// </summary>
         /// <param name="output">Output of the parsed design</param>
-        /// <param name="position">Scroll position of the browser</param>
+        /// <param name="position">Scroll position of the Browser</param>
 		public void DisplayOutput(List<IObjectCodeElement> output, int position = 0)
         {
             HtmlBuilder html = new HtmlBuilder(output);
@@ -234,25 +270,25 @@ namespace VisiBoole.Controllers
             }
             string htmlOutput = html.GetHTML();
 
-            browser.ObjectForScripting = this;
-            html.DisplayHtml(htmlOutput, browser);
+            Browser.ObjectForScripting = this;
+            html.DisplayHtml(htmlOutput, Browser);
 
-            browser.DocumentCompleted += (sender, e) => {
-                browser.Document.Body.ScrollTop = position;
-                browser.Document.Body.Click += (sender2, e2) => { mwController.RetrieveFocus(); };
-                mwController.RetrieveFocus();
+            Browser.DocumentCompleted += (sender, e) => {
+                Browser.Document.Body.ScrollTop = position;
+                Browser.Document.Body.Click += (sender2, e2) => { MainWindowController.RetrieveFocus(); };
+                MainWindowController.RetrieveFocus();
             };
 
             if (CurrentDisplay is DisplayEdit)
             {
-                mwController.LoadDisplay(DisplayType.RUN);
+                MainWindowController.LoadDisplay(DisplayType.RUN);
             }
 
             LastOutput = output;
         }
 
         /// <summary>
-        /// Handles the event that occurs when the browser needs to be refreshed.
+        /// Handles the event that occurs when the Browser needs to be refreshed.
         /// </summary>
         public void RefreshOutput()
         {
@@ -264,7 +300,7 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void SwitchDisplay()
         {
-            mwController.LoadDisplay(DisplayType.EDIT);
+            MainWindowController.LoadDisplay(DisplayType.EDIT);
         }
 
         /// <summary>
@@ -273,12 +309,12 @@ namespace VisiBoole.Controllers
         /// <param name="count">Number of times to tick</param>
         public void Tick(int count)
         {
-            browser.ObjectForScripting = this;
-            int position = browser.Document.Body.ScrollTop;
+            Browser.ObjectForScripting = this;
+            int position = Browser.Document.Body.ScrollTop;
 
             for (int i = 0; i < count; i++)
             {
-                List<IObjectCodeElement> output = mwController.Tick();
+                List<IObjectCodeElement> output = MainWindowController.Tick();
                 DisplayOutput(output, position);
             }
         }
@@ -289,9 +325,9 @@ namespace VisiBoole.Controllers
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
         public void Variable_Click(string variableName)
         {
-            browser.ObjectForScripting = this;
-            int position = browser.Document.Body.ScrollTop;
-            DisplayOutput(mwController.Variable_Click(variableName), position);
+            Browser.ObjectForScripting = this;
+            int position = Browser.Document.Body.ScrollTop;
+            DisplayOutput(MainWindowController.Variable_Click(variableName), position);
         }
 
         /// <summary>
@@ -300,7 +336,14 @@ namespace VisiBoole.Controllers
         /// <param name="instantiation">The instantiation that was clicked by the user</param>
         public void Instantiation_Click(string instantiation)
         {
-            List<IObjectCodeElement> output = mwController.RunSubdesign(instantiation);
+            List<string> errorLog;
+            List<IObjectCodeElement> output = MainWindowController.RunSubdesign(instantiation, out errorLog);
+            if (output == null)
+            {
+                MainWindowController.DisplayErrors(errorLog);
+                return;
+            }
+
             HtmlBuilder html = new HtmlBuilder(output);
             if (html.HtmlText == null)
             {
@@ -316,71 +359,11 @@ namespace VisiBoole.Controllers
             html.DisplayHtml(htmlOutput, subBrowser);
 
             subBrowser.DocumentCompleted += (sender, e) => {
-                subBrowser.Document.Body.Click += (sender2, e2) => { mwController.RetrieveFocus(); };
-                mwController.RetrieveFocus();
+                subBrowser.Document.Body.Click += (sender2, e2) => { MainWindowController.RetrieveFocus(); };
+                MainWindowController.RetrieveFocus();
             };
 
             CurrentDisplay.AddBrowser(instantiation.Split('.')[0], subBrowser);
-        }
-
-        /// <summary>
-        /// Closes a specific tab in the tab control
-        /// </summary>
-        /// <param name="index">Index to close</param>
-        /// <returns>Whether the operation was successful</returns>
-        public bool CloseTab(int index)
-        {
-            TabPage tab = tabControl.TabPages[index];
-
-            if (tab != null)
-            {
-                if (tabControl.SelectedIndex != 0)
-                {
-                    tabControl.SelectedIndex -= 1;
-                }
-                else
-                {
-                    tabControl.SelectedIndex += 1;
-                }
-
-                tabControl.TabPages.Remove(tab); // Remove tab page
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-		/// Closes the current tab
-		/// </summary>
-		/// <returns>Indicates whether the tab was closed</returns>
-        public bool CloseActiveTab()
-        {
-            Design design = tabControl.SelectedTab.Design();
-
-            TabPage tab = tabControl.SelectedTab;
-            if (tab != null)
-            {
-                if (tabControl.TabPages.Count > 1)
-                {
-                    if (tabControl.SelectedIndex != 0)
-                    {
-                        tabControl.SelectedIndex -= 1;
-                    }
-                    else
-                    {
-                        tabControl.SelectedIndex += 1;
-                    }
-
-                }
-                tabControl.TabPages.Remove(tab); // Remove tab page
-
-                return true;
-            }
-            else return false;
         }
     }
 }

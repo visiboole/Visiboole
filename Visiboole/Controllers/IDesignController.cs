@@ -36,12 +36,6 @@ namespace VisiBoole.Controllers
         void AttachMainWindowController(IMainWindowController mwController);
 
         /// <summary>
-        /// Selects a Design with the provided index
-        /// </summary>
-        /// <param name="index">Index of the design to select</param>
-        void SelectDesign(int index);
-
-        /// <summary>
         /// Returns the names of all Designs.
         /// </summary>
         /// <returns>Names of all Designs.</returns>
@@ -53,6 +47,12 @@ namespace VisiBoole.Controllers
         /// <param name="name">Name of design</param>
         /// <returns>Design with the provided name</returns>
         Design GetDesign(string name);
+
+        /// <summary>
+        /// Selects a design with the provided name
+        /// </summary>
+        /// <param name="design">Design to select</param>
+        void SelectDesign(string design);
 
         /// <summary>
         /// Creates a Design with the given name.
@@ -68,6 +68,12 @@ namespace VisiBoole.Controllers
         bool SaveActiveDesign();
 
         /// <summary>
+        /// Saves all Designs
+        /// </summary>
+        /// <returns>Whether the save was successful</returns>
+        bool SaveDesigns();
+
+        /// <summary>
         /// Closes a given Design.
         /// </summary>
         /// <param name="name">Name of Design</param>
@@ -76,16 +82,20 @@ namespace VisiBoole.Controllers
         bool CloseDesign(string name, bool save);
 
         /// <summary>
-        /// Saves all Designs
+        /// Update the font sizes of all Designs.
         /// </summary>
-        /// <returns>Whether the save was successful</returns>
-        bool SaveDesigns();
+        void SetDesignFontSizes();
+
+        /// <summary>
+        /// Set the themes of all Designs
+        /// </summary>
+        void SetThemes();
 
         /// <summary>
         /// Parses the active design.
         /// </summary>
         /// <returns>Output of the parsed design</returns>
-        List<IObjectCodeElement> Parse();
+        List<IObjectCodeElement> Parse(out List<string> errorLog);
 
         /// <summary>
         /// Parses a tick for the active design.
@@ -104,17 +114,8 @@ namespace VisiBoole.Controllers
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instnatiation</param>
+        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed design</returns>
-        List<IObjectCodeElement> ParseSubdesign(string instantiation);
-
-        /// <summary>
-        /// Update the font sizes of all Designs.
-        /// </summary>
-        void SetDesignFontSizes();
-
-        /// <summary>
-        /// Set the themes of all Designs
-        /// </summary>
-        void SetThemes();
+        List<IObjectCodeElement> ParseSubdesign(string instantiation, out List<string> errorLog);
     }
 }

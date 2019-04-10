@@ -20,7 +20,6 @@
 
 using System.Windows.Forms;
 using VisiBoole.Controllers;
-using static VisiBoole.Globals;
 
 namespace VisiBoole.Views
 {

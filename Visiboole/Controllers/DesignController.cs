@@ -74,22 +74,6 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Selects a Design with the provided index
-        /// </summary>
-        /// <param name="index">Index of the design to select</param>
-        public void SelectDesign(int index)
-        {
-            if (index == -1)
-            {
-                ActiveDesign = null; // No designs opened
-            }
-            else
-            {
-                ActiveDesign = Designs.Values.First(design => design.TabPageIndex == index);
-            }
-        }
-
-        /// <summary>
         /// Returns the names of all Designs.
         /// </summary>
         /// <returns>Names of all Designs.</returns>
@@ -116,6 +100,15 @@ namespace VisiBoole.Controllers
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Selects a design with the provided name
+        /// </summary>
+        /// <param name="design">Design to select</param>
+        public void SelectDesign(string design)
+        {
+            ActiveDesign = GetDesign(design);
         }
 
         /// <summary>
@@ -168,18 +161,6 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Saves the design with the provided name.
-        /// </summary>
-        /// <param name="name">Name of Design to save</param>
-        /// <returns>Whether the save was successful</returns>
-        public bool SaveDesign(string name)
-        {
-            Design design = GetDesign(name);
-            SaveDesign(design, false);
-            return true;
-        }
-
-        /// <summary>
         /// Saves all Designs
         /// </summary>
         /// <returns>Whether the save was successful</returns>
@@ -224,13 +205,35 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Update the font sizes of all Designs.
+        /// </summary>
+        public void SetDesignFontSizes()
+        {
+            foreach (Design design in Designs.Values)
+            {
+                design.SetFontSize();
+            }
+        }
+
+        /// <summary>
+        /// Change the themes of all Designs
+        /// </summary>
+        public void SetThemes()
+        {
+            foreach (Design design in Designs.Values)
+            {
+                design.SetTheme();
+            }
+        }
+
+        /// <summary>
         /// Parses the active design.
         /// </summary>
         /// <returns>Output of the parsed design</returns>
-        public List<IObjectCodeElement> Parse()
+        public List<IObjectCodeElement> Parse(out List<string> errorLog)
         {
             Parser = new Parser(ActiveDesign);
-            return Parser.Parse();
+            return Parser.Parse(out errorLog);
         }
 
         /// <summary>
@@ -256,8 +259,9 @@ namespace VisiBoole.Controllers
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instnatiation</param>
+        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed design</returns>
-        public List<IObjectCodeElement> ParseSubdesign(string instantiation)
+        public List<IObjectCodeElement> ParseSubdesign(string instantiation, out List<string> errorLog)
         {
             Design currentDesign = ActiveDesign;
 
@@ -270,7 +274,11 @@ namespace VisiBoole.Controllers
             Design subDesign = new Design(designPath, delegate { });
             ActiveDesign = subDesign;
             Parser subParser = new Parser(subDesign);
-            List<IObjectCodeElement> output = subParser.Parse(); // Parsers subdesign
+            List<IObjectCodeElement> output = subParser.Parse(out errorLog); // Parsers subdesign
+            if (output == null)
+            {
+                return null;
+            }
 
             // Click each input that is true
             int slots = instantLine.Substring(0, instantLine.IndexOf(':')).Count(c => c == ',') + 1;
@@ -290,28 +298,6 @@ namespace VisiBoole.Controllers
 
             ActiveDesign = currentDesign;
             return output;
-        }
-
-        /// <summary>
-        /// Update the font sizes of all Designs.
-        /// </summary>
-        public void SetDesignFontSizes()
-        {
-            foreach (Design s in Designs.Values)
-            {
-                s.SetFontSize();
-            }
-        }
-
-        /// <summary>
-        /// Change the themes of all Designs
-        /// </summary>
-        public void SetThemes()
-        {
-            foreach (Design s in Designs.Values)
-            {
-                s.SetTheme();
-            }
         }
     }
 }
