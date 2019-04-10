@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using VisiBoole.Models;
@@ -249,6 +250,46 @@ namespace VisiBoole.Controllers
         public List<IObjectCodeElement> ParseVariableClick(string variableName)
         {
             return Parser.ParseClick(variableName);
+        }
+
+        /// <summary>
+        /// Parsers a sub design with the provided instantiation.
+        /// </summary>
+        /// <param name="instantiation">Instnatiation</param>
+        /// <returns>Output of the parsed design</returns>
+        public List<IObjectCodeElement> ParseSubdesign(string instantiation)
+        {
+            Design currentDesign = ActiveDesign;
+
+            string designName = instantiation.Split('.')[0];
+            string instantName = instantiation.Split('.')[1];
+            string instantLine = Parser.Instantiations[instantName];
+            string designPath = Parser.Subdesigns[designName];
+
+            // Parse module
+            Design subDesign = new Design(designPath, delegate { });
+            ActiveDesign = subDesign;
+            Parser subParser = new Parser(subDesign);
+            List<IObjectCodeElement> output = subParser.Parse(); // Parsers subdesign
+
+            // Click each input that is true
+            int slots = instantLine.Substring(0, instantLine.IndexOf(':')).Count(c => c == ',') + 1;
+            for (int i = 0; i < slots; i++)
+            {
+                List<string> inDesignComponents = subParser.GetModuleComponents(instantLine, i); // InDesign is currentDesign (instant)
+                List<string> outDesignComponents = subParser.GetModuleComponents(subDesign.ModuleDeclaration, i); // OutDesign is subDesign (module)
+
+                for (int j = 0; j < outDesignComponents.Count; j++)
+                {
+                    if (currentDesign.Database.TryGetValue(inDesignComponents[j]) == 1)
+                    {
+                        output = subParser.ParseClick(outDesignComponents[j]);
+                    }
+                }
+            }
+
+            ActiveDesign = currentDesign;
+            return output;
         }
 
         /// <summary>

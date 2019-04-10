@@ -66,7 +66,7 @@ namespace VisiBoole.Views
 		/// Loads the given tabcontrol into this display
 		/// </summary>
 		/// <param name="tc">The tabcontrol that will be loaded by this display</param>
-		public void LoadTabControl(TabControl tc)
+		public void AddTabControl(TabControl tc)
 		{
 			if (!(tc == null))
 			{
@@ -75,13 +75,13 @@ namespace VisiBoole.Views
 			}
 		}
 
-		/// <summary>
-		/// Loads the given web browser into this display
-		/// </summary>
-		/// <param name="browser">The browser that will be loaded by this display</param>
-		public void LoadWebBrowser(WebBrowser browser)
+        /// <summary>
+        /// Loads the given web browser into this display
+        /// </summary>
+        /// <param name="designName">Name of the design represented by the browser</param>
+        /// <param name="browser">The browser that will be loaded by this display</param>
+        public void AddBrowser(string designName, WebBrowser browser)
 		{
-
 		}
-	}
+    }
 }

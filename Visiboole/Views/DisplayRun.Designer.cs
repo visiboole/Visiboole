@@ -35,12 +35,10 @@ namespace VisiBoole.Views
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.btnMultiTick = new System.Windows.Forms.Button();
             this.btnTick = new System.Windows.Forms.Button();
-            this.BrowserTabControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.pnlMain.SuspendLayout();
             this.pnlOutputControls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
-            this.BrowserTabControl.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlMain
@@ -50,7 +48,6 @@ namespace VisiBoole.Views
             this.pnlMain.ColumnCount = 1;
             this.pnlMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.pnlMain.Controls.Add(this.pnlOutputControls, 0, 0);
-            this.pnlMain.Controls.Add(this.BrowserTabControl, 0, 1);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMain.Location = new System.Drawing.Point(0, 0);
             this.pnlMain.Margin = new System.Windows.Forms.Padding(0);
@@ -130,21 +127,6 @@ namespace VisiBoole.Views
             this.btnTick.TabIndex = 0;
             this.btnTick.Text = "Tick";
             this.btnTick.UseVisualStyleBackColor = true;
-            this.btnTick.Click += new System.EventHandler(this.btnTick_Click);
-            // 
-            // BrowserTabControl
-            // 
-            this.BrowserTabControl.Controls.Add(this.tabPage1);
-            this.BrowserTabControl.Cursor = System.Windows.Forms.Cursors.Default;
-            this.BrowserTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.BrowserTabControl.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.BrowserTabControl.HotTrack = true;
-            this.BrowserTabControl.ItemSize = new System.Drawing.Size(58, 20);
-            this.BrowserTabControl.Location = new System.Drawing.Point(3, 30);
-            this.BrowserTabControl.Name = "BrowserTabControl";
-            this.BrowserTabControl.SelectedIndex = 0;
-            this.BrowserTabControl.Size = new System.Drawing.Size(794, 567);
-            this.BrowserTabControl.TabIndex = 1;
             // 
             // tabPage1
             // 
@@ -166,7 +148,6 @@ namespace VisiBoole.Views
             this.pnlMain.ResumeLayout(false);
             this.pnlOutputControls.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
-            this.BrowserTabControl.ResumeLayout(false);
             this.ResumeLayout(false);
 
 		}
@@ -178,7 +159,6 @@ namespace VisiBoole.Views
         private NumericUpDown numericUpDown1;
         private Button btnMultiTick;
         private Button btnTick;
-        private TabControl BrowserTabControl;
         private TabPage tabPage1;
     }
 }

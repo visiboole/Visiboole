@@ -85,6 +85,11 @@ namespace VisiBoole.Controllers
         void RefreshOutput();
 
         /// <summary>
+        /// Switches the display to the edit mode.
+        /// </summary>
+        void SwitchDisplay();
+
+        /// <summary>
         /// Handles the event that occurs when the user ticks.
         /// </summary>
         /// <param name="count">Number of times to tick</param>

@@ -114,7 +114,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying modules.
         /// </summary>
-        private static readonly string ModuleNotationPattern = $@"(?<Components>(?<Inputs>{ModuleComponentNotationPattern})\s+:\s+(?<Outputs>{ModuleComponentNotationPattern}))";
+        public static readonly string ModuleNotationPattern = $@"(?<Components>(?<Inputs>{ModuleComponentNotationPattern})\s+:\s+(?<Outputs>{ModuleComponentNotationPattern}))";
 
         /// <summary>
         /// Pattern for identifying whitespace.
@@ -448,15 +448,15 @@ namespace VisiBoole.ParsingEngine
                         }
                         else if (type == StatementType.Submodule)
                         {
-                            string instantiationName = Regex.Match(line, InstantiationNotationPattern).Groups["Name"].Value;
-
+                            /*
                             line = ExpandHorizontally(line);
                             if (line == null)
                             {
                                 return null;
                             }
+                            */
 
-                            //statements.Add(new SubmoduleInstantiationStmt(line, Instantiations[instantiationName]));
+                            statements.Add(new SubmoduleInstantiationStmt(line));
                         }
                         else
                         {
@@ -873,6 +873,23 @@ namespace VisiBoole.ParsingEngine
             }
 
             return true;
+        }
+
+        public List<string> GetModuleComponents(string line, int slot)
+        {
+            List<string> components = new List<string>();
+            Match module = Regex.Match(line, ModuleNotationPattern);
+            string[] inputs = Regex.Split(module.Groups["Inputs"].Value, @",\s+");
+            string[] outputs = Regex.Split(module.Groups["Outputs"].Value, @",\s+");
+
+            if (slot < inputs.Length)
+            {
+                return GetExpansion(ExpansionRegex3.Match(inputs[slot]));
+            }
+            else
+            {
+                return GetExpansion(ExpansionRegex3.Match(outputs[slot - inputs.Length]));
+            }
         }
 
         #region Expansion Methods

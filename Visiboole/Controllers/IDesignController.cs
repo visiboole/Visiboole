@@ -101,6 +101,13 @@ namespace VisiBoole.Controllers
         List<IObjectCodeElement> ParseVariableClick(string variableName);
 
         /// <summary>
+        /// Parsers a sub design with the provided instantiation.
+        /// </summary>
+        /// <param name="instantiation">Instnatiation</param>
+        /// <returns>Output of the parsed design</returns>
+        List<IObjectCodeElement> ParseSubdesign(string instantiation);
+
+        /// <summary>
         /// Update the font sizes of all Designs.
         /// </summary>
         void SetDesignFontSizes();

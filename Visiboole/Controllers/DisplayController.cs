@@ -69,6 +69,11 @@ namespace VisiBoole.Controllers
 		public WebBrowser browser;
 
         /// <summary>
+        /// Empty browser.
+        /// </summary>
+        private WebBrowser BrowserTemplate;
+
+        /// <summary>
         /// Last output of the browser.
         /// </summary>
         private List<IObjectCodeElement> LastOutput;
@@ -94,8 +99,9 @@ namespace VisiBoole.Controllers
 			}
 			set
 			{
-				value.LoadTabControl(tabControl);
-				value.LoadWebBrowser(browser);
+				value.AddTabControl(tabControl);
+                string currentDesign = tabControl.SelectedTab != null ? tabControl.SelectedTab.Name.TrimStart('*') : "";
+				value.AddBrowser(currentDesign, browser);
 				currentDisplay = value;
 			}
 		}
@@ -133,12 +139,13 @@ namespace VisiBoole.Controllers
             browser.IsWebBrowserContextMenuEnabled = false;
             browser.AllowWebBrowserDrop = false;
             browser.WebBrowserShortcutsEnabled = false;
+            BrowserTemplate = browser;
 
             ImageList il = new ImageList();
             il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
             tabControl.ImageList = il;
 
-			this.edit = edit;
+            this.edit = edit;
 			this.run = run;
 
 			allDisplays = new Dictionary<DisplayType, IDisplay>();
@@ -253,6 +260,14 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Switches the display to the edit mode.
+        /// </summary>
+        public void SwitchDisplay()
+        {
+            mwController.LoadDisplay(DisplayType.EDIT);
+        }
+
+        /// <summary>
         /// Handles the event that occurs when the user ticks.
         /// </summary>
         /// <param name="count">Number of times to tick</param>
@@ -285,49 +300,27 @@ namespace VisiBoole.Controllers
         /// <param name="instantiation">The instantiation that was clicked by the user</param>
         public void Instantiation_Click(string instantiation)
         {
-            // Decode path
-            /*
-            designPath = designPath.Replace("&amp;", "&").Replace("&back;", "\\").Replace("&apos;", "'");
-
-            Design design = new Design(designPath, delegate { });
-
-            Design current = mwController.GetActiveDesign();
-            List<Variable> inputs = new List<Variable>(); // Add inputs here
-            Parser parser = new Parser();
-            List<IObjectCodeElement> output = parser.ParseWithInput(design, inputs);
-            if (output == null)
-            {
-                return;
-            }
-
-            HtmlBuilder html = new HtmlBuilder(design, output);
-            if (html.HtmlText == null)
-            {
-                return;
-            }
-            string htmlOutput = html.GetHTML();
-            */
-
-
-            /*
-            HtmlBuilder html = new HtmlBuilder(design, output);
+            List<IObjectCodeElement> output = mwController.RunSubdesign(instantiation);
+            HtmlBuilder html = new HtmlBuilder(output);
             if (html.HtmlText == null)
             {
                 return;
             }
             string htmlOutput = html.GetHTML();
 
-            browser.ObjectForScripting = this;
-            int position = browser.Document.Body.ScrollTop;
-            html.DisplayHtml(htmlOutput, browser);
+            WebBrowser subBrowser = new WebBrowser();
+            subBrowser.IsWebBrowserContextMenuEnabled = false;
+            subBrowser.AllowWebBrowserDrop = false;
+            subBrowser.WebBrowserShortcutsEnabled = false;
+            subBrowser.ObjectForScripting = this;
+            html.DisplayHtml(htmlOutput, subBrowser);
 
-            browser.DocumentCompleted += (sender, e) => { browser.Document.Body.ScrollTop = position; };
+            subBrowser.DocumentCompleted += (sender, e) => {
+                subBrowser.Document.Body.Click += (sender2, e2) => { mwController.RetrieveFocus(); };
+                mwController.RetrieveFocus();
+            };
 
-            if (CurrentDisplay is DisplayEdit)
-            {
-                mwController.LoadDisplay(DisplayType.RUN);
-            }
-            */
+            CurrentDisplay.AddBrowser(instantiation.Split('.')[0], subBrowser);
         }
 
         /// <summary>

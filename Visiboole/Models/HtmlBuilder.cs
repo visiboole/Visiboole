@@ -74,7 +74,7 @@ namespace VisiBoole.Models
                         }
                         else
                         {
-                            bool isInstantiation = varType == typeof(IndependentVariable);
+                            bool isInstantiation = varType == typeof(Instantiation);
                             string color = "'black'";
                             string cursor = isInstantiation ? "hand" : "no-drop";
                             string decoration = "";

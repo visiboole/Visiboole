@@ -44,12 +44,13 @@ namespace VisiBoole.Views
 		/// Loads the given tabcontrol into this display
 		/// </summary>
 		/// <param name="tabControl">The tabcontrol that will be loaded by this display</param>
-		void LoadTabControl(TabControl tabControl);
+		void AddTabControl(TabControl tabControl);
 
 		/// <summary>
 		/// Loads the given web browser into this display
 		/// </summary>
+        /// <param name="designName">Name of the design represented by the browser</param>
 		/// <param name="browser">The browser that will be loaded by this display</param>
-		void LoadWebBrowser(WebBrowser browser);
-	}
+		void AddBrowser(string designName, WebBrowser browser);
+    }
 }

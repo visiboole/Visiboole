@@ -96,6 +96,13 @@ namespace VisiBoole.Controllers
         void Run();
 
         /// <summary>
+        /// Runs a subdesign from the provided instantiation.
+        /// </summary>
+        /// <param name="instantiation">Instantiation to run</param>
+        /// <returns>Output of the parsed instantiation</returns>
+        List<IObjectCodeElement> RunSubdesign(string instantiation);
+
+        /// <summary>
         /// Handles the event that occurs when the browser needs to be refreshed.
         /// </summary>
         void RefreshOutput();

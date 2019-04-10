@@ -61,6 +61,8 @@ namespace VisiBoole.ParsingEngine.Statements
             }
 
             // Output instantiation
+            Match match = Regex.Match(Text, Parser.InstantiationNotationPattern);
+            Output.Add(new Instantiation(match.Value));
 
             /*
             // Output seperator
