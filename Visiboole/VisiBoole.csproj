@@ -80,6 +80,9 @@
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
+    <Compile Include="Models\NewTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
