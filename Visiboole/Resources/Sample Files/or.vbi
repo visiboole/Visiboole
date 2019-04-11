@@ -1,2 +1,3 @@
-*a b c;
+xormodule.x(a, b : c);
+andmodule.a(a, b : c);
 ormodule.o(a, b : c);

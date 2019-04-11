@@ -158,7 +158,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
             // Obtain scalars, constants and operators
             string expression = $"({Expression})"; // Add () to expression
-            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatenationPattern}|(~?(?<Name>[_a-zA-Z]\w{{0,19}}))|(~?'[bB][0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
+            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatPattern}|(~?(?<Name>[_a-zA-Z]\w{{0,19}}))|(~?'[bB][0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
             foreach (Match match in matches)
             {
                 if (match.Value == ")")
@@ -244,7 +244,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 StringBuilder binary = new StringBuilder();
                 foreach (string var in vars)
                 {
-                    binary.Append(DesignController.ActiveDesign.Database.TryGetValue(Parser.ScalarRegex1.Match(var).Value));
+                    binary.Append(DesignController.ActiveDesign.Database.TryGetValue(var));
                 }
 
                 return Convert.ToInt32(binary.ToString(), 2);

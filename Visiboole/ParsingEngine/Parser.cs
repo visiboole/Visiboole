@@ -41,55 +41,38 @@ namespace VisiBoole.ParsingEngine
 	{
         #region Parsing Patterns & Regular Expressions
 
-        /// <summary>
-        /// Pattern for identifying scalars. (Optional ~)
-        /// </summary>
-        public static readonly string ScalarPattern1 = $"(~?{ScalarNotationPattern})";
+        private static readonly string ScalarPattern2 = $@"(?<!('|\.))(\*?{ScalarPattern})(?!\.)";
 
-        /// <summary>
-        /// Pattern for identifying scalars. (Optional *)
-        /// </summary>
-        public static readonly string ScalarPattern2 = $@"(\*?{ScalarNotationPattern})";
-
-        /// <summary>
-        /// Pattern for identifying vectors. (Optional ~)
-        /// </summary>
-        public static readonly string VectorPattern1 = $"(~?{VectorNotationPattern})";
-
-        /// <summary>
-        /// Pattern for identifying vectors. (Optional *)
-        /// </summary>
-        public static readonly string VectorPattern2 = $@"(\*?{VectorNotationPattern})";
-
-        /// <summary>
-        /// Pattern for identifying scalars and vectors. (No ~ or *)
-        /// </summary>
-        public static readonly string VariablePattern1 = $@"({VectorNotationPattern}|{ScalarNotationPattern})";
-
-        /// <summary>
-        /// Pattern for identifying scalars and vectors. (Optional *)
-        /// </summary>
-        public static readonly string VariablePattern2 = $@"({VectorPattern2}|{ScalarPattern2})";
+        private static readonly string VectorPattern2 = $@"\*?{VectorPattern}";
 
         /// <summary>
         /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
         /// </summary>
-        public static readonly string AnyTypePattern = $@"({VectorNotationPattern}|{ConstantNotationPattern}|{ScalarNotationPattern})";
+        public static readonly string VariablePattern = $@"({VectorPattern}|{ConstantPattern}|{ScalarPattern})";
+
+        private static readonly string VariablePattern2 = $@"({VectorPattern2}|{ConstantPattern}|{ScalarPattern2})";
 
         /// <summary>
-        /// Pattern for identifying concatenations of any type.
+        /// Pattern for identifying variable lists.
         /// </summary>
-        public static readonly string ConcatenationPattern = $@"(\{{(?<Vars>{AnyTypePattern}(\s+{AnyTypePattern})*)\}})";
+        public static readonly string VariableListPattern = $@"(?<Vars>{VariablePattern}(\s+{VariablePattern})*)";
+
+        // ^^^ Note: On + expansion constant is being put in {}
+
+        /// <summary>
+        /// Pattern for identifying concatenations.
+        /// </summary>
+        public static readonly string ConcatPattern = $@"(\{{{VariableListPattern}\}})";
 
         /// <summary>
         /// Pattern for identifying concatenations of any type or any type.
         /// </summary>
-        public static readonly string ConcatOrAnyTypePattern = $@"({ConcatenationPattern}|{AnyTypePattern})";
+        public static readonly string AnyTypePattern = $@"({ConcatPattern}|{VariablePattern})";
 
         /// <summary>
-        /// Pattern for identifying entire format specifiers.
+        /// Pattern for identifying format specifiers.
         /// </summary>
-        public static readonly string FormatSpecifierPattern = $@"({FormatSpecifierNotationPattern}{ConcatenationPattern})";
+        public static readonly string FormatSpecifierPattern = $@"({FormatterPattern}{ConcatPattern})";
 
         /// <summary>
         /// Pattern for identifying extra spacing.
@@ -97,24 +80,19 @@ namespace VisiBoole.ParsingEngine
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
 
         /// <summary>
-        /// Pattern for identifying comment statements.
-        /// </summary>
-        private static readonly string CommentPattern = @"^((?<Spacing>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;))$";
-
-        /// <summary>
-        /// Pattern for identifying library statements.
-        /// </summary>
-        private static readonly string LibraryPattern = @"^(#library\s(?<Name>.+);)$";
-
-        /// <summary>
         /// Pattern for identifying components (inputs or outputs) in a module notation.
         /// </summary>
-        private static readonly string ModuleComponentNotationPattern = $@"({ConcatOrAnyTypePattern}(,\s+{ConcatOrAnyTypePattern})*)";
+        private static readonly string ModuleComponentPattern = $@"({AnyTypePattern}(,\s+{AnyTypePattern})*)";
 
         /// <summary>
         /// Pattern for identifying modules.
         /// </summary>
-        public static readonly string ModuleNotationPattern = $@"(?<Components>(?<Inputs>{ModuleComponentNotationPattern})\s+:\s+(?<Outputs>{ModuleComponentNotationPattern}))";
+        public static readonly string ModulePattern = $@"(?<Components>(?<Inputs>{ModuleComponentPattern})\s+:\s+(?<Outputs>{ModuleComponentPattern}))";
+
+        /// <summary>
+        /// Pattern for identifying module instantiations.
+        /// </summary>
+        public static readonly string ModuleInstantiationPattern = $@"((?<Padding>\s*)?(?<Instantiation>{InstantiationPattern})\({ModulePattern}\))";
 
         /// <summary>
         /// Pattern for identifying whitespace.
@@ -122,44 +100,34 @@ namespace VisiBoole.ParsingEngine
         public static Regex WhitespaceRegex { get; } = new Regex(@"\s+", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying scalar notation.
-        /// </summary>
-        public static Regex ScalarRegex1 { get; } = new Regex(ScalarNotationPattern, RegexOptions.Compiled);
-
-        /// <summary>
         /// Regex for identifying scalars. (Optional *)
         /// </summary>
-        public static Regex ScalarRegex2 { get; } = new Regex(ScalarPattern2, RegexOptions.Compiled);
-
-        /// <summary>
-        /// Regex for identifying vectors not in concats. (No ~ or *)
-        /// </summary>
-        public static Regex VectorRegex1 { get; } = new Regex($@"({VectorNotationPattern}(?![^{{}}]*\}}))", RegexOptions.Compiled);
+        private static Regex ScalarRegex { get; } = new Regex(ScalarPattern2, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying vectors. (Optional *)
         /// </summary>
-        public static Regex VectorRegex2 { get; } = new Regex(VectorPattern2, RegexOptions.Compiled);
+        private static Regex VectorRegex { get; } = new Regex(VectorPattern2, RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying scalars, vectors and constants. (No ~ or *)
+        /// Regex for identifying scalars, vectors and constants.
         /// </summary>
-        private static Regex AnyTypeRegex = new Regex(AnyTypePattern);
+        private static Regex VariableRegex { get; } = new Regex(VariablePattern2, RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying whether expansion is necessary. (Concat, Vectors or Constants)
+        /// Regex for identifying concatenations.
         /// </summary>
-        private static Regex ExpansionRegex1 = new Regex($@"((?<!{FormatSpecifierNotationPattern}){ConcatenationPattern})|{VectorPattern2}|{ConstantNotationPattern}", RegexOptions.Compiled);
+        private static Regex ConcatRegex = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying whether expansion is necessary. (Concat, Vectors)
+        /// Regex for identifying concatenations of any type or any type.
         /// </summary>
-        private static Regex ExpansionRegex2 = new Regex($@"((?<!{FormatSpecifierNotationPattern}){ConcatenationPattern})|{VectorPattern2}", RegexOptions.Compiled);
+        private static Regex AnyTypeRegex = new Regex(AnyTypePattern, RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex used in expansion to preserve scalars. 
+        /// Regex for determining whether expansion is required.
         /// </summary>
-        private static Regex ExpansionRegex3 = new Regex($@"(({AnyTypePattern}(?![^{{}}]*\}}))|{ConcatenationPattern})", RegexOptions.Compiled);
+        private static Regex ExpansionRegex { get; } = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|{ConstantPattern}", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying entire format specifiers.
@@ -169,12 +137,17 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying comment statements.
         /// </summary>
-        public static Regex CommentRegex { get; } = new Regex(CommentPattern);
+        public static Regex CommentRegex { get; } = new Regex(@"^((?<Padding>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;))$");
 
         /// <summary>
         /// Regex for identifying library statements.
         /// </summary>
-        private static Regex LibraryRegex = new Regex(LibraryPattern);
+        private static Regex LibraryRegex = new Regex(@"^(#library\s(?<Name>.+);)$");
+
+        /// <summary>
+        /// Regex for identifying module instantiations.
+        /// </summary>
+        private static Regex ModuleInstantiationRegex = new Regex(ModuleInstantiationPattern);
 
         /// <summary>
         /// Regex for identifying module declarations.
@@ -200,7 +173,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="design">Design to parse</param>
         public Parser(Design design) : base(design)
         {
-            ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModuleNotationPattern}\);$");
+            ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModulePattern}\);$");
         }
 
         #region Parsing Methods
@@ -244,15 +217,14 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Parsers the current design text into output.
         /// </summary>
-        /// <param name="errorLog">Log of errors if any</param>
-        public List<IObjectCodeElement> Parse(out List<string> errorLog)
+        public List<IObjectCodeElement> Parse()
         {
             // Get statements for parsing
             Design.Database = new Database();
             Statements = ParseStatements();
-            errorLog = ErrorLog;
             if (Statements == null)
             {
+                ErrorDialogBox.Display(ErrorLog);
                 return null;
             }
 
@@ -322,12 +294,106 @@ namespace VisiBoole.ParsingEngine
             Statements = ParseStatements();
             if (Statements == null)
             {
+                ErrorDialogBox.Display(ErrorLog);
                 return null;
             }
             UpdateExpressionStatements();
 
             // Get output
             return GetParsedOutput();
+        }
+
+        /// <summary>
+        /// Parses the design as a module with the provided input values.
+        /// </summary>
+        /// <param name="inputValues">Values of input variables in the module declaration</param>
+        /// <returns>Values of output variables in the module declaration</returns>
+        public List<bool> ParseAsModule(List<bool> inputValues)
+        {
+            // Init database and get module match
+            Design.Database = new Database();
+
+            // Check design for valid module declaration
+            if (Design.ModuleDeclaration == null || !Regex.IsMatch(Design.ModuleDeclaration, ModulePattern))
+            {
+                ErrorDialogBox.Display(new List<string>(new string[] { $"Unable to locate a valid module declaration inside design '{Design.FileName}'. Please check your source file for errors." }));
+                return null;
+            }
+
+            Match moduleMatch = Regex.Match(Design.ModuleDeclaration, ModulePattern);
+
+            // Set input values
+            int inputValuesIndex = 0;
+            foreach (string inputList in Regex.Split(moduleMatch.Groups["Inputs"].Value, @",\s+"))
+            {
+                string[] inputs = WhitespaceRegex.Split(inputList);
+                foreach (string input in inputs)
+                {
+                    Design.Database.AddVariable(new IndependentVariable(input, inputValues[inputValuesIndex++]));
+                }
+            }
+
+            // Parse statements
+            Statements = ParseStatements();
+            if (Statements == null)
+            {
+                ErrorDialogBox.Display(new List<string>(new string[] { $"Error parsing design '{Design.FileName}'. Please check/run your source file for errors." }));
+                return null;
+            }
+            UpdateExpressionStatements();
+
+            // Get output values
+            List<bool> outputValues = new List<bool>();
+            foreach (string outputList in Regex.Split(moduleMatch.Groups["Outputs"].Value, @",\s+"))
+            {
+                // Output each output var in the output list
+                foreach (string outputVar in WhitespaceRegex.Split(outputList))
+                {
+                    foreach (string var in GetExpansion(AnyTypeRegex.Match(outputVar)).ToArray())
+                    {
+                        outputValues.Add(Design.Database.TryGetValue(var) == 1);
+                    }
+                }
+            }
+            return outputValues;
+        }
+
+        /// <summary>
+        /// Returns a list of inputs from the specified instantiation and module.
+        /// </summary>
+        /// <param name="instantiationName">Instantiation of module</param>
+        /// <param name="moduleDeclaration">Module declaration</param>
+        /// <returns>List of input variables</returns>
+        public List<Variable> GetModuleInputs(string instantiationName, string moduleDeclaration)
+        {
+            string instantiation = Instantiations[instantiationName];
+            string inputLists = Regex.Match(instantiation, ModuleInstantiationPattern).Groups["Inputs"].Value;
+
+            // Get input values
+            List<bool> inputValues = new List<bool>();
+            foreach (string input in Regex.Split(inputLists, @",\s+"))
+            {
+                string[] vars = GetExpansion(AnyTypeRegex.Match(input)).ToArray();
+                foreach (string var in vars)
+                {
+                    inputValues.Add(Design.Database.TryGetValue(var) == 1);
+                }
+            }
+
+            // Get input variables
+            List<string> inputNames = new List<string>();
+            foreach (string input in Regex.Split(Regex.Match(moduleDeclaration, ModulePattern).Groups["Inputs"].Value, @",\s+"))
+            {
+                inputNames.AddRange(GetExpansion(AnyTypeRegex.Match(input)));
+            }
+
+            List<Variable> inputVariables = new List<Variable>();
+            for (int i = 0; i < inputValues.Count; i++)
+            {
+                inputVariables.Add(new IndependentVariable(inputNames[i], inputValues[i]));
+            }
+
+            return inputVariables;
         }
 
         /// <summary>
@@ -342,7 +408,6 @@ namespace VisiBoole.ParsingEngine
             MemoryStream stream = new MemoryStream(bytes);
             using (StreamReader reader = new StreamReader(stream))
             {
-                Design.ModuleDeclaration = null;
                 LineNumber = 0;
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -359,7 +424,7 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (line[line.Length - 1] != ';')
                         {
-                            ErrorLog.Add($"Line {LineNumber}: Missing ';'.");
+                            ErrorLog.Add($"{LineNumber}: Missing ';'.");
                             valid = false;
                         }
                     }
@@ -383,24 +448,11 @@ namespace VisiBoole.ParsingEngine
                     }
                     else if (type == StatementType.Module)
                     {
-                        if (!String.IsNullOrEmpty(Design.ModuleDeclaration))
+                        if (Design.ModuleDeclaration != line)
                         {
-                            ErrorLog.Add($"Line {LineNumber}: A module declaration already exists.");
+                            ErrorLog.Add("Designs can only have one module statement.");
                             valid = false;
                         }
-                        else
-                        {
-                            if (!ModuleRegex.IsMatch(line))
-                            {
-                                ErrorLog.Add($"Line {LineNumber}: Invalid module declaration notation.");
-                                valid = false;
-                            }
-                            else
-                            {
-                                Design.ModuleDeclaration = line;
-                            }
-                        }
-
                         continue;
                     }
                     else
@@ -434,21 +486,9 @@ namespace VisiBoole.ParsingEngine
                                 statements.Add(new CommentStmt(line));
                             }
                         }
-                        else if (type == StatementType.Submodule)
-                        {
-                            /*
-                            line = ExpandHorizontally(line);
-                            if (line == null)
-                            {
-                                return null;
-                            }
-                            */
-
-                            statements.Add(new SubmoduleInstantiationStmt(line));
-                        }
                         else
                         {
-                            bool needsExpansion = ExpansionRegex1.IsMatch(line);
+                            bool needsExpansion = ExpansionRegex.IsMatch(line) || type == StatementType.Submodule;
                             if (needsExpansion && line.Contains("=") && !line.Contains("+") && !line.Contains("-"))
                             {
                                 // Vertical expansion needed
@@ -461,7 +501,15 @@ namespace VisiBoole.ParsingEngine
                             else if (needsExpansion)
                             {
                                 // Horizontal expansion needed
-                                line = ExpandHorizontally(line);
+                                if (type != StatementType.Submodule)
+                                {
+                                    line = ExpandHorizontally(line);
+                                }
+                                else
+                                {
+                                    Match match = ModuleInstantiationRegex.Match(line);
+                                    line = $"{match.Groups["Padding"].Value}{ match.Groups["Instantiation"].Value}({ExpandHorizontally(match.Groups["Components"].Value)});";
+                                }
                             }
 
                             // Add statement for each expansion of line
@@ -490,6 +538,11 @@ namespace VisiBoole.ParsingEngine
                                 {
                                     statements.Add(new VariableListStmt(source));
                                 }
+                                else if (type == StatementType.Submodule)
+                                {
+                                    Match match = ModuleInstantiationRegex.Match(line);
+                                    statements.Add(new SubmoduleInstantiationStmt(line, Subdesigns[match.Groups["Design"].Value]));
+                                }
                             }
                         }
                     }
@@ -517,10 +570,11 @@ namespace VisiBoole.ParsingEngine
         #region Statement Verifications
 
         /// <summary>
-        /// 
+        /// Verifies the statement from the provided line
         /// </summary>
-        /// <param name="line"></param>
-        /// <returns></returns>
+        /// <param name="line">Line of the statement</param>
+        /// <param name="type">Type of statement</param>
+        /// <returns>Whether the statement is valid or not</returns>
         private bool VerifyStatement(string line, StatementType? type)
         {
             if (type == StatementType.Boolean || type == StatementType.Clock)
@@ -543,7 +597,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!CommentRegex.IsMatch(line))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Invalid comment statement.");
+                    ErrorLog.Add($"{LineNumber}: Invalid comment statement.");
                     return false;
                 }
             }
@@ -602,7 +656,7 @@ namespace VisiBoole.ParsingEngine
 
                     if (innerExpression.Length == 0)
                     {
-                        ErrorLog.Add($"Line {LineNumber}: Empty ().");
+                        ErrorLog.Add($"{LineNumber}: Empty ().");
                         return false;
                     }
 
@@ -621,14 +675,14 @@ namespace VisiBoole.ParsingEngine
                     // Check operator for possible errors
                     if (wasPreviousOperator && token != "~")
                     {
-                        ErrorLog.Add($"Line {LineNumber}: An operator is missing its operands.");
+                        ErrorLog.Add($"{LineNumber}: An operator is missing its operands.");
                         return false;
                     }
 
                     // Check operator and mathematical expression status for error
                     if (mathematicalExpression && !(token == "+" || token == "-"))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: '+' and '-' can't appear with boolean operators.");
+                        ErrorLog.Add($"{LineNumber}: '+' and '-' can't appear with boolean operators.");
                         return false;
                     }
 
@@ -661,7 +715,7 @@ namespace VisiBoole.ParsingEngine
 
                                 if (pastOperators.Count > 0)
                                 {
-                                    ErrorLog.Add($"Line {LineNumber}: '{token}' must be the only operator in its parentheses level.");
+                                    ErrorLog.Add($"{LineNumber}: '{token}' must be the only operator in its parentheses level.");
                                     return false;
                                 }
 
@@ -672,7 +726,7 @@ namespace VisiBoole.ParsingEngine
                         {
                             if (token != exclusiveOperator)
                             {
-                                ErrorLog.Add($"Line {LineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
+                                ErrorLog.Add($"{LineNumber}: '{exclusiveOperator}' must be the only operator in its parentheses level.");
                                 return false;
                             }
                         }
@@ -700,10 +754,10 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the line is valid or not</returns>
         private bool VerifyFormatSpeciferStatement(string line)
         {
-            if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({VariablePattern2})"))
+            if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({VariablePattern})"))
             {
                 // If line contains a variable outside {}
-                ErrorLog.Add($"Line {LineNumber}: Scalars and vectors in a format specifier statement must be inside a format specifier.");
+                ErrorLog.Add($"{LineNumber}: Scalars and vectors in a format specifier statement must be inside a format specifier.");
                 return false;
             }
 
@@ -711,7 +765,7 @@ namespace VisiBoole.ParsingEngine
             MatchCollection formats = FormatSpecifierRegex.Matches(line);
             if (formats.Count != line.Count(c => c == '%'))
             {
-                ErrorLog.Add($"Line {LineNumber}: Invalid format specifier.");
+                ErrorLog.Add($"{LineNumber}: Invalid format specifier.");
                 return false;
             }
 
@@ -742,13 +796,13 @@ namespace VisiBoole.ParsingEngine
                 }
                 else
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Library '{path}' doesn't exist or is invalid.");
+                    ErrorLog.Add($"{LineNumber}: Library '{path}' doesn't exist or is invalid.");
                     return false;
                 }
             }
             catch (Exception)
             {
-                ErrorLog.Add($"Line {LineNumber}: Invalid library name '{library}'.");
+                ErrorLog.Add($"{LineNumber}: Invalid library name '{library}'.");
                 return false;
             }
         }
@@ -762,10 +816,9 @@ namespace VisiBoole.ParsingEngine
         {
             // Get input and output variables
             Match module = ModuleRegex.Match(Design.ModuleDeclaration);
-            string[] inputVars = Regex.Split(module.Groups["Inputs"].Value, @",\s+");
 
             // Check input variables
-            foreach (string input in inputVars)
+            foreach (string input in Regex.Split(module.Groups["Inputs"].Value, @",\s+"))
             {
                 List<string> vars;
                 if (!input.Contains("{") && !input.Contains("["))
@@ -775,7 +828,7 @@ namespace VisiBoole.ParsingEngine
                 }
                 else
                 {
-                    vars = GetExpansion(ExpansionRegex2.Match(input));
+                    vars = GetExpansion(AnyTypeRegex.Match(input));
                 }
 
                 foreach (string var in vars)
@@ -801,7 +854,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the operation was successful</returns>
         private bool InitVariables(StatementType? type, string line)
         {
-            MatchCollection matches = ScalarRegex2.Matches(line);
+            MatchCollection matches = ScalarRegex.Matches(line);
             foreach (Match match in matches)
             {
                 string var = match.Value;
@@ -849,35 +902,26 @@ namespace VisiBoole.ParsingEngine
                     if (Design.Database.TryGetVariable<Variable>(var) == null)
                     {
                         // Create Variable
-                        IndependentVariable indVar = new IndependentVariable(var, val);
-                        Design.Database.AddVariable<IndependentVariable>(indVar);
+                        if (!line.Contains(":") || (line.Contains(":") && match.Index < line.IndexOf(":")))
+                        {
+                            IndependentVariable indVar = new IndependentVariable(var, val);
+                            Design.Database.AddVariable(indVar);
+                        }
+                        else
+                        {
+                            DependentVariable depVar = new DependentVariable(var, val);
+                            Design.Database.AddVariable(depVar);
+                        }
                     }
                     else if (type == StatementType.VariableList)
                     {
-                        ErrorLog.Add($"Line {LineNumber}: {var} has already been declared.");
+                        ErrorLog.Add($"{LineNumber}: {var} has already been declared.");
                         return false; // You cannot declare a variable twice
                     }
                 }
             }
 
             return true;
-        }
-
-        public List<string> GetModuleComponents(string line, int slot)
-        {
-            List<string> components = new List<string>();
-            Match module = Regex.Match(line, ModuleNotationPattern);
-            string[] inputs = Regex.Split(module.Groups["Inputs"].Value, @",\s+");
-            string[] outputs = Regex.Split(module.Groups["Outputs"].Value, @",\s+");
-
-            if (slot < inputs.Length)
-            {
-                return GetExpansion(ExpansionRegex3.Match(inputs[slot]));
-            }
-            else
-            {
-                return GetExpansion(ExpansionRegex3.Match(outputs[slot - inputs.Length]));
-            }
         }
 
         #region Expansion Methods
@@ -944,7 +988,7 @@ namespace VisiBoole.ParsingEngine
             // Expand each variable
             foreach (string var in vars)
             {
-                Match match = AnyTypeRegex.Match(var);
+                Match match = VariableRegex.Match(var);
 
                 if (match.Value.Contains("[") || match.Value.Contains("'"))
                 {
@@ -967,54 +1011,29 @@ namespace VisiBoole.ParsingEngine
         private string ExpandHorizontally(string line)
         {
             string expandedLine = line;
+            Match match;
 
-            if (line.Contains("+") || line.Contains("-"))
+            while ((match = VectorRegex.Match(expandedLine)).Success)
             {
-                // Expand to concats
-                while (VectorRegex1.IsMatch(expandedLine))
+                // Replace matched vector with its components
+                expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
+            }
+
+            if (line.Contains("=") || line.Contains(":"))
+            {
+                Regex variableListRegex = new Regex($@"{VariableListPattern}(?![^{{}}]*\}})"); // Variable lists not inside {}
+                while ((match = variableListRegex.Match(expandedLine)).Success)
                 {
-                    Match match = VectorRegex1.Match(expandedLine);
-
-                    // Get expansion
-                    List<string> expansion = GetExpansion(match);
-
-                    // Check and combine expansion
-                    if (expansion == null)
-                    {
-                        return null;
-                    }
-                    string expanded = String.Join(" ", expansion);
-                    expanded = String.Concat("{", expanded, "}");
-
-                    expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
+                    // Add { } to the matched variable list
+                    expandedLine = expandedLine.Substring(0, match.Index) + String.Concat("{", match.Value, "}") + expandedLine.Substring(match.Index + match.Length);
                 }
             }
             else
             {
-                // Expand all expansions
-                while (ExpansionRegex2.IsMatch(expandedLine))
+                while ((match = ConcatRegex.Match(expandedLine)).Success)
                 {
-                    Match match = ExpansionRegex2.Match(expandedLine);
-
-                    // Get expansion
-                    List<string> expansion;
-                    if (!match.Value.Contains("{"))
-                    {
-                        expansion = ExpandToken(match);
-                    }
-                    else
-                    {
-                        expansion = GetExpansion(match);
-                    }
-
-                    // Check and combine expansion
-                    if (expansion == null)
-                    {
-                        return null;
-                    }
-                    string expanded = String.Join(" ", expansion);
-
-                    expandedLine = expandedLine.Substring(0, match.Index) + expanded + expandedLine.Substring(match.Index + match.Length);
+                    // Replace matched concat with its components
+                    expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
                 }
             }
 
@@ -1039,7 +1058,7 @@ namespace VisiBoole.ParsingEngine
 
             // Expand dependent
             List<string> dependentExpansion = new List<string>();
-            Match dependentMatch = ExpansionRegex3.Match(dependent);
+            Match dependentMatch = AnyTypeRegex.Match(dependent);
             if (dependentMatch.Value.Contains("{"))
             {
                 dependentExpansion.AddRange(GetExpansion(dependentMatch));
@@ -1055,7 +1074,7 @@ namespace VisiBoole.ParsingEngine
 
             // Expand expression
             List<List<string>> expressionExpansions = new List<List<string>>();
-            MatchCollection matches = ExpansionRegex1.Matches(expression);
+            MatchCollection matches = ExpansionRegex.Matches(expression);
             foreach (Match match in matches)
             {
                 if (!match.Value.Contains("{"))
@@ -1073,7 +1092,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (dependentExpansion.Count != expressionExpansion.Count)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
+                    ErrorLog.Add($"{LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
                     return null;
                 }
             }

@@ -45,7 +45,7 @@ namespace VisiBoole.ParsingEngine.Statements
 		{
             // Output padding (if present)
             Match comment = Parser.CommentRegex.Match(Text);
-            foreach (char space in comment.Groups["Spacing"].Value)
+            foreach (char space in comment.Groups["Padding"].Value)
             {
                 Output.Add(new SpaceFeed());
             }

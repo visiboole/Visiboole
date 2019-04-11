@@ -46,12 +46,6 @@ namespace VisiBoole.Controllers
         void RetrieveFocus();
 
         /// <summary>
-        /// Displays the provided error log to the user.
-        /// </summary>
-        /// <param name="errorLog">Error log to display</param>
-        void DisplayErrors(List<string> errorLog);
-
-        /// <summary>
         /// Selects the file at the specified index.
         /// </summary>
         /// <param name="index">The index of the file</param>
@@ -122,9 +116,8 @@ namespace VisiBoole.Controllers
         /// Runs a subdesign from the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instantiation to run</param>
-        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed instantiation</returns>
-        List<IObjectCodeElement> RunSubdesign(string instantiation, out List<string> errorLog);
+        List<IObjectCodeElement> RunSubdesign(string instantiation);
 
         /// <summary>
         /// Handles the event that occurs when the browser needs to be refreshed.

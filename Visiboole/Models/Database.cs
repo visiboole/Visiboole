@@ -90,70 +90,61 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Adds a variable namespace that doesn't already exist or appends new components to the existing namespace.
+        /// Inserts the provided component into the provided namespace.
         /// </summary>
-        /// <param name="name">Namespace to create</param>
-        /// <param name="components">Expanded components</param>
-        public void AddNamespace(string name, IEnumerable<string> components)
+        /// <param name="name">Namepsace to insert into</param>
+        /// <param name="component">Component to insert</param>
+        private void InsertNamespaceComponent(string name, string component)
         {
-            if (!HasNamespace(name))
+            int componentCount = Namespaces[name].Count;
+            if (componentCount != 0)
             {
-                // Add Namespace and its values to the dictionary
-                if (components != null)
+                int newBit = int.Parse(component.Substring(name.Length)); // Bit of the new component
+                bool bitInserted = false;
+                for (int i = 0; i < componentCount; i++)
                 {
-                    Namespaces.Add(name, components.ToList());
+                    int componentBit = int.Parse(Namespaces[name][i].Substring(name.Length)); // Bit of the list component
+                    if (newBit > componentBit)
+                    {
+                        Namespaces[name].Insert(i, component);
+                        bitInserted = true;
+                    }
                 }
-                else
+
+                if (!bitInserted)
                 {
-                    Namespaces.Add(name, null);
+                    Namespaces[name].Add(component);
                 }
             }
             else
             {
-                // Check to add new components
-                bool wasComponentAdded = false;
-                foreach (string component in components)
+                Namespaces[name].Add(component);
+            }
+        }
+
+        /// <summary>
+        /// Adds the provided component into the provided namespace.
+        /// </summary>
+        /// <param name="name">Namepsace to add to</param>
+        /// <param name="component">Component to add</param>
+        public void AddNamespaceComponent(string name, string component)
+        {
+            if (!HasNamespace(name))
+            {
+                if (component != null)
                 {
-                    if (!Namespaces[name].Contains(component))
-                    {
-                        Namespaces[name].Add(component);
-                        wasComponentAdded = true;
-                    }
+                    Namespaces.Add(name, new List<string>(new string[] { component })); // Namespace now belongs to a vector
                 }
-
-                // Order components from MSB to LSB
-                if (wasComponentAdded)
+                else
                 {
-                    Namespaces[name] = Namespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
-
-                    wasComponentAdded = false;
-                    for (int i = 0; i < Namespaces[name].Count; i++)
-                    {
-                        if (i < Namespaces[name].Count - 1)
-                        {
-                            Match currentMatch = Parser.ScalarRegex.Match(Namespaces[name][i]);
-                            Match nextMatch = Parser.ScalarRegex.Match(Namespaces[name][i+1]);
-
-                            int currentBit = Convert.ToInt32(currentMatch.Groups["Bit"].Value);
-                            int nextBit = Convert.ToInt32(nextMatch.Groups["Bit"].Value);
-
-                            // Check to add missing bits
-                            if (currentBit - 1 != nextBit)
-                            {
-                                for (int newBit = currentBit - 1; newBit > nextBit; newBit--)
-                                {
-                                    Namespaces[name].Add(String.Concat(name, newBit));
-                                }
-                                wasComponentAdded = true;
-                            }
-                        }
-                    }
-
-                    // Resort components
-                    if (wasComponentAdded)
-                    {
-                        Namespaces[name] = Namespaces[name].OrderByDescending(b => PadNumbers(b)).ToList();
-                    }
+                    Namespaces.Add(name, null); // Namespace now belongs to a scalar
+                }
+            }
+            else
+            {
+                if (!Namespaces[name].Contains(component))
+                {
+                    InsertNamespaceComponent(name, component); // Insert component if not in the list of components
                 }
             }
         }

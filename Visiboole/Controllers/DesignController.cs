@@ -230,10 +230,10 @@ namespace VisiBoole.Controllers
         /// Parses the active design.
         /// </summary>
         /// <returns>Output of the parsed design</returns>
-        public List<IObjectCodeElement> Parse(out List<string> errorLog)
+        public List<IObjectCodeElement> Parse()
         {
             Parser = new Parser(ActiveDesign);
-            return Parser.Parse(out errorLog);
+            return Parser.Parse();
         }
 
         /// <summary>
@@ -259,44 +259,29 @@ namespace VisiBoole.Controllers
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instnatiation</param>
-        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed design</returns>
-        public List<IObjectCodeElement> ParseSubdesign(string instantiation, out List<string> errorLog)
+        public List<IObjectCodeElement> ParseSubdesign(string instantiation)
         {
             Design currentDesign = ActiveDesign;
 
             string designName = instantiation.Split('.')[0];
-            string instantName = instantiation.Split('.')[1];
-            string instantLine = Parser.Instantiations[instantName];
+            string instantName = instantiation.Split('.')[1].TrimEnd('(');
             string designPath = Parser.Subdesigns[designName];
-
-            // Parse module
             Design subDesign = new Design(designPath, delegate { });
+
+            // Get input variables
+            List<Variable> inputVariables = Parser.GetModuleInputs(instantName, subDesign.ModuleDeclaration);
+
+            // Parse sub design
             ActiveDesign = subDesign;
             Parser subParser = new Parser(subDesign);
-            List<IObjectCodeElement> output = subParser.Parse(out errorLog); // Parsers subdesign
+            List<IObjectCodeElement> output = subParser.ParseWithInput(inputVariables); // Parse subdesign
+            ActiveDesign = currentDesign;
             if (output == null)
             {
                 return null;
             }
 
-            // Click each input that is true
-            int slots = instantLine.Substring(0, instantLine.IndexOf(':')).Count(c => c == ',') + 1;
-            for (int i = 0; i < slots; i++)
-            {
-                List<string> inDesignComponents = subParser.GetModuleComponents(instantLine, i); // InDesign is currentDesign (instant)
-                List<string> outDesignComponents = subParser.GetModuleComponents(subDesign.ModuleDeclaration, i); // OutDesign is subDesign (module)
-
-                for (int j = 0; j < outDesignComponents.Count; j++)
-                {
-                    if (currentDesign.Database.TryGetValue(inDesignComponents[j]) == 1)
-                    {
-                        output = subParser.ParseClick(outDesignComponents[j]);
-                    }
-                }
-            }
-
-            ActiveDesign = currentDesign;
             return output;
         }
     }

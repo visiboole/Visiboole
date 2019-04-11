@@ -336,11 +336,9 @@ namespace VisiBoole.Controllers
         /// <param name="instantiation">The instantiation that was clicked by the user</param>
         public void Instantiation_Click(string instantiation)
         {
-            List<string> errorLog;
-            List<IObjectCodeElement> output = MainWindowController.RunSubdesign(instantiation, out errorLog);
+            List<IObjectCodeElement> output = MainWindowController.RunSubdesign(instantiation);
             if (output == null)
             {
-                MainWindowController.DisplayErrors(errorLog);
                 return;
             }
 

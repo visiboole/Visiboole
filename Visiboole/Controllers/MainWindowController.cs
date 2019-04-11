@@ -54,11 +54,6 @@ namespace VisiBoole.Controllers
         private DialogBox DialogBox;
 
         /// <summary>
-        /// Error dialog box for design errors.
-        /// </summary>
-        private ErrorDialogBox ErrorDialogBox;
-
-        /// <summary>
         /// Constructs an instance of MainWindowController with handles to its view and the controllers
         /// </summary>
         /// <param name="mainWindow">Handle to the MainWindow which is the view for this controller</param>
@@ -71,7 +66,6 @@ namespace VisiBoole.Controllers
 			DisplayController = displayController;
             DesignController = designController;
             DialogBox = new DialogBox();
-            ErrorDialogBox = new ErrorDialogBox();
         }
 
         /// <summary>
@@ -149,15 +143,6 @@ namespace VisiBoole.Controllers
             {
                 DialogBox.New("Failure", "File save failed.", DialogType.Ok);
             }
-        }
-
-        /// <summary>
-        /// Displays the provided error log to the user.
-        /// </summary>
-        /// <param name="errorLog">Error log to display</param>
-        public void DisplayErrors(List<string> errorLog)
-        {
-            ErrorDialogBox.Display(errorLog);
         }
 
         /// <summary>
@@ -386,11 +371,9 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                List<string> errorLog;
-                List<IObjectCodeElement> output = DesignController.Parse(out errorLog);
+                List<IObjectCodeElement> output = DesignController.Parse();
                 if (output == null)
                 {
-                    DisplayErrors(errorLog);
                     return;
                 }
                 DisplayController.DisplayOutput(output);
@@ -406,11 +389,10 @@ namespace VisiBoole.Controllers
         /// Runs a subdesign from the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instantiation to run</param>
-        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed instantiation</returns>
-        public List<IObjectCodeElement> RunSubdesign(string instantiation, out List<string> errorLog)
+        public List<IObjectCodeElement> RunSubdesign(string instantiation)
         {
-            return DesignController.ParseSubdesign(instantiation, out errorLog);
+            return DesignController.ParseSubdesign(instantiation);
         }
 
         /// <summary>

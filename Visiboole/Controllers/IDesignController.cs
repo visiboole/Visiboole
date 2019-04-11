@@ -95,7 +95,7 @@ namespace VisiBoole.Controllers
         /// Parses the active design.
         /// </summary>
         /// <returns>Output of the parsed design</returns>
-        List<IObjectCodeElement> Parse(out List<string> errorLog);
+        List<IObjectCodeElement> Parse();
 
         /// <summary>
         /// Parses a tick for the active design.
@@ -114,8 +114,7 @@ namespace VisiBoole.Controllers
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instnatiation</param>
-        /// <param name="errorLog">Log of errors (if any) from parsing</param>
         /// <returns>Output of the parsed design</returns>
-        List<IObjectCodeElement> ParseSubdesign(string instantiation, out List<string> errorLog);
+        List<IObjectCodeElement> ParseSubdesign(string instantiation);
     }
 }

@@ -67,6 +67,8 @@ namespace VisiBoole.Models
         /// </summary>
         public Stack UndoHistory { get; private set; }
 
+        private Regex ModuleRegex;
+
         /// <summary>
         /// Module declaration of the design. (if exists)
         /// </summary>
@@ -86,6 +88,7 @@ namespace VisiBoole.Models
             FileSource = new FileInfo(filename);
             FileSourceName = FileSource.Name;
             FileName = FileSourceName.Split('.')[0];
+            ModuleRegex = new Regex($@"^\s*{FileName}\({Parser.ModulePattern}\);$", RegexOptions.Compiled);
             UpdateDisplay = update;
 
             if (!File.Exists(filename))
@@ -160,6 +163,11 @@ namespace VisiBoole.Models
                     // Clean line
                     nextLine = nextLine.Replace("\t", new string(' ', 4));
                     nextLine = nextLine.TrimEnd();
+
+                    if (ModuleRegex.IsMatch(nextLine))
+                    {
+                        ModuleDeclaration = nextLine;
+                    }
 
                     // Append line to text
                     text += nextLine + "\n";

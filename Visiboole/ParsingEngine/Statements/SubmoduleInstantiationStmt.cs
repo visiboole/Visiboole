@@ -19,7 +19,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using VisiBoole.Controllers;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
@@ -30,19 +32,16 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public class SubmoduleInstantiationStmt : Statement
 	{
-        /// <summary>
-        /// Regex for getting instantiation tokens (variables and concatenations).
-        /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.ConcatenationPattern}|{Parser.VariablePattern1})");
+        private string DesignPath;
 
         /// <summary>
         /// Constructs a SubmoduleInstatiationStmt instance.
         /// </summary>
-        /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-        /// <param name="instantiation">Instantiation object</param>
-		public SubmoduleInstantiationStmt(string text) : base(text)
+        /// <param name="designPath">Path to the design</param>
+		public SubmoduleInstantiationStmt(string text, string designPath) : base(text)
 		{
+            DesignPath = designPath;
         }
 
         /// <summary>
@@ -50,70 +49,105 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
+            Match instantiationMatch = Regex.Match(Text, Parser.ModuleInstantiationPattern);
+
             // Output padding (if present)
-            Match padding = Parser.WhitespaceRegex.Match(Text);
-            if (padding.Success)
+            for (int i = 0; i < instantiationMatch.Groups["Padding"].Value.Length; i++)
             {
-                for (int i = 0; i < padding.Value.Length; i++)
-                {
-                    Output.Add(new SpaceFeed());
-                }
+                Output.Add(new SpaceFeed());
             }
 
             // Output instantiation
-            Match match = Regex.Match(Text, Parser.InstantiationNotationPattern);
-            Output.Add(new Instantiation(match.Value));
+            Output.Add(new Instantiation($"{instantiationMatch.Groups["Instantiation"].Value}("));
 
-            /*
-            // Output seperator
-            OutputOperator(":");
-
-            // Add variables and concatenations to output
-            string instantiationVariables = Regex.Match(Text.Substring(Text.IndexOf('(')), $@"({Parser.ScalarPattern2}(\s+{Parser.ScalarPattern2})*)(,\s+({Parser.ScalarPattern2}(\s+{Parser.ScalarPattern2})*))*").Value;
-            string[] variableLists = Regex.Split(instantiationVariables, @",\s+");
-            for (int i = 0; i < variableLists.Length; i++)
+            // Output input variables
+            List<bool> inputValues = new List<bool>();
+            string[] inputLists = Regex.Split(instantiationMatch.Groups["Inputs"].Value, @",\s+");
+            for (int i = 0; i < inputLists.Length; i++)
             {
-                string variableList = variableLists[i];
+                string inputList = inputLists[i];
 
-                MatchCollection matches = Parser.ScalarRegex2.Matches(variableList);
-                if (matches.Count > 1)
+                Output.Add(new Comment("{")); // Add starting concat
+
+                foreach (string var in Parser.WhitespaceRegex.Split(inputList.Substring(1, inputList.Length - 2)))
                 {
-                    // Output {
-                    OutputOperator("{");
-                }
-                foreach (Match match in matches)
-                {
-                    if (match.Value == "NC")
+                    // Output each input var in the input list
+                    IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+                    DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+
+                    if (indVar != null)
                     {
-                        OutputOperator("NC");
+                        Output.Add(indVar);
+                        inputValues.Add(indVar.Value);
                     }
                     else
                     {
-                        IndependentVariable indVar = Database.TryGetVariable<IndependentVariable>(match.Value) as IndependentVariable;
-                        DependentVariable depVar = Database.TryGetVariable<DependentVariable>(match.Value) as DependentVariable;
-                        if (indVar != null)
+                        Output.Add(depVar);
+                        inputValues.Add(depVar.Value);
+                    }
+                }
+
+                Output.Add(new Comment("}")); // Add ending concat
+
+                if (i < inputLists.Length - 1)
+                {
+                    Output.Add(new Comment(",")); // Add comma seperator if not last list
+                }
+            }
+
+            // Output seperator
+            Output.Add(new Comment(":"));
+
+            // Get output values
+            Design currentDesign = DesignController.ActiveDesign;
+            Design subDesign = new Design(DesignPath, delegate { });
+            Parser subParser = new Parser(subDesign);
+            DesignController.ActiveDesign = subDesign;
+            List<bool> outputValues = subParser.ParseAsModule(inputValues);
+
+            // Output output
+            if (outputValues == null)
+            {
+                Output.Add(new Comment(instantiationMatch.Groups["Outputs"].Value)); // Output as comment since there was an error
+            }
+            else
+            {
+                int outputValueIndex = 0;
+                string[] outputLists = Regex.Split(instantiationMatch.Groups["Outputs"].Value, @",\s+");
+                for (int i = 0; i < outputLists.Length; i++)
+                {
+                    string outputList = outputLists[i];
+
+                    Output.Add(new Comment("{")); // Add starting concat
+
+                    foreach (string var in Parser.WhitespaceRegex.Split(outputList.Substring(1, outputList.Length - 2)))
+                    {
+                        // Output each input var in the input list
+                        if (var != "NC")
                         {
-                            Output.Add(indVar);
+                            Output.Add(new DependentVariable(var, outputValues[outputValueIndex]));
                         }
                         else
                         {
-                            Output.Add(depVar);
+                            Output.Add(new Comment("NC"));
                         }
+                        outputValueIndex++;
+                    }
+
+                    Output.Add(new Comment("}")); // Add ending concat
+
+                    if (i < outputLists.Length - 1)
+                    {
+                        Output.Add(new Comment(",")); // Add comma seperator if not last list
                     }
                 }
-                if (matches.Count > 1)
-                {
-                    OutputOperator("}");
-                }
-
-                if (i < variableLists.Length - 1)
-                {
-                    OutputOperator(",");
-                }
             }
-            */
 
-            // Output newline
+            // Reset active design
+            DesignController.ActiveDesign = currentDesign;
+
+            // Output ending ) and newline
+            Output.Add(new Comment(")"));
             Output.Add(new LineFeed());
         }
 	}

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
+using VisiBoole.Views;
 
 namespace VisiBoole.ParsingEngine
 {
@@ -35,64 +36,39 @@ namespace VisiBoole.ParsingEngine
         #region Lexer Patterns and Regular Expressions
 
         /// <summary>
-        /// Pattern for identifying scalar notation.
+        /// Pattern for identifying names.
         /// </summary>
-        protected static readonly string ScalarNotationPattern = @"((?<Name>[_a-zA-Z](?<Mid>\w{0,18})?(?(Mid)[_a-zA-Z]))(?<Bit>([1-2]|(?<Bit3>3))?(?(Bit3)[0-1]|[0-9]))?)";
+        private static readonly string NamePattern = @"(?<Name>[_a-zA-Z]\w{0,19})";
 
         /// <summary>
-        /// Pattern for identifying scalars. (With ~ or *)
+        /// Pattern for identifying scalars. (No ~ or *)
         /// </summary>
-        private static readonly string ScalarPattern = $"^([~*]*{ScalarNotationPattern})$";
+        public static readonly string ScalarPattern = $@"({NamePattern}\d{{0,2}})";
 
         /// <summary>
-        /// Pattern for identifying index notation.
+        /// Pattern for identifying vectors. (No ~ or *)
         /// </summary>
-        private static readonly string IndexNotationPattern = @"((\[(?<LeftBound>\d+)\.(?<Step>[1-9]\d*)?\.(?<RightBound>\d+)\])|(\[\]))";
+        protected static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d{{1,2}})\.(?<Step>\d{{1,2}})?\.(?<RightBound>\d{{1,2}})\])|(\[\])))";
 
         /// <summary>
-        /// Pattern for identifying vector notation.
+        /// Pattern for identifying constants. (No ~)
         /// </summary>
-        protected static readonly string VectorNotationPattern = $"({ScalarNotationPattern}{IndexNotationPattern})";
+        protected static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
 
         /// <summary>
-        /// Pattern for identifying vectors. (Optional ~ or *)
+        /// Pattern for identifying formatters.
         /// </summary>
-        private static readonly string VectorPattern = $"^([~*]*{VectorNotationPattern})$";
-
-        /// <summary>
-        /// Pattern for identifying constant notation.
-        /// </summary>
-        protected static readonly string ConstantNotationPattern = @"((?<BitCount>\d{1,2})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
-
-        /// <summary>
-        /// Pattern for identifying constants. (Optional ~)
-        /// </summary>
-        private static readonly string ConstantPattern = $"^(~*{ConstantNotationPattern})$";
-
-        /// <summary>
-        /// Pattern for identifying format specifier notation.
-        /// </summary>
-        protected static readonly string FormatSpecifierNotationPattern = @"(%(?<Format>[ubhdUBHD]))";
-
-        /// <summary>
-        /// Pattern for identifying format specifiers.
-        /// </summary>
-        private static readonly string FormatSpecifierPattern = $@"^{FormatSpecifierNotationPattern}$";
-
-        /// <summary>
-        /// Pattern for identifying submodule instantiation notation.
-        /// </summary>
-        public static readonly string InstantiationNotationPattern = @"(?<Design>\w+)\.(?<Name>\w+)";
+        protected static readonly string FormatterPattern = @"(%(?<Format>[ubhdUBHD]))";
 
         /// <summary>
         /// Pattern for identifying submodule instantiations.
         /// </summary>
-        private static readonly string InstantiationPattern = $@"^{InstantiationNotationPattern}$";
+        protected static readonly string InstantiationPattern = @"(?<Design>\w+)\.(?<Name>\w+)";
 
         /// <summary>
         /// Pattern for identifying operators.
         /// </summary>
-        private static readonly string OperatorPattern = $@"^(([=+^|-])|(<=(@{ScalarNotationPattern})?)|(~+)|(==))$";
+        private static readonly string OperatorPattern = $@"^(([=+^|-])|(<=(@{ScalarPattern})?)|(~+)|(==))$";
 
         /// <summary>
         /// Pattern for identifying seperators.
@@ -105,29 +81,34 @@ namespace VisiBoole.ParsingEngine
         private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]";
 
         /// <summary>
-        /// Regex for identifying scalars. (With ~ or *)
+        /// Regex for identifying bits.
         /// </summary>
-        public static Regex ScalarRegex { get; } = new Regex(ScalarPattern, RegexOptions.Compiled);
+        private static Regex BitRegex { get; } = new Regex(@"\d+$", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying vectors. (With ~ or *)
+        /// Regex for identifying scalars. (Optional ~ or *)
         /// </summary>
-        private static Regex VectorRegex { get; } = new Regex(VectorPattern, RegexOptions.Compiled);
+        private static Regex ScalarRegex { get; } = new Regex($"^[~*]*{ScalarPattern}$", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Regex for identifying vectors. (Optional ~ or *)
+        /// </summary>
+        private static Regex VectorRegex { get; } = new Regex($"^[~*]*{VectorPattern}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying constants. (Optional ~)
         /// </summary>
-        public static Regex ConstantRegex { get; } = new Regex(ConstantPattern, RegexOptions.Compiled);
+        public static Regex ConstantRegex { get; } = new Regex($"^~*{ConstantPattern}$", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying format specifiers.
+        /// Regex for identifying formatters.
         /// </summary>
-        private static Regex FormatSpecifierRegex = new Regex(FormatSpecifierPattern, RegexOptions.Compiled);
+        private static Regex FormatterRegex = new Regex($"^{FormatterPattern}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying submodule instantiations.
         /// </summary>
-        private static Regex InstantiationRegex = new Regex(InstantiationPattern);
+        private static Regex InstantiationRegex = new Regex($"^{InstantiationPattern}$");
 
         /// <summary>
         /// Regex for identifying operators.
@@ -152,9 +133,14 @@ namespace VisiBoole.ParsingEngine
         protected int LineNumber;
 
         /// <summary>
-        /// List of errors from the parsing.
+        /// List of errors.
         /// </summary>
         protected List<string> ErrorLog;
+
+        /// <summary>
+        /// Error dialog box for design errors.
+        /// </summary>
+        protected ErrorDialogBox ErrorDialogBox;
 
         /// <summary>
         /// The design being parsed.
@@ -188,6 +174,7 @@ namespace VisiBoole.ParsingEngine
         protected Lexer(Design design)
         {
             ErrorLog = new List<string>();
+            ErrorDialogBox = new ErrorDialogBox();
             Design = design;
             Libraries = new List<string>();
             Subdesigns = new Dictionary<string, string>();
@@ -226,14 +213,14 @@ namespace VisiBoole.ParsingEngine
                     // Make sure current lexeme is empty, + or -
                     if (!(currentLexeme == "+" || currentLexeme == "-" || currentLexeme == ""))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: Invalid '\"'.");
+                        ErrorLog.Add($"{LineNumber}: Invalid '\"'.");
                         return null;
                     }
 
                     // Make sure no other tokens exist
                     if (tokens.Any(token => token != " "))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: Invalid '\"'.");
+                        ErrorLog.Add($"{LineNumber}: Invalid '\"'.");
                         return null;
                     }
 
@@ -257,7 +244,7 @@ namespace VisiBoole.ParsingEngine
                             if (type != StatementType.Empty || c != '(' || !InstantiationRegex.IsMatch(currentLexeme))
                             {
                                 // If token is not valid and is not an instantiation
-                                ErrorLog.Add($"Line {LineNumber}: Invalid '{currentLexeme}'.");
+                                ErrorLog.Add($"{LineNumber}: Invalid '{currentLexeme}'.");
                                 return null;
                             }
                         }
@@ -290,13 +277,13 @@ namespace VisiBoole.ParsingEngine
                             }
                             else
                             {
-                                ErrorLog.Add($"Line {LineNumber}: '{top}' must be matched first.");
+                                ErrorLog.Add($"{LineNumber}: '{top}' must be matched first.");
                                 return null;
                             }
                         }
                         else
                         {
-                            ErrorLog.Add($"Line {LineNumber}: Unmatched '{c}'.");
+                            ErrorLog.Add($"{LineNumber}: Unmatched '{c}'.");
                             return null;
                         }
                     }
@@ -306,7 +293,7 @@ namespace VisiBoole.ParsingEngine
                 else if (InvalidRegex.IsMatch(newChar))
                 {
                     // Invalid char
-                    ErrorLog.Add($"Line {LineNumber}: Invalid character '{c}'.");
+                    ErrorLog.Add($"{LineNumber}: Invalid character '{c}'.");
                     return null;
                 }
                 else
@@ -318,7 +305,7 @@ namespace VisiBoole.ParsingEngine
                         // Check for constant bit count inside {}
                         if (groupings.Count > 0 && groupings.Peek() == '{' && (String.IsNullOrEmpty(currentLexeme) || !currentLexeme.All(ch => Char.IsDigit(ch))))
                         {
-                            ErrorLog.Add($"Line {LineNumber}: Constants in concatenation fields must specify bit count.");
+                            ErrorLog.Add($"{LineNumber}: Constants in concatenation fields must specify bit count.");
                             return null;
                         }
                     }
@@ -332,7 +319,7 @@ namespace VisiBoole.ParsingEngine
             {
                 foreach (char grouping in groupings)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{grouping}' is not matched.");
+                    ErrorLog.Add($"{LineNumber}: '{grouping}' is not matched.");
                 }
                 return null;
             }
@@ -371,7 +358,7 @@ namespace VisiBoole.ParsingEngine
             {
                 return true;
             }
-            else if (FormatSpecifierRegex.IsMatch(lexeme))
+            else if (FormatterRegex.IsMatch(lexeme))
             {
                 return true;
             }
@@ -382,52 +369,55 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Returns whether a lexeme is a scalar. (If so, initializes it)
+        /// Returns whether a lexeme is a scalar.
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a scalar</returns>
         private bool IsScalar(string lexeme)
         {
-            Match match = ScalarRegex.Match(lexeme);
-            if (match.Success)
+            if (ScalarRegex.IsMatch(lexeme))
             {
                 // Get scalar name and bit
-                string name = match.Groups["Name"].Value;
-                int bit = String.IsNullOrEmpty(match.Groups["Bit"].Value)
-                    ? -1
-                    : Convert.ToInt32(match.Groups["Bit"].Value);
+                Match bitMatch = BitRegex.Match(lexeme);
+                int bit = bitMatch.Success ? Convert.ToInt32(bitMatch.Value) : -1;
+                string name = bitMatch.Success ? lexeme.Substring(0, bitMatch.Index) : lexeme;
+
+                // Check for invalid bit
+                if (bit > 31)
+                {
+                    ErrorLog.Add($"{LineNumber}: Bit count of '{name}' must be between 0 and 31.");
+                    return false;
+                }
 
                 // Check scalar name has at least one letter
                 if (!name.Any(c => char.IsLetter(c)))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Invalid scalar name.");
+                    ErrorLog.Add($"{LineNumber}: Scalar name '{name}' must contain at least one letter.");
                     return false;
                 }
 
-                // Check to add scalar to namespaces
-                if (bit == -1)
+                name = name.TrimStart('*').TrimStart('~');
+                lexeme = lexeme.TrimStart('*').TrimStart('~');
+
+                // Check for taken namespace
+                if (Design.Database.GetComponents(name) != null && bit == -1)
                 {
-                    if (Design.Database.GetComponents(name) != null)
-                    {
-                        ErrorLog.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a vector.");
-                        return false;
-                    }
-                    else if (!Design.Database.HasNamespace(name))
-                    {
-                        Design.Database.AddNamespace(name, null);
-                    }
+                    ErrorLog.Add($"{LineNumber}: Namespace '{name}' is already being used by a vector.");
+                    return false;
+                }
+
+                // Add namespace component
+                if (bit != -1)
+                {
+                    Design.Database.AddNamespaceComponent(name, lexeme);
                 }
                 else
                 {
-                    if (Design.Database.GetComponents(name) == null & Design.Database.HasNamespace(name))
+                    if (!Design.Database.HasNamespace(name))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: Namespace '{name}' is already being used by a scalar.");
-                        return false;
+                        Design.Database.AddNamespaceComponent(name, null);
                     }
-                    else
-                    {
-                        Design.Database.AddNamespace(name, new List<string>(new string[] { String.Concat(name, bit) }));
-                    }
+                    
                 }
 
                 return true;
@@ -452,7 +442,7 @@ namespace VisiBoole.ParsingEngine
                 string vectorNamespace = match.Groups["Name"].Value;
                 if (Char.IsDigit(vectorNamespace[vectorNamespace.Length - 1]))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Vector namespaces cannot end in a number.");
+                    ErrorLog.Add($"{LineNumber}: Vector name '{vectorNamespace}' cannot end in a number.");
                     return false;
                 }
 
@@ -460,36 +450,44 @@ namespace VisiBoole.ParsingEngine
                 int leftBound = String.IsNullOrEmpty(match.Groups["LeftBound"].Value) ? -1 : Convert.ToInt32(match.Groups["LeftBound"].Value);
                 int step = String.IsNullOrEmpty(match.Groups["Step"].Value) ? -1 : Convert.ToInt32(match.Groups["Step"].Value);
                 int rightBound = String.IsNullOrEmpty(match.Groups["RightBound"].Value) ? -1 : Convert.ToInt32(match.Groups["RightBound"].Value);
-                if (leftBound > 31 || rightBound > 31 || step > 31)
+                if (leftBound > 31 || rightBound > 31)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Vector bounds and step must be between 0 and 31.");
+                    ErrorLog.Add($"{LineNumber}: Vector bounds of '{lexeme}' must be between 0 and 31.");
+                    return false;
+                }
+                else if (step > 31)
+                {
+                    ErrorLog.Add($"{LineNumber}: Vector step of '{lexeme}' must be between 0 and 31.");
                     return false;
                 }
 
-                // Check if namespace is used by a scalar
-                if (Design.Database.GetComponents(vectorNamespace) == null && Design.Database.HasNamespace(vectorNamespace))
-                {
-                    ErrorLog.Add($"Line {LineNumber}: A scalar with the name '{vectorNamespace}' already exists.");
-                    return false;
-                }
-
+                // Check for invalid [] notation
                 if (!Design.Database.HasNamespace(vectorNamespace) && leftBound == -1)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
+                    ErrorLog.Add($"{LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
+                    return false;
+                }
+
+                // Check for taken namespace
+                if (Design.Database.GetComponents(vectorNamespace) == null && Design.Database.HasNamespace(vectorNamespace))
+                {
+                    ErrorLog.Add($"{LineNumber}: Namespace '{vectorNamespace}' is already being used by a scalar.");
                     return false;
                 }
 
                 if (leftBound != -1)
                 {
-                    // Adds all variables in the range
-                    string initVector = $"{vectorNamespace}[{leftBound}..{rightBound}]";
-                    if (ExpansionMemo.ContainsKey(initVector))
+                    if (leftBound < rightBound)
                     {
-                        Design.Database.AddNamespace(vectorNamespace, ExpansionMemo[initVector]);
+                        // Flips bounds so MSB is the leftBound
+                        leftBound = leftBound + rightBound;
+                        rightBound = leftBound - rightBound;
+                        leftBound = leftBound - rightBound;
                     }
-                    else
+
+                    for (int i = leftBound; i >= rightBound; i--)
                     {
-                        Design.Database.AddNamespace(vectorNamespace, ExpandVector(VectorRegex.Match(initVector)));
+                        Design.Database.AddNamespaceComponent(vectorNamespace, String.Concat(vectorNamespace, i));
                     }
                 }
 
@@ -514,7 +512,7 @@ namespace VisiBoole.ParsingEngine
                 // Check bit count
                 if (!String.IsNullOrEmpty(match.Groups["BitCount"].Value) && Convert.ToInt32(match.Groups["BitCount"].Value) > 32)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Constant can have at most 32 bits.");
+                    ErrorLog.Add($"{LineNumber}: Constant can have at most 32 bits.");
                     return false;
                 }
                 return true;
@@ -545,7 +543,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' can only be used after the dependent in a boolean statement.");
+                    ErrorLog.Add($"{LineNumber}: '{currentLexeme}' can only be used after the dependent in a boolean statement.");
                     return false;
                 }
                 else
@@ -555,7 +553,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (line.Substring(0, line.IndexOf(currentLexeme)).Contains("*"))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
+                    ErrorLog.Add($"{LineNumber}: '*' can only be used in a variable list statement.");
                     return false;
                 }
             }
@@ -563,7 +561,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' can only be used after the dependent in a clock statement.");
+                    ErrorLog.Add($"{LineNumber}: '{currentLexeme}' can only be used after the dependent in a clock statement.");
                     return false;
                 }
                 else
@@ -573,7 +571,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (line.Substring(0, line.IndexOf(currentLexeme)).Contains("*"))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
+                    ErrorLog.Add($"{LineNumber}: '*' can only be used in a variable list statement.");
                     return false;
                 }
             }
@@ -581,7 +579,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' operator can only be used in a boolean or clock statement.");
+                    ErrorLog.Add($"{LineNumber}: '{currentLexeme}' operator can only be used in a boolean or clock statement.");
                     return false;
                 }
             }
@@ -589,7 +587,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty && type != StatementType.FormatSpecifier)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{currentLexeme}' can only be used in a format specifier statement.");
+                    ErrorLog.Add($"{LineNumber}: '{currentLexeme}' can only be used in a format specifier statement.");
                     return false;
                 }
                 else if (type == StatementType.Empty)
@@ -601,19 +599,19 @@ namespace VisiBoole.ParsingEngine
             {
                 if (currentLexeme == "~" && currentChar != '(' && currentChar != '{')
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '~' must be attached to a scalar, vector, constant, parenthesis or concatenation.");
+                    ErrorLog.Add($"{LineNumber}: '~' must be attached to a scalar, vector, constant, parenthesis or concatenation.");
                     return false;
                 }
 
                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '~' can only be used in on the right side of a boolean or clock statement.");
+                    ErrorLog.Add($"{LineNumber}: '~' can only be used in on the right side of a boolean or clock statement.");
                     return false;
                 }
 
                 if (groupings.Count > 0 && groupings.Peek() == '{')
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '~' can't be used inside a concatenation field.");
+                    ErrorLog.Add($"{LineNumber}: '~' can't be used inside a concatenation field.");
                     return false;
                 }
             }
@@ -621,7 +619,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (type != StatementType.Empty)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '*' can only be used in a variable list statement.");
+                    ErrorLog.Add($"{LineNumber}: '*' can only be used in a variable list statement.");
                     return false;
                 }
             }
@@ -629,7 +627,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (!(type == StatementType.Boolean || type == StatementType.Clock))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Constants can only be used on the right side of a boolean or clock statement.");
+                    ErrorLog.Add($"{LineNumber}: Constants can only be used on the right side of a boolean or clock statement.");
                     return false;
                 }
             }
@@ -653,7 +651,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (seperatorChar == '{' && groupings.Count > 0 && groupings.Peek() == '{')
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Concatenations can't be used inside of other concatenations.");
+                    ErrorLog.Add($"{LineNumber}: Concatenations can't be used inside of other concatenations.");
                     return false;
                 }
             }
@@ -661,7 +659,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (groupings.Count > 0 && groupings.Peek() == '{')
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{seperatorChar}' can't be used in a concatenation.");
+                    ErrorLog.Add($"{LineNumber}: '{seperatorChar}' can't be used in a concatenation.");
                     return false;
                 }
 
@@ -677,13 +675,13 @@ namespace VisiBoole.ParsingEngine
 
                     if (designName == Design.FileName)
                     {
-                        ErrorLog.Add($"Line {LineNumber}: You cannot instantiate from the current design.");
+                        ErrorLog.Add($"{LineNumber}: You cannot instantiate from the current design.");
                         return false;
                     }
 
                     if (Instantiations.ContainsKey(instantiationName))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: Instantiation name '{instantiationName}' is already being used.");
+                        ErrorLog.Add($"{LineNumber}: Instantiation name '{instantiationName}' is already being used.");
                         return false;
                     }
                     else
@@ -721,7 +719,7 @@ namespace VisiBoole.ParsingEngine
                                     if (file == null)
                                     {
                                         // Not found
-                                        ErrorLog.Add($"Line {LineNumber}: Unable to find '{designName}'.");
+                                        ErrorLog.Add($"{LineNumber}: Unable to find '{designName}'.");
                                         return false;
                                     }
                                 }
@@ -736,7 +734,7 @@ namespace VisiBoole.ParsingEngine
                         }
                         catch (Exception)
                         {
-                            ErrorLog.Add($"Line {LineNumber}: Error locating '{designName}'.");
+                            ErrorLog.Add($"{LineNumber}: Error locating '{designName}'.");
                             return false;
                         }
                     }
@@ -746,7 +744,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (type == StatementType.FormatSpecifier || type == StatementType.Empty)
                 {
-                    ErrorLog.Add($"Line {LineNumber}: '{seperatorChar}' can't be used in a format specifier or variable list statement.");
+                    ErrorLog.Add($"{LineNumber}: '{seperatorChar}' can't be used in a format specifier or variable list statement.");
                     return false;
                 }
             }
@@ -754,13 +752,13 @@ namespace VisiBoole.ParsingEngine
             {
                 if (tokens.Count == 0 || tokens.Contains(";"))
                 {
-                    ErrorLog.Add($"Line {LineNumber}: ';' can only be used to end a statement.");
+                    ErrorLog.Add($"{LineNumber}: ';' can only be used to end a statement.");
                     return false;
                 }
 
                 if (tokens.Last() == " ")
                 {
-                    ErrorLog.Add($"Line {LineNumber}: Spaces cannot occur before ';'.");
+                    ErrorLog.Add($"{LineNumber}: Spaces cannot occur before ';'.");
                     return false;
                 }
             }
@@ -769,14 +767,14 @@ namespace VisiBoole.ParsingEngine
                 // Check for misplaced comma
                 if (groupings.Count == 0 || groupings.Peek() != '(')
                 {
-                    ErrorLog.Add($"Line {LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
+                    ErrorLog.Add($"{LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
                     return false;
                 }
                 else
                 {
                     if (!(type == StatementType.Submodule || type == StatementType.Module))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
+                        ErrorLog.Add($"{LineNumber}: ',' can only be used inside the () in a submodule or module statement.");
                         return false;
                     }
                 }
@@ -785,21 +783,21 @@ namespace VisiBoole.ParsingEngine
             {
                 if (groupings.Count == 0 || groupings.Peek() != '(')
                 {
-                    ErrorLog.Add($"Line {LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
+                    ErrorLog.Add($"{LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
                     return false;
                 }
                 else
                 {
                     if (!(type == StatementType.Module || type == StatementType.Submodule))
                     {
-                        ErrorLog.Add($"Line {LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
+                        ErrorLog.Add($"{LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
                         return false;
                     }
                     else
                     {
                         if (tokens.Contains(":"))
                         {
-                            ErrorLog.Add($"Line {LineNumber}: ':' can only be used once in a module or submodule statement.");
+                            ErrorLog.Add($"{LineNumber}: ':' can only be used once in a module or submodule statement.");
                             return false;
                         }
                     }
@@ -887,7 +885,7 @@ namespace VisiBoole.ParsingEngine
             if (specifiedBitCount != -1 && specifiedBitCount < bits.Length)
             {
                 // Error
-                ErrorLog.Add($"Line {LineNumber}: {constant.Value} doesn't specify enough bits.");
+                ErrorLog.Add($"{LineNumber}: {constant.Value} doesn't specify enough bits.");
                 return null;
             }
             else if (specifiedBitCount > bits.Length)
