@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using CustomTabControl;
 using System;
 using System.Windows.Forms;
 using VisiBoole.Views;
@@ -42,6 +43,6 @@ namespace VisiBoole
         /// <summary>
         /// Tab Control
         /// </summary>
-        public static TabControl TabControl = null;
+        public static NewTabControl TabControl = null;
     }
 }

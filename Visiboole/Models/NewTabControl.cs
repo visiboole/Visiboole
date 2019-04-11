@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using VisiBoole;
 
 namespace CustomTabControl
 {
@@ -13,7 +14,7 @@ namespace CustomTabControl
         public NewTabControl() : base()
         {
             SizeMode = TabSizeMode.Fixed;
-            ItemSize = new Size(125, 20);
+            ItemSize = new Size(125, 23);
             DrawMode = TabDrawMode.OwnerDrawFixed;
             AllowDrop = true;
             ShowToolTips = true;
@@ -34,6 +35,7 @@ namespace CustomTabControl
             {
                 Tag = TabPages[clickedIndex];
 
+                /*
                 Rectangle current = GetTabRect(clickedIndex);
                 Rectangle close = new Rectangle(current.Right - 18, current.Height - 15, 16, 16);
                 if (close.Contains(e.Location))
@@ -41,6 +43,7 @@ namespace CustomTabControl
                     SelectedIndex = SelectedIndex != 0 ? SelectedIndex - 1 : SelectedIndex + 1;
                     TabPages.RemoveAt(clickedIndex);
                 }
+                */
             }
         }
 
@@ -162,7 +165,9 @@ namespace CustomTabControl
             // Swap tab indexes
             int srcIndex = TabPages.IndexOf(srcTab);
             int dstIndex = TabPages.IndexOf(dstTab);
+            TabPages[dstIndex].Design().TabPageIndex = srcIndex;
             TabPages[dstIndex] = srcTab;
+            TabPages[srcIndex].Design().TabPageIndex = dstIndex;
             TabPages[srcIndex] = dstTab;
             Refresh();
         }
@@ -173,26 +178,21 @@ namespace CustomTabControl
             string tabName = newTabPage.Text;
             newTabPage.ToolTipText = tabName;
 
-            // Fill tab
-            Rectangle newTabFullRect = GetTabRect(e.Index);
-            //Color tabColor = Properties.Settings.Default.Theme == "Light" ? Color.White : Color.FromArgb(48, 48, 48);
-            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(48, 48, 48)), newTabFullRect);
-
             // Draw close
-            e.Graphics.DrawImage(Properties.Resources.Close, newTabFullRect.Right - 18, newTabFullRect.Height - 15);
+            Rectangle newTabFullRect = GetTabRect(e.Index);
+            e.Graphics.DrawImage(VisiBoole.Properties.Resources.Close, newTabFullRect.Right - 18, newTabFullRect.Height - 17);
 
             // Draw tab text
-            Rectangle newTabTextRect = new Rectangle(new Point(newTabFullRect.X, newTabFullRect.Y), new Size(newTabFullRect.Width - 16, newTabFullRect.Height));
-            //Color fontColor = Properties.Settings.Default.Theme == "Light" ? Color.Black : Color.White;
-            TextRenderer.DrawText(e.Graphics, tabName, new Font("Segoe UI", 11F), newTabTextRect, Color.White, TextFormatFlags.WordEllipsis);
+            Rectangle newTabTextRect = new Rectangle(new Point(newTabFullRect.X + 2, newTabFullRect.Y + 1), new Size(newTabFullRect.Width - 16, newTabFullRect.Height));
+            TextRenderer.DrawText(e.Graphics, tabName, new Font("Segoe UI", 11F), newTabTextRect, Color.Black, TextFormatFlags.WordEllipsis);
 
             // Draw tab background
             Rectangle lastTabRect = GetTabRect(TabPages.Count - 1);
             Rectangle backgroundRect = new Rectangle();
             backgroundRect.Location = new Point(lastTabRect.Right, 0);
-            backgroundRect.Size = new Size(Right - backgroundRect.Left, lastTabRect.Height + 1);
-            //Color backgroundColor = Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
-            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(66, 66, 66)), backgroundRect);
+            backgroundRect.Size = new Size(Right - backgroundRect.Left, lastTabRect.Height);
+            Color backgroundColor = VisiBoole.Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
+            e.Graphics.FillRectangle(new SolidBrush(backgroundColor), backgroundRect);
 
             base.OnDrawItem(e);
         }

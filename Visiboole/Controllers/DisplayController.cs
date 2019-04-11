@@ -28,6 +28,7 @@ using VisiBoole.ParsingEngine.ObjectCode;
 using System.Drawing;
 using System.Threading;
 using System;
+using CustomTabControl;
 
 namespace VisiBoole.Controllers
 {
@@ -56,7 +57,7 @@ namespace VisiBoole.Controllers
 		/// <summary>
 		/// The TabControl that shows the input that is shared amongst the displays that are hosted by the MainWindow
 		/// </summary>
-		private TabControl TabControl;
+		private NewTabControl TabControl;
 
 		/// <summary>
 		/// The WebBrowser that shows the output that is shared amongst the displays that are hosted by the MainWindow
@@ -104,12 +105,14 @@ namespace VisiBoole.Controllers
         public DisplayController(IDisplay editDisplay, IDisplay runDisplay)
 		{
             // Init tab control
-			TabControl = new TabControl();
+			TabControl = new NewTabControl();
 
+            /*
             TabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
             ImageList il = new ImageList();
             il.Images.Add("Close", Properties.Resources.Close);
             TabControl.ImageList = il;
+            */
 
             TabControl.SelectedIndexChanged += (sender, e) => {
                 MainWindowController.SelectFile(TabControl.SelectedIndex);
@@ -119,7 +122,7 @@ namespace VisiBoole.Controllers
                 if (TabControl.SelectedIndex != -1)
                 {
                     Rectangle current = TabControl.GetTabRect(TabControl.SelectedIndex);
-                    Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
+                    Rectangle close = new Rectangle(current.Right - 18, current.Height - 16, 16, 16);
                     if (close.Contains(e.Location))
                     {
                         MainWindowController.CloseActiveFile();
@@ -202,8 +205,10 @@ namespace VisiBoole.Controllers
         {
             TabPage tab = new TabPage(design.FileSourceName);
             tab.Name = design.FileSourceName;
+            /*
             tab.ImageKey = "Close";
             tab.ImageIndex = 0;
+            */
             tab.Controls.Add(design);
             design.Dock = DockStyle.Fill;
 
