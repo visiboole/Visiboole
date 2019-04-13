@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using CustomTabControl;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -30,7 +31,7 @@ namespace VisiBoole.Views
 	/// </summary>
 	public partial class DisplayRun : UserControl, IDisplay
 	{
-        private TabControl BrowserTabControl;
+        private NewTabControl BrowserTabControl;
 
 		/// <summary>
 		/// Handle to the controller for this display
@@ -55,14 +56,16 @@ namespace VisiBoole.Views
 		{
 			InitializeComponent();
 
-            BrowserTabControl = new TabControl();
+            BrowserTabControl = new NewTabControl();
+            /*
             BrowserTabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
 
             ImageList il = new ImageList();
             il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
             BrowserTabControl.ImageList = il;
+            */
 
-            BrowserTabControl.MouseDown += new MouseEventHandler(this.TabMouseDownEvent);
+            BrowserTabControl.MouseDown += new MouseEventHandler(TabMouseDownEvent);
         }
 
         /// <summary>
@@ -75,7 +78,7 @@ namespace VisiBoole.Views
             if (BrowserTabControl.SelectedIndex != -1)
             {
                 Rectangle current = BrowserTabControl.GetTabRect(BrowserTabControl.SelectedIndex);
-                Rectangle close = new Rectangle(current.Left + 7, current.Top + 4, 12, 12);
+                Rectangle close = new Rectangle(current.Right - 18, current.Height - 15, 16, 16);
                 TabPage tab = BrowserTabControl.SelectedTab;
                 if (close.Contains(e.Location))
                 {
@@ -130,8 +133,10 @@ namespace VisiBoole.Views
         public void AddBrowser(string designName, WebBrowser browser)
 		{
             TabPage newTab = new TabPage(designName);
+            /*
             newTab.ImageKey = "Close";
             newTab.ImageIndex = 0;
+            */
             newTab.Controls.Add(browser);
             browser.Dock = DockStyle.Fill;
 

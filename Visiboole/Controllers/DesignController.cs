@@ -128,9 +128,9 @@ namespace VisiBoole.Controllers
                 newDesign = new Design(name, delegate { }); // used for testing
             }
             
-            if (!Designs.ContainsKey(newDesign.FileSourceName))
+            if (!Designs.ContainsKey(newDesign.FileName))
             {
-                Designs.Add(newDesign.FileSourceName, newDesign);
+                Designs.Add(newDesign.FileName, newDesign);
                 ActiveDesign = newDesign;
             }
 

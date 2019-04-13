@@ -106,13 +106,10 @@ namespace VisiBoole.Controllers
 		{
             // Init tab control
 			TabControl = new NewTabControl();
-
-            /*
-            TabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-            ImageList il = new ImageList();
-            il.Images.Add("Close", Properties.Resources.Close);
-            TabControl.ImageList = il;
-            */
+            TabControl.Font = new Font("Segoe UI", 10.75F);
+            TabControl.SelectedTabColor = Color.DodgerBlue;
+            TabControl.TabBoundaryColor = Color.Black;
+            TabControl.SelectedTabTextColor = Color.White;
 
             TabControl.SelectedIndexChanged += (sender, e) => {
                 MainWindowController.SelectFile(TabControl.SelectedIndex);
@@ -203,20 +200,16 @@ namespace VisiBoole.Controllers
 		/// <returns>Returns true if a new tab was successfully created</returns>
 		public bool CreateNewTab(Design design)
         {
-            TabPage tab = new TabPage(design.FileSourceName);
-            tab.Name = design.FileSourceName;
-            /*
-            tab.ImageKey = "Close";
-            tab.ImageIndex = 0;
-            */
+            TabPage tab = new TabPage(design.FileName);
+            tab.Name = design.FileName;
             tab.Controls.Add(design);
             design.Dock = DockStyle.Fill;
 
-            if (TabControl.TabPages.ContainsKey(design.FileSourceName))
+            if (TabControl.TabPages.ContainsKey(design.FileName))
             {
-                int index = TabControl.TabPages.IndexOfKey(design.FileSourceName);
+                int index = TabControl.TabPages.IndexOfKey(design.FileName);
 
-                TabControl.TabPages.RemoveByKey(design.FileSourceName);
+                TabControl.TabPages.RemoveByKey(design.FileName);
                 TabControl.TabPages.Insert(index, tab);
                 design.TabPageIndex = TabControl.TabPages.IndexOf(tab);
                 TabControl.SelectTab(tab);

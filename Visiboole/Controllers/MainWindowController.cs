@@ -180,7 +180,7 @@ namespace VisiBoole.Controllers
 
                 if (DisplayController.CreateNewTab(design) == true)
                 {
-                    MainWindow.AddNavTreeNode(design.FileSourceName);
+                    MainWindow.AddNavTreeNode(design.FileName);
                 }
 
                 LoadDisplay(DisplayController.CurrentDisplay.TypeOfDisplay);
@@ -273,7 +273,7 @@ namespace VisiBoole.Controllers
                 // Otherwise close file
                 DisplayController.CloseTab(design.TabPageIndex);
                 DesignController.CloseDesign(name, save);
-                MainWindow.RemoveNavTreeNode(design.FileSourceName);
+                MainWindow.RemoveNavTreeNode(design.FileName);
                 return design.FileSourceName;
             }
             else
@@ -289,7 +289,7 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                CloseFile(Controllers.DesignController.ActiveDesign.FileSourceName);
+                CloseFile(Controllers.DesignController.ActiveDesign.FileName);
             }
             catch (Exception)
             {

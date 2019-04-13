@@ -11,15 +11,84 @@ namespace CustomTabControl
 {
     public class NewTabControl : TabControl
     {
+        /// <summary>
+        /// Background color of the component.
+        /// </summary>
+        public Color BackgroundColor { get; set; } = Color.FromArgb(66, 66, 66);
+
+        /// <summary>
+        /// Color of the tab headers.
+        /// </summary>
+        public Color TabColor { get; set; } = Color.FromArgb(66, 66, 66);
+
+        /// <summary>
+        /// Color of the tab header that is currently selected.
+        /// </summary>
+        public Color SelectedTabColor { get; set; } = SystemColors.Highlight;
+
+        /// <summary>
+        /// Color of the outside boundary for the tab header.
+        /// </summary>
+        public Color TabBoundaryColor { get; set; } = Color.Black;
+
+        /// <summary>
+        /// Color of the tab header text.
+        /// </summary>
+        public Color TabTextColor { get; set; } = Color.White;
+
+        /// <summary>
+        /// Color of the selected tab header text.
+        /// </summary>
+        public Color SelectedTabTextColor { get; set; } = Color.White;
+
         public NewTabControl() : base()
         {
-            SizeMode = TabSizeMode.Fixed;
-            ItemSize = new Size(125, 23);
-            DrawMode = TabDrawMode.OwnerDrawFixed;
             AllowDrop = true;
             ShowToolTips = true;
+            SizeMode = TabSizeMode.Fixed;
+            ItemSize = new Size(125, 25);
+            DrawMode = TabDrawMode.OwnerDrawFixed;
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.DoubleBuffer, true);
 
             MouseDown += MouseDownEvent;
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+            // Paint background
+            SolidBrush backgroundBrush = new SolidBrush(BackgroundColor);
+            pevent.Graphics.FillRectangle(backgroundBrush, 0, 0, Size.Width, Size.Height);
+            backgroundBrush.Dispose();
+
+            // Paint each tab
+            foreach (TabPage tab in TabPages)
+            {
+                // Get tab info
+                int index = TabPages.IndexOf(tab);
+                Rectangle TabBoundary = GetTabRect(index);
+                tab.ToolTipText = $"{tab.Text.TrimStart('*')}.vbi";
+
+                // Draw tab
+                Color tabColor = index == SelectedIndex ? SelectedTabColor : TabColor;
+                SolidBrush tabBrush = new SolidBrush(tabColor);
+                pevent.Graphics.FillRectangle(tabBrush, TabBoundary);
+                tabBrush.Dispose();
+
+                // Draw tab boundary
+                Pen boundaryPen = new Pen(TabBoundaryColor);
+                pevent.Graphics.DrawRectangle(boundaryPen, TabBoundary);
+                boundaryPen.Dispose();
+
+                // Draw closing X
+                pevent.Graphics.DrawImage(VisiBoole.Properties.Resources.Close, TabBoundary.Right - 19, TabBoundary.Height - 18);
+
+                // Draw text
+                Rectangle TabTextBoundary = new Rectangle(TabBoundary.X + 2, TabBoundary.Y + 2, TabBoundary.Width - 17, TabBoundary.Height - 2);
+                Color fontColor = index == SelectedIndex ? SelectedTabTextColor : TabTextColor;
+                TextRenderer.DrawText(pevent.Graphics, tab.Text, Font, TabTextBoundary, fontColor, TextFormatFlags.WordEllipsis);
+            }
+
+            pevent.Dispose();
         }
 
         /// <summary>
@@ -165,36 +234,20 @@ namespace CustomTabControl
             // Swap tab indexes
             int srcIndex = TabPages.IndexOf(srcTab);
             int dstIndex = TabPages.IndexOf(dstTab);
-            TabPages[dstIndex].Design().TabPageIndex = srcIndex;
+
+            if (TabPages[dstIndex].Design() != null)
+            {
+                TabPages[dstIndex].Design().TabPageIndex = srcIndex;
+            }
             TabPages[dstIndex] = srcTab;
-            TabPages[srcIndex].Design().TabPageIndex = dstIndex;
+
+            if (TabPages[srcIndex].Design() != null)
+            {
+                TabPages[srcIndex].Design().TabPageIndex = dstIndex;
+            }
             TabPages[srcIndex] = dstTab;
+
             Refresh();
-        }
-
-        protected override void OnDrawItem(DrawItemEventArgs e)
-        {
-            TabPage newTabPage = TabPages[e.Index];
-            string tabName = newTabPage.Text;
-            newTabPage.ToolTipText = tabName;
-
-            // Draw close
-            Rectangle newTabFullRect = GetTabRect(e.Index);
-            e.Graphics.DrawImage(VisiBoole.Properties.Resources.Close, newTabFullRect.Right - 18, newTabFullRect.Height - 17);
-
-            // Draw tab text
-            Rectangle newTabTextRect = new Rectangle(new Point(newTabFullRect.X + 2, newTabFullRect.Y + 1), new Size(newTabFullRect.Width - 16, newTabFullRect.Height));
-            TextRenderer.DrawText(e.Graphics, tabName, new Font("Segoe UI", 11F), newTabTextRect, Color.Black, TextFormatFlags.WordEllipsis);
-
-            // Draw tab background
-            Rectangle lastTabRect = GetTabRect(TabPages.Count - 1);
-            Rectangle backgroundRect = new Rectangle();
-            backgroundRect.Location = new Point(lastTabRect.Right, 0);
-            backgroundRect.Size = new Size(Right - backgroundRect.Left, lastTabRect.Height);
-            Color backgroundColor = VisiBoole.Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
-            e.Graphics.FillRectangle(new SolidBrush(backgroundColor), backgroundRect);
-
-            base.OnDrawItem(e);
         }
     }
 }

@@ -133,6 +133,11 @@ namespace VisiBoole.Views
                 OpenFileLinkLabel.LinkColor = Color.DodgerBlue;
 
                 MainWindowController.SetTheme();
+
+                // Set tab control colors
+                Globals.TabControl.BackgroundColor = Color.AliceBlue;
+                Globals.TabControl.TabColor = Color.White;
+                Globals.TabControl.TabTextColor = Color.Black;
                 Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");
                 Globals.TabControl.TabPages.Remove(Globals.TabControl.TabPages[Globals.TabControl.TabPages.Count - 1]);
             }
@@ -149,6 +154,10 @@ namespace VisiBoole.Views
                 OpenFileLinkLabel.LinkColor = Color.DodgerBlue;
 
                 MainWindowController.SetTheme();
+
+                Globals.TabControl.BackgroundColor = Color.FromArgb(66, 66, 66);
+                Globals.TabControl.TabColor = Color.FromArgb(66, 66, 66);
+                Globals.TabControl.TabTextColor = Color.White;
                 Globals.TabControl.TabPages.Add("!@#$FillTab!@#$");
                 Globals.TabControl.TabPages.Remove(Globals.TabControl.TabPages[Globals.TabControl.TabPages.Count - 1]);
             }
