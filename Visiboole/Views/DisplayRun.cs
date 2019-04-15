@@ -31,6 +31,9 @@ namespace VisiBoole.Views
 	/// </summary>
 	public partial class DisplayRun : UserControl, IDisplay
 	{
+        /// <summary>
+        /// Tab control for designs in run mode.
+        /// </summary>
         private NewTabControl BrowserTabControl;
 
 		/// <summary>
@@ -57,14 +60,10 @@ namespace VisiBoole.Views
 			InitializeComponent();
 
             BrowserTabControl = new NewTabControl();
-            /*
-            BrowserTabControl.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-
-            ImageList il = new ImageList();
-            il.Images.Add("Close", VisiBoole.Properties.Resources.Close);
-            BrowserTabControl.ImageList = il;
-            */
-
+            BrowserTabControl.Font = new Font("Segoe UI", 10.75F);
+            BrowserTabControl.SelectedTabColor = Color.DodgerBlue;
+            BrowserTabControl.TabBoundaryColor = Color.Black;
+            BrowserTabControl.SelectedTabTextColor = Color.White;
             BrowserTabControl.MouseDown += new MouseEventHandler(TabMouseDownEvent);
         }
 
@@ -78,7 +77,7 @@ namespace VisiBoole.Views
             if (BrowserTabControl.SelectedIndex != -1)
             {
                 Rectangle current = BrowserTabControl.GetTabRect(BrowserTabControl.SelectedIndex);
-                Rectangle close = new Rectangle(current.Right - 18, current.Height - 15, 16, 16);
+                Rectangle close = new Rectangle(current.Right - 18, current.Height - 16, 16, 16);
                 TabPage tab = BrowserTabControl.SelectedTab;
                 if (close.Contains(e.Location))
                 {
@@ -123,6 +122,7 @@ namespace VisiBoole.Views
             pnlMain.Controls.Add(BrowserTabControl, 0, 1);
             BrowserTabControl.Dock = DockStyle.Fill;
             BrowserTabControl.TabPages.Clear();
+            numericUpDown1.Value = 1; // Reset value
         }
 
         /// <summary>
@@ -133,10 +133,6 @@ namespace VisiBoole.Views
         public void AddBrowser(string designName, WebBrowser browser)
 		{
             TabPage newTab = new TabPage(designName);
-            /*
-            newTab.ImageKey = "Close";
-            newTab.ImageIndex = 0;
-            */
             newTab.Controls.Add(browser);
             browser.Dock = DockStyle.Fill;
 

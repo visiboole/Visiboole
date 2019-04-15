@@ -80,9 +80,7 @@
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
-    <Compile Include="Models\NewTabControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Models\NewTabControl.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
@@ -112,11 +110,11 @@
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
     <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Views\ErrorDialogBox.cs">
+    <Compile Include="Views\ErrorListBox.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Views\ErrorDialogBox.Designer.cs">
-      <DependentUpon>ErrorDialogBox.cs</DependentUpon>
+    <Compile Include="Views\ErrorListBox.Designer.cs">
+      <DependentUpon>ErrorListBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Views\DialogBox.cs">
       <SubType>Form</SubType>
@@ -162,8 +160,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="Views\ErrorDialogBox.resx">
-      <DependentUpon>ErrorDialogBox.cs</DependentUpon>
+    <EmbeddedResource Include="Views\ErrorListBox.resx">
+      <DependentUpon>ErrorListBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Views\DialogBox.resx">
       <DependentUpon>DialogBox.cs</DependentUpon>
@@ -202,6 +200,7 @@
     <None Include="Resources\Letter V blue.ico" />
     <Content Include="license.txt" />
     <Content Include="Resources\Close.png" />
+    <None Include="Resources\Expand.png" />
     <Content Include="Resources\Help Documentation\Syntax.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

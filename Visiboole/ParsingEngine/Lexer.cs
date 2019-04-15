@@ -46,14 +46,49 @@ namespace VisiBoole.ParsingEngine
         public static readonly string ScalarPattern = $@"({NamePattern}\d{{0,2}})";
 
         /// <summary>
+        /// Pattern for identifying scalars. (Optional *)
+        /// </summary>
+        protected static readonly string ScalarPattern2 = $@"(?<!('|\.))(\*?{ScalarPattern})(?!\.)";
+
+        /// <summary>
         /// Pattern for identifying vectors. (No ~ or *)
         /// </summary>
         protected static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d{{1,2}})\.(?<Step>\d{{1,2}})?\.(?<RightBound>\d{{1,2}})\])|(\[\])))";
 
         /// <summary>
+        /// Pattern for identifying vectors. (Optional *)
+        /// </summary>
+        protected static readonly string VectorPattern2 = $@"\*?{VectorPattern}";
+
+        /// <summary>
         /// Pattern for identifying constants. (No ~)
         /// </summary>
         protected static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
+
+        /// <summary>
+        /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
+        /// </summary>
+        protected static readonly string VariablePattern = $@"({VectorPattern}|{ConstantPattern}|{ScalarPattern})";
+
+        /// <summary>
+        /// Pattern for identifying scalars, vectors and constants. (Optional *)
+        /// </summary>
+        protected static readonly string VariablePattern2 = $@"({VectorPattern2}|{ConstantPattern}|{ScalarPattern2})";
+
+        /// <summary>
+        /// Pattern for identifying variable lists.
+        /// </summary>
+        public static readonly string VariableListPattern = $@"(?<Vars>{VariablePattern}(\s+{VariablePattern})*)";
+
+        /// <summary>
+        /// Pattern for identifying concatenations.
+        /// </summary>
+        public static readonly string ConcatPattern = $@"(\{{{VariableListPattern}\}})";
+
+        /// <summary>
+        /// Pattern for identifying concatenations of any type or any type.
+        /// </summary>
+        public static readonly string AnyTypePattern = $@"({ConcatPattern}|{VariablePattern})";
 
         /// <summary>
         /// Pattern for identifying formatters.
@@ -64,6 +99,21 @@ namespace VisiBoole.ParsingEngine
         /// Pattern for identifying submodule instantiations.
         /// </summary>
         protected static readonly string InstantiationPattern = @"(?<Design>\w+)\.(?<Name>\w+)";
+
+        /// <summary>
+        /// Pattern for identifying components (inputs or outputs) in a module notation.
+        /// </summary>
+        protected static readonly string ModuleComponentPattern = $@"({AnyTypePattern}(,\s+{AnyTypePattern})*)";
+
+        /// <summary>
+        /// Pattern for identifying modules.
+        /// </summary>
+        public static readonly string ModulePattern = $@"(?<Components>(?<Inputs>{ModuleComponentPattern})\s+:\s+(?<Outputs>{ModuleComponentPattern}))";
+
+        /// <summary>
+        /// Pattern for identifying module instantiations.
+        /// </summary>
+        public static readonly string ModuleInstantiationPattern = $@"((?<Padding>\s*)?(?<Instantiation>{InstantiationPattern})\({ModulePattern}\))";
 
         /// <summary>
         /// Pattern for identifying operators.
@@ -81,6 +131,11 @@ namespace VisiBoole.ParsingEngine
         private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}|;'#<>,.-]";
 
         /// <summary>
+        /// Pattern for identifying whitespace.
+        /// </summary>
+        public static Regex WhitespaceRegex { get; } = new Regex(@"\s+", RegexOptions.Compiled);
+
+        /// <summary>
         /// Regex for identifying bits.
         /// </summary>
         private static Regex BitRegex { get; } = new Regex(@"\d+$", RegexOptions.Compiled);
@@ -91,14 +146,39 @@ namespace VisiBoole.ParsingEngine
         private static Regex ScalarRegex { get; } = new Regex($"^[~*]*{ScalarPattern}$", RegexOptions.Compiled);
 
         /// <summary>
+        /// Regex for identifying scalars. (Optional *)
+        /// </summary>
+        protected static Regex ScalarRegex2 { get; } = new Regex(ScalarPattern2, RegexOptions.Compiled);
+
+        /// <summary>
         /// Regex for identifying vectors. (Optional ~ or *)
         /// </summary>
         private static Regex VectorRegex { get; } = new Regex($"^[~*]*{VectorPattern}$", RegexOptions.Compiled);
 
         /// <summary>
+        /// Regex for identifying vectors. (Optional *)
+        /// </summary>
+        private static Regex VectorRegex2 { get; } = new Regex(VectorPattern2, RegexOptions.Compiled);
+
+        /// <summary>
         /// Regex for identifying constants. (Optional ~)
         /// </summary>
         public static Regex ConstantRegex { get; } = new Regex($"^~*{ConstantPattern}$", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Regex for identifying scalars, vectors and constants.
+        /// </summary>
+        private static Regex VariableRegex { get; } = new Regex(VariablePattern2, RegexOptions.Compiled);
+
+        /// <summary>
+        /// Regex for identifying concatenations.
+        /// </summary>
+        private static Regex ConcatRegex = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Regex for identifying concatenations of any type or any type.
+        /// </summary>
+        protected static Regex AnyTypeRegex = new Regex(AnyTypePattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying formatters.
@@ -109,6 +189,16 @@ namespace VisiBoole.ParsingEngine
         /// Regex for identifying submodule instantiations.
         /// </summary>
         private static Regex InstantiationRegex = new Regex($"^{InstantiationPattern}$");
+
+        /// <summary>
+        /// Regex for determining whether expansion is required.
+        /// </summary>
+        protected static Regex ExpansionRegex { get; } = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|{ConstantPattern}", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Regex for identifying module instantiations.
+        /// </summary>
+        protected static Regex ModuleInstantiationRegex = new Regex(ModuleInstantiationPattern);
 
         /// <summary>
         /// Regex for identifying operators.
@@ -136,11 +226,6 @@ namespace VisiBoole.ParsingEngine
         /// List of errors.
         /// </summary>
         protected List<string> ErrorLog;
-
-        /// <summary>
-        /// Error dialog box for design errors.
-        /// </summary>
-        protected ErrorDialogBox ErrorDialogBox;
 
         /// <summary>
         /// The design being parsed.
@@ -174,7 +259,6 @@ namespace VisiBoole.ParsingEngine
         protected Lexer(Design design)
         {
             ErrorLog = new List<string>();
-            ErrorDialogBox = new ErrorDialogBox();
             Design = design;
             Libraries = new List<string>();
             Subdesigns = new Dictionary<string, string>();
@@ -669,74 +753,9 @@ namespace VisiBoole.ParsingEngine
                 }
                 else if (InstantiationRegex.IsMatch(currentLexeme))
                 {
-                    Match instantiation = InstantiationRegex.Match(currentLexeme);
-                    string designName = instantiation.Groups["Design"].Value;
-                    string instantiationName = instantiation.Groups["Name"].Value;
-
-                    if (designName == Design.FileName)
+                    if (!ValidateInstantiation(InstantiationRegex.Match(currentLexeme), line))
                     {
-                        ErrorLog.Add($"{LineNumber}: You cannot instantiate from the current design.");
                         return false;
-                    }
-
-                    if (Instantiations.ContainsKey(instantiationName))
-                    {
-                        ErrorLog.Add($"{LineNumber}: Instantiation name '{instantiationName}' is already being used.");
-                        return false;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            if (!Subdesigns.ContainsKey(designName))
-                            {
-                                string file = null;
-                                string[] files = Directory.GetFiles(Design.FileSource.DirectoryName, String.Concat(designName, ".vbi"));
-                                if (files.Length > 0)
-                                {
-                                    // Check for module Declaration
-                                    //foundDeclaration = DesignHasModuleDeclaration(files[0], line);
-                                    file = files[0];
-                                }
-
-                                if (file != null)
-                                {
-                                    for (int i = 0; i < Libraries.Count; i++)
-                                    {
-                                        files = Directory.GetFiles(Libraries[i], String.Concat(designName, ".vbi"));
-                                        if (files.Length > 0)
-                                        {
-                                            // Check for module Declaration
-                                            //foundDeclaration = DesignHasModuleDeclaration(files[0], line);
-                                            file = files[0];
-                                            if (file != null)
-                                            {
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    if (file == null)
-                                    {
-                                        // Not found
-                                        ErrorLog.Add($"{LineNumber}: Unable to find '{designName}'.");
-                                        return false;
-                                    }
-                                }
-
-                                Subdesigns.Add(designName, file);
-                                Instantiations.Add(instantiationName, line);
-                            }
-                            else
-                            {
-                                Instantiations.Add(instantiationName, line);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            ErrorLog.Add($"{LineNumber}: Error locating '{designName}'.");
-                            return false;
-                        }
                     }
 
                     type = StatementType.Submodule;
@@ -805,6 +824,111 @@ namespace VisiBoole.ParsingEngine
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Validates a submodule instantiation.
+        /// </summary>
+        /// <param name="instantiationMatch">Instantiation</param>
+        /// <param name="line">Line of instantiation</param>
+        /// <returns>Whether the instantiation is valid</returns>
+        private bool ValidateInstantiation(Match instantiationMatch, string line)
+        {
+            string designName = instantiationMatch.Groups["Design"].Value;
+            string instantiationName = instantiationMatch.Groups["Name"].Value;
+
+            if (designName == Design.FileName)
+            {
+                ErrorLog.Add($"{LineNumber}: You cannot instantiate from the current design.");
+                return false;
+            }
+
+            if (Instantiations.ContainsKey(instantiationName))
+            {
+                ErrorLog.Add($"{LineNumber}: Instantiation name '{instantiationName}' is already being used.");
+                return false;
+            }
+            else
+            {
+                try
+                {
+                    if (!Subdesigns.ContainsKey(designName))
+                    {
+                        string file = null;
+                        string[] files = Directory.GetFiles(Design.FileSource.DirectoryName, String.Concat(designName, ".vbi"));
+                        if (files.Length > 0)
+                        {
+                            // Check for module Declaration
+                            if (DesignHasModuleDeclaration(files[0]))
+                            {
+                                file = files[0];
+                            }
+                        }
+
+                        if (file == null)
+                        {
+                            for (int i = 0; i < Libraries.Count; i++)
+                            {
+                                files = Directory.GetFiles(Libraries[i], String.Concat(designName, ".vbi"));
+                                if (files.Length > 0)
+                                {
+                                    // Check for module Declaration
+                                    if (DesignHasModuleDeclaration(files[0]))
+                                    {
+                                        file = files[0];
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (file == null)
+                            {
+                                // Not found
+                                ErrorLog.Add($"{LineNumber}: Unable to find a design named '{designName}' with a module declaration.");
+                                return false;
+                            }
+                        }
+
+                        Subdesigns.Add(designName, file);
+                        Instantiations.Add(instantiationName, line);
+                    }
+                    else
+                    {
+                        Instantiations.Add(instantiationName, line);
+                    }
+
+                    return true;
+                }
+                catch (Exception)
+                {
+                    ErrorLog.Add($"{LineNumber}: Error locating '{designName}'.");
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns whether the design has a module declaration.
+        /// </summary>
+        /// <param name="designPath">Path to design</param>
+        /// <returns>Whether the design has a module declaration</returns>
+        private bool DesignHasModuleDeclaration(string designPath)
+        {
+            FileInfo fileInfo = new FileInfo(designPath);
+            string name = fileInfo.Name.Split('.')[0];
+            using (StreamReader reader = fileInfo.OpenText())
+            {
+                string nextLine = string.Empty;
+                while ((nextLine = reader.ReadLine()) != null)
+                {
+                    if (Regex.IsMatch(nextLine, $@"^\s*{name}\({ModulePattern}\);$"))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         #endregion
@@ -910,6 +1034,198 @@ namespace VisiBoole.ParsingEngine
             }
 
             return expansion;
+        }
+
+        /// <summary>
+        /// Exapnds a single token into its components.
+        /// </summary>
+        /// <param name="token">Token to expand</param>
+        /// <returns>List of expansion components</returns>
+        protected List<string> ExpandToken(Match token)
+        {
+            if (token.Value.Contains("[") && String.IsNullOrEmpty(token.Groups["LeftBound"].Value))
+            {
+                List<string> components = Design.Database.GetComponents(token.Groups["Name"].Value);
+                if (token.Value.Contains("~") && !components[0].Contains("~"))
+                {
+                    for (int i = 0; i < components.Count; i++)
+                    {
+                        components[i] = String.Concat("~", components[i]);
+                    }
+                }
+                return components;
+            }
+            else
+            {
+                if (ExpansionMemo.ContainsKey(token.Value))
+                {
+                    return ExpansionMemo[token.Value];
+                }
+                else
+                {
+                    if (token.Value.Contains("["))
+                    {
+                        return ExpandVector(token);
+                    }
+                    else
+                    {
+                        return ExpandConstant(token);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Expands token into components.
+        /// </summary>
+        /// <param name="token">Token to expand</param>
+        /// <returns>List of expansion components</returns>
+        protected List<string> GetExpansion(Match token)
+        {
+            List<string> expansion = new List<string>();
+
+            // Get token's variables
+            string[] vars;
+            if (token.Value.Contains("{"))
+            {
+                vars = WhitespaceRegex.Split(token.Value);
+            }
+            else
+            {
+                vars = new string[] { token.Value };
+            }
+
+            // Expand each variable
+            foreach (string var in vars)
+            {
+                Match match = VariableRegex.Match(var);
+
+                if (match.Value.Contains("[") || match.Value.Contains("'"))
+                {
+                    expansion.AddRange(ExpandToken(match));
+                }
+                else
+                {
+                    expansion.Add(match.Value);
+                }
+            }
+
+            return expansion;
+        }
+
+        /// <summary>
+        /// Expands all concatenations and vectors in a line.
+        /// </summary>
+        /// <param name="line">Line to expand</param>
+        /// <returns>Expanded line</returns>
+        protected string ExpandHorizontally(string line)
+        {
+            string expandedLine = line;
+            Match match;
+
+            while ((match = VectorRegex2.Match(expandedLine)).Success)
+            {
+                // Replace matched vector with its components
+                expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
+            }
+
+            if (line.Contains("=") || line.Contains(":"))
+            {
+                Regex variableListRegex = new Regex($@"{VariableListPattern}(?![^{{}}]*\}})"); // Variable lists not inside {}
+                while ((match = variableListRegex.Match(expandedLine)).Success)
+                {
+                    // Add { } to the matched variable list
+                    expandedLine = expandedLine.Substring(0, match.Index) + String.Concat("{", match.Value, "}") + expandedLine.Substring(match.Index + match.Length);
+                }
+            }
+            else
+            {
+                while ((match = ConcatRegex.Match(expandedLine)).Success)
+                {
+                    // Replace matched concat with its components
+                    expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
+                }
+            }
+
+            return expandedLine;
+        }
+
+        /// <summary>
+        /// Expands a line into lines.
+        /// </summary>
+        /// <param name="line">Line to expand</param>
+        /// <returns>Expanded lines</returns>
+        protected string ExpandVertically(string line)
+        {
+            string expanded = String.Empty;
+
+            // Get dependent and expression
+            int start = line.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
+            string dependent = line.Contains("<")
+                ? line.Substring(start, line.IndexOf("<") - start).TrimEnd()
+                : line.Substring(start, line.IndexOf("=") - start).TrimEnd();
+            string expression = line.Substring(line.IndexOf("=") + 1).TrimStart();
+
+            // Expand dependent
+            List<string> dependentExpansion = new List<string>();
+            Match dependentMatch = AnyTypeRegex.Match(dependent);
+            if (dependentMatch.Value.Contains("{"))
+            {
+                dependentExpansion.AddRange(GetExpansion(dependentMatch));
+            }
+            else if (dependentMatch.Value.Contains("["))
+            {
+                dependentExpansion.AddRange(ExpandToken(dependentMatch));
+            }
+            else
+            {
+                dependentExpansion.Add(dependent);
+            }
+
+            // Expand expression
+            List<List<string>> expressionExpansions = new List<List<string>>();
+            MatchCollection matches = ExpansionRegex.Matches(expression);
+            foreach (Match match in matches)
+            {
+                if (!match.Value.Contains("{"))
+                {
+                    expressionExpansions.Add(ExpandToken(match));
+                }
+                else
+                {
+                    expressionExpansions.Add(GetExpansion(match));
+                }
+            }
+
+            // Verify expansions
+            foreach (List<string> expressionExpansion in expressionExpansions)
+            {
+                if (dependentExpansion.Count != expressionExpansion.Count)
+                {
+                    ErrorLog.Add($"{LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
+                    return null;
+                }
+            }
+
+            // Combine expansions
+            List<List<string>> expansions = new List<List<string>>();
+            expansions.Add(dependentExpansion);
+            expansions.AddRange(expressionExpansions);
+
+            // Expand line into lines
+            for (int i = 0; i < dependentExpansion.Count; i++)
+            {
+                string newLine = line;
+                newLine = newLine.Replace(dependent, expansions[0][i]); // Replace dependent
+                int j = 1;
+                foreach (Match match in matches)
+                {
+                    newLine = newLine.Replace(match.Value, expansions[j++][i]); // Replace expression parts
+                }
+                expanded += String.Concat(newLine, "\n");
+            }
+
+            return expanded;
         }
 
         #endregion

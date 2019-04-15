@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using CustomTabControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,14 +119,10 @@ namespace VisiBoole.Controllers
         /// <returns>The Design created</returns>
         public Design CreateDesign(string name)
         {
-            Design newDesign;
+            Design newDesign = new Design(name);
             if (mwController != null)
             {
-                newDesign = new Design(name, mwController.LoadDisplay);
-            }
-            else
-            {
-                newDesign = new Design(name, delegate { }); // used for testing
+                newDesign.DesignEdit += new DesignEditEventHandler(mwController.OnDesignEdit);
             }
             
             if (!Designs.ContainsKey(newDesign.FileName))
@@ -141,12 +138,11 @@ namespace VisiBoole.Controllers
         /// Saves the provided Design.
         /// </summary>
         /// <param name="design">Design to save.</param>
-        /// <param name="isClosing">Indicates whether the design is closing</param>
-        private void SaveDesign(Design design, bool isClosing)
+        private void SaveDesign(Design design)
         {
             if (design.IsDirty)
             {
-                design.SaveTextToFile(isClosing);
+                design.SaveTextToFile();
             }
         }
 
@@ -156,7 +152,7 @@ namespace VisiBoole.Controllers
         /// <returns>Whether the save was successful</returns>
         public bool SaveActiveDesign()
         {
-            SaveDesign(ActiveDesign, false);
+            SaveDesign(ActiveDesign);
             return true;
         }
 
@@ -168,7 +164,7 @@ namespace VisiBoole.Controllers
         {
             foreach (Design design in Designs.Values)
             {
-                SaveDesign(design, false);
+                SaveDesign(design);
             }
             return true;
         }
@@ -185,16 +181,12 @@ namespace VisiBoole.Controllers
 
             if (design != null)
             {
-                if (design.IsDirty && save)
+                if (save)
                 {
-                    SaveDesign(design, true);
+                    SaveDesign(design);
                 }
 
                 Designs.Remove(name);
-                for (int i = 0; i < Globals.TabControl.TabPages.Count; i++)
-                {
-                    Globals.TabControl.TabPages[i].Design().TabPageIndex = i;
-                }
 
                 return true;
             }
@@ -267,7 +259,7 @@ namespace VisiBoole.Controllers
             string designName = instantiation.Split('.')[0];
             string instantName = instantiation.Split('.')[1].TrimEnd('(');
             string designPath = Parser.Subdesigns[designName];
-            Design subDesign = new Design(designPath, delegate { });
+            Design subDesign = new Design(designPath);
 
             // Get input variables
             List<Variable> inputVariables = Parser.GetModuleInputs(instantName, subDesign.ModuleDeclaration);

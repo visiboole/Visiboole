@@ -77,6 +77,7 @@ namespace VisiBoole.Views
             this.redoToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.editModeToggle = new System.Windows.Forms.ToolStripMenuItem();
             this.runModeToggle = new System.Windows.Forms.ToolStripMenuItem();
+            this.runStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.previousStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -86,7 +87,7 @@ namespace VisiBoole.Views
             // 
             // menuStrip1
             // 
-            this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
+            this.menuStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(49)))), ((int)(((byte)(49)))));
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -111,16 +112,16 @@ namespace VisiBoole.Views
             this.closeAllDesignToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.fileToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.fileToolStripMenuItem.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
             this.fileToolStripMenuItem.ToolTipText = "New File (Ctrl+N)";
-            this.fileToolStripMenuItem.DropDownClosed += new System.EventHandler(this.MenuDropDownClosedEvent);
-            this.fileToolStripMenuItem.DropDownOpening += new System.EventHandler(this.MenuDropDownOpeningEvent);
             // 
             // newToolStripMenuItem
             // 
+            this.newToolStripMenuItem.BackColor = System.Drawing.SystemColors.Control;
+            this.newToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
             this.newToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
             this.newToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+N";
@@ -139,6 +140,7 @@ namespace VisiBoole.Views
             // 
             // toolStripSeparator
             // 
+            this.toolStripSeparator.ForeColor = System.Drawing.SystemColors.ControlText;
             this.toolStripSeparator.Name = "toolStripSeparator";
             this.toolStripSeparator.Size = new System.Drawing.Size(143, 6);
             // 
@@ -200,12 +202,10 @@ namespace VisiBoole.Views
             this.toolStripSeparator4,
             this.selectAllToolStripMenuItem});
             this.editToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.editToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.editToolStripMenuItem.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
-            this.editToolStripMenuItem.DropDownClosed += new System.EventHandler(this.MenuDropDownClosedEvent);
-            this.editToolStripMenuItem.DropDownOpening += new System.EventHandler(this.MenuDropDownOpeningEvent);
             this.editToolStripMenuItem.Click += new System.EventHandler(this.EditMenuClick);
             // 
             // undoToolStripMenuItem
@@ -287,12 +287,10 @@ namespace VisiBoole.Views
             this.colorBlindModeToolStripMenuItem,
             this.simulationCommentsToolStripMenuItem});
             this.viewToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.viewToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.viewToolStripMenuItem.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
-            this.viewToolStripMenuItem.DropDownClosed += new System.EventHandler(this.MenuDropDownClosedEvent);
-            this.viewToolStripMenuItem.DropDownOpening += new System.EventHandler(this.MenuDropDownOpeningEvent);
             // 
             // increaseFontToolStripMenuItem
             // 
@@ -357,12 +355,10 @@ namespace VisiBoole.Views
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.syntaxDocumentationToolStripMenuItem});
             this.helpToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.helpToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.helpToolStripMenuItem.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "&Help";
-            this.helpToolStripMenuItem.DropDownClosed += new System.EventHandler(this.MenuDropDownClosedEvent);
-            this.helpToolStripMenuItem.DropDownOpening += new System.EventHandler(this.MenuDropDownOpeningEvent);
             // 
             // syntaxDocumentationToolStripMenuItem
             // 
@@ -450,7 +446,7 @@ namespace VisiBoole.Views
             // 
             // menuStrip2
             // 
-            this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
+            this.menuStrip2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(49)))), ((int)(((byte)(49)))));
             this.menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newIcon,
             this.openIcon,
@@ -459,7 +455,8 @@ namespace VisiBoole.Views
             this.undoToolStripMenuItem1,
             this.redoToolStripMenuItem1,
             this.editModeToggle,
-            this.runModeToggle});
+            this.runModeToggle,
+            this.runStateToolStripMenuItem});
             this.menuStrip2.Location = new System.Drawing.Point(0, 24);
             this.menuStrip2.Name = "menuStrip2";
             this.menuStrip2.ShowItemToolTips = true;
@@ -529,7 +526,7 @@ namespace VisiBoole.Views
             // editModeToggle
             // 
             this.editModeToggle.Enabled = false;
-            this.editModeToggle.ForeColor = System.Drawing.Color.White;
+            this.editModeToggle.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.editModeToggle.Image = global::VisiBoole.Properties.Resources.Stop;
             this.editModeToggle.Margin = new System.Windows.Forms.Padding(40, 0, 0, 0);
             this.editModeToggle.Name = "editModeToggle";
@@ -541,22 +538,31 @@ namespace VisiBoole.Views
             // 
             // runModeToggle
             // 
-            this.runModeToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
-            this.runModeToggle.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.newStateToolStripMenuItem,
-            this.previousStateToolStripMenuItem});
+            this.runModeToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(49)))), ((int)(((byte)(49)))));
             this.runModeToggle.Enabled = false;
-            this.runModeToggle.ForeColor = System.Drawing.Color.White;
+            this.runModeToggle.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.runModeToggle.Image = ((System.Drawing.Image)(resources.GetObject("runModeToggle.Image")));
             this.runModeToggle.Name = "runModeToggle";
+            this.runModeToggle.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.runModeToggle.ShowShortcutKeys = false;
-            this.runModeToggle.Size = new System.Drawing.Size(56, 20);
+            this.runModeToggle.Size = new System.Drawing.Size(52, 20);
             this.runModeToggle.Text = "Run";
             this.runModeToggle.ToolTipText = "Run (Ctrl+R)";
-            this.runModeToggle.DropDownClosed += new System.EventHandler(this.runModeToggle_DropDownClosed);
-            this.runModeToggle.DropDownOpening += new System.EventHandler(this.runModeToggle_DropDownOpening);
             this.runModeToggle.Click += new System.EventHandler(this.RunButtonClick);
-            this.runModeToggle.MouseHover += new System.EventHandler(this.runModeToggle_MouseHover);
+            // 
+            // runStateToolStripMenuItem
+            // 
+            this.runStateToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newStateToolStripMenuItem,
+            this.previousStateToolStripMenuItem});
+            this.runStateToolStripMenuItem.Enabled = false;
+            this.runStateToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.runStateToolStripMenuItem.Image = global::VisiBoole.Properties.Resources.Expand;
+            this.runStateToolStripMenuItem.Margin = new System.Windows.Forms.Padding(-8, 0, 0, 0);
+            this.runStateToolStripMenuItem.Name = "runStateToolStripMenuItem";
+            this.runStateToolStripMenuItem.Padding = new System.Windows.Forms.Padding(0);
+            this.runStateToolStripMenuItem.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.runStateToolStripMenuItem.Size = new System.Drawing.Size(20, 20);
             // 
             // newStateToolStripMenuItem
             // 
@@ -653,7 +659,8 @@ namespace VisiBoole.Views
         private ToolStripMenuItem simulationCommentsToolStripMenuItem;
         private ToolStripMenuItem closeAllDesignToolStripMenuItem;
         private ToolStripMenuItem editModeToggle;
-        private ToolStripMenuItem previousStateToolStripMenuItem;
+        private ToolStripMenuItem runStateToolStripMenuItem;
         private ToolStripMenuItem newStateToolStripMenuItem;
+        private ToolStripMenuItem previousStateToolStripMenuItem;
     }
 }

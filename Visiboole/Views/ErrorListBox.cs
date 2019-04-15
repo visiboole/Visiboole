@@ -14,18 +14,18 @@ namespace VisiBoole.Views
     /// <summary>
     /// Class for error prompts.
     /// </summary>
-    public partial class ErrorDialogBox : Form
+    public partial class ErrorListBox : Form
     {
         [System.Runtime.InteropServices.DllImportAttribute("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
         [System.Runtime.InteropServices.DllImportAttribute("user32.dll")]
         public static extern bool ReleaseCapture();
 
-        public ErrorDialogBox()
+        private ErrorListBox()
         {
             InitializeComponent();
-            uxPanelTop.MouseDown += new MouseEventHandler(ErrorDialogMouseDown);
-            uxLabelTitle.MouseDown += new MouseEventHandler(ErrorDialogMouseDown);
+            uxPanelTop.MouseDown += new MouseEventHandler(ErrorListBoxMouseDown);
+            uxLabelTitle.MouseDown += new MouseEventHandler(ErrorListBoxMouseDown);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ErrorDialogMouseDown(object sender, MouseEventArgs e)
+        private void ErrorListBoxMouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
@@ -47,21 +47,26 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ErrorDialogPaint(object sender, PaintEventArgs e)
+        private void ErrorListBoxPaint(object sender, PaintEventArgs e)
         {
             Color color = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
-            e.Graphics.DrawRectangle(new Pen(color, 4), DisplayRectangle);
+            Pen borderPen = new Pen(color, 4);
+            e.Graphics.DrawRectangle(borderPen, DisplayRectangle);
             uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
+
+            borderPen.Dispose();
+            e.Graphics.Dispose();
         }
 
         /// <summary>
         /// Displays the provided error log to the user.
         /// </summary>
         /// <param name="log">Log to display</param>
-        public void Display(List<string> log)
+        public static void Display(List<string> log)
         {
-            uxRichTextBoxLog.Text = String.Join("\n", log);
-            ShowDialog(); // Show form
+            var errorBoxDialog = new ErrorListBox();
+            errorBoxDialog.uxRichTextBoxLog.Text = String.Join("\n", log);
+            errorBoxDialog.ShowDialog(); // Show form
         }
     }
 }

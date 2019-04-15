@@ -19,6 +19,7 @@
  */
 
 using VisiBoole.Controllers;
+using VisiBoole.Models;
 
 namespace VisiBoole.Views
 {
@@ -45,12 +46,19 @@ namespace VisiBoole.Views
 		/// <param name="name">The name of the node to be removed</param>
 		void RemoveNavTreeNode(string name);
 
-		/// <summary>
-		/// Loads the given IDisplay
-		/// </summary>
-		/// <param name="previous">The display to replace</param>
-		/// <param name="current">The display to be loaded</param>
-		void LoadDisplay(IDisplay previous, IDisplay current);
+        /// <summary>
+        /// Swaps two indexes of the nav tree.
+        /// </summary>
+        /// <param name="srcIndex">Source index</param>
+        /// <param name="dstIndex">Destination index</param>
+        void SwapNavTreeNodes(int srcIndex, int dstIndex);
+
+        /// <summary>
+        /// Loads the given IDisplay
+        /// </summary>
+        /// <param name="previous">The display to replace</param>
+        /// <param name="current">The display to be loaded</param>
+        void LoadDisplay(IDisplay previous, IDisplay current);
 
         /// <summary>
         /// Focuses this window.

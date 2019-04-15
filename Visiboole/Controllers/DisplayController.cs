@@ -91,7 +91,7 @@ namespace VisiBoole.Controllers
 			set
 			{
 				value.AddTabControl(TabControl);
-                string currentDesign = TabControl.SelectedTab != null ? TabControl.SelectedTab.Name.TrimStart('*') : "";
+                string currentDesign = TabControl.SelectedTab != null ? TabControl.SelectedTab.Text.TrimStart('*') : "";
 				value.AddBrowser(currentDesign, Browser);
 				currentDisplay = value;
 			}
@@ -126,6 +126,9 @@ namespace VisiBoole.Controllers
                     }
                 }
             };
+            TabControl.TabSwap += (sender, e) => {
+                MainWindowController.SwapDesignNodes(e.SourceTabPageIndex, e.DestinationTabPageIndex);
+            };
             Globals.TabControl = TabControl;
 
             // Init browser
@@ -147,7 +150,7 @@ namespace VisiBoole.Controllers
         public void AttachMainWindowController(IMainWindowController mainWindowController)
 		{
 			MainWindowController = mainWindowController;
-		}
+        }
 
         /// <summary>
 		/// Returns a handle to the display of the matching type
@@ -176,6 +179,23 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Gets the tab index of the provided design name.
+        /// </summary>
+        /// <param name="designName">Name of the design</param>
+        /// <returns>Index of the tab with the provided name</returns>
+        private int GetDesignTabIndex(string designName)
+        {
+            for (int i = 0; i < TabControl.TabPages.Count; i++)
+            {
+                if (TabControl.TabPages[i].Text.TrimStart('*') == designName)
+                {
+                    return i; // Return index of tab with the provided name
+                }
+            }
+            return -1; // Not found
+        }
+
+        /// <summary>
 		/// Selects the tab page with the given index.
 		/// </summary>
 		/// <param name="index">Index of tabpage to select</param>
@@ -185,7 +205,7 @@ namespace VisiBoole.Controllers
             if (index != -1)
             {
                 TabControl.SelectTab(index);
-                return TabControl.SelectedTab.Text;
+                return TabControl.SelectedTab.Text.TrimStart('*');
             }
             else
             {
@@ -201,7 +221,9 @@ namespace VisiBoole.Controllers
 		public bool CreateNewTab(Design design)
         {
             TabPage tab = new TabPage(design.FileName);
-            tab.Name = design.FileName;
+            tab.Name = $"designTab{TabControl.TabPages.Count}";
+            tab.Text = design.FileName;
+            tab.ToolTipText = $"{tab.Text}.vbi";
             tab.Controls.Add(design);
             design.Dock = DockStyle.Fill;
 
@@ -211,27 +233,25 @@ namespace VisiBoole.Controllers
 
                 TabControl.TabPages.RemoveByKey(design.FileName);
                 TabControl.TabPages.Insert(index, tab);
-                design.TabPageIndex = TabControl.TabPages.IndexOf(tab);
                 TabControl.SelectTab(tab);
                 return false;
             }
             else
             {
                 TabControl.TabPages.Add(tab);
-                design.TabPageIndex = TabControl.TabPages.IndexOf(tab);
                 TabControl.SelectTab(tab);
                 return true;
             }
         }
 
         /// <summary>
-        /// Closes a specific tab in the tab control
+        /// Closes a specific tab in the tab control.
         /// </summary>
-        /// <param name="index">Index to close</param>
+        /// <param name="designName">Name of the design being closed</param>
         /// <returns>Whether the operation was successful</returns>
-        public bool CloseTab(int index)
+        public bool CloseTab(string designName)
         {
-            TabPage tab = TabControl.TabPages[index];
+            TabPage tab = TabControl.TabPages[GetDesignTabIndex(designName)];
 
             if (tab != null)
             {
@@ -251,6 +271,39 @@ namespace VisiBoole.Controllers
             else
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Updates the tab text to include or remove the dirty indicator.
+        /// </summary>
+        /// <param name="designName">Design name of the tab to update</param>
+        /// <param name="isDirty">Whether the design has unsaved changes</param>
+        public void UpdateTabText(string designName, bool isDirty)
+        {
+            int designTabIndex = GetDesignTabIndex(designName);
+            if (designTabIndex != -1)
+            {
+                TabControl.TabPages[designTabIndex].Text = isDirty ? $"*{designName}" : designName;
+            }
+        }
+
+        /// <summary>
+        /// Sets the theme of edit and run tab control
+        /// </summary>
+        public void SetTheme()
+        {
+            TabControl.BackgroundColor = Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
+            TabControl.TabColor = Properties.Settings.Default.Theme == "Light" ? Color.White : Color.FromArgb(66, 66, 66);
+            TabControl.TabTextColor = Properties.Settings.Default.Theme == "Light" ? Color.Black : Color.White;
+
+            if (CurrentDisplay is DisplayEdit)
+            {
+                TabControl.Refresh();
+            }
+            else
+            {
+                
             }
         }
 

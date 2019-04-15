@@ -9,8 +9,47 @@ using VisiBoole;
 
 namespace CustomTabControl
 {
+    /// <summary>
+    /// Delegate for tab swap events.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="eventArgs"></param>
+    public delegate void TabSwapEventHandler(object sender, TabSwapEventArgs eventArgs);
+
+    /// <summary>
+    /// Event arguments for a tab swap event
+    /// </summary>
+    public class TabSwapEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Index of the location of the tab being swapped.
+        /// </summary>
+        public int SourceTabPageIndex { get; private set; }
+
+        /// <summary>
+        /// Destination index for the tab being swapped.
+        /// </summary>
+        public int DestinationTabPageIndex { get; private set; }
+
+        /// <summary>
+        /// Constructs a TabSwapEventArgs with the provided source and destination tab page indexes.
+        /// </summary>
+        /// <param name="sourceTabPageIndex">Index of the location of the tab being swapped</param>
+        /// <param name="destinationTabPageIndex">Destination index for the tab being swapped</param>
+        public TabSwapEventArgs(int sourceTabPageIndex, int destinationTabPageIndex)
+        {
+            SourceTabPageIndex = sourceTabPageIndex;
+            DestinationTabPageIndex = destinationTabPageIndex;
+        }
+    }
+
     public class NewTabControl : TabControl
     {
+        /// <summary>
+        /// Event that occurs when two tab pages are being swapped.
+        /// </summary>
+        public event TabSwapEventHandler TabSwap;
+
         /// <summary>
         /// Background color of the component.
         /// </summary>
@@ -66,7 +105,6 @@ namespace CustomTabControl
                 // Get tab info
                 int index = TabPages.IndexOf(tab);
                 Rectangle TabBoundary = GetTabRect(index);
-                tab.ToolTipText = $"{tab.Text.TrimStart('*')}.vbi";
 
                 // Draw tab
                 Color tabColor = index == SelectedIndex ? SelectedTabColor : TabColor;
@@ -235,16 +273,9 @@ namespace CustomTabControl
             int srcIndex = TabPages.IndexOf(srcTab);
             int dstIndex = TabPages.IndexOf(dstTab);
 
-            if (TabPages[dstIndex].Design() != null)
-            {
-                TabPages[dstIndex].Design().TabPageIndex = srcIndex;
-            }
-            TabPages[dstIndex] = srcTab;
+            TabSwap?.Invoke(this, new TabSwapEventArgs(srcIndex, dstIndex));
 
-            if (TabPages[srcIndex].Design() != null)
-            {
-                TabPages[srcIndex].Design().TabPageIndex = dstIndex;
-            }
+            TabPages[dstIndex] = srcTab;
             TabPages[srcIndex] = dstTab;
 
             Refresh();

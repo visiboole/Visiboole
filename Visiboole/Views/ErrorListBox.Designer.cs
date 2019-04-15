@@ -1,6 +1,6 @@
 ﻿namespace VisiBoole.Views
 {
-    partial class ErrorDialogBox
+    partial class ErrorListBox
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorDialogBox));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorListBox));
             this.uxButtonExit = new System.Windows.Forms.Button();
             this.uxPanelTop = new System.Windows.Forms.Panel();
             this.uxLabelTitle = new System.Windows.Forms.Label();
@@ -97,11 +97,11 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "ErrorDialog";
+            this.Name = "ErrorListBox";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Errors";
             this.TopMost = true;
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.ErrorDialogPaint);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.ErrorListBoxPaint);
             this.uxPanelTop.ResumeLayout(false);
             this.uxPanelTop.PerformLayout();
             this.ResumeLayout(false);

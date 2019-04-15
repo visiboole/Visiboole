@@ -100,7 +100,7 @@ namespace VisiBoole.ParsingEngine.Statements
 
             // Get output values
             Design currentDesign = DesignController.ActiveDesign;
-            Design subDesign = new Design(DesignPath, delegate { });
+            Design subDesign = new Design(DesignPath);
             Parser subParser = new Parser(subDesign);
             DesignController.ActiveDesign = subDesign;
             List<bool> outputValues = subParser.ParseAsModule(inputValues);

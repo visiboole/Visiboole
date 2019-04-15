@@ -74,11 +74,23 @@ namespace VisiBoole.Controllers
 		bool CreateNewTab(Design design);
 
         /// <summary>
-        /// Closes a specific tab in the tab control
+        /// Closes a specific tab in the tab control.
         /// </summary>
-        /// <param name="index">Index to close</param>
+        /// <param name="designName">Name of the design being closed</param>
         /// <returns>Whether the operation was successful</returns>
-        bool CloseTab(int index);
+        bool CloseTab(string designName);
+
+        /// <summary>
+        /// Updates the tab text to include or remove the dirty indicator.
+        /// </summary>
+        /// <param name="designName">Design name of the tab to update</param>
+        /// <param name="isDirty">Whether the design has unsaved changes</param>
+        void UpdateTabText(string designName, bool isDirty);
+
+        /// <summary>
+        /// Sets the theme of edit and run tab control
+        /// </summary>
+        void SetTheme();
 
         /// <summary>
         /// Displays the provided output to the browser.

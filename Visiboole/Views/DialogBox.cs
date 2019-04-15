@@ -14,7 +14,7 @@ namespace VisiBoole.Views
     /// </summary>
     public partial class DialogBox : Form
     {
-        public DialogBox()
+        private DialogBox()
         {
             InitializeComponent();
             uxPanelTop.MouseDown += new MouseEventHandler(DialogBoxMouseDown);
@@ -47,60 +47,62 @@ namespace VisiBoole.Views
         /// <param name="message">Message of dialog box</param>
         /// <param name="type">Type of dialog box</param>
         /// <returns></returns>
-        public DialogResult New(string title, string message, DialogType type)
+        public static DialogResult New(string title, string message, DialogType type)
         {
+            var dialogBox = new DialogBox();
+
             if (message.Length < 90)
             {
-                uxLabelMessage.Font = new Font("Segoe UI", 14F, FontStyle.Regular, GraphicsUnit.Point, 0);
+                dialogBox.uxLabelMessage.Font = new Font("Segoe UI", 14F, FontStyle.Regular, GraphicsUnit.Point, 0);
             }
             else if (message.Length < 180)
             {
-                uxLabelMessage.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+                dialogBox.uxLabelMessage.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             }
             else
             {
-                uxLabelMessage.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+                dialogBox.uxLabelMessage.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             }
 
-            uxLabelTitle.Text = title;
-            uxLabelMessage.Text = message;
-            uxButton1.Select();
+            dialogBox.uxLabelTitle.Text = title;
+            dialogBox.uxLabelMessage.Text = message;
+            dialogBox.uxButton1.Select();
 
             if (type == DialogType.YesNoCancel)
             {
-                uxButton1.Visible = true;
-                uxButton1.Text = "Cancel";
-                uxButton1.DialogResult = DialogResult.Cancel;
-                uxButton2.Visible = true;
-                uxButton2.Text = "No";
-                uxButton2.DialogResult = DialogResult.No;
-                uxButton3.Visible = true;
-                uxButton3.Text = "Yes";
-                uxButton3.DialogResult = DialogResult.Yes;
-                uxButtonExit.DialogResult = DialogResult.Cancel;
+                dialogBox.uxButton1.Visible = true;
+                dialogBox.uxButton1.Text = "Cancel";
+                dialogBox.uxButton1.DialogResult = DialogResult.Cancel;
+                dialogBox.uxButton2.Visible = true;
+                dialogBox.uxButton2.Text = "No";
+                dialogBox.uxButton2.DialogResult = DialogResult.No;
+                dialogBox.uxButton3.Visible = true;
+                dialogBox.uxButton3.Text = "Yes";
+                dialogBox.uxButton3.DialogResult = DialogResult.Yes;
+                dialogBox.uxButtonExit.DialogResult = DialogResult.Cancel;
             }
             else if (type == DialogType.YesNo)
             {
-                uxButton1.Visible = true;
-                uxButton1.Text = "No";
-                uxButton1.DialogResult = DialogResult.No;
-                uxButton2.Visible = true;
-                uxButton2.Text = "Yes";
-                uxButton2.DialogResult = DialogResult.Yes;
-                uxButton3.Visible = false;
-                uxButtonExit.DialogResult = DialogResult.No;
+                dialogBox.uxButton1.Visible = true;
+                dialogBox.uxButton1.Text = "No";
+                dialogBox.uxButton1.DialogResult = DialogResult.No;
+                dialogBox.uxButton2.Visible = true;
+                dialogBox.uxButton2.Text = "Yes";
+                dialogBox.uxButton2.DialogResult = DialogResult.Yes;
+                dialogBox.uxButton3.Visible = false;
+                dialogBox.uxButtonExit.DialogResult = DialogResult.No;
             }
             else
             {
-                uxButton1.Visible = true;
-                uxButton1.Text = "OK";
-                uxButton1.DialogResult = DialogResult.OK;
-                uxButton2.Visible = false;
-                uxButton3.Visible = false;
-                uxButtonExit.DialogResult = DialogResult.OK;
+                dialogBox.uxButton1.Visible = true;
+                dialogBox.uxButton1.Text = "OK";
+                dialogBox.uxButton1.DialogResult = DialogResult.OK;
+                dialogBox.uxButton2.Visible = false;
+                dialogBox.uxButton3.Visible = false;
+                dialogBox.uxButtonExit.DialogResult = DialogResult.OK;
             }
 
-            return ShowDialog();
+            return dialogBox.ShowDialog();
         }
 
         /// <summary>
@@ -111,8 +113,12 @@ namespace VisiBoole.Views
         private void DialogBoxPaint(object sender, PaintEventArgs e)
         {
             Color color = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
-            e.Graphics.DrawRectangle(new Pen(color, 4), DisplayRectangle);
+            Pen borderPen = new Pen(color, 4);
+            e.Graphics.DrawRectangle(borderPen, DisplayRectangle);
             uxPanelTop.BackColor = Properties.Settings.Default.Theme.Equals("Light") ? Color.DodgerBlue : Color.FromArgb(66, 66, 66);
+
+            borderPen.Dispose();
+            e.Dispose();
         }
     }
 }

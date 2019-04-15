@@ -18,7 +18,9 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using CustomTabControl;
 using System.Collections.Generic;
+using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.Views;
 
@@ -90,6 +92,20 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <param name="name">Name of the file to keep open</param>
         void CloseFilesExceptFor(string name);
+
+        /// <summary>
+        /// Handles the event that occurs when an edit has been made to a design.
+        /// </summary>
+        /// <param name="designName">Name of the design that was edited</param>
+        /// <param name="isDirty">Whether the design has unsaved changes</param>
+        void OnDesignEdit(string designName, bool isDirty);
+
+        /// <summary>
+        /// Swaps two nav tree nodes.
+        /// </summary>
+        /// <param name="srcIndex">Source index of the swap</param>
+        /// <param name="dstIndex">Destination index of the swap</param>
+        void SwapDesignNodes(int srcIndex, int dstIndex);
 
         /// <summary>
         /// Set theme of Designs

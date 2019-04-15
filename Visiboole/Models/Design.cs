@@ -10,7 +10,12 @@ using VisiBoole.ParsingEngine;
 
 namespace VisiBoole.Models
 {
-    public delegate void DisplayLoader(DisplayType dType); // Delegate for LoadDisplay Method
+    /// <summary>
+    /// Delegate for design edit events.
+    /// </summary>
+    /// <param name="designName">Name of the design that was edited</param>
+    /// <param name="isDirty">Whether the design has unsaved changes</param>
+    public delegate void DesignEditEventHandler(string designName, bool isDirty);
 
     /// <summary>
     /// A User-Created Design
@@ -18,39 +23,29 @@ namespace VisiBoole.Models
     public class Design : RichTextBoxEx
     {
         /// <summary>
+        /// Event that occurs when the design has been edited.
+        /// </summary>
+        public event DesignEditEventHandler DesignEdit;
+
+        /// <summary>
         /// Database of the Design
         /// </summary>
         public Database Database { get; set; }
 
         /// <summary>
-        /// The index of the TabControl that this occupies
-        /// </summary>
-        public int TabPageIndex { get; set; }
-
-        /// <summary>
         /// The file location that this Design is saved in
         /// </summary>
-        public FileInfo FileSource { get; set; }
-
-        /// <summary>
-        /// The short filename of the FileSource
-        /// </summary>
-        public string FileSourceName { get; set; }
+        public FileInfo FileSource { get; private set; }
 
         /// <summary>
         /// Short filename that doesn't include the extension.
         /// </summary>
-        public string FileName { get; set; }
+        public string FileName { get; private set; }
 
         /// <summary>
-        /// Delegate for updating the display
+        /// Returns True if this Design Text does not match the FileSource contents
         /// </summary>
-        private DisplayLoader UpdateDisplay;
-
-		/// <summary>
-		/// Returns True if this Design Text does not match the FileSource contents
-		/// </summary>
-		public bool IsDirty { get; private set; }
+        public bool IsDirty { get; private set; }
 
         /// <summary>
         /// Previous text of the design.
@@ -67,6 +62,9 @@ namespace VisiBoole.Models
         /// </summary>
         public Stack UndoHistory { get; private set; }
 
+        /// <summary>
+        /// Regex for identifying a module declaration.
+        /// </summary>
         private Regex ModuleRegex;
 
         /// <summary>
@@ -78,7 +76,7 @@ namespace VisiBoole.Models
         /// Constructs a new Design object
         /// </summary>
         /// <param name="filename">The path of the file source for this Design</param>
-        public Design(string filename, DisplayLoader update)
+        public Design(string filename)
         {
             if (string.IsNullOrEmpty(filename))
             {
@@ -86,10 +84,8 @@ namespace VisiBoole.Models
             }
 
             FileSource = new FileInfo(filename);
-            FileSourceName = FileSource.Name;
-            FileName = FileSourceName.Split('.')[0];
+            FileName = FileSource.Name.Split('.')[0];
             ModuleRegex = new Regex($@"^\s*{FileName}\({Parser.ModulePattern}\);$", RegexOptions.Compiled);
-            UpdateDisplay = update;
 
             if (!File.Exists(filename))
             {
@@ -97,6 +93,25 @@ namespace VisiBoole.Models
             }
 
             Text = GetFileText();
+            InitDesign();
+        }
+
+        public Design(string name, string text)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException("Invalid filename");
+            }
+
+            if (text == null)
+            {
+                throw new ArgumentNullException("Invalid text");
+
+            }
+        }
+
+        private void InitDesign()
+        {
             LastText = Text;
             IsDirty = false;
             Database = new Database();
@@ -108,7 +123,7 @@ namespace VisiBoole.Models
             KeyDown += Design_KeyDown;
 
             AcceptsTab = true;
-	        ShowLineNumbers = true;
+            ShowLineNumbers = true;
 
             SetTheme();
             SetFontSize();
@@ -174,19 +189,6 @@ namespace VisiBoole.Models
                 }
             }
             return text;
-        }
-
-        /// <summary>
-        /// Updates dirty and changes file name to indicate unsaved changes
-        /// </summary>
-        private void UpdateDirty()
-        {
-            IsDirty = true;
-
-            if (Globals.TabControl.TabPages[TabPageIndex].Text == FileName)
-            {
-                Globals.TabControl.TabPages[TabPageIndex].Text = "*" + FileName;
-            } 
         }
 
         /// <summary>
@@ -324,9 +326,17 @@ namespace VisiBoole.Models
 
             if (!IsDirty)
             {
-                UpdateDirty();
+                IsDirty = true;
             }
-            UpdateDisplay(DisplayType.EDIT);
+            ProcessDesignEdit();
+        }
+
+        /// <summary>
+        /// Invokes listeners for the OnDesignEdit event.
+        /// </summary>
+        private void ProcessDesignEdit()
+        {
+            DesignEdit?.Invoke(FileName, IsDirty);
         }
 
         /// <summary>
@@ -339,12 +349,12 @@ namespace VisiBoole.Models
             if (!Text.Equals(LastText))
             {
                 RecordEdit();
-                OnTextChanged(new EventArgs());
+                OnTextChanged(e);
                 if (!IsDirty)
                 {
-                    UpdateDirty();
+                    IsDirty = true;
                 }
-                UpdateDisplay(DisplayType.EDIT);
+                ProcessDesignEdit();
             }
         }
 
@@ -460,9 +470,9 @@ namespace VisiBoole.Models
             OnTextChanged(new EventArgs());
             if (!IsDirty)
             {
-                UpdateDirty();
+                IsDirty = true;
             }
-            UpdateDisplay(DisplayType.EDIT);
+            ProcessDesignEdit();
         }
 
         /// <summary>
@@ -546,16 +556,15 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
-        /// Saves the contents of this Text property to the FileSource contents
+        /// Saves the contents of this Text property to the FileSource contents.
         /// </summary>
-        /// <param name="isClosing">Indicates whether we are saving before a close</param>
-        public void SaveTextToFile(bool isClosing)
+        public void SaveTextToFile()
         {
-            File.WriteAllText(FileSource.FullName, Text);
-            if (!isClosing)
+            if (IsDirty)
             {
+                File.WriteAllText(FileSource.FullName, Text);
                 IsDirty = false;
-                Globals.TabControl.TabPages[TabPageIndex].Text = FileName;
+                ProcessDesignEdit();
             }
         }
     }
