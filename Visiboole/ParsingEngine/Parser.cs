@@ -114,7 +114,28 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Updates expression statements in the statement list.
+        /// Ticks statements with alt clocks that go from off to on.
+        /// </summary>
+        private void UpdateAltClockStatements()
+        {
+            if (Design.Database.AltClocks.Count > 0)
+            {
+                foreach (KeyValuePair<string, AltClock> kv in Design.Database.AltClocks)
+                {
+                    if ((Design.Database.TryGetValue(kv.Key) == 1) && !(bool)kv.Value.ObjCodeValue)
+                    {
+                        List<ExpressionStatement> altClockExpressions = Design.Database.GetAltClockExpressions(kv.Key);
+                        foreach (ExpressionStatement expressionStatement in altClockExpressions)
+                        {
+                            ((DffClockStmt)expressionStatement).Tick();
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates expression statements.
         /// </summary>
         private void UpdateExpressionStatements()
         {
@@ -127,6 +148,23 @@ namespace VisiBoole.ParsingEngine
                 {
                     ExpressionStatement expressionStatement = (ExpressionStatement)statement;
                     Statements[i] = Design.Database.GetExpression(expressionStatement.LineNumber);
+                }
+            }
+
+            UpdateAltClockValues();
+        }
+
+        /// <summary>
+        /// Updates the stored values of all alternate clocks.
+        /// </summary>
+        private void UpdateAltClockValues()
+        {
+            if (Design.Database.AltClocks.Count > 0)
+            {
+                // Update alt clock values
+                foreach (KeyValuePair<string, AltClock> kv in Design.Database.AltClocks)
+                {
+                    kv.Value.UpdateValue(Design.Database.TryGetValue(kv.Key) == 1);
                 }
             }
         }
@@ -160,6 +198,7 @@ namespace VisiBoole.ParsingEngine
             // Flip value of variable clicked and reevlaute expressions
             Design.Database.FlipValue(variableName);
             Design.Database.ReevaluateExpressions();
+            UpdateAltClockStatements();
             UpdateExpressionStatements();
 
             // Get output
@@ -177,10 +216,15 @@ namespace VisiBoole.ParsingEngine
             {
                 if (stmt.GetType() == typeof(DffClockStmt))
                 {
-                    ((DffClockStmt)stmt).Tick();
+                    DffClockStmt clockStmt = ((DffClockStmt)stmt);
+                    if (!clockStmt.Operation.Contains("@"))
+                    {
+                        clockStmt.Tick();
+                    }
                 }
             }
             Design.Database.ReevaluateExpressions();
+            UpdateAltClockStatements();
             UpdateExpressionStatements();
 
             // Get output
@@ -507,10 +551,27 @@ namespace VisiBoole.ParsingEngine
             {
                 // Verify expressions
                 int start = line.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
-                string dependent = line.Contains("<")
-                    ? line.Substring(start, line.IndexOf('<') - start).Trim()
-                    : line.Substring(start, line.IndexOf('=') - start).Trim();
-                string expression = line.Substring(line.IndexOf("=") + 1).Trim();
+                string dependent;
+                string operation;
+                string expression;
+                if (!line.Contains("<"))
+                {
+                    operation = "=";
+                    dependent = line.Substring(start, line.IndexOf('=') - start).Trim();
+                }
+                else
+                {
+                    if (!line.Contains("@"))
+                    {
+                        operation = "<=";
+                    }
+                    else
+                    {
+                        operation = Regex.Match(line, @"<=@\S+").Value;
+                    }
+                    dependent = line.Substring(start, line.IndexOf('<') - start).Trim();
+                }
+                expression = line.Substring(line.IndexOf(operation) + operation.Length).Trim();
                 expression = expression.TrimEnd(';');
                 expression = String.Concat("(", expression, ")"); 
 

@@ -77,12 +77,12 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else
                 {
-                    Operation = Regex.Match(Expression, @"<=@[^\s]+").Value;
+                    Operation = Regex.Match(Expression, @"<=@\S+").Value;
                 }
                 Delay = Expression.Substring(0, Expression.IndexOf('<')).Trim();
                 Dependent = Delay + ".d";
             }
-            Expression = Expression.Substring(Expression.IndexOf("=") + 1).Trim();
+            Expression = Expression.Substring(Expression.IndexOf(Operation) + Operation.Length).Trim();
             Expression = Parser.WhitespaceRegex.Replace(Expression, " "); // Replace multiple spaces
         }
 

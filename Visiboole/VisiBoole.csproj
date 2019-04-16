@@ -84,6 +84,7 @@
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
+    <Compile Include="ParsingEngine\ObjectCode\AltClock.cs" />
     <Compile Include="ParsingEngine\ObjectCode\SpaceFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Parenthesis.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />

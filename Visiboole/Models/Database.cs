@@ -58,6 +58,11 @@ namespace VisiBoole.ParsingEngine
         private Dictionary<int, ExpressionStatement> Expressions;
 
         /// <summary>
+        /// Dictionary of alternating clocks in the design.
+        /// </summary>
+        public Dictionary<string, AltClock> AltClocks;
+
+        /// <summary>
         /// Index of the last expression in the design.
         /// </summary>
         private int LastExpressionIndex;
@@ -71,6 +76,7 @@ namespace VisiBoole.ParsingEngine
             AllVars = new Dictionary<string, Variable>();
             Namespaces = new Dictionary<string, List<string>>();
             Expressions = new Dictionary<int, ExpressionStatement>();
+            AltClocks = new Dictionary<string, AltClock>();
             LastExpressionIndex = -1;
         }
 
@@ -338,7 +344,20 @@ namespace VisiBoole.ParsingEngine
         public void AddExpression(int lineNumber, ExpressionStatement expression)
         {
             ReevaluateExpressions();
+
             Expressions.Add(lineNumber, expression);
+            if (expression.Operation.Contains("@"))
+            {
+                string altClock = Regex.Match(expression.Operation, @"@\S+").Value;
+                string name = altClock.Substring(1);
+
+                if (!AltClocks.ContainsKey(name))
+                {
+                    AltClocks.Add(name, new AltClock(name, TryGetValue(name) == 1));
+                }
+                AltClocks[name].AddDependency(expression.Dependent);
+            }
+
             if (lineNumber > LastExpressionIndex)
             {
                 LastExpressionIndex = lineNumber;
@@ -354,6 +373,26 @@ namespace VisiBoole.ParsingEngine
         public ExpressionStatement GetExpression(int lineNumber)
         {
             return Expressions[lineNumber];
+        }
+
+
+        public List<ExpressionStatement> GetAltClockExpressions(string clockName)
+        {
+            List<ExpressionStatement> altClockExpressions = new List<ExpressionStatement>();
+            foreach (ExpressionStatement expressionStatement in Expressions.Values)
+            {
+                if (expressionStatement.Operation.Contains("@"))
+                {
+                    string altClock = Regex.Match(expressionStatement.Operation, @"@\S+").Value;
+                    string name = altClock.Substring(1);
+
+                    if (name == clockName)
+                    {
+                        altClockExpressions.Add(expressionStatement);
+                    }
+                }
+            }
+            return altClockExpressions;
         }
     }
 }

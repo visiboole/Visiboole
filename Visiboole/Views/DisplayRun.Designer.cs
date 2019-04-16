@@ -127,6 +127,7 @@ namespace VisiBoole.Views
             this.btnTick.TabIndex = 0;
             this.btnTick.Text = "Tick";
             this.btnTick.UseVisualStyleBackColor = true;
+            this.btnTick.Click += new System.EventHandler(this.btnTick_Click);
             // 
             // tabPage1
             // 

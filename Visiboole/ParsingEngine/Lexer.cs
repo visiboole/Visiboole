@@ -641,7 +641,7 @@ namespace VisiBoole.ParsingEngine
                     return false;
                 }
             }
-            else if (currentLexeme == "<=")
+            else if (currentLexeme.Contains("<="))
             {
                 if (type != StatementType.Empty)
                 {
