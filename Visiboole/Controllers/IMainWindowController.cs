@@ -129,6 +129,11 @@ namespace VisiBoole.Controllers
         void Run();
 
         /// <summary>
+        /// Runs the active design with its previous state.
+        /// </summary>
+        void RunPreviousState();
+
+        /// <summary>
         /// Runs a subdesign from the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instantiation to run</param>

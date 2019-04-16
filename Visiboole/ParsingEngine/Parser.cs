@@ -85,12 +85,18 @@ namespace VisiBoole.ParsingEngine
         private List<Statement> Statements;
 
         /// <summary>
+        /// Input variables provided to the parser.
+        /// </summary>
+        private List<Variable> InputVariables;
+
+        /// <summary>
         /// Constructs a parser to parse designs.
         /// </summary>
         /// <param name="design">Design to parse</param>
         public Parser(Design design) : base(design)
         {
             ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModulePattern}\);$");
+            InputVariables = new List<Variable>();
         }
 
         #region Parsing Methods
@@ -232,6 +238,24 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
+        /// Gets the input variable (if present) by the provided name.
+        /// </summary>
+        /// <param name="variableName">Name of input variable</param>
+        /// <returns></returns>
+        private Variable GetInputVariable(string variableName)
+        {
+            foreach (Variable variable in InputVariables)
+            {
+                if (variable.Name == variableName)
+                {
+                    return variable;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Parsers the current design text with input variables.
         /// </summary>
         /// <param name="inputs">Input variables</param>
@@ -240,17 +264,7 @@ namespace VisiBoole.ParsingEngine
         {
             // Get statements for parsing
             Design.Database = new Database();
-            foreach (Variable var in inputs)
-            {
-                if (var.GetType() == typeof(IndependentVariable))
-                {
-                    Design.Database.AddVariable((IndependentVariable)var);
-                }
-                else
-                {
-                    Design.Database.AddVariable(new IndependentVariable(var.Name, var.Value));
-                }
-            }
+            InputVariables = inputs;
 
             Statements = ParseStatements();
             if (Statements == null)
@@ -355,6 +369,23 @@ namespace VisiBoole.ParsingEngine
             }
 
             return inputVariables;
+        }
+
+        /// <summary>
+        /// Exports the independent variables
+        /// </summary>
+        /// <returns></returns>
+        public List<Variable> ExportState()
+        {
+            List<Variable> variables = new List<Variable>();
+            foreach (Variable var in Design.Database.AllVars.Values)
+            {
+                if (var.GetType() == typeof(IndependentVariable))
+                {
+                    variables.Add(var);
+                }
+            }
+            return variables;
         }
 
         /// <summary>
@@ -944,8 +975,16 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (Design.Database.TryGetVariable<Variable>(var) == null)
                         {
-                            IndependentVariable indVar = new IndependentVariable(var, false);
-                            Design.Database.AddVariable<IndependentVariable>(indVar);
+                            // Check for an input variable
+                            Variable inputVariable = GetInputVariable(var);
+                            if (inputVariable == null)
+                            {
+                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, false));
+                            }
+                            else
+                            {
+                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, inputVariable.Value));
+                            }
                         }
                     }
                 }
@@ -959,8 +998,16 @@ namespace VisiBoole.ParsingEngine
                         // Create Variable
                         if (!line.Contains(":") || (line.Contains(":") && match.Index < line.IndexOf(":")))
                         {
-                            IndependentVariable indVar = new IndependentVariable(var, val);
-                            Design.Database.AddVariable(indVar);
+                            // Check for an input variable
+                            Variable inputVariable = GetInputVariable(var);
+                            if (inputVariable == null)
+                            {
+                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, val));
+                            }
+                            else
+                            {
+                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, inputVariable.Value));
+                            }
                         }
                         else
                         {

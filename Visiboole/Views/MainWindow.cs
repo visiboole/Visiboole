@@ -762,7 +762,7 @@ namespace VisiBoole.Views
 
         private void previousStateToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MainWindowController.RefreshOutput();
+            MainWindowController.RunPreviousState();
         }
     }
 }

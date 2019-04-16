@@ -248,6 +248,17 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Parsers the current design text with input variables.
+        /// </summary>
+        /// <param name="inputVariables">Input variables</param>
+        /// <returns>Parsed output</returns>
+        public List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables)
+        {
+            Parser = new Parser(ActiveDesign);
+            return Parser.ParseWithInput(inputVariables);
+        }
+
+        /// <summary>
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instnatiation</param>
@@ -275,6 +286,15 @@ namespace VisiBoole.Controllers
             }
 
             return output;
+        }
+
+        /// <summary>
+        /// Gets the active designs current state.
+        /// </summary>
+        /// <returns>Active designs current state</returns>
+        public List<Variable> GetActiveDesignState()
+        {
+            return Parser.ExportState();
         }
     }
 }

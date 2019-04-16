@@ -112,10 +112,23 @@ namespace VisiBoole.Controllers
         List<IObjectCodeElement> ParseVariableClick(string variableName);
 
         /// <summary>
+        /// Parsers the current design text with input variables.
+        /// </summary>
+        /// <param name="inputVariables">Input variables</param>
+        /// <returns>Parsed output</returns>
+        List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables);
+
+        /// <summary>
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instnatiation</param>
         /// <returns>Output of the parsed design</returns>
         List<IObjectCodeElement> ParseSubdesign(string instantiation);
+
+        /// <summary>
+        /// Gets the active designs current state.
+        /// </summary>
+        /// <returns>Active designs current state</returns>
+        List<Variable> GetActiveDesignState();
     }
 }

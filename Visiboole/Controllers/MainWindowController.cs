@@ -345,6 +345,27 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Runs the active design with its previous state.
+        /// </summary>
+        public void RunPreviousState()
+        {
+            try
+            {
+                List<IObjectCodeElement> output = DesignController.ParseWithInput(DesignController.GetActiveDesignState());
+                if (output == null)
+                {
+                    return;
+                }
+                DisplayController.DisplayOutput(output);
+            }
+            catch (Exception exception)
+            {
+                DialogBox.New("Error", exception.ToString(), DialogType.Ok);
+                // Leave this error message for debugging purposes
+            }
+        }
+
+        /// <summary>
         /// Runs a subdesign from the provided instantiation.
         /// </summary>
         /// <param name="instantiation">Instantiation to run</param>
