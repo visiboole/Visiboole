@@ -165,6 +165,8 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         public static Regex ConstantRegex { get; } = new Regex($"^~*{ConstantPattern}$", RegexOptions.Compiled);
 
+        private static Regex ConstantRegex2 { get; } = new Regex($"(?!(('b1)|('b0)|(1'b1)|(1'b0)))({ConstantPattern})", RegexOptions.Compiled);
+
         /// <summary>
         /// Regex for identifying scalars, vectors and constants.
         /// </summary>
@@ -1126,6 +1128,12 @@ namespace VisiBoole.ParsingEngine
             while ((match = VectorRegex2.Match(expandedLine)).Success)
             {
                 // Replace matched vector with its components
+                expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
+            }
+
+            while ((match = ConstantRegex2.Match(expandedLine)).Success)
+            {
+                // Replace matched constants with its components
                 expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
             }
 
