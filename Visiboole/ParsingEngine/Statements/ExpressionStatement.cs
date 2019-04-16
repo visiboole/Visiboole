@@ -119,7 +119,8 @@ namespace VisiBoole.ParsingEngine.Statements
             }
 
             // Output expression
-            MatchCollection matches = Regex.Matches(Expression, @"(~?(?<Name>[_a-zA-Z]\w{0,19}))|(~?'[bB][0-1])|([|^()+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
+            // Operators: ([|^()+-])|(==)|(?<=\w|\))\s(?=[\w(~'])
+            MatchCollection matches = Regex.Matches(Expression, $@"({Lexer.ConcatPattern})|(~?{Lexer.ScalarPattern})|(~?{Lexer.ConstantPattern})|([|^()+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
             foreach (Match match in matches)
             {
                 string token = match.Value;
@@ -131,13 +132,9 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     OutputOperator(token);
                 }
-                else if (token.Contains("'"))
-                {
-                    Output.Add(new Constant(token));
-                }
                 else
                 {
-                    OutputVariable(token); // Variable
+                    OutputVariable(token); // Variable or constant
                 }
             }
 
@@ -244,7 +241,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 StringBuilder binary = new StringBuilder();
                 foreach (string var in vars)
                 {
-                    binary.Append(DesignController.ActiveDesign.Database.TryGetValue(var));
+                    binary.Append(GetValue(var));
                 }
 
                 return Convert.ToInt32(binary.ToString(), 2);

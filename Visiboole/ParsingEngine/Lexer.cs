@@ -63,7 +63,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying constants. (No ~)
         /// </summary>
-        protected static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
+        public static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
 
         /// <summary>
         /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
