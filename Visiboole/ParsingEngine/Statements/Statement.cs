@@ -58,70 +58,74 @@ namespace VisiBoole.ParsingEngine.Statements
 		public abstract void Parse();
 
         /// <summary>
+        /// Adds variables in the provided text that are not in the database to the database.
+        /// </summary>
+        /// <param name="text">Text that contains variables</param>
+        protected void InitVariables(string text)
+        {
+            // Get variables in the statement
+            MatchCollection variableMatches = Parser.ScalarRegex.Matches(text);
+            // Iterate through all variables in the statement
+            foreach (Match variableMatch in variableMatches)
+            {
+                // Get variable
+                string variable = variableMatch.Value;
+                // Get value of variable
+                bool value = variable.Contains("*");
+                // If value is true
+                if (value)
+                {
+                    // Remove * from variable
+                    variable = variable.TrimStart('*');
+                }
+
+                // If variable isn't in the database
+                if (DesignController.ActiveDesign.Database.TryGetVariable<Variable>(variable) == null)
+                {
+                    // Add variable to the database
+                    DesignController.ActiveDesign.Database.AddVariable(new IndependentVariable(variable, value));
+                }
+            }
+        }
+
+        /// <summary>
         /// Outputs the provided variable to the output list.
         /// </summary>
         /// <param name="var">Variable to output</param>
         protected void OutputVariable(string var)
         {
-            string[] variables;
-            if (!var.Contains("{"))
-            {
-                variables = new string[] { var };
-            }
-            else
-            {
-                variables = Parser.WhitespaceRegex.Split(var.Substring(1, var.Length - 2));
-            }
+            string name = var.TrimStart('~');
 
-            if (variables.Length > 1)
+            if (!name.Contains("'"))
             {
-                OutputOperator("{");
-            }
-
-            foreach (string variable in variables)
-            {
-                string name = variable.TrimStart('~');
-
-                if (!name.Contains("'"))
+                IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
+                DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
+                if (indVar != null)
                 {
-                    IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
-                    DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
-                    if (indVar != null)
+                    if (!var.Contains("~"))
                     {
-                        if (!var.Contains("~"))
-                        {
-                            Output.Add(indVar);
-                        }
-                        else
-                        {
-                            Output.Add(new IndependentVariable(var, indVar.Value));
-                        }
-                    }
-                    else if (depVar != null)
-                    {
-                        if (!var.Contains("~"))
-                        {
-                            Output.Add(depVar);
-                        }
-                        else
-                        {
-                            Output.Add(new DependentVariable(var, depVar.Value));
-                        }
+                        Output.Add(indVar);
                     }
                     else
                     {
-                        // Error
+                        Output.Add(new IndependentVariable(var, indVar.Value));
                     }
                 }
-                else
+                else if (depVar != null)
                 {
-                    Output.Add(new Constant(variable));
-                }                
+                    if (!var.Contains("~"))
+                    {
+                        Output.Add(depVar);
+                    }
+                    else
+                    {
+                        Output.Add(new DependentVariable(var, depVar.Value));
+                    }
+                }
             }
-
-            if (variables.Length > 1)
+            else
             {
-                OutputOperator("}");
+                Output.Add(new Constant(var));
             }
         }
 

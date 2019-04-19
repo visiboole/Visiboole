@@ -52,6 +52,11 @@ namespace VisiBoole.ParsingEngine
         public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
 
         /// <summary>
+        /// Regex for identifying scalars. (Optional *)
+        /// </summary>
+        public static Regex ScalarRegex { get; } = new Regex(ScalarPattern2, RegexOptions.Compiled);
+
+        /// <summary>
         /// Regex for identifying entire format specifiers.
         /// </summary>
         public static Regex FormatSpecifierRegex { get; } = new Regex(FormatSpecifierPattern);
@@ -59,24 +64,29 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying comment statements.
         /// </summary>
-        public static Regex CommentRegex { get; } = new Regex(@"^((?<Padding>\s*)(?<DoInclude>[+-])?(?<Comment>"".*""\;))$");
+        public static Regex CommentStmtRegex { get; } = new Regex(@"^(?<FrontSpacing>\s*)(?<DoInclude>[+-])?""(?<Comment>.*)""(?<BackSpacing>\s*);$", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying library statements.
         /// </summary>
-        private static Regex LibraryRegex = new Regex(@"^(#library\s(?<Name>.+);)$");
+        private static Regex LibraryStmtRegex = new Regex(@"^(?<FrontSpacing>\s*)#library\s(?<Name>\S+)(?<BackSpacing>\s*);$", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying module declarations.
         /// </summary>
         private Regex ModuleRegex;
 
+        /// <summary>
+        /// Regex for identifying submodule statements.
+        /// </summary>
+        private static Regex SubmoduleStmtRegex = new Regex($@"(?<FrontSpacing>\s*)(?<Instantiation>{InstantiationPattern})\({ModulePattern}\)(?<BackSpacing>\s*);", RegexOptions.Compiled);
+
         #endregion
 
         /// <summary>
         /// List of operators.
         /// </summary>
-        public static readonly IList<string> OperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "|", "+", "-", "==", " ", "~"});
+        public static readonly IList<string> OperatorsList = new ReadOnlyCollection<string>(new List<string> { "^", "|", "+", "-", "==", " ", "~" });
         public static readonly IList<string> ExclusiveOperatorsList = new ReadOnlyCollection<string>(new List<string>{"^", "+", "-", "=="});
 
         /// <summary>
@@ -85,18 +95,12 @@ namespace VisiBoole.ParsingEngine
         private List<Statement> Statements;
 
         /// <summary>
-        /// Input variables provided to the parser.
-        /// </summary>
-        private List<Variable> InputVariables;
-
-        /// <summary>
         /// Constructs a parser to parse designs.
         /// </summary>
         /// <param name="design">Design to parse</param>
         public Parser(Design design) : base(design)
         {
             ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModulePattern}\);$");
-            InputVariables = new List<Variable>();
         }
 
         #region Parsing Methods
@@ -122,7 +126,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Ticks statements with alt clocks that go from off to on.
         /// </summary>
-        private void UpdateAltClockStatements()
+        private void TickAltClocks()
         {
             if (Design.Database.AltClocks.Count > 0)
             {
@@ -130,10 +134,16 @@ namespace VisiBoole.ParsingEngine
                 {
                     if ((Design.Database.TryGetValue(kv.Key) == 1) && !(bool)kv.Value.ObjCodeValue)
                     {
-                        List<ExpressionStatement> altClockExpressions = Design.Database.GetAltClockExpressions(kv.Key);
-                        foreach (ExpressionStatement expressionStatement in altClockExpressions)
+                        foreach (Statement stmt in Statements)
                         {
-                            ((DffClockStmt)expressionStatement).Tick();
+                            if (stmt.GetType() == typeof(DffClockStmt))
+                            {
+                                DffClockStmt clockStmt = ((DffClockStmt)stmt);
+                                if (clockStmt.AltClock == kv.Key)
+                                {
+                                    clockStmt.Tick();
+                                }
+                            }
                         }
                     }
                 }
@@ -141,29 +151,9 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Updates expression statements.
-        /// </summary>
-        private void UpdateExpressionStatements()
-        {
-            // Replace expression statements with the correctly updated versions
-            for (int i = 0; i < Statements.Count; i++)
-            {
-                Statement statement = Statements[i];
-
-                if (statement.GetType() == typeof(BooleanAssignmentStmt) || statement.GetType() == typeof(DffClockStmt))
-                {
-                    ExpressionStatement expressionStatement = (ExpressionStatement)statement;
-                    Statements[i] = Design.Database.GetExpression(expressionStatement.LineNumber);
-                }
-            }
-
-            UpdateAltClockValues();
-        }
-
-        /// <summary>
         /// Updates the stored values of all alternate clocks.
         /// </summary>
-        private void UpdateAltClockValues()
+        private void UpdateAltClocks()
         {
             if (Design.Database.AltClocks.Count > 0)
             {
@@ -190,7 +180,7 @@ namespace VisiBoole.ParsingEngine
             }
 
             // Get output
-            UpdateExpressionStatements();
+            UpdateAltClocks();
             return GetParsedOutput();
         }
 
@@ -204,8 +194,8 @@ namespace VisiBoole.ParsingEngine
             // Flip value of variable clicked and reevlaute expressions
             Design.Database.FlipValue(variableName);
             Design.Database.ReevaluateExpressions();
-            UpdateAltClockStatements();
-            UpdateExpressionStatements();
+            TickAltClocks();
+            UpdateAltClocks();
 
             // Get output
             return GetParsedOutput();
@@ -223,36 +213,18 @@ namespace VisiBoole.ParsingEngine
                 if (stmt.GetType() == typeof(DffClockStmt))
                 {
                     DffClockStmt clockStmt = ((DffClockStmt)stmt);
-                    if (!clockStmt.Operation.Contains("@"))
+                    if (clockStmt.AltClock == null)
                     {
                         clockStmt.Tick();
                     }
                 }
             }
             Design.Database.ReevaluateExpressions();
-            UpdateAltClockStatements();
-            UpdateExpressionStatements();
+            TickAltClocks();
+            UpdateAltClocks();
 
             // Get output
             return GetParsedOutput();
-        }
-
-        /// <summary>
-        /// Gets the input variable (if present) by the provided name.
-        /// </summary>
-        /// <param name="variableName">Name of input variable</param>
-        /// <returns></returns>
-        private Variable GetInputVariable(string variableName)
-        {
-            foreach (Variable variable in InputVariables)
-            {
-                if (variable.Name == variableName)
-                {
-                    return variable;
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -264,7 +236,10 @@ namespace VisiBoole.ParsingEngine
         {
             // Get statements for parsing
             Design.Database = new Database();
-            InputVariables = inputs;
+            foreach (Variable input in inputs)
+            {
+                Design.Database.AddVariable(new IndependentVariable(input.Name, input.Value));
+            }
 
             Statements = ParseStatements();
             if (Statements == null)
@@ -272,7 +247,7 @@ namespace VisiBoole.ParsingEngine
                 ErrorListBox.Display(ErrorLog);
                 return null;
             }
-            UpdateExpressionStatements();
+            UpdateAltClocks();
 
             // Get output
             return GetParsedOutput();
@@ -315,7 +290,7 @@ namespace VisiBoole.ParsingEngine
                 ErrorListBox.Display(new List<string>(new string[] { $"Error parsing design '{Design.FileName}'. Please check/run your source file for errors." }));
                 return null;
             }
-            UpdateExpressionStatements();
+            UpdateAltClocks();
 
             // Get output values
             List<bool> outputValues = new List<bool>();
@@ -389,162 +364,182 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Returns a list of statements from parsed source code.
+        /// Creates a list of statements from parsed source code.
         /// </summary>
         /// <returns>List of statements</returns>
         private List<Statement> ParseStatements()
         {
-            bool valid = true;
             List<Statement> statements = new List<Statement>();
+            bool valid = true;
             byte[] bytes = Encoding.UTF8.GetBytes(Design.Text);
             MemoryStream stream = new MemoryStream(bytes);
             using (StreamReader reader = new StreamReader(stream))
             {
                 LineNumber = 0;
                 Design.ModuleDeclaration = null;
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                string source;
+
+                while ((source = reader.ReadLine()) != null)
                 {
                     LineNumber++;
                     StatementType? type = null;
 
-                    line = line.TrimEnd(); // Trim end of line
-                    if (String.IsNullOrWhiteSpace(line))
+                    // Trim end of source
+                    source = source.TrimEnd();
+                    // If source is only whitespace
+                    if (String.IsNullOrWhiteSpace(source))
                     {
-                        type = StatementType.Empty;
-                    }
-                    else
-                    {
-                        if (line[line.Length - 1] != ';')
+                        // If current execution is valid
+                        if (valid)
                         {
-                            ErrorLog.Add($"{LineNumber}: Missing ';'.");
-                            valid = false;
+                            // Add empty statement to statement list
+                            statements.Add(new EmptyStmt(source));
                         }
-                    }
-
-                    if (valid && type == null)
-                    {
-                        type = GetStatementType(line);
-                    }
-
-                    if (type == null)
-                    {
-                        valid = false;
-                    }
-                    else if (type == StatementType.Library)
-                    {
-                        if (!VerifyLibraryStatement(line))
-                        {
-                            valid = false;
-                        }
+                        // Continue loop
                         continue;
                     }
-                    else if (type == StatementType.Module)
+                    // If source is a comment statement
+                    else if (CommentStmtRegex.IsMatch(source))
                     {
-                        if (Design.ModuleDeclaration == null)
+                        // If current execution is valid
+                        if (valid)
                         {
-                            Design.ModuleDeclaration = line;
-                        }
-                        else
-                        {
-                            if (Design.ModuleDeclaration != line)
+                            // Get comment match
+                            Match commentMatch = CommentStmtRegex.Match(source);
+                            // If comment should be displayed
+                            if (commentMatch.Groups["DoInclude"].Value != "-" && (Properties.Settings.Default.SimulationComments || commentMatch.Groups["DoInclude"].Value == "+"))
                             {
-                                ErrorLog.Add("Designs can only have one module statement.");
-                                valid = false;
+                                // Add comment statement to statement list
+                                statements.Add(new CommentStmt(source));
                             }
                         }
-                        
+                        // Continue loop
                         continue;
+                    }
+                    // If source is a library statement
+                    else if (LibraryStmtRegex.IsMatch(source))
+                    {
+                        // If library statement doesn't contain a valid library
+                        if (!VerifyLibraryStatement(source))
+                        {
+                            // Set valid to false
+                            valid = false;
+                        }
+                        // Continue loop (Libraries don't get added to statement list)
+                        continue;
+                    }
+                    // If source is none of the above
+                    else
+                    {
+                        // Get statement type
+                        type = GetStatementType(source);
+
+                        if (type == null)
+                        {
+                            // Set valid to false
+                            valid = false;
+                            // Continue loop
+                            continue;
+                        }
+                    }
+
+                    // If source is a submodule statement
+                    if (SubmoduleStmtRegex.IsMatch(source))
+                    {
+                        // If submodule instantiation isn't valid
+                        if (!VerifySubmoduleStatement(source))
+                        {
+                            // Set valid to false
+                            valid = false;
+                            // Continue loop
+                            continue;
+                        }
+                    }
+                    // If source is a module statement
+                    else if (ModuleRegex.IsMatch(source))
+                    {
+                        // If design doesn't have a module declaration
+                        if (Design.ModuleDeclaration == null)
+                        {
+                            // Set the design's module declaration to the source
+                            Design.ModuleDeclaration = source;
+                        }
+                        // If design has a module module declaration
+                        else
+                        {
+                            // Add invalid module statement error to error list
+                            ErrorLog.Add("Designs can only have one module statement.");
+                            // Set valid to false
+                            valid = false;
+                            // Continue loop
+                            continue;
+                        }
                     }
                     else
                     {
                         // Verify line from its statement type
-                        if (!VerifyStatement(line, type))
+                        if (!VerifyStatement(source, type))
                         {
+                            // Set valid to false
                             valid = false;
+                            // Continue loop
+                            continue;
                         }
                     }
 
-                    if (valid)
+                    // Remove double **
+                    source = source.Replace("**", "");
+                    // Remove double ~~
+                    source = source.Replace("~~", "");
+
+                    bool needsExpansion = ExpansionRegex.IsMatch(source) || type == StatementType.Submodule;
+                    if (needsExpansion && source.Contains("=") && !source.Contains("+") && !source.Contains("-"))
                     {
-                        if (type != StatementType.Comment)
+                        // Vertical expansion needed
+                        source = ExpandVertically(source);
+                        if (source == null)
                         {
-                            line = line.Replace("**", ""); // Remove double negatives
-                            line = line.Replace("~~", ""); // Remove double negatives
+                            valid = false;
+                            continue;
                         }
-
-                        // Create statements
-                        if (type == StatementType.Empty)
+                    }
+                    else if (needsExpansion)
+                    {
+                        // Horizontal expansion needed
+                        if (type != StatementType.Submodule)
                         {
-                            statements.Add(new EmptyStmt(line));
-                        }
-                        else if (type == StatementType.Comment)
-                        {
-                            Match match = CommentRegex.Match(line);
-
-                            if (match.Groups["DoInclude"].Value != "-" && (Properties.Settings.Default.SimulationComments || match.Groups["DoInclude"].Value == "+"))
-                            {
-                                statements.Add(new CommentStmt(line));
-                            }
+                            source = ExpandHorizontally(source);
                         }
                         else
                         {
-                            bool needsExpansion = ExpansionRegex.IsMatch(line) || type == StatementType.Submodule;
-                            if (needsExpansion && line.Contains("=") && !line.Contains("+") && !line.Contains("-"))
-                            {
-                                // Vertical expansion needed
-                                line = ExpandVertically(line);
-                                if (line == null)
-                                {
-                                    return null;
-                                }
-                            }
-                            else if (needsExpansion)
-                            {
-                                // Horizontal expansion needed
-                                if (type != StatementType.Submodule)
-                                {
-                                    line = ExpandHorizontally(line);
-                                }
-                                else
-                                {
-                                    Match match = ModuleInstantiationRegex.Match(line);
-                                    line = $"{match.Groups["Padding"].Value}{ match.Groups["Instantiation"].Value}({ExpandHorizontally(match.Groups["Components"].Value)});";
-                                }
-                            }
+                            Match match = ModuleInstantiationRegex.Match(source);
+                            source = $"{match.Groups["Padding"].Value}{ match.Groups["Instantiation"].Value}({ExpandHorizontally(match.Groups["Components"].Value)});";
+                        }
+                    }
 
-                            // Add statement for each expansion of line
-                            string[] lines = line.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                            foreach (string source in lines)
-                            {
-                                if (!InitVariables(type, source))
-                                {
-                                    // Unable to initialize variables
-                                    valid = false;
-                                }
-
-                                if (type == StatementType.Boolean)
-                                {
-                                    statements.Add(new BooleanAssignmentStmt(source, statements.Count));
-                                }
-                                else if (type == StatementType.Clock)
-                                {
-                                    statements.Add(new DffClockStmt(source, statements.Count));
-                                }
-                                else if (type == StatementType.FormatSpecifier)
-                                {
-                                    statements.Add(new FormatSpecifierStmt(source));
-                                }
-                                else if (type == StatementType.VariableList)
-                                {
-                                    statements.Add(new VariableListStmt(source));
-                                }
-                                else if (type == StatementType.Submodule)
-                                {
-                                    Match match = ModuleInstantiationRegex.Match(line);
-                                    statements.Add(new SubmoduleInstantiationStmt(line, Subdesigns[match.Groups["Design"].Value]));
-                                }
-                            }
+                    string[] lines = source.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string line in lines)
+                    {
+                        if (type == StatementType.Boolean)
+                        {
+                            statements.Add(new BooleanAssignmentStmt(line));
+                        }
+                        else if (type == StatementType.Clock)
+                        {
+                            statements.Add(new DffClockStmt(line));
+                        }
+                        else if (type == StatementType.FormatSpecifier)
+                        {
+                            statements.Add(new FormatSpecifierStmt(line));
+                        }
+                        else if (type == StatementType.VariableList)
+                        {
+                            statements.Add(new VariableListStmt(line));
+                        }
+                        else if (type == StatementType.Submodule)
+                        {
+                            Match match = ModuleInstantiationRegex.Match(line);
+                            statements.Add(new SubmoduleInstantiationStmt(line, Subdesigns[match.Groups["Design"].Value]));
                         }
                     }
                 }
@@ -556,14 +551,9 @@ namespace VisiBoole.ParsingEngine
                 valid = false;
             }
 
-            if (!valid)
-            {
-                return null;
-            }
-            else
-            {
-                return statements;
-            }
+            // If valid return statement list
+            // Otherwise return null
+            return valid ? statements : null;
         }
 
         #endregion
@@ -610,22 +600,6 @@ namespace VisiBoole.ParsingEngine
                 {
                     return false;
                 }
-            }
-            else if (type == StatementType.Comment)
-            {
-                if (!CommentRegex.IsMatch(line))
-                {
-                    ErrorLog.Add($"{LineNumber}: Invalid comment statement.");
-                    return false;
-                }
-            }
-            else if (type == StatementType.FormatSpecifier)
-            {
-                return VerifyFormatSpeciferStatement(line);
-            }
-            else if (type == StatementType.Submodule)
-            {
-                return VerifySubmoduleInstantiationStatement(line);
             }
 
             return true;
@@ -764,38 +738,13 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Verifies a format specifier statement
-        /// </summary>
-        /// <param name="line">Line to verify</param>
-        /// <returns>Whether the line is valid or not</returns>
-        private bool VerifyFormatSpeciferStatement(string line)
-        {
-            if (Regex.IsMatch(line, $@"(?<!%)(?![^{{}}]*\}})({VariablePattern})"))
-            {
-                // If line contains a variable outside {}
-                ErrorLog.Add($"{LineNumber}: Scalars and vectors in a format specifier statement must be inside a format specifier.");
-                return false;
-            }
-
-            // Check for formats inside formats or formats without variables
-            MatchCollection formats = FormatSpecifierRegex.Matches(line);
-            if (formats.Count != line.Count(c => c == '%'))
-            {
-                ErrorLog.Add($"{LineNumber}: Invalid format specifier.");
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Verifies a library statement
         /// </summary>
         /// <param name="line">Line to verify</param>
         /// <returns>Whether the line is valid or not</returns>
         private bool VerifyLibraryStatement(string line)
         {
-            string library = LibraryRegex.Match(line).Groups["Name"].Value;
+            string library = LibraryStmtRegex.Match(line).Groups["Name"].Value;
             try
             {
                 // Insert slash if not present
@@ -865,7 +814,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="instantiation">Instantiation to verify</param>
         /// <returns>Whether the instantiation is valid</returns>
-        private bool VerifySubmoduleInstantiationStatement(string instantiation)
+        private bool VerifySubmoduleStatement(string instantiation)
         {
             Match instantiationMatch = ModuleInstantiationRegex.Match(instantiation);
             string[] instantiationInputVars = Regex.Split(instantiationMatch.Groups["Inputs"].Value, @",\s+");
@@ -931,99 +880,5 @@ namespace VisiBoole.ParsingEngine
         }
 
         #endregion
-
-        /// <summary>
-        /// Initializes variables in a line.
-        /// </summary>
-        /// <param name="type">Type of statement</param>
-        /// <param name="line">Line</param>
-        /// <returns>Whether the operation was successful</returns>
-        private bool InitVariables(StatementType? type, string line)
-        {
-            MatchCollection matches = ScalarRegex2.Matches(line);
-            foreach (Match match in matches)
-            {
-                string var = match.Value;
-                if (line.Contains("="))
-                {
-                    if (match.Index < line.IndexOf("="))
-                    {
-                        if (Design.Database.TryGetVariable<Variable>(var) == null)
-                        {
-                            Design.Database.AddVariable<DependentVariable>(new DependentVariable(var, false));
-                        }
-                        else
-                        {
-                            if (Design.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable != null)
-                            {
-                                Design.Database.MakeDependent(var);
-                            }
-                        }
-
-                        if (line.Contains("<"))
-                        {
-                            // Create delay variable
-                            var += ".d";
-
-                            if (Design.Database.TryGetVariable<Variable>(var) == null)
-                            {
-                                Design.Database.AddVariable<DependentVariable>(new DependentVariable(var, false));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (Design.Database.TryGetVariable<Variable>(var) == null)
-                        {
-                            // Check for an input variable
-                            Variable inputVariable = GetInputVariable(var);
-                            if (inputVariable == null)
-                            {
-                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, false));
-                            }
-                            else
-                            {
-                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, inputVariable.Value));
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    bool val = var.Contains("*");
-                    var = var.TrimStart('*'); // Remove * if present
-
-                    if (Design.Database.TryGetVariable<Variable>(var) == null)
-                    {
-                        // Create Variable
-                        if (!line.Contains(":") || (line.Contains(":") && match.Index < line.IndexOf(":")))
-                        {
-                            // Check for an input variable
-                            Variable inputVariable = GetInputVariable(var);
-                            if (inputVariable == null)
-                            {
-                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, val));
-                            }
-                            else
-                            {
-                                Design.Database.AddVariable<IndependentVariable>(new IndependentVariable(var, inputVariable.Value));
-                            }
-                        }
-                        else
-                        {
-                            DependentVariable depVar = new DependentVariable(var, val);
-                            Design.Database.AddVariable(depVar);
-                        }
-                    }
-                    else if (type == StatementType.VariableList)
-                    {
-                        ErrorLog.Add($"{LineNumber}: {var} has already been declared.");
-                        return false; // You cannot declare a variable twice
-                    }
-                }
-            }
-
-            return true;
-        }
     }
 }

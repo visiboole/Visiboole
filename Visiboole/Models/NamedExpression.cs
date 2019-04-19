@@ -1,29 +1,41 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VisiBoole.Controllers;
+using VisiBoole.ParsingEngine;
 using VisiBoole.ParsingEngine.ObjectCode;
 
-namespace VisiBoole.ParsingEngine.Statements
+namespace VisiBoole.Models
 {
-    /// <summary>
-    /// Base for expression statements.
-    /// </summary>
-    public abstract class ExpressionStatement : Statement
+    public class NamedExpression
     {
+        /// <summary>
+        /// Delay of the expression. (If any)
+        /// </summary>
+        public string Delay { get; private set; }
+
+        /// <summary>
+        /// All delays of the expression. (If any)
+        /// </summary>
+        public string[] Delays { get; private set; }
+
         /// <summary>
         /// Dependent of the expression.
         /// </summary>
         public string Dependent { get; private set; }
 
         /// <summary>
-        /// Delay of the expression. (If clock)
+        /// All dependents of the expression.
         /// </summary>
-        public string Delay { get; private set; }
+        public string[] Dependents { get; private set; }
+
+        /// <summary>
+        /// Max value of the dependents. 2^(# of Dependents)
+        /// </summary>
+        private int MaxValue;
 
         /// <summary>
         /// Operation of the expression.
@@ -36,41 +48,33 @@ namespace VisiBoole.ParsingEngine.Statements
         public string Expression { get; private set; }
 
         /// <summary>
-        /// Line number of the expression statement.
-        /// </summary>
-        public int LineNumber { get; private set; }
-
-        /// <summary>
-        /// Index of the first non whitespace character.
-        /// </summary>
-        private int StartIndex;
-
-        /// <summary>
         /// Dictionary of parentheses contained in the expression.
         /// </summary>
         public Dictionary<int, Parenthesis> Parentheses { get; private set; }
 
         /// <summary>
-        /// Constructs an ExpressionStatement instance.
+        /// Constructs a NamedExpression with the provided full expression.
         /// </summary>
-        /// <param name="text">Text of the statement</param>
-        /// <param name="lineNumber">Line number of the expression statement</param>
-        protected ExpressionStatement(string text, int lineNumber) : base(text)
+        /// <param name="fullExpression">Full expression</param>
+        public NamedExpression(string fullExpression)
         {
-            LineNumber = lineNumber;
-            StartIndex = text.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
-            Expression = text.Substring(StartIndex); // Start expression with first non whitespace character
+            int startIndex = fullExpression.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
+            Expression = fullExpression.Substring(startIndex); // Start expression with first non whitespace character
             Expression = Expression.TrimEnd(';');
 
-            // Get operation, dependent and expression values
             if (!Expression.Contains("<"))
             {
-                Operation = "=";
-                Delay = null;
                 Dependent = Expression.Substring(0, Expression.IndexOf('=')).Trim();
+                Delay = null;
+                Delays = null;
+                Operation = "=";
             }
             else
             {
+                Delay = Expression.Substring(0, Expression.IndexOf('<')).Trim();
+                Delays = GetVariables(Delay);
+                Dependent = Delay + ".d";
+
                 if (!Expression.Contains("@"))
                 {
                     Operation = "<=";
@@ -79,67 +83,13 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Operation = Regex.Match(Expression, @"<=@\S+").Value;
                 }
-                Delay = Expression.Substring(0, Expression.IndexOf('<')).Trim();
-                Dependent = Delay + ".d";
             }
+
+            Dependents = GetVariables(Dependent);
+            MaxValue = (int)Math.Pow(2, Dependents.Length) - 1;
+
             Expression = Expression.Substring(Expression.IndexOf(Operation) + Operation.Length).Trim();
             Expression = Parser.WhitespaceRegex.Replace(Expression, " "); // Replace multiple spaces
-        }
-
-        /// <summary>
-        /// Parses the expression text of this statement into a list of output elements.
-        /// </summary>
-        public override void Parse()
-        {
-            // Output padding (if present)
-            for (int i = 0; i < StartIndex; i++)
-            {
-                Output.Add(new SpaceFeed());
-            }
-
-            // Output dependent (if =) or delay (if <=)
-            string variable = (Delay == null) ? Dependent : Delay;
-            OutputVariable(variable);
-
-            // Output operator
-            if (Operation == "=")
-            {
-                OutputOperator("=");
-            }
-            else
-            {
-                if (!Operation.Contains("@"))
-                {
-                    Output.Add(new DependentVariable(Operation, DesignController.ActiveDesign.Database.TryGetValue(Dependent) == 1));
-                }
-                else
-                {
-                    Output.Add(new DependentVariable(Operation, DesignController.ActiveDesign.Database.TryGetValue(Operation.Substring(Operation.IndexOf("@") + 1)) == 1));
-                }
-            }
-
-            // Output expression
-            // Operators: ([|^()+-])|(==)|(?<=\w|\))\s(?=[\w(~'])
-            MatchCollection matches = Regex.Matches(Expression, $@"({Lexer.ConcatPattern})|(~?{Lexer.ScalarPattern})|(~?{Lexer.ConstantPattern})|([|^()+-])|(==)|(?<=\w|\))\s(?=[\w(~'])");
-            foreach (Match match in matches)
-            {
-                string token = match.Value;
-                if (token == "(" || token == ")")
-                {
-                    Output.Add(Parentheses[match.Index]); // Output the corresponding parenthesis
-                }
-                else if (Parser.OperatorsList.Contains(token))
-                {
-                    OutputOperator(token);
-                }
-                else
-                {
-                    OutputVariable(token); // Variable or constant
-                }
-            }
-
-            // Output newline
-            Output.Add(new LineFeed());
         }
 
         /// <summary>
@@ -150,7 +100,7 @@ namespace VisiBoole.ParsingEngine.Statements
         {
             Stack<int> valueStack = new Stack<int>();
             Stack<string> operatorStack = new Stack<string>();
-            Stack parenthesisStack = new Stack();
+            Stack<int> parenthesisIndicesStack = new Stack<int>();
             Parentheses = new Dictionary<int, Parenthesis>();
 
             // Obtain scalars, constants and operators
@@ -182,7 +132,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     {
                         bool parenthesesValue = valueStack.Peek() == 1;
                         Parentheses.Add(match.Index - 1, new Parenthesis(")", parenthesesValue, areParenthesesNegated));
-                        Parentheses.Add((int)parenthesisStack.Pop(), new Parenthesis("(", parenthesesValue, areParenthesesNegated));
+                        Parentheses.Add(parenthesisIndicesStack.Pop(), new Parenthesis("(", parenthesesValue, areParenthesesNegated));
                     }
                 }
                 else if (match.Value == "(" || Parser.OperatorsList.Contains(match.Value))
@@ -198,7 +148,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     // Push operation
                     if (match.Index != 0 && operation == "(")
                     {
-                        parenthesisStack.Push(match.Index - 1);
+                        parenthesisIndicesStack.Push(match.Index - 1);
                     }
                     operatorStack.Push(operation);
                 }
@@ -225,17 +175,40 @@ namespace VisiBoole.ParsingEngine.Statements
             return valueStack.Pop();
         }
 
+        private string[] GetVariables(string token)
+        {
+            if (!token.Contains("{"))
+            {
+                return new string[] { token };
+            }
+
+            if (!token.Contains(".d"))
+            {
+                token = token.Substring(1, token.Length - 2);
+                return Lexer.WhitespaceRegex.Split(token);
+            }
+            else
+            {
+                token = token.Substring(1, token.Length - 4);
+                string[] variables = Lexer.WhitespaceRegex.Split(token);
+                for (int i = 0; i < variables.Length; i++)
+                {
+                    variables[i] = variables[i] + ".d";
+                }
+                return variables;
+            }
+        }
+
         /// <summary>
         /// Gets the value of the provided token.
         /// </summary>
         /// <param name="token">Token to get value of</param>
         /// <returns>Value of the token</returns>
-        protected int GetValue(string token)
+        public int GetValue(string token)
         {
             if (token.Contains("{"))
             {
-                token = token.Substring(1, token.Length - 2);
-                string[] vars = Parser.WhitespaceRegex.Split(token);
+                string[] vars = GetVariables(token);
 
                 // Get binary value
                 StringBuilder binary = new StringBuilder();
@@ -318,40 +291,37 @@ namespace VisiBoole.ParsingEngine.Statements
         public bool Evaluate()
         {
             int expressionValue = Solve();
+            if (expressionValue > MaxValue)
+            {
+                expressionValue = MaxValue;
+            }
             int dependentValue = GetValue(Dependent);
+
             if (expressionValue != dependentValue)
             {
-                if (!Dependent.Contains("{"))
+                string[] vars = Dependents;
+                if (vars.Length > 1)
                 {
-                    DesignController.ActiveDesign.Database.SetValue(Dependent, expressionValue == 1);
+                    vars = vars.Reverse().ToArray();
                 }
-                else
+                string binary = Convert.ToString(expressionValue, 2);
+                if (binary.Length < vars.Length)
                 {
-                    string variables = Dependent.Substring(1, Dependent.Length - 2);
-                    string[] vars = Parser.WhitespaceRegex.Split(variables);
-                    if (vars.Length > 1)
-                    {
-                        vars = vars.Reverse().ToArray();
-                    }
-                    string binary = Convert.ToString(expressionValue, 2);
-                    if (binary.Length < vars.Length)
-                    {
-                        binary = binary.PadLeft(vars.Length, '0');
-                    }
-                    if (binary.Length > 1)
-                    {
-                        char[] reverseBinary = binary.ToCharArray();
-                        Array.Reverse(reverseBinary);
-                        binary = new string(reverseBinary);
-                    }
+                    binary = binary.PadLeft(vars.Length, '0');
+                }
+                if (binary.Length > 1)
+                {
+                    char[] reverseBinary = binary.ToCharArray();
+                    Array.Reverse(reverseBinary);
+                    binary = new string(reverseBinary);
+                }
 
-                    // Get binary value
-                    for (int i = 0; i < vars.Length; i++)
-                    {
-                        string var = vars[i];
-                        int val = int.Parse(binary[i].ToString());
-                        DesignController.ActiveDesign.Database.SetValue(var, val == 1);
-                    }
+                // Get binary value
+                for (int i = 0; i < vars.Length; i++)
+                {
+                    string var = vars[i];
+                    int val = int.Parse(binary[i].ToString());
+                    DesignController.ActiveDesign.Database.SetValue(var, val == 1);
                 }
 
                 return true;

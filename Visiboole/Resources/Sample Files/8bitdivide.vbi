@@ -9,7 +9,7 @@
 +"3. Select Start:";
    start;
 
-+"4. Click Tick Untill <false>AnsRdy</> changes to <true>AnsRdy</>";
++"4. Click Tick Until <false>AnsRdy</> changes to <true>AnsRdy</>";
    AnsRdy;
 
 +"Quotient:";

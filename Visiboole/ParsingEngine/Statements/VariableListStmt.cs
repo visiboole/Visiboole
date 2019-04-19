@@ -23,6 +23,7 @@ using VisiBoole.ParsingEngine.ObjectCode;
 using System;
 using System.Collections.Generic;
 using VisiBoole.Models;
+using VisiBoole.Controllers;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -34,7 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting variable list tokens (extra spaces and scalars).
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Lexer.ScalarPattern}|{Parser.SpacingPattern})");
+        private static Regex TokenRegex = new Regex($@"(('b[0-1])|{Lexer.ScalarPattern}|\s|;)");
 
         /// <summary>
         /// Constructs a VariableListStmt instance.
@@ -42,7 +43,9 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="text">Text of the statement</param>
 		public VariableListStmt(string text) : base(text)
 		{
-		}
+            // Initialize variables in the statement
+            InitVariables(text);
+        }
 
         /// <summary>
         /// Parses the text of this statement into a list of output elements.
@@ -53,16 +56,18 @@ namespace VisiBoole.ParsingEngine.Statements
             MatchCollection matches = TokenRegex.Matches(Text);
             foreach (Match match in matches)
             {
-                if (String.IsNullOrWhiteSpace(match.Value))
+                string token = match.Value;
+                if (String.IsNullOrWhiteSpace(token))
                 {
-                    for (int i = 0; i < match.Value.Length; i++)
-                    {
-                        Output.Add(new SpaceFeed());
-                    }
+                    Output.Add(new SpaceFeed());
+                }
+                else if (token == ";")
+                {
+                    // Output ;
+                    OutputOperator(";");
                 }
                 else
                 {
-                    //string var = match.Value.TrimStart('*');
                     OutputVariable(match.Value);
                 }
             }

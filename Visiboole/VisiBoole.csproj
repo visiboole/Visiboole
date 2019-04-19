@@ -80,6 +80,7 @@
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
+    <Compile Include="Models\NamedExpression.cs" />
     <Compile Include="Models\NewTabControl.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
@@ -94,7 +95,6 @@
     <Compile Include="ParsingEngine\Statements\DffClockStmt.cs" />
     <Compile Include="ParsingEngine\Statements\EmptyStmt.cs" />
     <Compile Include="Models\FormatSpecifier.cs" />
-    <Compile Include="ParsingEngine\Statements\ExpressionStatement.cs" />
     <Compile Include="ParsingEngine\Statements\FormatSpecifierStmt.cs" />
     <Compile Include="Models\HtmlBuilder.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IObjectCodeElement.cs" />

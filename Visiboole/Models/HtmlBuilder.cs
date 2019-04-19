@@ -56,7 +56,7 @@ namespace VisiBoole.Models
                     if (token is Comment)
                     {
                         // Add coloring tags to comment
-                        currentLine += String.Concat(ColorComment(token.ObjCodeText), " ");
+                        currentLine += ColorComment(token.ObjCodeText);
                         continue;
                     }
 
@@ -76,12 +76,11 @@ namespace VisiBoole.Models
                         {
                             bool isInstantiation = varType == typeof(Instantiation);
                             string color = "'black'";
-                            string cursor = isInstantiation ? "hand" : "no-drop";
+                            string cursor = isInstantiation ? "hand" : "text";
                             string decoration = "";
                             string action = isInstantiation ? $" onclick=\"window.external.Instantiation_Click('{variable}')\"" : "";
 
                             currentLine += string.Format(template, color, cursor, decoration, action, variable);
-                            currentLine += " ";
                         }
                     }
                     else
@@ -101,7 +100,6 @@ namespace VisiBoole.Models
                         string action = isIndependentVariable ? $" onclick=\"window.external.Variable_Click('{variable}')\"" : "";
 
                         currentLine += string.Format(template, color, cursor, decoration, action, variable);
-                        currentLine += " ";
                     }
                 }
 

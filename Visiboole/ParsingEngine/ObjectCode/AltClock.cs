@@ -43,11 +43,6 @@ namespace VisiBoole.ParsingEngine.ObjectCode
         public bool ObjHasNegation { get; private set; }
 
         /// <summary>
-        /// List of variables that depend on the alternating clock.
-        /// </summary>
-        public List<string> DependencyList { get; private set; }
-
-        /// <summary>
         /// Constructs an alternating clock instace with the provided name. 
         /// </summary>
         /// <param name="name">Variable name of the alternating clock</param>
@@ -56,7 +51,6 @@ namespace VisiBoole.ParsingEngine.ObjectCode
 			ObjCodeText = name;
             ObjCodeValue = value;
             ObjHasNegation = false;
-            DependencyList = new List<string>();
 		}
 
         /// <summary>
@@ -66,15 +60,6 @@ namespace VisiBoole.ParsingEngine.ObjectCode
         public void UpdateValue(bool value)
         {
             ObjCodeValue = value;
-        }
-
-        /// <summary>
-        /// Adds the provided variable name to the dependency list.
-        /// </summary>
-        /// <param name="variableName">Name of variable to add</param>
-        public void AddDependency(string variableName)
-        {
-            DependencyList.Add(variableName);
         }
 	}
 }

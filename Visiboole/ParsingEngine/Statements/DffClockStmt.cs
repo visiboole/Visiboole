@@ -33,20 +33,68 @@ namespace VisiBoole.ParsingEngine.Statements
     /// <summary>
     /// An expression statement that assigns the value of an expression to a dependent on a clock tick.
     /// </summary>
-    public class DffClockStmt : ExpressionStatement
+    public class DffClockStmt : Statement
     {
+        /// <summary>
+        /// Expression of the clock statement.
+        /// </summary>
+        private NamedExpression Expression;
+
+        /// <summary>
+        /// Alternate clock of statement. (if any)
+        /// </summary>
+        public string AltClock;
+
         /// <summary>
         /// Constructs a DffClockStmt instance.
         /// </summary>
         /// <param name="text">Text of the statement</param>
-        /// <param name="lineNumber">Line number of the expression statement</param>
-        public DffClockStmt(string text, int lineNumber) : base(text, lineNumber)
+        public DffClockStmt(string text) : base(text)
         {
-            // Update variable value (delay)
-            Evaluate();
+            // Create expression with the provided text
+            Expression = new NamedExpression(text);
+            // If expression contains an alternate clock
+            if (Expression.Operation.Contains("@"))
+            {
+                // Get alternate clock
+                AltClock = Expression.Operation.Substring(Expression.Operation.IndexOf("@") + 1);
+            }
+            else
+            {
+                // Set alternate clock to null
+                AltClock = null;
+            }
 
+            // Initialize delay variable
+            InitVariables(Expression.Delay);
+
+            // Iterate through all dependent variables
+            for (int i = 0; i < Expression.Dependents.Length; i++)
+            {
+                // Get dependent
+                string dependent = Expression.Dependents[i];
+                // If the dependent isn't in the database
+                if (DesignController.ActiveDesign.Database.TryGetVariable<Variable>(dependent) == null)
+                {
+                    // Add dependent to the database
+                    DesignController.ActiveDesign.Database.AddVariable(new DependentVariable(dependent, false));
+                }
+            }
+
+            // If there is an alternate clock
+            if (AltClock != null)
+            {
+                // Initialize alternate clock variable
+                InitVariables(AltClock);
+            }
+
+            // Initialize variables in the expression
+            InitVariables(Expression.Expression);
+
+            // Evaluate the expression
+            Expression.Evaluate();
             // Add expression to the database
-            DesignController.ActiveDesign.Database.AddExpression(lineNumber, this);
+            DesignController.ActiveDesign.Database.AddExpression(Expression);
         }
 
         /// <summary>
@@ -54,11 +102,15 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public void Tick()
         {
-            int delayValue = GetValue(Delay);
-            int dependentValue = GetValue(Dependent);
+            int delayValue = Expression.GetValue(Expression.Delay);
+            int dependentValue = Expression.GetValue(Expression.Dependent);
             if (delayValue != dependentValue)
             {
-                DesignController.ActiveDesign.Database.SetValue(Delay, dependentValue == 1);
+                for(int i = 0; i < Expression.Delays.Length; i++)
+                {
+                    bool val = DesignController.ActiveDesign.Database.TryGetValue(Expression.Dependents[i]) == 1;
+                    DesignController.ActiveDesign.Database.SetValue(Expression.Delays[i], val);
+                }
             }
         }
 
@@ -67,7 +119,36 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
-            base.Parse();
+            // Output tokens
+            MatchCollection matches = Regex.Matches(Text, $@"(~?{Lexer.ScalarPattern})|(~?{Lexer.ConstantPattern})|([|^(){{}};@+-])|(==)|(<=)|(\s)");
+            foreach (Match match in matches)
+            {
+                string token = match.Value;
+                if (token == " ")
+                {
+                    Output.Add(new SpaceFeed());
+                }
+                else if (token == "(" || token == ")")
+                {
+                    Output.Add(Expression.Parentheses[match.Index]); // Output the corresponding parenthesis
+                }
+                else if (token == "<=")
+                {
+                    // Output <= with dependent value
+                    Output.Add(new DependentVariable("<=", Expression.GetValue(Expression.Dependent) >= 1));
+                }
+                else if (Parser.OperatorsList.Contains(token) || token == "{" || token == "}" || token == "@" || token == ";")
+                {
+                    OutputOperator(token);
+                }
+                else
+                {
+                    OutputVariable(token); // Variable or constant
+                }
+            }
+
+            // Output newline
+            Output.Add(new LineFeed());
         }
     }
 }

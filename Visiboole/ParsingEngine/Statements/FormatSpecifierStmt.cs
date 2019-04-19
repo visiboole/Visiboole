@@ -35,7 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting format specifier tokens (format specifiers and extra spacing).
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern}|((?![^{{}}]*\}}){Parser.SpacingPattern}))");
+        private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern}|((?![^{{}}]*\}})\s)|;)");
 
         /// <summary>
         /// Constructs a FormatSpecifierStmt instance.
@@ -44,7 +44,9 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="text">Text of the statement</param>
         public FormatSpecifierStmt(string text) : base(text)
 		{
-		}
+            // Initialize variables in the statement
+            InitVariables(text);
+        }
 
         /// <summary>
         /// Parses the text of this statement into a list of output elements.
@@ -55,12 +57,15 @@ namespace VisiBoole.ParsingEngine.Statements
             MatchCollection matches = TokenRegex.Matches(Text);
             foreach (Match match in matches)
             {
-                if (String.IsNullOrWhiteSpace(match.Value))
+                string token = match.Value;
+                if (String.IsNullOrWhiteSpace(token))
                 {
-                    for (int i = 0; i < match.Value.Length; i++)
-                    {
-                        Output.Add(new SpaceFeed());
-                    }
+                    Output.Add(new SpaceFeed());
+                }
+                else if (token == ";")
+                {
+                    // Output ;
+                    OutputOperator(";");
                 }
                 else
                 {

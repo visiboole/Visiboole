@@ -23,26 +23,58 @@ using System.Text.RegularExpressions;
 using System;
 using System.Text;
 using VisiBoole.Controllers;
+using VisiBoole.Models;
+using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
     /// <summary>
     /// An expression statement that assigns the value of an expression to a dependent.
     /// </summary>
-	public class BooleanAssignmentStmt : ExpressionStatement
+	public class BooleanAssignmentStmt : Statement
 	{
+        /// <summary>
+        /// Expression of the boolean statement.
+        /// </summary>
+        private NamedExpression Expression;
+
         /// <summary>
         /// Constructs a BooleanAssignemntStmt instance.
         /// </summary>
         /// <param name="text">Text of the statement</param>
-        /// <param name="lineNumber">Line number of the expression statement</param>
-		public BooleanAssignmentStmt(string text, int lineNumber) : base(text, lineNumber)
+		public BooleanAssignmentStmt(string text) : base(text)
         {
-            // Update variable value
-            Evaluate();
+            // Create expression with the provided text
+            Expression = new NamedExpression(text);
 
+            // Iterate through all dependent variables
+            foreach (string dependent in Expression.Dependents)
+            {
+                // If the dependent isn't in the database
+                if (DesignController.ActiveDesign.Database.TryGetVariable<Variable>(dependent) == null)
+                {
+                    // Add dependent to the database
+                    DesignController.ActiveDesign.Database.AddVariable(new DependentVariable(dependent, false));
+                }
+                // If the dependent is in the database
+                else
+                {
+                    // If the dependent is in the database as an independent variable
+                    if (DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(dependent) as IndependentVariable != null)
+                    {
+                        // Make independent variable a dependent variable
+                        DesignController.ActiveDesign.Database.MakeDependent(dependent);
+                    }
+                }
+            }
+
+            // Initialize variables in the expression
+            InitVariables(Expression.Expression);
+
+            // Evaluate the expression
+            Expression.Evaluate();
             // Add expression to the database
-            DesignController.ActiveDesign.Database.AddExpression(lineNumber, this);
+            DesignController.ActiveDesign.Database.AddExpression(Expression);
         }
 
         /// <summary>
@@ -50,7 +82,31 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
-            base.Parse();
+            // Output tokens
+            MatchCollection matches = Regex.Matches(Text, $@"(~?{Lexer.ScalarPattern})|(~?{Lexer.ConstantPattern})|([|^(){{}};=+-])|(==)|(\s)");
+            foreach (Match match in matches)
+            {
+                string token = match.Value;
+                if (token == " ")
+                {
+                    Output.Add(new SpaceFeed());
+                }
+                else if (token == "(" || token == ")")
+                {
+                    Output.Add(Expression.Parentheses[match.Index]); // Output the corresponding parenthesis
+                }
+                else if (Parser.OperatorsList.Contains(token) || token == "=" || token == "{" || token == "}" || token == ";")
+                {
+                    OutputOperator(token);
+                }
+                else
+                {
+                    OutputVariable(token); // Variable or constant
+                }
+            }
+            
+            // Output newline
+            Output.Add(new LineFeed());
         }
     }
 }

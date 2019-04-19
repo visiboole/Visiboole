@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 using VisiBoole.ParsingEngine.ObjectCode;
 using System.Linq;
 using VisiBoole.ParsingEngine.Statements;
+using VisiBoole.Models;
 
 namespace VisiBoole.ParsingEngine
 {
@@ -53,19 +54,14 @@ namespace VisiBoole.ParsingEngine
         private Dictionary<string, List<string>> Namespaces;
 
         /// <summary>
-        /// Dictionary of the expressions in the design.
+        /// List of the expressions in the design.
         /// </summary>
-        private Dictionary<int, ExpressionStatement> Expressions;
+        private List<KeyValuePair<string, NamedExpression>> Expressions;
 
         /// <summary>
         /// Dictionary of alternating clocks in the design.
         /// </summary>
         public Dictionary<string, AltClock> AltClocks;
-
-        /// <summary>
-        /// Index of the last expression in the design.
-        /// </summary>
-        private int LastExpressionIndex;
 
 	    #region Accessor methods
 
@@ -75,9 +71,8 @@ namespace VisiBoole.ParsingEngine
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
             Namespaces = new Dictionary<string, List<string>>();
-            Expressions = new Dictionary<int, ExpressionStatement>();
+            Expressions = new List<KeyValuePair<string, NamedExpression>>();
             AltClocks = new Dictionary<string, AltClock>();
-            LastExpressionIndex = -1;
         }
 
         /// <summary>
@@ -315,23 +310,16 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         public void ReevaluateExpressions()
         {
-            List<int> noReevaluation = new List<int>();
-            for (int i = 0; i <= LastExpressionIndex; i++)
+            // Iterate through all expressions
+            for (int i = 0; i < Expressions.Count; i++)
             {
-                if (Expressions.ContainsKey(i))
+                // Get expression
+                var expression = Expressions[i].Value;
+                // If expression was reevaluated
+                if (expression.Evaluate())
                 {
-                    if (!noReevaluation.Contains(i))
-                    {
-                        var expression = Expressions[i];
-                        if (expression.Evaluate())
-                        {
-                            if (expression.Expression.Contains("==") || expression.Expression.Contains("+") || expression.Expression.Contains("-"))
-                            {
-                                noReevaluation.Add(i);
-                            }
-                            i = -1; // Reset loop if reevaluated
-                        }
-                    }
+                    // Reset loop
+                    i = -1;
                 }
             }
         }
@@ -339,60 +327,30 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Updates all expression values then adds the expression to the expressions dictionary.
         /// </summary>
-        /// <param name="lineNumber">Line number of expression statement</param>
         /// <param name="expression">Expression to add</param>
-        public void AddExpression(int lineNumber, ExpressionStatement expression)
+        public void AddExpression(NamedExpression expression)
         {
+            // Reevaluate all expressions before adding new expression
             ReevaluateExpressions();
 
-            Expressions.Add(lineNumber, expression);
+            // Add expression to expressions list
+            Expressions.Add(new KeyValuePair<string, NamedExpression>(expression.Dependent, expression));
+
+            // If expression has an alternate clock
             if (expression.Operation.Contains("@"))
             {
+                // Get alternate clock
                 string altClock = Regex.Match(expression.Operation, @"@\S+").Value;
+                // Get alternate clock variable
                 string name = altClock.Substring(1);
 
+                // If alternate clock dictionary doesn't have the alternate clock variable
                 if (!AltClocks.ContainsKey(name))
                 {
+                    // Add alternate clock to alternate clock dictionary
                     AltClocks.Add(name, new AltClock(name, TryGetValue(name) == 1));
                 }
-                AltClocks[name].AddDependency(expression.Dependent);
             }
-
-            if (lineNumber > LastExpressionIndex)
-            {
-                LastExpressionIndex = lineNumber;
-            }
-            //ReevaluateExpressions();
-        }
-
-        /// <summary>
-        /// Returns the expression statement at the provided line number.
-        /// </summary>
-        /// <param name="lineNumber">Line number of the expression statement</param>
-        /// <returns>Expression statement at the provided line number</returns>
-        public ExpressionStatement GetExpression(int lineNumber)
-        {
-            return Expressions[lineNumber];
-        }
-
-
-        public List<ExpressionStatement> GetAltClockExpressions(string clockName)
-        {
-            List<ExpressionStatement> altClockExpressions = new List<ExpressionStatement>();
-            foreach (ExpressionStatement expressionStatement in Expressions.Values)
-            {
-                if (expressionStatement.Operation.Contains("@"))
-                {
-                    string altClock = Regex.Match(expressionStatement.Operation, @"@\S+").Value;
-                    string name = altClock.Substring(1);
-
-                    if (name == clockName)
-                    {
-                        altClockExpressions.Add(expressionStatement);
-                    }
-                }
-            }
-            return altClockExpressions;
         }
     }
 }

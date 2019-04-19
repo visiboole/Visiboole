@@ -42,6 +42,9 @@ namespace VisiBoole.ParsingEngine.Statements
 		public SubmoduleInstantiationStmt(string text, string designPath) : base(text)
 		{
             DesignPath = designPath;
+
+            // Initialize variables in the statement
+            InitVariables(text);
         }
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace VisiBoole.ParsingEngine.Statements
             Match instantiationMatch = Regex.Match(Text, Parser.ModuleInstantiationPattern);
 
             // Output padding (if present)
-            for (int i = 0; i < instantiationMatch.Groups["Padding"].Value.Length; i++)
+            for (int i = 0; i < instantiationMatch.Groups["FrontSpacing"].Value.Length; i++)
             {
                 Output.Add(new SpaceFeed());
             }
@@ -60,72 +63,64 @@ namespace VisiBoole.ParsingEngine.Statements
             // Output instantiation
             Output.Add(new Instantiation($"{instantiationMatch.Groups["Instantiation"].Value}("));
 
+            // Save current design
+            Design currentDesign = DesignController.ActiveDesign;
+
             // Output input variables
             List<bool> inputValues = new List<bool>();
-            string[] inputLists = Regex.Split(instantiationMatch.Groups["Inputs"].Value, @",\s+");
-            for (int i = 0; i < inputLists.Length; i++)
+            List<bool> outputValues = new List<bool>();
+            int outputValueIndex = 0;
+
+            string module = Text.Substring(Text.IndexOf("(") + 1);
+            MatchCollection matches = Regex.Matches(module, $@"({Lexer.ScalarPattern})|({Lexer.ConstantPattern})|([){{}},;:])|(\s)");
+            foreach (Match match in matches)
             {
-                string inputList = inputLists[i];
-
-                Output.Add(new Comment("{")); // Add starting concat
-
-                foreach (string var in Parser.WhitespaceRegex.Split(inputList.Substring(1, inputList.Length - 2)))
+                string token = match.Value;
+                if (token == " ")
                 {
-                    // Output each input var in the input list
-                    IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-                    DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+                    Output.Add(new SpaceFeed());
+                }
+                else if (token == "," || token == "{" || token == "}" || token == ":" || token == ")" || token == ";")
+                {
+                    OutputOperator(token);
 
-                    if (indVar != null)
+                    if (token == ":")
                     {
-                        Output.Add(indVar);
-                        inputValues.Add(indVar.Value);
+                        Design subDesign = new Design(DesignPath);
+                        Parser subParser = new Parser(subDesign);
+                        DesignController.ActiveDesign = subDesign;
+                        outputValues = subParser.ParseAsModule(inputValues);
+                        if (outputValues == null)
+                        {
+                            Output.Add(new Comment(module.Substring(match.Index + 1))); // Output as comment since there was an error
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // If variable is an input
+                    if (match.Index < module.IndexOf(":"))
+                    {
+                        // Output each input var in the input list
+                        IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
+                        DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
+                        if (indVar != null)
+                        {
+                            Output.Add(indVar);
+                            inputValues.Add(indVar.Value);
+                        }
+                        else
+                        {
+                            Output.Add(depVar);
+                            inputValues.Add(depVar.Value);
+                        }
                     }
                     else
                     {
-                        Output.Add(depVar);
-                        inputValues.Add(depVar.Value);
-                    }
-                }
-
-                Output.Add(new Comment("}")); // Add ending concat
-
-                if (i < inputLists.Length - 1)
-                {
-                    Output.Add(new Comment(",")); // Add comma seperator if not last list
-                }
-            }
-
-            // Output seperator
-            Output.Add(new Comment(":"));
-
-            // Get output values
-            Design currentDesign = DesignController.ActiveDesign;
-            Design subDesign = new Design(DesignPath);
-            Parser subParser = new Parser(subDesign);
-            DesignController.ActiveDesign = subDesign;
-            List<bool> outputValues = subParser.ParseAsModule(inputValues);
-
-            // Output output
-            if (outputValues == null)
-            {
-                Output.Add(new Comment(instantiationMatch.Groups["Outputs"].Value)); // Output as comment since there was an error
-            }
-            else
-            {
-                int outputValueIndex = 0;
-                string[] outputLists = Regex.Split(instantiationMatch.Groups["Outputs"].Value, @",\s+");
-                for (int i = 0; i < outputLists.Length; i++)
-                {
-                    string outputList = outputLists[i];
-
-                    Output.Add(new Comment("{")); // Add starting concat
-
-                    foreach (string var in Parser.WhitespaceRegex.Split(outputList.Substring(1, outputList.Length - 2)))
-                    {
-                        // Output each input var in the input list
-                        if (var != "NC")
+                        if (token != "NC")
                         {
-                            Output.Add(new DependentVariable(var, outputValues[outputValueIndex]));
+                            Output.Add(new DependentVariable(token, outputValues[outputValueIndex]));
                         }
                         else
                         {
@@ -133,21 +128,13 @@ namespace VisiBoole.ParsingEngine.Statements
                         }
                         outputValueIndex++;
                     }
-
-                    Output.Add(new Comment("}")); // Add ending concat
-
-                    if (i < outputLists.Length - 1)
-                    {
-                        Output.Add(new Comment(",")); // Add comma seperator if not last list
-                    }
                 }
             }
 
             // Reset active design
             DesignController.ActiveDesign = currentDesign;
 
-            // Output ending ) and newline
-            Output.Add(new Comment(")"));
+            // Output newline
             Output.Add(new LineFeed());
         }
 	}

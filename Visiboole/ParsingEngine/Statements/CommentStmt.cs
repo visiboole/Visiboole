@@ -44,14 +44,15 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Output padding (if present)
-            Match comment = Parser.CommentRegex.Match(Text);
-            foreach (char space in comment.Groups["Padding"].Value)
+            Match comment = Parser.CommentStmtRegex.Match(Text);
+            foreach (char space in comment.Groups["FrontSpacing"].Value)
             {
                 Output.Add(new SpaceFeed());
             }
 
-            // Output comment and newline
-            Output.Add(new Comment(String.Concat(comment.Groups["Comment"].Value.Substring(1, comment.Groups["Comment"].Value.Length - 3))));
+            // Output comment
+            Output.Add(new Comment(comment.Groups["Comment"].Value));
+            // Output newline
             Output.Add(new LineFeed());
 		}
 	}
