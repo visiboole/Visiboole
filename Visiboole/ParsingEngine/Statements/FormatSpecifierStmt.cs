@@ -12,7 +12,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program located at "\Visiboole\license.txt".
  * If not, see <http://www.gnu.org/licenses/>
@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using VisiBoole.Controllers;
-using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
@@ -33,9 +32,9 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class FormatSpecifierStmt : Statement
 	{
         /// <summary>
-        /// Regex for getting format specifier tokens (format specifiers and extra spacing).
+        /// Regex for getting output tokens.
         /// </summary>
-        private static Regex TokenRegex = new Regex($@"({Parser.FormatSpecifierPattern}|((?![^{{}}]*\}})\s)|;)");
+        private Regex OutputRegex = new Regex($@"{Parser.FormatSpecifierPattern}|[\s;]");
 
         /// <summary>
         /// Constructs a FormatSpecifierStmt instance.
@@ -54,11 +53,11 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
 		{
             // Find format specifiers and extra spacing
-            MatchCollection matches = TokenRegex.Matches(Text);
+            MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 string token = match.Value;
-                if (String.IsNullOrWhiteSpace(token))
+                if (token == " ")
                 {
                     Output.Add(new SpaceFeed());
                 }

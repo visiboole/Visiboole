@@ -36,6 +36,11 @@ namespace VisiBoole.ParsingEngine.Statements
     public class DffClockStmt : Statement
     {
         /// <summary>
+        /// Regex for getting output tokens.
+        /// </summary>
+        private Regex OutputRegex = new Regex($@"(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|(<=)|[\s;{{}}()@^|+-]");
+
+        /// <summary>
         /// Expression of the clock statement.
         /// </summary>
         private NamedExpression Expression;
@@ -120,7 +125,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
         {
             // Output tokens
-            MatchCollection matches = Regex.Matches(Text, $@"(~?{Lexer.ScalarPattern})|(~?{Lexer.ConstantPattern})|([|^(){{}};@+-])|(==)|(<=)|(\s)");
+            MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 string token = match.Value;

@@ -93,25 +93,6 @@ namespace VisiBoole.Models
             }
 
             Text = GetFileText();
-            InitDesign();
-        }
-
-        public Design(string name, string text)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException("Invalid filename");
-            }
-
-            if (text == null)
-            {
-                throw new ArgumentNullException("Invalid text");
-
-            }
-        }
-
-        private void InitDesign()
-        {
             LastText = Text;
             IsDirty = false;
             Database = new Database();
@@ -447,22 +428,41 @@ namespace VisiBoole.Models
         {
             int startLine = GetLineFromCharIndex(SelectionStart);
             int endLine = GetLineFromCharIndex(SelectionStart + SelectionLength);
+            if (endLine > Lines.Length)
+            {
+                endLine = Lines.Length - 1;
+            }
 
             for (int i = startLine; i <= endLine; i++)
             {
                 if (Lines[i].Length > 0)
                 {
-                    // Add " to start of current line
                     int start = GetFirstCharIndexFromLine(i);
-                    SelectionLength = 0;
-                    SelectionStart = start;
-                    SelectedText = "\"";
 
-                    // Add "; to end of current line
-                    int end = start + Lines[i].Length;
-                    SelectionLength = 0;
-                    SelectionStart = end;
-                    SelectedText = "\";";
+                    Match commentMatch = Parser.CommentStmtRegex.Match(Lines[i]);
+                    if (commentMatch.Success)
+                    {
+                        SelectionStart = start + Lines[i].IndexOf("\"");
+                        SelectionLength = 1;
+                        SelectedText = "";
+
+                        SelectionStart = start + Lines[i].LastIndexOf("\"");
+                        SelectionLength = 2;
+                        SelectedText = "";
+                    }
+                    else
+                    {
+                        // Add " to start of current line
+                        SelectionLength = 0;
+                        SelectionStart = start;
+                        SelectedText = "\"";
+
+                        // Add "; to end of current line
+                        int end = start + Lines[i].Length;
+                        SelectionLength = 0;
+                        SelectionStart = end;
+                        SelectedText = "\";";
+                    }
                 }
             }
 

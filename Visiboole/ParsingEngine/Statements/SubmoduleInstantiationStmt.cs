@@ -32,6 +32,14 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public class SubmoduleInstantiationStmt : Statement
 	{
+        /// <summary>
+        /// Regex for getting output tokens.
+        /// </summary>
+        private Regex OutputRegex = new Regex($@"({Parser.InstantiationPattern}\()|(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|[\s;:,{{}})]");
+
+        /// <summary>
+        /// Design path of the instantiation.
+        /// </summary>
         private string DesignPath;
 
         /// <summary>
@@ -52,27 +60,16 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
-            Match instantiationMatch = Regex.Match(Text, Parser.ModuleInstantiationPattern);
-
-            // Output padding (if present)
-            for (int i = 0; i < instantiationMatch.Groups["FrontSpacing"].Value.Length; i++)
-            {
-                Output.Add(new SpaceFeed());
-            }
-
-            // Output instantiation
-            Output.Add(new Instantiation($"{instantiationMatch.Groups["Instantiation"].Value}("));
-
             // Save current design
             Design currentDesign = DesignController.ActiveDesign;
-
-            // Output input variables
+            // Create input values list
             List<bool> inputValues = new List<bool>();
-            List<bool> outputValues = new List<bool>();
-            int outputValueIndex = 0;
+            // Get input side text
+            string inputSideText = Text.Substring(0, Text.IndexOf(':') + 1);
+            // Get output side text
+            string outputSideText = Text.Substring(inputSideText.Length);
 
-            string module = Text.Substring(Text.IndexOf("(") + 1);
-            MatchCollection matches = Regex.Matches(module, $@"({Lexer.ScalarPattern})|({Lexer.ConstantPattern})|([){{}},;:])|(\s)");
+            MatchCollection matches = OutputRegex.Matches(inputSideText);
             foreach (Match match in matches)
             {
                 string token = match.Value;
@@ -80,41 +77,56 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Output.Add(new SpaceFeed());
                 }
-                else if (token == "," || token == "{" || token == "}" || token == ":" || token == ")" || token == ";")
+                else if (token.Contains("("))
+                {
+                    Output.Add(new Instantiation(token));
+                }
+                else if (token == "," || token == "{" || token == "}" || token == ":")
                 {
                     OutputOperator(token);
-
-                    if (token == ":")
-                    {
-                        Design subDesign = new Design(DesignPath);
-                        Parser subParser = new Parser(subDesign);
-                        DesignController.ActiveDesign = subDesign;
-                        outputValues = subParser.ParseAsModule(inputValues);
-                        if (outputValues == null)
-                        {
-                            Output.Add(new Comment(module.Substring(match.Index + 1))); // Output as comment since there was an error
-                            break;
-                        }
-                    }
                 }
                 else
                 {
-                    // If variable is an input
-                    if (match.Index < module.IndexOf(":"))
+                    // Output each input var in the input list
+                    IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
+                    DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
+                    if (indVar != null)
                     {
-                        // Output each input var in the input list
-                        IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
-                        DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
-                        if (indVar != null)
-                        {
-                            Output.Add(indVar);
-                            inputValues.Add(indVar.Value);
-                        }
-                        else
-                        {
-                            Output.Add(depVar);
-                            inputValues.Add(depVar.Value);
-                        }
+                        Output.Add(indVar);
+                        inputValues.Add(indVar.Value);
+                    }
+                    else
+                    {
+                        Output.Add(depVar);
+                        inputValues.Add(depVar.Value);
+                    }
+                }
+            }
+
+            Design subDesign = new Design(DesignPath);
+            Parser subParser = new Parser(subDesign);
+            DesignController.ActiveDesign = subDesign;
+            List<bool> outputValues = subParser.ParseAsModule(inputValues);
+            if (outputValues == null)
+            {
+                Output.Add(new Comment(outputSideText)); // Output as comment since there was an error
+            }
+            else
+            {
+                // Output input variables
+                int outputValueIndex = 0;
+
+                matches = OutputRegex.Matches(outputSideText);
+                foreach (Match match in matches)
+                {
+                    string token = match.Value;
+                    if (token == " ")
+                    {
+                        Output.Add(new SpaceFeed());
+                    }
+                    else if (token == "," || token == "{" || token == "}" || token == ")" || token == ";")
+                    {
+                        OutputOperator(token);
                     }
                     else
                     {

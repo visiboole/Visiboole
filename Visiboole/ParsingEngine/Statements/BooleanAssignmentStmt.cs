@@ -12,7 +12,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program located at "\Visiboole\license.txt".
  * If not, see <http://www.gnu.org/licenses/>
@@ -33,6 +33,11 @@ namespace VisiBoole.ParsingEngine.Statements
     /// </summary>
 	public class BooleanAssignmentStmt : Statement
 	{
+        /// <summary>
+        /// Regex for getting output tokens.
+        /// </summary>
+        private Regex OutputRegex = new Regex($@"(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|[\s;{{}}()=^|+-]");
+
         /// <summary>
         /// Expression of the boolean statement.
         /// </summary>
@@ -83,7 +88,7 @@ namespace VisiBoole.ParsingEngine.Statements
         public override void Parse()
         {
             // Output tokens
-            MatchCollection matches = Regex.Matches(Text, $@"(~?{Lexer.ScalarPattern})|(~?{Lexer.ConstantPattern})|([|^(){{}};=+-])|(==)|(\s)");
+            MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 string token = match.Value;

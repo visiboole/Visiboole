@@ -45,12 +45,7 @@ namespace VisiBoole.ParsingEngine
         /// Pattern for identifying format specifiers.
         /// </summary>
         public static readonly string FormatSpecifierPattern = $@"({FormatterPattern}{ConcatPattern})";
-
-        /// <summary>
-        /// Pattern for identifying extra spacing.
-        /// </summary>
-        public static readonly string SpacingPattern = @"(^\s+|(?<=\s)\s+)";
-
+        
         /// <summary>
         /// Regex for identifying scalars. (Optional *)
         /// </summary>
@@ -276,10 +271,12 @@ namespace VisiBoole.ParsingEngine
             int inputValuesIndex = 0;
             foreach (string inputList in Regex.Split(moduleMatch.Groups["Inputs"].Value, @",\s+"))
             {
-                string[] inputs = WhitespaceRegex.Split(inputList);
-                foreach (string input in inputs)
+                foreach (string input in WhitespaceRegex.Split(inputList))
                 {
-                    Design.Database.AddVariable(new IndependentVariable(input, inputValues[inputValuesIndex++]));
+                    foreach (string inputVar in GetExpansion(AnyTypeRegex.Match(input)))
+                    {
+                        Design.Database.AddVariable(new IndependentVariable(inputVar, inputValues[inputValuesIndex++]));
+                    }
                 }
             }
 
@@ -297,11 +294,11 @@ namespace VisiBoole.ParsingEngine
             foreach (string outputList in Regex.Split(moduleMatch.Groups["Outputs"].Value, @",\s+"))
             {
                 // Output each output var in the output list
-                foreach (string outputVar in WhitespaceRegex.Split(outputList))
+                foreach (string output in WhitespaceRegex.Split(outputList))
                 {
-                    foreach (string var in GetExpansion(AnyTypeRegex.Match(outputVar)).ToArray())
+                    foreach (string outputVar in GetExpansion(AnyTypeRegex.Match(output)))
                     {
-                        outputValues.Add(Design.Database.TryGetValue(var) == 1);
+                        outputValues.Add(Design.Database.TryGetValue(outputVar) == 1);
                     }
                 }
             }
@@ -506,14 +503,18 @@ namespace VisiBoole.ParsingEngine
                     else if (needsExpansion)
                     {
                         // Horizontal expansion needed
-                        if (type != StatementType.Submodule)
+                        if (type != StatementType.Submodule && type != StatementType.Module)
                         {
                             source = ExpandHorizontally(source);
                         }
                         else
                         {
-                            Match match = ModuleInstantiationRegex.Match(source);
-                            source = $"{match.Groups["Padding"].Value}{ match.Groups["Instantiation"].Value}({ExpandHorizontally(match.Groups["Components"].Value)});";
+                            // Get text that shouldn't be expanded
+                            string frontText = source.Substring(0, source.IndexOf("(") + 1);
+                            // Get text that needs to be expanded
+                            string restOfText = source.Substring(frontText.Length);
+                            // Combine front text with the expanded form of the rest of the text
+                            source = $"{frontText}{ExpandHorizontally(restOfText)}";
                         }
                     }
 
@@ -540,6 +541,10 @@ namespace VisiBoole.ParsingEngine
                         {
                             Match match = ModuleInstantiationRegex.Match(line);
                             statements.Add(new SubmoduleInstantiationStmt(line, Subdesigns[match.Groups["Design"].Value]));
+                        }
+                        else if (type == StatementType.Module)
+                        {
+                            statements.Add(new ModuleDeclarationStmt(line));
                         }
                     }
                 }

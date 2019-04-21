@@ -48,7 +48,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying scalars. (Optional *)
         /// </summary>
-        protected static readonly string ScalarPattern2 = $@"(?<!([%.']))(\*?{ScalarPattern})(?!\.)";
+        protected static readonly string ScalarPattern2 = $@"(?<!([%.']))(\*?{ScalarPattern})(?![.(])";
 
         /// <summary>
         /// Pattern for identifying vectors. (No ~ or *)
@@ -98,7 +98,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying submodule instantiations.
         /// </summary>
-        protected static readonly string InstantiationPattern = @"(?<Design>\w+)\.(?<Name>\w+)";
+        public static readonly string InstantiationPattern = @"(?<Design>\w+)\.(?<Name>\w+)";
 
         /// <summary>
         /// Pattern for identifying components (inputs or outputs) in a module notation.
@@ -940,17 +940,23 @@ namespace VisiBoole.ParsingEngine
             int rightBound = Convert.ToInt32(vector.Groups["RightBound"].Value);
             if (leftBound < rightBound)
             {
-                // Flips bounds so MSB is the leftBound
-                leftBound = leftBound + rightBound;
-                rightBound = leftBound - rightBound;
-                leftBound = leftBound - rightBound;
-            }
-            int step = String.IsNullOrEmpty(vector.Groups["Step"].Value) ? -1 : -Convert.ToInt32(vector.Groups["Step"].Value);
+                int step = String.IsNullOrEmpty(vector.Groups["Step"].Value) ? 1 : Convert.ToInt32(vector.Groups["Step"].Value);
 
-            // Expand vector
-            for (int i = leftBound; i >= rightBound; i += step)
+                // Expand vector
+                for (int i = leftBound; i <= rightBound; i += step)
+                {
+                    expansion.Add(String.Concat(name, i));
+                }
+            }
+            else
             {
-                expansion.Add(String.Concat(name, i));
+                int step = String.IsNullOrEmpty(vector.Groups["Step"].Value) ? -1 : -Convert.ToInt32(vector.Groups["Step"].Value);
+
+                // Expand vector
+                for (int i = leftBound; i >= rightBound; i += step)
+                {
+                    expansion.Add(String.Concat(name, i));
+                }
             }
 
             // Save expansion

@@ -80,12 +80,12 @@
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Globals.cs" />
-    <Compile Include="Models\NamedExpression.cs" />
+    <Compile Include="Models\DatabaseObjects\NamedExpression.cs" />
     <Compile Include="Models\NewTabControl.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
-    <Compile Include="ParsingEngine\ObjectCode\AltClock.cs" />
+    <Compile Include="Models\DatabaseObjects\AltClock.cs" />
     <Compile Include="ParsingEngine\ObjectCode\SpaceFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Parenthesis.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />
@@ -102,12 +102,13 @@
     <Compile Include="ParsingEngine\ObjectCode\LineFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Operator.cs" />
     <Compile Include="ParsingEngine\Parser.cs" />
+    <Compile Include="ParsingEngine\Statements\ModuleDeclarationStmt.cs" />
     <Compile Include="ParsingEngine\Statements\Statement.cs" />
     <Compile Include="Models\Design.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
-    <Compile Include="ParsingEngine\ObjectCode\Variable.cs" />
+    <Compile Include="Models\DatabaseObjects\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
     <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="Settings.cs" />

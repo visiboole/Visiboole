@@ -48,6 +48,11 @@ namespace VisiBoole.Models
         public string Expression { get; private set; }
 
         /// <summary>
+        /// Index of the expression.
+        /// </summary>
+        private int ExpressionIndex;
+
+        /// <summary>
         /// Dictionary of parentheses contained in the expression.
         /// </summary>
         public Dictionary<int, Parenthesis> Parentheses { get; private set; }
@@ -89,7 +94,7 @@ namespace VisiBoole.Models
             MaxValue = (int)Math.Pow(2, Dependents.Length) - 1;
 
             Expression = Expression.Substring(Expression.IndexOf(Operation) + Operation.Length).Trim();
-            Expression = Parser.WhitespaceRegex.Replace(Expression, " "); // Replace multiple spaces
+            ExpressionIndex = fullExpression.IndexOf(Expression);
         }
 
         /// <summary>
@@ -131,7 +136,7 @@ namespace VisiBoole.Models
                     if (match.Index != expression.Length - 1)
                     {
                         bool parenthesesValue = valueStack.Peek() == 1;
-                        Parentheses.Add(match.Index - 1, new Parenthesis(")", parenthesesValue, areParenthesesNegated));
+                        Parentheses.Add(match.Index + ExpressionIndex - 1, new Parenthesis(")", parenthesesValue, areParenthesesNegated));
                         Parentheses.Add(parenthesisIndicesStack.Pop(), new Parenthesis("(", parenthesesValue, areParenthesesNegated));
                     }
                 }
@@ -148,7 +153,7 @@ namespace VisiBoole.Models
                     // Push operation
                     if (match.Index != 0 && operation == "(")
                     {
-                        parenthesisIndicesStack.Push(match.Index - 1);
+                        parenthesisIndicesStack.Push(match.Index + ExpressionIndex - 1);
                     }
                     operatorStack.Push(operation);
                 }
