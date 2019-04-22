@@ -59,10 +59,20 @@ namespace VisiBoole.Controllers
 		/// </summary>
 		private NewTabControl TabControl;
 
+        /// <summary>
+        /// HTMLBuilder for the web browser.
+        /// </summary>
+        private HtmlBuilder HtmlBuilder;
+
 		/// <summary>
 		/// The WebBrowser that shows the output that is shared amongst the displays that are hosted by the MainWindow
 		/// </summary>
 		private WebBrowser Browser;
+
+        /// <summary>
+        /// Html output template for the browser
+        /// </summary>
+        private string OutputTemplate = "<html><head><style type=\"text/css\"> p { margin: 0;} </style></head><body>{0}</body></html>";
 
         /// <summary>
         /// Last output of the browser.
@@ -131,11 +141,25 @@ namespace VisiBoole.Controllers
             };
             Globals.TabControl = TabControl;
 
+            HtmlBuilder = new HtmlBuilder();
+
             // Init browser
             Browser = new WebBrowser();
             Browser.IsWebBrowserContextMenuEnabled = false;
             Browser.AllowWebBrowserDrop = false;
             Browser.WebBrowserShortcutsEnabled = false;
+            Browser.ObjectForScripting = this;
+            // Create browser with empty body
+            Browser.DocumentText = OutputTemplate.Replace("{0}", "");
+            Browser.DocumentCompleted += (sender, e) => {
+                Browser.Document.Body.Click += (sender2, e2) => {
+                    MainWindowController.RetrieveFocus();
+                };
+                Browser.Document.Body.DoubleClick += (sender3, e3) => {
+                    MainWindowController.RetrieveFocus();
+                };
+                MainWindowController.RetrieveFocus();
+            };
 
             // Init displays
             EditDisplay = editDisplay;
@@ -314,21 +338,9 @@ namespace VisiBoole.Controllers
         /// <param name="position">Scroll position of the Browser</param>
 		public void DisplayOutput(List<IObjectCodeElement> output, int position = 0)
         {
-            HtmlBuilder html = new HtmlBuilder(output);
-            if (html.HtmlText == null)
-            {
-                return;
-            }
-            string htmlOutput = html.GetHTML();
-
-            Browser.ObjectForScripting = this;
-            html.DisplayHtml(htmlOutput, Browser);
-
-            Browser.DocumentCompleted += (sender, e) => {
-                Browser.Document.Body.ScrollTop = position;
-                Browser.Document.Body.Click += (sender2, e2) => { MainWindowController.RetrieveFocus(); };
-                MainWindowController.RetrieveFocus();
-            };
+            //Browser.ObjectForScripting = this;
+            Browser.Document.Body.ScrollTop = position;
+            Browser.Document.Body.InnerHtml = HtmlBuilder.GetHTML(output);
 
             if (CurrentDisplay is DisplayEdit)
             {
@@ -343,7 +355,8 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void RefreshOutput()
         {
-            DisplayOutput(LastOutput);
+            //Browser.ObjectForScripting = this;
+            DisplayOutput(LastOutput, Browser.Document.Body.ScrollTop);
         }
 
         /// <summary>
@@ -360,13 +373,12 @@ namespace VisiBoole.Controllers
         /// <param name="count">Number of times to tick</param>
         public void Tick(int count)
         {
-            Browser.ObjectForScripting = this;
+            //Browser.ObjectForScripting = this;
             int position = Browser.Document.Body.ScrollTop;
 
             for (int i = 0; i < count; i++)
             {
-                List<IObjectCodeElement> output = MainWindowController.Tick();
-                DisplayOutput(output, position);
+                DisplayOutput(MainWindowController.Tick(), position);
             }
         }
 
@@ -376,9 +388,9 @@ namespace VisiBoole.Controllers
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
         public void Variable_Click(string variableName)
         {
-            Browser.ObjectForScripting = this;
-            int position = Browser.Document.Body.ScrollTop;
-            DisplayOutput(MainWindowController.Variable_Click(variableName), position);
+            //Browser.ObjectForScripting = this;
+            DisplayOutput(MainWindowController.Variable_Click(variableName), Browser.Document.Body.ScrollTop);
+            MainWindowController.RetrieveFocus();
         }
 
         /// <summary>
@@ -393,23 +405,16 @@ namespace VisiBoole.Controllers
                 return;
             }
 
-            HtmlBuilder html = new HtmlBuilder(output);
-            if (html.HtmlText == null)
-            {
-                return;
-            }
-            string htmlOutput = html.GetHTML();
-
             WebBrowser subBrowser = new WebBrowser();
             subBrowser.IsWebBrowserContextMenuEnabled = false;
             subBrowser.AllowWebBrowserDrop = false;
             subBrowser.WebBrowserShortcutsEnabled = false;
             subBrowser.ObjectForScripting = this;
-            html.DisplayHtml(htmlOutput, subBrowser);
-
+            subBrowser.DocumentText = OutputTemplate.Replace("{0}", HtmlBuilder.GetHTML(output));
             subBrowser.DocumentCompleted += (sender, e) => {
-                subBrowser.Document.Body.Click += (sender2, e2) => { MainWindowController.RetrieveFocus(); };
-                MainWindowController.RetrieveFocus();
+                Browser.Document.Body.Click += (sender2, e2) => {
+                    MainWindowController.RetrieveFocus();
+                };
             };
 
             CurrentDisplay.AddBrowser(instantiation.Split('.')[0], subBrowser);

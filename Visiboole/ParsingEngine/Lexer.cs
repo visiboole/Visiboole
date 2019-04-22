@@ -1222,7 +1222,7 @@ namespace VisiBoole.ParsingEngine
                 {
                     newLine = newLine.Replace(match.Value, expansions[j++][i]); // Replace expression parts
                 }
-                expanded += String.Concat(newLine, "\n");
+                expanded += newLine;
             }
 
             return expanded;

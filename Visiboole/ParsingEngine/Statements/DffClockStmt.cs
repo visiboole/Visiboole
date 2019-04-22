@@ -38,7 +38,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|(<=)|[\s;{{}}()@^|+-]");
+        private Regex OutputRegex = new Regex($@"(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|(<=)|[\s{{}}()@^|+-]");
 
         /// <summary>
         /// Expression of the clock statement.
@@ -133,6 +133,11 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Output.Add(new SpaceFeed());
                 }
+                else if (token == "\n")
+                {
+                    // Output newline
+                    Output.Add(new LineFeed());
+                }
                 else if (token == "(" || token == ")")
                 {
                     Output.Add(Expression.Parentheses[match.Index]); // Output the corresponding parenthesis
@@ -142,7 +147,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     // Output <= with dependent value
                     Output.Add(new DependentVariable("<=", Expression.GetValue(Expression.Dependent) >= 1));
                 }
-                else if (Parser.OperatorsList.Contains(token) || token == "{" || token == "}" || token == "@" || token == ";")
+                else if (Parser.OperatorsList.Contains(token) || token == "{" || token == "}" || token == "@")
                 {
                     OutputOperator(token);
                 }
@@ -152,8 +157,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
-            // Output newline
-            Output.Add(new LineFeed());
+            base.Parse();
         }
     }
 }

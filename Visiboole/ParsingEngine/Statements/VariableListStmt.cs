@@ -35,7 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"{Parser.ScalarPattern}|('b[0-1])|[\s;]");
+        private Regex OutputRegex = new Regex($@"{Parser.ScalarPattern}|('b[0-1])|[\s]");
 
         /// <summary>
         /// Constructs a VariableListStmt instance.
@@ -61,10 +61,10 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Output.Add(new SpaceFeed());
                 }
-                else if (token == ";")
+                else if (token == "\n")
                 {
-                    // Output ;
-                    OutputOperator(";");
+                    // Output newline
+                    Output.Add(new LineFeed());
                 }
                 else
                 {
@@ -72,8 +72,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
-            // Output newline
-            Output.Add(new LineFeed());
+            base.Parse();
         }
 	}
 }

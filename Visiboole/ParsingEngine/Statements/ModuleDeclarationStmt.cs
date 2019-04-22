@@ -13,7 +13,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"(\w+\()|(~?{Parser.ScalarPattern})|[\s;:,{{}})]");
+        private Regex OutputRegex = new Regex($@"(\w+\()|(~?{Parser.ScalarPattern})|[\s:,{{}})]");
 
         /// <summary>
         /// Constructs a ModuleDeclarationStmt instance.
@@ -35,11 +35,16 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Output.Add(new SpaceFeed());
                 }
+                else if (token == "\n")
+                {
+                    // Output newline
+                    Output.Add(new LineFeed());
+                }
                 else if (token.Contains("("))
                 {
                     Output.Add(new Comment(token));
                 }
-                else if (token == "," || token == "{" || token == "}" || token == ":" || token == ")" || token == ";")
+                else if (token == "," || token == "{" || token == "}" || token == ":" || token == ")")
                 {
                     OutputOperator(token);
                 }
@@ -49,8 +54,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
-            // Output newline
-            Output.Add(new LineFeed());
+            base.Parse();
         }
     }
 }

@@ -31,24 +31,31 @@ namespace VisiBoole.Models
 {
     public class HtmlBuilder
 	{
-		public string HtmlText = "";
-		public string currentLine = "";
-        private string trueColor = "'crimson'";
-        private string falseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
+        /// <summary>
+        /// Color of true variables.
+        /// </summary>
+        private string TrueColor;
 
-        public HtmlBuilder(List<IObjectCodeElement> output)
+        /// <summary>
+        /// Color of false variables.
+        /// </summary>
+        private string FalseColor;
+
+        public string GetHTML(List<IObjectCodeElement> output)
         {
+            string html = "";
+            string currentLine = "";
+            TrueColor = "'crimson'";
+            FalseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
-            int lineNumber = 0;
 
             foreach (List<IObjectCodeElement> line in newOutput)
             {
-                lineNumber++;
                 currentLine = "<p style=\"font-family:consolas; font-size:" + Properties.Settings.Default.FontSize + "pt\">";
 
                 if (line.Count == 0)
                 {
-                    currentLine += "<br>>";
+                    currentLine += "<br>";
                 }
 
                 foreach (IObjectCodeElement token in line)
@@ -89,11 +96,11 @@ namespace VisiBoole.Models
                         string color;
                         if (!hasNegation)
                         {
-                            color = ((bool)value) ? trueColor : falseColor;
+                            color = ((bool)value) ? TrueColor : FalseColor;
                         }
                         else
                         {
-                            color = ((bool)value) ? falseColor : trueColor;
+                            color = ((bool)value) ? FalseColor : TrueColor;
                         }
                         string cursor = isIndependentVariable ? "hand" : "no-drop";
                         string decoration = hasNegation ? " text-decoration: overline;" : "";
@@ -103,10 +110,32 @@ namespace VisiBoole.Models
                     }
                 }
 
-                currentLine = currentLine.Substring(0, currentLine.Length - 1);
                 currentLine += "</p>";
-                HtmlText += currentLine + "\n";
+                html += currentLine;
+                //html += currentLine + "\n";
             }
+
+            return html;
+        }
+
+        private List<List<IObjectCodeElement>> PreParseHTML(List<IObjectCodeElement> output)
+        {
+            List<List<IObjectCodeElement>> fullText = new List<List<IObjectCodeElement>>();
+            List<IObjectCodeElement> subText = new List<IObjectCodeElement>();
+            foreach (IObjectCodeElement element in output)
+            {
+                Type elementType = element.GetType();
+                if (elementType == typeof(LineFeed))
+                {
+                    fullText.Add(subText);
+                    subText = new List<IObjectCodeElement>();
+                }
+                else
+                {
+                    subText.Add(element);
+                }
+            }
+            return fullText;
         }
 
         /// <summary>
@@ -157,11 +186,11 @@ namespace VisiBoole.Models
                     // Check for true or false color
                     if (color.Equals("true", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        color = trueColor.Replace("'", "");
+                        color = TrueColor.Replace("'", "");
                     }
                     else if (color.Equals("false", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        color = falseColor.Replace("'", "");
+                        color = FalseColor.Replace("'", "");
                     }
 
                     isValidColor = IsValidHTMLColor(color); // Check whether the provided color is valid
@@ -223,6 +252,7 @@ namespace VisiBoole.Models
         {
             // Replace specific characters with their encodings so they show in text
             comment = Regex.Replace(comment, @"(?<=\s)\s", "&nbsp;");
+            //comment = comment.Replace(":", "");
             comment = comment.Replace("<", "&lt;");
             comment = comment.Replace(">", "&gt;");
             return comment;
@@ -241,57 +271,6 @@ namespace VisiBoole.Models
             }
 
             return System.Drawing.Color.FromName(color).IsKnownColor;
-        }
-
-        private List<List<IObjectCodeElement>> PreParseHTML(List<IObjectCodeElement> output)
-        {
-            List<List<IObjectCodeElement>> fullText = new List<List<IObjectCodeElement>>();
-            List<IObjectCodeElement> subText = new List<IObjectCodeElement>();
-            foreach (IObjectCodeElement element in output)
-            {
-                Type elementType = element.GetType();
-                if (elementType == typeof(LineFeed))
-                {
-                    fullText.Add(subText);
-                    subText = new List<IObjectCodeElement>();
-                }
-                else
-                {
-                    subText.Add(element);
-                }
-            }
-            return fullText;
-        }
-
-		/// <summary>
-		/// Returns the generated HTML text
-		/// </summary>
-		/// <returns>Returns the generated HTML text</returns>
-		public string GetHTML()
-		{
-			return HtmlText;
-		}
-
-        /// <summary>
-        /// Displays the html text within the give WebBrowser object
-        /// </summary>
-        /// <param name="html">The html text to display</param>
-        /// <param name="browser">The WebBrowser object to display the HTML in</param>
-        public void DisplayHtml(string html, WebBrowser browser)
-		{
-            browser.Refresh();
-            
-            browser.Navigate("about:blank");
-
-			if (browser.Document != null)
-			{
-				browser.Document.Write(string.Empty);
-			}
-            
-            string styles = "<html><head><style type=\"text/css\"> p { margin: 0;} </style ></head >";
-            html = styles + html;
-            browser.DocumentText = html;
-           
         }
 	}
 }

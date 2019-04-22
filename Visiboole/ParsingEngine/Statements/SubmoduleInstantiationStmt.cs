@@ -35,7 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"({Parser.InstantiationPattern}\()|(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|[\s;:,{{}})]");
+        private Regex OutputRegex = new Regex($@"({Parser.InstantiationPattern}\()|(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|[\s:,{{}})]");
 
         /// <summary>
         /// Design path of the instantiation.
@@ -76,6 +76,11 @@ namespace VisiBoole.ParsingEngine.Statements
                 if (token == " ")
                 {
                     Output.Add(new SpaceFeed());
+                }
+                else if (token == "\n")
+                {
+                    // Output newline
+                    Output.Add(new LineFeed());
                 }
                 else if (token.Contains("("))
                 {
@@ -124,7 +129,12 @@ namespace VisiBoole.ParsingEngine.Statements
                     {
                         Output.Add(new SpaceFeed());
                     }
-                    else if (token == "," || token == "{" || token == "}" || token == ")" || token == ";")
+                    else if (token == "\n")
+                    {
+                        // Output newline
+                        Output.Add(new LineFeed());
+                    }
+                    else if (token == "," || token == "{" || token == "}" || token == ")")
                     {
                         OutputOperator(token);
                     }
@@ -146,8 +156,7 @@ namespace VisiBoole.ParsingEngine.Statements
             // Reset active design
             DesignController.ActiveDesign = currentDesign;
 
-            // Output newline
-            Output.Add(new LineFeed());
+            base.Parse();
         }
 	}
 }

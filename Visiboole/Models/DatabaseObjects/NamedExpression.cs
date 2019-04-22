@@ -65,7 +65,7 @@ namespace VisiBoole.Models
         {
             int startIndex = fullExpression.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
             Expression = fullExpression.Substring(startIndex); // Start expression with first non whitespace character
-            Expression = Expression.TrimEnd(';');
+            //Expression = Expression.TrimEnd(';');
 
             if (!Expression.Contains("<"))
             {

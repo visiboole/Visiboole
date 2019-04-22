@@ -55,7 +55,11 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Parses the text of this statement into a list of output elements.
         /// </summary>
-		public abstract void Parse();
+		public virtual void Parse()
+        {
+            OutputOperator(";");
+            Output.Add(new LineFeed());
+        }
 
         /// <summary>
         /// Adds variables in the provided text that are not in the database to the database.

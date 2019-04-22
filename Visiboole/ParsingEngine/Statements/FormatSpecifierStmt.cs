@@ -61,10 +61,10 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Output.Add(new SpaceFeed());
                 }
-                else if (token == ";")
+                else if (token == "\n")
                 {
-                    // Output ;
-                    OutputOperator(";");
+                    // Output newline
+                    Output.Add(new LineFeed());
                 }
                 else
                 {
@@ -84,8 +84,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
             }
 
-            // Output newline
-            Output.Add(new LineFeed());
+            base.Parse();
         }
 
         /// <summary>

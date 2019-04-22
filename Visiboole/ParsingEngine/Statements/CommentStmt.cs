@@ -43,17 +43,8 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
 		{
-            // Output padding (if present)
-            Match comment = Parser.CommentStmtRegex.Match(Text);
-            foreach (char space in comment.Groups["FrontSpacing"].Value)
-            {
-                Output.Add(new SpaceFeed());
-            }
-
-            // Output comment
-            Output.Add(new Comment(comment.Groups["Comment"].Value));
-            // Output newline
+            Output.Add(new Comment(Text));
             Output.Add(new LineFeed());
-		}
+        }
 	}
 }

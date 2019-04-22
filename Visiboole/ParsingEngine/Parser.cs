@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 using VisiBoole.ParsingEngine.Statements;
@@ -52,19 +51,14 @@ namespace VisiBoole.ParsingEngine
         public static Regex ScalarRegex { get; } = new Regex(ScalarPattern2, RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying entire format specifiers.
-        /// </summary>
-        public static Regex FormatSpecifierRegex { get; } = new Regex(FormatSpecifierPattern);
-
-        /// <summary>
         /// Regex for identifying comment statements.
         /// </summary>
-        public static Regex CommentStmtRegex { get; } = new Regex(@"^(?<FrontSpacing>\s*)(?<DoInclude>[+-])?""(?<Comment>.*)""(?<BackSpacing>\s*);$", RegexOptions.Compiled);
+        public static Regex CommentStmtRegex = new Regex(@"^(?<FrontSpacing>\s*)(?<DoInclude>[+-])?""(?<Comment>.*)"";$", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying library statements.
         /// </summary>
-        private static Regex LibraryStmtRegex = new Regex(@"^(?<FrontSpacing>\s*)#library\s(?<Name>\S+)(?<BackSpacing>\s*);$", RegexOptions.Compiled);
+        private static Regex LibraryStmtRegex = new Regex(@"^\s*#library\s+(?<Name>\S+)\s*;$", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying module declarations.
@@ -74,7 +68,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying submodule statements.
         /// </summary>
-        private static Regex SubmoduleStmtRegex = new Regex($@"(?<FrontSpacing>\s*)(?<Instantiation>{InstantiationPattern})\({ModulePattern}\)(?<BackSpacing>\s*);", RegexOptions.Compiled);
+        private static Regex SubmoduleStmtRegex = new Regex($@"\s*(?<Instantiation>{InstantiationPattern})\({ModulePattern}\)\s*;", RegexOptions.Compiled);
 
         #endregion
 
@@ -95,7 +89,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="design">Design to parse</param>
         public Parser(Design design) : base(design)
         {
-            ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModulePattern}\);$");
+            ModuleRegex = new Regex($@"^\s*{Design.FileName}\({ModulePattern}\)\s*;$");
         }
 
         #region Parsing Methods
@@ -360,6 +354,44 @@ namespace VisiBoole.ParsingEngine
             return variables;
         }
 
+        private IEnumerable<string> ReadLines(StreamReader streamReader)
+        {
+            List<char> chars = new List<char>();
+            bool buildingLine = true;
+            while (!streamReader.EndOfStream)
+            {
+                char c = (char)streamReader.Read();
+
+                if (buildingLine)
+                {
+                    chars.Add(c);
+                }
+
+                if (c == ';')
+                {
+                    buildingLine = false;
+                    yield return new string(chars.ToArray());
+                    chars.Clear();
+                }
+                else if (c == '\n')
+                {
+                    if (!buildingLine)
+                    {
+                        buildingLine = true;
+                    }
+                    else
+                    {
+                        string currentLine = new string(chars.ToArray());
+                        if (string.IsNullOrWhiteSpace(currentLine))
+                        {
+                            yield return currentLine;
+                            chars.Clear();
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a list of statements from parsed source code.
         /// </summary>
@@ -372,19 +404,15 @@ namespace VisiBoole.ParsingEngine
             MemoryStream stream = new MemoryStream(bytes);
             using (StreamReader reader = new StreamReader(stream))
             {
-                LineNumber = 0;
                 Design.ModuleDeclaration = null;
-                string source;
-
-                while ((source = reader.ReadLine()) != null)
+                LineNumber = 0;
+                foreach (string source in ReadLines(reader))
                 {
                     LineNumber++;
                     StatementType? type = null;
 
-                    // Trim end of source
-                    source = source.TrimEnd();
                     // If source is only whitespace
-                    if (String.IsNullOrWhiteSpace(source))
+                    if (string.IsNullOrWhiteSpace(source))
                     {
                         // If current execution is valid
                         if (valid)
@@ -395,29 +423,33 @@ namespace VisiBoole.ParsingEngine
                         // Continue loop
                         continue;
                     }
-                    // If source is a comment statement
-                    else if (CommentStmtRegex.IsMatch(source))
+
+                    string line = source;
+
+                    // If line is a comment statement
+                    if (CommentStmtRegex.IsMatch(line))
                     {
                         // If current execution is valid
                         if (valid)
                         {
                             // Get comment match
-                            Match commentMatch = CommentStmtRegex.Match(source);
+                            Match commentMatch = CommentStmtRegex.Match(line);
                             // If comment should be displayed
                             if (commentMatch.Groups["DoInclude"].Value != "-" && (Properties.Settings.Default.SimulationComments || commentMatch.Groups["DoInclude"].Value == "+"))
                             {
+                                string comment = $"{commentMatch.Groups["FrontSpacing"].Value}{commentMatch.Groups["Comment"].Value}";
                                 // Add comment statement to statement list
-                                statements.Add(new CommentStmt(source));
+                                statements.Add(new CommentStmt(comment));
                             }
                         }
                         // Continue loop
                         continue;
                     }
-                    // If source is a library statement
-                    else if (LibraryStmtRegex.IsMatch(source))
+                    // If line is a library statement
+                    else if (LibraryStmtRegex.IsMatch(line))
                     {
                         // If library statement doesn't contain a valid library
-                        if (!VerifyLibraryStatement(source))
+                        if (!VerifyLibraryStatement(line))
                         {
                             // Set valid to false
                             valid = false;
@@ -425,11 +457,11 @@ namespace VisiBoole.ParsingEngine
                         // Continue loop (Libraries don't get added to statement list)
                         continue;
                     }
-                    // If source is none of the above
+                    // If line is none of the above
                     else
                     {
                         // Get statement type
-                        type = GetStatementType(source);
+                        type = GetStatementType(line);
 
                         if (type == null)
                         {
@@ -440,11 +472,11 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
 
-                    // If source is a submodule statement
-                    if (SubmoduleStmtRegex.IsMatch(source))
+                    // If line is a submodule statement
+                    if (SubmoduleStmtRegex.IsMatch(line))
                     {
                         // If submodule instantiation isn't valid
-                        if (!VerifySubmoduleStatement(source))
+                        if (!VerifySubmoduleStatement(line))
                         {
                             // Set valid to false
                             valid = false;
@@ -452,14 +484,14 @@ namespace VisiBoole.ParsingEngine
                             continue;
                         }
                     }
-                    // If source is a module statement
-                    else if (ModuleRegex.IsMatch(source))
+                    // If line is a module statement
+                    else if (ModuleRegex.IsMatch(line))
                     {
                         // If design doesn't have a module declaration
                         if (Design.ModuleDeclaration == null)
                         {
-                            // Set the design's module declaration to the source
-                            Design.ModuleDeclaration = source;
+                            // Set the design's module declaration to the line
+                            Design.ModuleDeclaration = line;
                         }
                         // If design has a module module declaration
                         else
@@ -475,7 +507,7 @@ namespace VisiBoole.ParsingEngine
                     else
                     {
                         // Verify line from its statement type
-                        if (!VerifyStatement(source, type))
+                        if (!VerifyStatement(line, type))
                         {
                             // Set valid to false
                             valid = false;
@@ -485,16 +517,16 @@ namespace VisiBoole.ParsingEngine
                     }
 
                     // Remove double **
-                    source = source.Replace("**", "");
+                    line = line.Replace("**", "");
                     // Remove double ~~
-                    source = source.Replace("~~", "");
+                    line = line.Replace("~~", "");
 
                     bool needsExpansion = ExpansionRegex.IsMatch(source) || type == StatementType.Submodule;
-                    if (needsExpansion && source.Contains("=") && !source.Contains("+") && !source.Contains("-"))
+                    if (needsExpansion && line.Contains("=") && !line.Contains("+") && !line.Contains("-"))
                     {
                         // Vertical expansion needed
-                        source = ExpandVertically(source);
-                        if (source == null)
+                        line = ExpandVertically(line);
+                        if (line == null)
                         {
                             valid = false;
                             continue;
@@ -505,46 +537,46 @@ namespace VisiBoole.ParsingEngine
                         // Horizontal expansion needed
                         if (type != StatementType.Submodule && type != StatementType.Module)
                         {
-                            source = ExpandHorizontally(source);
+                            line = ExpandHorizontally(line);
                         }
                         else
                         {
                             // Get text that shouldn't be expanded
-                            string frontText = source.Substring(0, source.IndexOf("(") + 1);
+                            string frontText = line.Substring(0, line.IndexOf("(") + 1);
                             // Get text that needs to be expanded
-                            string restOfText = source.Substring(frontText.Length);
+                            string restOfText = line.Substring(frontText.Length);
                             // Combine front text with the expanded form of the rest of the text
-                            source = $"{frontText}{ExpandHorizontally(restOfText)}";
+                            line = $"{frontText}{ExpandHorizontally(restOfText)}";
                         }
                     }
 
-                    string[] lines = source.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string line in lines)
+                    string[] expandedLines = line.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string expandedLine in expandedLines)
                     {
                         if (type == StatementType.Boolean)
                         {
-                            statements.Add(new BooleanAssignmentStmt(line));
+                            statements.Add(new BooleanAssignmentStmt(expandedLine));
                         }
                         else if (type == StatementType.Clock)
                         {
-                            statements.Add(new DffClockStmt(line));
+                            statements.Add(new DffClockStmt(expandedLine));
                         }
                         else if (type == StatementType.FormatSpecifier)
                         {
-                            statements.Add(new FormatSpecifierStmt(line));
+                            statements.Add(new FormatSpecifierStmt(expandedLine));
                         }
                         else if (type == StatementType.VariableList)
                         {
-                            statements.Add(new VariableListStmt(line));
+                            statements.Add(new VariableListStmt(expandedLine));
                         }
                         else if (type == StatementType.Submodule)
                         {
-                            Match match = ModuleInstantiationRegex.Match(line);
-                            statements.Add(new SubmoduleInstantiationStmt(line, Subdesigns[match.Groups["Design"].Value]));
+                            Match match = ModuleInstantiationRegex.Match(expandedLine);
+                            statements.Add(new SubmoduleInstantiationStmt(expandedLine, Subdesigns[match.Groups["Design"].Value]));
                         }
                         else if (type == StatementType.Module)
                         {
-                            statements.Add(new ModuleDeclarationStmt(line));
+                            statements.Add(new ModuleDeclarationStmt(expandedLine));
                         }
                     }
                 }
