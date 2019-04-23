@@ -112,7 +112,6 @@ namespace VisiBoole.Models
 
                 currentLine += "</p>";
                 html += currentLine;
-                //html += currentLine + "\n";
             }
 
             return html;
@@ -252,7 +251,6 @@ namespace VisiBoole.Models
         {
             // Replace specific characters with their encodings so they show in text
             comment = Regex.Replace(comment, @"(?<=\s)\s", "&nbsp;");
-            //comment = comment.Replace(":", "");
             comment = comment.Replace("<", "&lt;");
             comment = comment.Replace(">", "&gt;");
             return comment;

@@ -1,3 +1,0 @@
-a b;
-a <= ~switch;
-c <=@a b;

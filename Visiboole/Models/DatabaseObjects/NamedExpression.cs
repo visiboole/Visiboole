@@ -190,12 +190,12 @@ namespace VisiBoole.Models
             if (!token.Contains(".d"))
             {
                 token = token.Substring(1, token.Length - 2);
-                return Lexer.WhitespaceRegex.Split(token);
+                return Parser.WhitespaceRegex.Split(token);
             }
             else
             {
                 token = token.Substring(1, token.Length - 4);
-                string[] variables = Lexer.WhitespaceRegex.Split(token);
+                string[] variables = Parser.WhitespaceRegex.Split(token);
                 for (int i = 0; i < variables.Length; i++)
                 {
                     variables[i] = variables[i] + ".d";

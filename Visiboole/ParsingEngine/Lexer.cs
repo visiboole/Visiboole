@@ -46,24 +46,14 @@ namespace VisiBoole.ParsingEngine
         public static readonly string ScalarPattern = $@"({NamePattern}\d{{0,2}})";
 
         /// <summary>
-        /// Pattern for identifying scalars. (Optional *)
-        /// </summary>
-        protected static readonly string ScalarPattern2 = $@"(?<!([%.']))(\*?{ScalarPattern})(?![.(])";
-
-        /// <summary>
         /// Pattern for identifying vectors. (No ~ or *)
         /// </summary>
         protected static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d{{1,2}})\.(?<Step>\d{{1,2}})?\.(?<RightBound>\d{{1,2}})\])|(\[\])))";
 
         /// <summary>
-        /// Pattern for identifying vectors. (Optional *)
-        /// </summary>
-        protected static readonly string VectorPattern2 = $@"\*?{VectorPattern}";
-
-        /// <summary>
         /// Pattern for identifying constants. (No ~)
         /// </summary>
-        public static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+)))|((?<![a-zA-Z])\d+))";
+        public static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+)))|((?<!\S)\d+))";
 
         /// <summary>
         /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
@@ -71,14 +61,9 @@ namespace VisiBoole.ParsingEngine
         protected static readonly string VariablePattern = $@"({VectorPattern}|{ConstantPattern}|{ScalarPattern})";
 
         /// <summary>
-        /// Pattern for identifying scalars, vectors and constants. (Optional *)
-        /// </summary>
-        protected static readonly string VariablePattern2 = $@"({VectorPattern2}|{ConstantPattern}|{ScalarPattern2})";
-
-        /// <summary>
         /// Pattern for identifying variable lists.
         /// </summary>
-        public static readonly string VariableListPattern = $@"(?<Vars>{VariablePattern}(\s+{VariablePattern})*)";
+        protected static readonly string VariableListPattern = $@"(?<Vars>{VariablePattern}(\s+{VariablePattern})*)";
 
         /// <summary>
         /// Pattern for identifying concatenations.
@@ -103,17 +88,12 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying components (inputs or outputs) in a module notation.
         /// </summary>
-        protected static readonly string ModuleComponentPattern = $@"({AnyTypePattern}(,\s+{AnyTypePattern})*)";
+        private static readonly string ModuleComponentPattern = $@"({AnyTypePattern}(,\s+{AnyTypePattern})*)";
 
         /// <summary>
         /// Pattern for identifying modules.
         /// </summary>
         public static readonly string ModulePattern = $@"(?<Components>(?<Inputs>{ModuleComponentPattern})\s+:\s+(?<Outputs>{ModuleComponentPattern}))";
-
-        /// <summary>
-        /// Pattern for identifying module instantiations.
-        /// </summary>
-        public static readonly string ModuleInstantiationPattern = $@"((?<Padding>\s*)?(?<Instantiation>{InstantiationPattern})\({ModulePattern}\))";
 
         /// <summary>
         /// Pattern for identifying operators.
@@ -131,11 +111,6 @@ namespace VisiBoole.ParsingEngine
         private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=+[\]{}<|:;',.-]";
 
         /// <summary>
-        /// Pattern for identifying whitespace.
-        /// </summary>
-        public static Regex WhitespaceRegex { get; } = new Regex(@"\s+", RegexOptions.Compiled);
-
-        /// <summary>
         /// Regex for identifying bits.
         /// </summary>
         private static Regex BitRegex { get; } = new Regex(@"\d+$", RegexOptions.Compiled);
@@ -151,31 +126,9 @@ namespace VisiBoole.ParsingEngine
         private static Regex VectorRegex { get; } = new Regex($"^[~*]*{VectorPattern}$", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying vectors. (Optional *)
-        /// </summary>
-        private static Regex VectorRegex2 { get; } = new Regex(VectorPattern2, RegexOptions.Compiled);
-
-        /// <summary>
         /// Regex for identifying constants. (Optional ~)
         /// </summary>
         public static Regex ConstantRegex { get; } = new Regex($"^~*{ConstantPattern}$", RegexOptions.Compiled);
-
-        private static Regex ConstantRegex2 { get; } = new Regex($"(?!(('b1)|('b0)))({ConstantPattern})", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Regex for identifying scalars, vectors and constants.
-        /// </summary>
-        private static Regex VariableRegex { get; } = new Regex(VariablePattern2, RegexOptions.Compiled);
-
-        /// <summary>
-        /// Regex for identifying concatenations.
-        /// </summary>
-        private static Regex ConcatRegex = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Regex for identifying concatenations of any type or any type.
-        /// </summary>
-        protected static Regex AnyTypeRegex = new Regex(AnyTypePattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying formatters.
@@ -186,16 +139,6 @@ namespace VisiBoole.ParsingEngine
         /// Regex for identifying submodule instantiations.
         /// </summary>
         private static Regex InstantiationRegex = new Regex($"^{InstantiationPattern}$");
-
-        /// <summary>
-        /// Regex for determining whether expansion is required.
-        /// </summary>
-        protected static Regex ExpansionRegex { get; } = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|{ConstantPattern}", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Regex for identifying module instantiations.
-        /// </summary>
-        protected static Regex ModuleInstantiationRegex = new Regex(ModuleInstantiationPattern);
 
         /// <summary>
         /// Regex for identifying operators.
@@ -1033,227 +976,6 @@ namespace VisiBoole.ParsingEngine
             }
 
             return expansion;
-        }
-
-        /// <summary>
-        /// Exapnds a single token into its components.
-        /// </summary>
-        /// <param name="token">Token to expand</param>
-        /// <returns>List of expansion components</returns>
-        protected List<string> ExpandToken(Match token)
-        {
-            if (token.Value.Contains("[") && String.IsNullOrEmpty(token.Groups["LeftBound"].Value))
-            {
-                List<string> components = Design.Database.GetComponents(token.Groups["Name"].Value);
-                if (token.Value.Contains("~") && !components[0].Contains("~"))
-                {
-                    for (int i = 0; i < components.Count; i++)
-                    {
-                        components[i] = String.Concat("~", components[i]);
-                    }
-                }
-                return components;
-            }
-            else
-            {
-                if (ExpansionMemo.ContainsKey(token.Value))
-                {
-                    return ExpansionMemo[token.Value].ToList();
-                }
-                else
-                {
-                    if (token.Value.Contains("["))
-                    {
-                        return ExpandVector(token);
-                    }
-                    else
-                    {
-                        return ExpandConstant(token);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Expands token into components.
-        /// </summary>
-        /// <param name="token">Token to expand</param>
-        /// <returns>List of expansion components</returns>
-        protected List<string> GetExpansion(Match token)
-        {
-            List<string> expansion = new List<string>();
-
-            // Get token's variables
-            string[] vars;
-            if (token.Value.Contains("{"))
-            {
-                vars = WhitespaceRegex.Split(token.Value);
-            }
-            else
-            {
-                vars = new string[] { token.Value };
-            }
-
-            // Expand each variable
-            foreach (string var in vars)
-            {
-                Match match = VariableRegex.Match(var);
-
-                if (match.Value.Contains("[") || match.Value.Contains("'") || match.Value.All(char.IsDigit))
-                {
-                    expansion.AddRange(ExpandToken(match));
-                }
-                else
-                {
-                    expansion.Add(match.Value);
-                }
-            }
-
-            return expansion;
-        }
-
-        /// <summary>
-        /// Expands all concatenations and vectors in a line.
-        /// </summary>
-        /// <param name="line">Line to expand</param>
-        /// <returns>Expanded line</returns>
-        protected string ExpandHorizontally(string line)
-        {
-            string expandedLine = line;
-            Match match;
-
-            while ((match = VectorRegex2.Match(expandedLine)).Success)
-            {
-                // Replace matched vector with its components
-                expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
-            }
-
-            while ((match = ConstantRegex2.Match(expandedLine)).Success)
-            {
-                // Replace matched constants with its components
-                expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
-            }
-
-            if (line.Contains("=") || line.Contains(":"))
-            {
-                Regex variableListRegex = new Regex($@"{VariableListPattern}(?![^{{}}]*\}})"); // Variable lists not inside {}
-                while ((match = variableListRegex.Match(expandedLine)).Success)
-                {
-                    // Add { } to the matched variable list
-                    expandedLine = expandedLine.Substring(0, match.Index) + String.Concat("{", match.Value, "}") + expandedLine.Substring(match.Index + match.Length);
-                }
-            }
-            else
-            {
-                while ((match = ConcatRegex.Match(expandedLine)).Success)
-                {
-                    // Replace matched concat with its components
-                    expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
-                }
-            }
-
-            return expandedLine;
-        }
-
-        /// <summary>
-        /// Expands a line into lines.
-        /// </summary>
-        /// <param name="line">Line to expand</param>
-        /// <returns>Expanded lines</returns>
-        protected string ExpandVertically(string line)
-        {
-            string expanded = String.Empty;
-
-            // Get dependent and expression
-            int start = line.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
-            string dependent = line.Contains("<")
-                ? line.Substring(start, line.IndexOf("<") - start).TrimEnd()
-                : line.Substring(start, line.IndexOf("=") - start).TrimEnd();
-            string expression = line.Substring(line.IndexOf("=") + 1).TrimStart();
-            int expressionIndex = line.LastIndexOf(expression);
-
-            // Expand dependent
-            List<string> dependentExpansion = new List<string>();
-            Match dependentMatch = AnyTypeRegex.Match(dependent);
-            if (dependentMatch.Value.Contains("{"))
-            {
-                dependentExpansion.AddRange(GetExpansion(dependentMatch));
-            }
-            else if (dependentMatch.Value.Contains("["))
-            {
-                dependentExpansion.AddRange(ExpandToken(dependentMatch));
-            }
-            else
-            {
-                dependentExpansion.Add(dependent);
-            }
-
-            // Expand expression
-            List<List<string>> expressionExpansions = new List<List<string>>();
-            MatchCollection matches = ExpansionRegex.Matches(expression);
-            foreach (Match match in matches)
-            {
-                List<string> expansion;
-                bool canPad;
-                if (!match.Value.Contains("{"))
-                {
-                    canPad = !match.Value.Contains("[") && string.IsNullOrEmpty(match.Groups["BitCount"].Value);
-                    expansion = ExpandToken(match);
-                }
-                else
-                {
-                    canPad = false;
-                    expansion = GetExpansion(match);
-                }
-
-                if (canPad)
-                {
-                    int paddingCount = dependentExpansion.Count - expansion.Count;
-                    for (int i = 0; i < paddingCount; i++)
-                    {
-                        expansion.Insert(0, "'b0");
-                    }
-                }
-
-                expressionExpansions.Add(expansion);
-            }
-
-            // Verify expansions
-            foreach (List<string> expressionExpansion in expressionExpansions)
-            {
-                if (dependentExpansion.Count != expressionExpansion.Count)
-                {
-                    ErrorLog.Add($"{LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
-                    return null;
-                }
-            }
-
-            // Combine expansions
-            List<List<string>> expansions = new List<List<string>>();
-            expansions.Add(dependentExpansion);
-            expansions.AddRange(expressionExpansions);
-
-            // Expand line into lines
-            for (int i = 0; i < dependentExpansion.Count; i++)
-            {
-                string newLine = line;
-
-                for (int j = matches.Count - 1; j >= 0; j--)
-                {
-                    Match match = matches[j];
-                    string beforeMatch = newLine.Substring(0, match.Index + expressionIndex);
-                    string afterMatch = newLine.Substring(match.Index + expressionIndex + match.Length);
-                    newLine = string.Concat(beforeMatch, expansions[j+1][i], afterMatch);
-                }
-
-                string beforeDependent = newLine.Substring(0, start);
-                string afterDependent = newLine.Substring(start + dependent.Length);
-                newLine = string.Concat(beforeDependent, expansions[0][i], afterDependent);
-
-                expanded += newLine;
-            }
-
-            return expanded;
         }
 
         #endregion
