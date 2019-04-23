@@ -84,6 +84,15 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Returns the active design.
+        /// </summary>
+        /// <returns>Active design</returns>
+        public Design GetActiveDesign()
+        {
+            return ActiveDesign;
+        }
+
+        /// <summary>
         /// Gets a design by name.
         /// </summary>
         /// <param name="name">Name of design</param>
@@ -115,11 +124,11 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Creates a Design with the given name
         /// </summary>
-        /// <param name="path">Name of Design</param>
+        /// <param name="path">Path of the design</param>
         /// <returns>The Design created</returns>
-        public Design CreateDesign(string name)
+        public Design CreateDesign(string path)
         {
-            Design newDesign = new Design(name);
+            Design newDesign = new Design(path);
             if (mwController != null)
             {
                 newDesign.DesignEdit += new DesignEditEventHandler(mwController.OnDesignEdit);

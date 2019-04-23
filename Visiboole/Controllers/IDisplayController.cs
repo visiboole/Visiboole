@@ -81,6 +81,13 @@ namespace VisiBoole.Controllers
         bool CloseTab(string designName);
 
         /// <summary>
+        /// Updates the provided tab with a new design. (Used for SaveAs operations)
+        /// </summary>
+        /// <param name="tabName">Name of tab</param>
+        /// <param name="newDesign">Design to add</param>
+        void UpdateTab(string tabName, Design newDesign);
+
+        /// <summary>
         /// Updates the tab text to include or remove the dirty indicator.
         /// </summary>
         /// <param name="designName">Design name of the tab to update</param>

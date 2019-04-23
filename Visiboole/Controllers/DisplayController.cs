@@ -299,6 +299,29 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Updates the provided tab with a new design. (Used for SaveAs operations)
+        /// </summary>
+        /// <param name="tabName">Name of tab</param>
+        /// <param name="newDesign">Design to add</param>
+        public void UpdateTab(string tabName, Design newDesign)
+        {
+            // Get index of tab
+            int designTabIndex = GetDesignTabIndex(tabName);
+            // Get tab from tab control
+            TabPage tab = TabControl.TabPages[designTabIndex];
+            // Remove design from tab's controls
+            tab.Controls.Clear();
+            // Update tab text
+            tab.Text = newDesign.FileName;
+            // Update tab tool tip text
+            tab.ToolTipText = $"{tab.Text}.vbi";
+            // Add new design to tab
+            tab.Controls.Add(newDesign);
+            // Fill tab with new design
+            newDesign.Dock = DockStyle.Fill;
+        }
+
+        /// <summary>
         /// Updates the tab text to include or remove the dirty indicator.
         /// </summary>
         /// <param name="designName">Design name of the tab to update</param>

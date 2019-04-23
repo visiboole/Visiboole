@@ -63,7 +63,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying constants. (No ~)
         /// </summary>
-        public static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+))))";
+        public static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+)))|((?<![a-zA-Z])\d+))";
 
         /// <summary>
         /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
@@ -160,7 +160,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         public static Regex ConstantRegex { get; } = new Regex($"^~*{ConstantPattern}$", RegexOptions.Compiled);
 
-        private static Regex ConstantRegex2 { get; } = new Regex($"(?!(('b1)|('b0)|(1'b1)|(1'b0)))({ConstantPattern})", RegexOptions.Compiled);
+        private static Regex ConstantRegex2 { get; } = new Regex($"(?!(('b1)|('b0)))({ConstantPattern})", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying scalars, vectors and constants.
@@ -247,7 +247,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Memo for vector expansions.
         /// </summary>
-        protected static Dictionary<string, List<string>> ExpansionMemo = new Dictionary<string, List<string>>();
+        protected static Dictionary<string, IEnumerable<string>> ExpansionMemo = new Dictionary<string, IEnumerable<string>>();
 
         /// <summary>
         /// Constructs a lexer to verify the design.
@@ -990,9 +990,14 @@ namespace VisiBoole.ParsingEngine
                 outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 10), 2);
                 charBits = outputBinary.ToCharArray();
             }
-            else
+            else if (constant.Groups["Format"].Value == "b" || constant.Groups["Format"].Value == "B")
             {
                 charBits = constant.Groups["Value"].Value.ToCharArray();
+            }
+            else
+            {
+                outputBinary = Convert.ToString(Convert.ToInt32(constant.Value, 10), 2);
+                charBits = outputBinary.ToCharArray();
             }
 
             int[] bits = Array.ConvertAll(charBits, bit => (int)Char.GetNumericValue(bit));
@@ -1053,7 +1058,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (ExpansionMemo.ContainsKey(token.Value))
                 {
-                    return ExpansionMemo[token.Value];
+                    return ExpansionMemo[token.Value].ToList();
                 }
                 else
                 {
@@ -1094,7 +1099,7 @@ namespace VisiBoole.ParsingEngine
             {
                 Match match = VariableRegex.Match(var);
 
-                if (match.Value.Contains("[") || match.Value.Contains("'"))
+                if (match.Value.Contains("[") || match.Value.Contains("'") || match.Value.All(char.IsDigit))
                 {
                     expansion.AddRange(ExpandToken(match));
                 }
@@ -1165,6 +1170,7 @@ namespace VisiBoole.ParsingEngine
                 ? line.Substring(start, line.IndexOf("<") - start).TrimEnd()
                 : line.Substring(start, line.IndexOf("=") - start).TrimEnd();
             string expression = line.Substring(line.IndexOf("=") + 1).TrimStart();
+            int expressionIndex = line.LastIndexOf(expression);
 
             // Expand dependent
             List<string> dependentExpansion = new List<string>();
@@ -1187,14 +1193,29 @@ namespace VisiBoole.ParsingEngine
             MatchCollection matches = ExpansionRegex.Matches(expression);
             foreach (Match match in matches)
             {
+                List<string> expansion;
+                bool canPad;
                 if (!match.Value.Contains("{"))
                 {
-                    expressionExpansions.Add(ExpandToken(match));
+                    canPad = !match.Value.Contains("[") && string.IsNullOrEmpty(match.Groups["BitCount"].Value);
+                    expansion = ExpandToken(match);
                 }
                 else
                 {
-                    expressionExpansions.Add(GetExpansion(match));
+                    canPad = false;
+                    expansion = GetExpansion(match);
                 }
+
+                if (canPad)
+                {
+                    int paddingCount = dependentExpansion.Count - expansion.Count;
+                    for (int i = 0; i < paddingCount; i++)
+                    {
+                        expansion.Insert(0, "'b0");
+                    }
+                }
+
+                expressionExpansions.Add(expansion);
             }
 
             // Verify expansions
@@ -1216,12 +1237,19 @@ namespace VisiBoole.ParsingEngine
             for (int i = 0; i < dependentExpansion.Count; i++)
             {
                 string newLine = line;
-                newLine = newLine.Replace(dependent, expansions[0][i]); // Replace dependent
-                int j = 1;
-                foreach (Match match in matches)
+
+                for (int j = matches.Count - 1; j >= 0; j--)
                 {
-                    newLine = newLine.Replace(match.Value, expansions[j++][i]); // Replace expression parts
+                    Match match = matches[j];
+                    string beforeMatch = newLine.Substring(0, match.Index + expressionIndex);
+                    string afterMatch = newLine.Substring(match.Index + expressionIndex + match.Length);
+                    newLine = string.Concat(beforeMatch, expansions[j+1][i], afterMatch);
                 }
+
+                string beforeDependent = newLine.Substring(0, start);
+                string afterDependent = newLine.Substring(start + dependent.Length);
+                newLine = string.Concat(beforeDependent, expansions[0][i], afterDependent);
+
                 expanded += newLine;
             }
 

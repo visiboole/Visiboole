@@ -122,7 +122,7 @@ namespace VisiBoole.Views
             pnlMain.Controls.Add(BrowserTabControl, 0, 1);
             BrowserTabControl.Dock = DockStyle.Fill;
             BrowserTabControl.TabPages.Clear();
-            numericUpDown1.Value = 1; // Reset value
+            numericUpDown1.Value = 7; // Reset value
         }
 
         /// <summary>

@@ -660,7 +660,7 @@ namespace VisiBoole.ParsingEngine
             // Operators (~, ^, (, ), |, +, -): ([~^()|+-])
             // Equal To Operator: (==)
             // And Operator: ((?<=[\w)}])\s+(?=[\w({~'])(?![^{}]*\}))
-            MatchCollection matches = Regex.Matches(expression, @"([_a-zA-Z]\w{0,19})|([~^()|+-])|(==)|((?<=[\w)}])\s+(?=[\w({~'])(?![^{}]*\}))");
+            MatchCollection matches = Regex.Matches(expression, @"([_a-zA-Z]\w{0,19})|(\d+)|([~^()|+-])|(==)|((?<=[\w)}])\s+(?=[\w({~'])(?![^{}]*\}))");
             string token = "";
             foreach (Match match in matches)
             {

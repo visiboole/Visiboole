@@ -43,6 +43,12 @@ namespace VisiBoole.Controllers
         string[] GetDesigns();
 
         /// <summary>
+        /// Returns the active design.
+        /// </summary>
+        /// <returns>Active design</returns>
+        Design GetActiveDesign();
+
+        /// <summary>
         /// Gets a design by name.
         /// </summary>
         /// <param name="name">Name of design</param>

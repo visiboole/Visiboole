@@ -47,6 +47,13 @@ namespace VisiBoole.Views
 		void RemoveNavTreeNode(string name);
 
         /// <summary>
+        /// Updates the provided nav tree node with a new name.
+        /// </summary>
+        /// <param name="oldName">Name of node</param>
+        /// <param name="newName">New name of node</param>
+        void UpdateNavTreeNode(string oldName, string newName);
+
+        /// <summary>
         /// Swaps two indexes of the nav tree.
         /// </summary>
         /// <param name="srcIndex">Source index</param>

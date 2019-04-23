@@ -185,12 +185,25 @@ namespace VisiBoole.Controllers
         /// <param name="path">The new file path to save the active file to</param>
         public void SaveFileAs(string path)
         {
-            // Write the contents of the active tab in a new file at location of the selected path
-            string content = DisplayController.GetActiveTabPage().Design().Text;
-            File.WriteAllText(Path.ChangeExtension(path, ".vbi"), content);
+            // Get current design that is being saved as
+            Design currentDesign = DesignController.GetActiveDesign();
+            // Get current design's name
+            string currentDesignName = currentDesign.FileName;
+            // Get content of current design
+            string content = currentDesign.Text;
 
-            // Process the new file as usual
-            ProcessNewFile(path);
+            // Write content of current design to new design
+            File.WriteAllText(Path.ChangeExtension(path, ".vbi"), content);
+            // Create new design
+            Design newDesign = DesignController.CreateDesign(path);
+
+            // Close old design
+            DesignController.CloseDesign(currentDesignName, false);
+            // Update tab with new design
+            DisplayController.UpdateTab(currentDesignName, newDesign);
+            // Update node with new design
+            MainWindow.UpdateNavTreeNode(currentDesignName, newDesign.FileName);
+            // Display success
             SaveFileSuccess(true);
         }
 
