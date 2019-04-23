@@ -30,7 +30,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Designs:");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Designs:");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,6 +80,7 @@ namespace VisiBoole.Views
             this.runStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.previousStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -353,7 +354,8 @@ namespace VisiBoole.Views
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.syntaxDocumentationToolStripMenuItem});
+            this.syntaxDocumentationToolStripMenuItem,
+            this.userGuideToolStripMenuItem});
             this.helpToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.helpToolStripMenuItem.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
@@ -363,7 +365,7 @@ namespace VisiBoole.Views
             // syntaxDocumentationToolStripMenuItem
             // 
             this.syntaxDocumentationToolStripMenuItem.Name = "syntaxDocumentationToolStripMenuItem";
-            this.syntaxDocumentationToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.syntaxDocumentationToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.syntaxDocumentationToolStripMenuItem.Text = "VisiBoole Syntax";
             this.syntaxDocumentationToolStripMenuItem.Click += new System.EventHandler(this.SyntaxDocumentationMenuClick);
             // 
@@ -399,14 +401,14 @@ namespace VisiBoole.Views
             this.NavTree.Location = new System.Drawing.Point(1, 1);
             this.NavTree.Margin = new System.Windows.Forms.Padding(1);
             this.NavTree.Name = "NavTree";
-            treeNode1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            treeNode1.ForeColor = System.Drawing.Color.DodgerBlue;
-            treeNode1.Name = "Explorer";
-            treeNode1.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            treeNode1.SelectedImageIndex = -2;
-            treeNode1.Text = "Designs:";
+            treeNode2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            treeNode2.ForeColor = System.Drawing.Color.DodgerBlue;
+            treeNode2.Name = "Explorer";
+            treeNode2.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            treeNode2.SelectedImageIndex = -2;
+            treeNode2.Text = "Designs:";
             this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1});
+            treeNode2});
             this.NavTree.ShowLines = false;
             this.NavTree.ShowPlusMinus = false;
             this.NavTree.ShowRootLines = false;
@@ -581,6 +583,13 @@ namespace VisiBoole.Views
             this.previousStateToolStripMenuItem.Text = "Previous State";
             this.previousStateToolStripMenuItem.Click += new System.EventHandler(this.previousStateToolStripMenuItem_Click);
             // 
+            // userGuideToolStripMenuItem
+            // 
+            this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
+            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.userGuideToolStripMenuItem.Text = "User Guide";
+            this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -662,5 +671,6 @@ namespace VisiBoole.Views
         private ToolStripMenuItem runStateToolStripMenuItem;
         private ToolStripMenuItem newStateToolStripMenuItem;
         private ToolStripMenuItem previousStateToolStripMenuItem;
+        private ToolStripMenuItem userGuideToolStripMenuItem;
     }
 }

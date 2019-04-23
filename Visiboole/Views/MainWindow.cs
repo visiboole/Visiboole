@@ -776,5 +776,13 @@ namespace VisiBoole.Views
         {
             MainWindowController.RunPreviousState();
         }
+
+        private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TutorialWindow tutorial = new TutorialWindow();
+            
+            tutorial.Show();
+            
+        }
     }
 }
