@@ -38,22 +38,42 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying names.
         /// </summary>
-        private static readonly string NamePattern = @"(?<Name>[_a-zA-Z]\w{0,19})";
+        private static readonly string NamePattern = @"(?<Name>[_a-zA-Z]\w*(?<!\d))";
 
         /// <summary>
         /// Pattern for identifying scalars. (No ~ or *)
         /// </summary>
-        public static readonly string ScalarPattern = $@"({NamePattern}\d{{0,2}})";
+        public static readonly string ScalarPattern = $@"({NamePattern}(?<Bit>\d+)?)";
+
+        /// <summary>
+        /// Pattern for identfying indexes.
+        /// </summary>
+        private static readonly string IndexPattern = @"(\[(?<LeftBound>\d+)\.(?<Step>\d+)?\.(?<RightBound>\d+)\]|\[\])";
 
         /// <summary>
         /// Pattern for identifying vectors. (No ~ or *)
         /// </summary>
-        protected static readonly string VectorPattern = $@"({NamePattern}((\[(?<LeftBound>\d{{1,2}})\.(?<Step>\d{{1,2}})?\.(?<RightBound>\d{{1,2}})\])|(\[\])))";
+        protected static readonly string VectorPattern = $@"({NamePattern}{IndexPattern})";
+
+        /// <summary>
+        /// Pattern for identifying binary constants.
+        /// </summary>
+        private static readonly string BinaryConstantPattern = @"((?<BitCount>\d+)?'(?<Format>[bB])(?<Value>[0-1]+))";
+
+        /// <summary>
+        /// Pattern for identifying hex constants.
+        /// </summary>
+        private static readonly string HexConstantPattern = @"((?<BitCount>\d+)?'(?<Format>[hH])(?<Value>[a-fA-F0-9]+))";
+
+        /// <summary>
+        /// Pattern for identifying decimal constants.
+        /// </summary>
+        private static readonly string DecimalConstantPattern = @"(((?<BitCount>\d+)?'(?<Format>[dD])?)?(?<Value>[0-9]+))";
 
         /// <summary>
         /// Pattern for identifying constants. (No ~)
         /// </summary>
-        public static readonly string ConstantPattern = $@"((?<BitCount>\d{{1,2}})?'(((?<Format>[hH])(?<Value>[a-fA-F\d]+))|((?<Format>[dD])(?<Value>\d+))|((?<Format>[bB])(?<Value>[0-1]+)))|((?<!\S)\d+))";
+        public static readonly string ConstantPattern = $@"({BinaryConstantPattern}|{HexConstantPattern}|{DecimalConstantPattern})";
 
         /// <summary>
         /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
@@ -299,6 +319,10 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
 
+                    if (c == '\n')
+                    {
+                        LineNumber++;
+                    }
                     // Add seperator to tokens list
                     tokens.Add(newChar);
                 }
@@ -481,7 +505,7 @@ namespace VisiBoole.ParsingEngine
                 // Check for invalid [] notation
                 if (!Design.Database.HasNamespace(vectorNamespace) && leftBound == -1)
                 {
-                    ErrorLog.Add($"{LineNumber}: '{vectorNamespace}[]' notation cannot be used before the vector is initialized.");
+                    ErrorLog.Add($"{LineNumber}: '{vectorNamespace}[]' cannot be used without an explicit dimension somewhere.");
                     return false;
                 }
 
@@ -939,7 +963,7 @@ namespace VisiBoole.ParsingEngine
             }
             else
             {
-                outputBinary = Convert.ToString(Convert.ToInt32(constant.Value, 10), 2);
+                outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 10), 2);
                 charBits = outputBinary.ToCharArray();
             }
 
@@ -959,14 +983,14 @@ namespace VisiBoole.ParsingEngine
                 // Add padding
                 for (int i = 0; i < specifiedBitCount - bits.Length; i++)
                 {
-                    expansion.Add("'b0");
+                    expansion.Add("0");
                 }
             }
 
             // Add bits to expansion
             foreach (int bit in bits)
             {
-                expansion.Add(String.Concat("'b", bit));
+                expansion.Add(bit.ToString());
             }
 
             // Save expansion

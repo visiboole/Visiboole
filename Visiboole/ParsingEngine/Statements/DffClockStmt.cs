@@ -46,6 +46,11 @@ namespace VisiBoole.ParsingEngine.Statements
         private NamedExpression Expression;
 
         /// <summary>
+        /// Whether the expression is a mathematical expression. (Contains + or -)
+        /// </summary>
+        private bool IsMathExpression;
+
+        /// <summary>
         /// Alternate clock of statement. (if any)
         /// </summary>
         public string AltClock;
@@ -69,6 +74,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 // Set alternate clock to null
                 AltClock = null;
             }
+            // Get whether the expression is a mathematical expression
+            IsMathExpression = Expression.Expression.Contains("+") || Expression.Expression.Contains("-");
 
             // Initialize delay variable
             InitVariables(Expression.Delay);
@@ -145,7 +152,14 @@ namespace VisiBoole.ParsingEngine.Statements
                 else if (token == "<=")
                 {
                     // Output <= with dependent value
-                    Output.Add(new DependentVariable("<=", Expression.GetValue(Expression.Dependent) >= 1));
+                    if (!IsMathExpression)
+                    {
+                        Output.Add(new DependentVariable("<=", Expression.GetValue(Expression.Dependent) >= 1));
+                    }
+                    else
+                    {
+                        OutputOperator(token);
+                    }
                 }
                 else if (Parser.OperatorsList.Contains(token) || token == "{" || token == "}" || token == "@")
                 {

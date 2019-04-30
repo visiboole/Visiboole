@@ -83,12 +83,12 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for identifying constants that need to be expanded.
         /// </summary>
-        private static Regex ConstantRegex2 { get; } = new Regex($"(?!(('b1)|('b0)))({ConstantPattern})", RegexOptions.Compiled);
+        private static Regex ConstantRegex2 { get; } = new Regex($@"((?<=\W){ConstantPattern})", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying scalars, vectors and constants.
         /// </summary>
-        private static Regex VariableRegex { get; } = new Regex(VariablePattern2, RegexOptions.Compiled);
+        public static Regex VariableRegex { get; } = new Regex(VariablePattern2, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying concatenations.
@@ -108,7 +108,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Regex for determining whether expansion is required.
         /// </summary>
-        private static Regex ExpansionRegex = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|{ConstantPattern}", RegexOptions.Compiled);
+        private static Regex ExpansionRegex = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|((?<=\W){ConstantPattern})", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying comment statements.
@@ -233,8 +233,10 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Ticks statements with alt clocks that go from off to on.
         /// </summary>
-        private void TickAltClocks()
+        /// <returns>Whether an alternate clock was ticked</returns>
+        private bool TickAltClocks()
         {
+            bool wasClockTicked = false;
             if (Design.Database.AltClocks.Count > 0)
             {
                 foreach (KeyValuePair<string, AltClock> kv in Design.Database.AltClocks)
@@ -249,12 +251,14 @@ namespace VisiBoole.ParsingEngine
                                 if (clockStmt.AltClock == kv.Key)
                                 {
                                     clockStmt.Tick();
+                                    wasClockTicked = true;
                                 }
                             }
                         }
                     }
                 }
             }
+            return wasClockTicked;
         }
 
         #endregion
@@ -278,6 +282,37 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
+        /// Runs any present submodules. Returns whether there was an error.
+        /// </summary>
+        /// <returns>Whether there was an error</returns>
+        private bool TryRunSubmodules()
+        {
+            bool ranASubmodule = false;
+            foreach (Statement statement in Statements)
+            {
+                if (statement.GetType() == typeof(SubmoduleInstantiationStmt))
+                {
+                    SubmoduleInstantiationStmt submodule = (SubmoduleInstantiationStmt)statement;
+                    if (!submodule.TryRunInstance())
+                    {
+                        return false;
+                    }
+
+                    if (!ranASubmodule)
+                    {
+                        ranASubmodule = true;
+                    }
+                }
+            }
+
+            if (ranASubmodule)
+            {
+                Design.Database.ReevaluateExpressions();
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Parsers the current design text into output.
         /// </summary>
         public List<IObjectCodeElement> Parse()
@@ -286,6 +321,11 @@ namespace VisiBoole.ParsingEngine
             Design.Database = new Database();
             Statements = ParseStatements();
             if (Statements == null)
+            {
+                ErrorListBox.Display(ErrorLog);
+                return null;
+            }
+            if (!TryRunSubmodules())
             {
                 ErrorListBox.Display(ErrorLog);
                 return null;
@@ -306,8 +346,13 @@ namespace VisiBoole.ParsingEngine
             // Flip value of variable clicked and reevlaute expressions
             Design.Database.FlipValue(variableName);
             Design.Database.ReevaluateExpressions();
-            TickAltClocks();
+            bool didAnAltClockTick = TickAltClocks();
             UpdateAltClocks();
+            if (didAnAltClockTick)
+            {
+                Design.Database.ReevaluateExpressions();
+            }
+            TryRunSubmodules();
 
             // Get output
             return GetParsedOutput();
@@ -332,8 +377,13 @@ namespace VisiBoole.ParsingEngine
                 }
             }
             Design.Database.ReevaluateExpressions();
-            TickAltClocks();
+            bool didAnAltClockTick = TickAltClocks();
             UpdateAltClocks();
+            if (didAnAltClockTick)
+            {
+                Design.Database.ReevaluateExpressions();
+            }
+            TryRunSubmodules();
 
             // Get output
             return GetParsedOutput();
@@ -355,6 +405,11 @@ namespace VisiBoole.ParsingEngine
 
             Statements = ParseStatements();
             if (Statements == null)
+            {
+                ErrorListBox.Display(ErrorLog);
+                return null;
+            }
+            if (!TryRunSubmodules())
             {
                 ErrorListBox.Display(ErrorLog);
                 return null;
@@ -402,6 +457,11 @@ namespace VisiBoole.ParsingEngine
             if (Statements == null)
             {
                 ErrorListBox.Display(new List<string>(new string[] { $"Error parsing design '{Design.FileName}'. Please check/run your source file for errors." }));
+                return null;
+            }
+            if (!TryRunSubmodules())
+            {
+                ErrorListBox.Display(ErrorLog);
                 return null;
             }
             UpdateAltClocks();
@@ -485,6 +545,7 @@ namespace VisiBoole.ParsingEngine
                 LineNumber = 0;
                 foreach (string source in ReadLines(reader))
                 {
+                    // Increment line number
                     LineNumber++;
                     StatementType? type = null;
 
@@ -629,11 +690,27 @@ namespace VisiBoole.ParsingEngine
                     {
                         if (type == StatementType.Boolean)
                         {
-                            statements.Add(new BooleanAssignmentStmt(expandedLine));
+                            try
+                            {
+                                statements.Add(new BooleanAssignmentStmt(expandedLine));
+                            }
+                            catch (Exception)
+                            {
+                                valid = false;
+                                continue;
+                            }
                         }
                         else if (type == StatementType.Clock)
                         {
-                            statements.Add(new DffClockStmt(expandedLine));
+                            try
+                            {
+                                statements.Add(new DffClockStmt(expandedLine));
+                            }
+                            catch (Exception)
+                            {
+                                valid = false;
+                                continue;
+                            }
                         }
                         else if (type == StatementType.FormatSpecifier)
                         {
@@ -1087,7 +1164,7 @@ namespace VisiBoole.ParsingEngine
                 expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
             }
 
-            while ((match = ConstantRegex2.Match(expandedLine)).Success)
+            while ((match = ConstantRegex2.Match(expandedLine)).Success && match.Value != ("1") && match.Value != ("0"))
             {
                 // Replace matched constants with its components
                 expandedLine = expandedLine.Substring(0, match.Index) + String.Join(" ", GetExpansion(match)) + expandedLine.Substring(match.Index + match.Length);
@@ -1170,7 +1247,7 @@ namespace VisiBoole.ParsingEngine
                     int paddingCount = dependentExpansion.Count - expansion.Count;
                     for (int i = 0; i < paddingCount; i++)
                     {
-                        expansion.Insert(0, "'b0");
+                        expansion.Insert(0, "0");
                     }
                 }
 
@@ -1178,11 +1255,12 @@ namespace VisiBoole.ParsingEngine
             }
 
             // Verify expansions
-            foreach (List<string> expressionExpansion in expressionExpansions)
+            for (int i = 0; i < expressionExpansions.Count; i++)
             {
+                List<string> expressionExpansion = expressionExpansions[i];
                 if (dependentExpansion.Count != expressionExpansion.Count)
                 {
-                    ErrorLog.Add($"{LineNumber}: Vector and/or concatenation element counts must be consistent across the entire expression.");
+                    ErrorLog.Add($"{LineNumber}: Expansion count of '{matches[i].Value}' doesn't equal the expansion count of '{dependent}'.");
                     return null;
                 }
             }

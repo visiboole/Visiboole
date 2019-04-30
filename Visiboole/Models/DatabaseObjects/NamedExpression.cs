@@ -110,7 +110,7 @@ namespace VisiBoole.Models
 
             // Obtain scalars, constants and operators
             string expression = $"({Expression})"; // Add () to expression
-            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatPattern}|(~?(?<Name>[_a-zA-Z]\w{{0,19}}))|(~?'[bB][0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
+            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatPattern}|(~?(?<Name>[_a-zA-Z]\w{{0,19}}))|(~?[0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
             foreach (Match match in matches)
             {
                 if (match.Value == ")")
@@ -224,8 +224,10 @@ namespace VisiBoole.Models
 
                 return Convert.ToInt32(binary.ToString(), 2);
             }
-            else if (token.Contains("'"))
+            else if (char.IsDigit(token[0]))
             {
+                return Convert.ToInt32(token);
+                /*
                 Match constant = Parser.ConstantRegex.Match(token);
 
                 // Get binary bits from format type
@@ -244,6 +246,7 @@ namespace VisiBoole.Models
                 }
 
                 return Convert.ToInt32(outputBinary, 2);
+                */
             }
             else
             {
@@ -300,6 +303,11 @@ namespace VisiBoole.Models
             {
                 expressionValue = MaxValue;
             }
+            else if (expressionValue < 0)
+            {
+                expressionValue = Convert.ToInt32(Convert.ToString(expressionValue & MaxValue, 2), 2);
+            }
+
             int dependentValue = GetValue(Dependent);
 
             if (expressionValue != dependentValue)

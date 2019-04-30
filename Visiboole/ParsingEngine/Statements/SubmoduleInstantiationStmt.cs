@@ -43,6 +43,11 @@ namespace VisiBoole.ParsingEngine.Statements
         private string DesignPath;
 
         /// <summary>
+        /// List of no concant values in the instaniation.
+        /// </summary>
+        private List<bool> NoContactValues;
+
+        /// <summary>
         /// Constructs a SubmoduleInstatiationStmt instance.
         /// </summary>
         /// <param name="text">Text of the statement</param>
@@ -50,9 +55,62 @@ namespace VisiBoole.ParsingEngine.Statements
 		public SubmoduleInstantiationStmt(string text, string designPath) : base(text)
 		{
             DesignPath = designPath;
+            NoContactValues = new List<bool>();
 
             // Initialize variables in the statement
             InitVariables(text);
+        }
+
+        /// <summary>
+        /// Runs the instance and returns whether the instance was successful or not
+        /// </summary>
+        /// <returns>Whether the instance was successful or not</returns>
+        public bool TryRunInstance()
+        {
+            // Save current design
+            Design currentDesign = DesignController.ActiveDesign;
+            // Create input values list
+            List<bool> inputValues = new List<bool>();
+            // Get input side text
+            string inputSideText = Text.Substring(Text.IndexOf('('), Text.IndexOf(':') + 1 - Text.IndexOf('('));
+            // Get output side text
+            string outputSideText = Text.Substring(Text.IndexOf('(') + inputSideText.Length);
+
+            MatchCollection matches = Parser.VariableRegex.Matches(inputSideText);
+            foreach (Match match in matches)
+            {
+                inputValues.Add(currentDesign.Database.TryGetValue(match.Value) == 1);
+            }
+
+            Design subDesign = new Design(DesignPath);
+            Parser subParser = new Parser(subDesign);
+            DesignController.ActiveDesign = subDesign;
+            List<bool> outputValues = subParser.ParseAsModule(inputValues);
+            if (outputValues == null)
+            {
+                return false;
+            }
+
+            int outputValueIndex = 0;
+            matches = Parser.VariableRegex.Matches(outputSideText);
+            foreach (Match match in matches)
+            {
+                string token = match.Value;
+                if (token != "NC")
+                {
+                    currentDesign.Database.SetValue(token, outputValues[outputValueIndex]);
+                }
+                else
+                {
+                    NoContactValues.Add(outputValues[outputValueIndex]);
+                }
+                outputValueIndex++;
+            }
+
+            // Reset active design
+            DesignController.ActiveDesign = currentDesign;
+
+            return true;
         }
 
         /// <summary>
@@ -60,16 +118,9 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
-            // Save current design
-            Design currentDesign = DesignController.ActiveDesign;
-            // Create input values list
-            List<bool> inputValues = new List<bool>();
-            // Get input side text
-            string inputSideText = Text.Substring(0, Text.IndexOf(':') + 1);
-            // Get output side text
-            string outputSideText = Text.Substring(inputSideText.Length);
-
-            MatchCollection matches = OutputRegex.Matches(inputSideText);
+            int seperatorIndex = Text.IndexOf(':');
+            int currentNoContactIndex = 0;
+            MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 string token = match.Value;
@@ -86,75 +137,33 @@ namespace VisiBoole.ParsingEngine.Statements
                 {
                     Output.Add(new Instantiation(token));
                 }
-                else if (token == "," || token == "{" || token == "}" || token == ":")
+                else if (token == "," || token == "{" || token == "}" || token == ":" || token == ")")
                 {
                     OutputOperator(token);
                 }
                 else
                 {
-                    // Output each input var in the input list
-                    IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
-                    DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
-                    if (indVar != null)
+                    if (match.Index > seperatorIndex && token == "NC")
                     {
-                        Output.Add(indVar);
-                        inputValues.Add(indVar.Value);
+                        Output.Add(new DependentVariable(token, NoContactValues[currentNoContactIndex++]));
                     }
                     else
                     {
-                        Output.Add(depVar);
-                        inputValues.Add(depVar.Value);
-                    }
-                }
-            }
-
-            Design subDesign = new Design(DesignPath);
-            Parser subParser = new Parser(subDesign);
-            DesignController.ActiveDesign = subDesign;
-            List<bool> outputValues = subParser.ParseAsModule(inputValues);
-            if (outputValues == null)
-            {
-                Output.Add(new Comment(outputSideText)); // Output as comment since there was an error
-            }
-            else
-            {
-                // Output input variables
-                int outputValueIndex = 0;
-
-                matches = OutputRegex.Matches(outputSideText);
-                foreach (Match match in matches)
-                {
-                    string token = match.Value;
-                    if (token == " ")
-                    {
-                        Output.Add(new SpaceFeed());
-                    }
-                    else if (token == "\n")
-                    {
-                        // Output newline
-                        Output.Add(new LineFeed());
-                    }
-                    else if (token == "," || token == "{" || token == "}" || token == ")")
-                    {
-                        OutputOperator(token);
-                    }
-                    else
-                    {
-                        if (token != "NC")
+                        // Output each input var in the input list
+                        IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
+                        DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
+                        if (indVar != null)
                         {
-                            Output.Add(new DependentVariable(token, outputValues[outputValueIndex]));
+                            Output.Add(indVar);
                         }
                         else
                         {
-                            Output.Add(new Comment("NC"));
+                            Output.Add(depVar);
                         }
-                        outputValueIndex++;
                     }
+
                 }
             }
-
-            // Reset active design
-            DesignController.ActiveDesign = currentDesign;
 
             base.Parse();
         }

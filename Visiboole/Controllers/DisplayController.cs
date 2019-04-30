@@ -151,14 +151,29 @@ namespace VisiBoole.Controllers
             Browser.ObjectForScripting = this;
             // Create browser with empty body
             Browser.DocumentText = OutputTemplate.Replace("{0}", "");
-            Browser.DocumentCompleted += (sender, e) => {
-                Browser.Document.Body.Click += (sender2, e2) => {
-                    MainWindowController.RetrieveFocus();
-                };
-                Browser.Document.Body.DoubleClick += (sender3, e3) => {
-                    MainWindowController.RetrieveFocus();
-                };
-                MainWindowController.RetrieveFocus();
+            Browser.PreviewKeyDown += (sender, eventArgs) => {
+                if (eventArgs.Control)
+                {
+                    if (eventArgs.KeyCode == Keys.E)
+                    {
+                        MainWindowController.LoadDisplay(DisplayType.EDIT);
+                    }
+                    else if (eventArgs.KeyCode == Keys.Add || eventArgs.KeyCode == Keys.Oemplus)
+                    {
+                        Properties.Settings.Default.FontSize += 2;
+                        MainWindowController.SetFontSize();
+                        MainWindowController.RefreshOutput();
+                    }
+                    else if (eventArgs.KeyCode == Keys.Subtract || eventArgs.KeyCode == Keys.OemMinus)
+                    {
+                        if (Properties.Settings.Default.FontSize > 9)
+                        {
+                            Properties.Settings.Default.FontSize -= 2;
+                            MainWindowController.SetFontSize();
+                            RefreshOutput();
+                        }
+                    }
+                }
             };
 
             // Init displays
@@ -434,10 +449,29 @@ namespace VisiBoole.Controllers
             subBrowser.WebBrowserShortcutsEnabled = false;
             subBrowser.ObjectForScripting = this;
             subBrowser.DocumentText = OutputTemplate.Replace("{0}", HtmlBuilder.GetHTML(output));
-            subBrowser.DocumentCompleted += (sender, e) => {
-                Browser.Document.Body.Click += (sender2, e2) => {
-                    MainWindowController.RetrieveFocus();
-                };
+            subBrowser.PreviewKeyDown += (sender, eventArgs) => {
+                if (eventArgs.Control)
+                {
+                    if (eventArgs.KeyCode == Keys.E)
+                    {
+                        MainWindowController.LoadDisplay(DisplayType.EDIT);
+                    }
+                    else if (eventArgs.KeyCode == Keys.Add || eventArgs.KeyCode == Keys.Oemplus)
+                    {
+                        Properties.Settings.Default.FontSize += 2;
+                        MainWindowController.SetFontSize();
+                        MainWindowController.RefreshOutput();
+                    }
+                    else if (eventArgs.KeyCode == Keys.Subtract || eventArgs.KeyCode == Keys.OemMinus)
+                    {
+                        if (Properties.Settings.Default.FontSize > 9)
+                        {
+                            Properties.Settings.Default.FontSize -= 2;
+                            MainWindowController.SetFontSize();
+                            RefreshOutput();
+                        }
+                    }
+                }
             };
 
             CurrentDisplay.AddBrowser(instantiation.Split('.')[0], subBrowser);

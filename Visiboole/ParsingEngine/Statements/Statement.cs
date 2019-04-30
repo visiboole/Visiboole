@@ -100,7 +100,7 @@ namespace VisiBoole.ParsingEngine.Statements
         {
             string name = var.TrimStart('~');
 
-            if (!name.Contains("'"))
+            if (!char.IsDigit(name[0]))
             {
                 IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
                 DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
