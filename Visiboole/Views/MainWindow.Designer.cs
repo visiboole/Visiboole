@@ -63,6 +63,7 @@ namespace VisiBoole.Views
             this.simulationCommentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.syntaxDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.NavTree = new System.Windows.Forms.TreeView();
             this.OpenFileLinkLabel = new System.Windows.Forms.LinkLabel();
@@ -80,7 +81,7 @@ namespace VisiBoole.Views
             this.runStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.previousStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -93,7 +94,8 @@ namespace VisiBoole.Views
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
             this.viewToolStripMenuItem,
-            this.helpToolStripMenuItem});
+            this.helpToolStripMenuItem,
+            this.aboutToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(959, 24);
@@ -365,9 +367,16 @@ namespace VisiBoole.Views
             // syntaxDocumentationToolStripMenuItem
             // 
             this.syntaxDocumentationToolStripMenuItem.Name = "syntaxDocumentationToolStripMenuItem";
-            this.syntaxDocumentationToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.syntaxDocumentationToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
             this.syntaxDocumentationToolStripMenuItem.Text = "VisiBoole Syntax";
             this.syntaxDocumentationToolStripMenuItem.Click += new System.EventHandler(this.SyntaxDocumentationMenuClick);
+            // 
+            // userGuideToolStripMenuItem
+            // 
+            this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
+            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.userGuideToolStripMenuItem.Text = "User Guide";
+            this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
             // 
             // MainLayoutPanel
             // 
@@ -583,12 +592,13 @@ namespace VisiBoole.Views
             this.previousStateToolStripMenuItem.Text = "Previous State";
             this.previousStateToolStripMenuItem.Click += new System.EventHandler(this.previousStateToolStripMenuItem_Click);
             // 
-            // userGuideToolStripMenuItem
+            // aboutToolStripMenuItem
             // 
-            this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.userGuideToolStripMenuItem.Text = "User Guide";
-            this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
+            this.aboutToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -672,5 +682,6 @@ namespace VisiBoole.Views
         private ToolStripMenuItem newStateToolStripMenuItem;
         private ToolStripMenuItem previousStateToolStripMenuItem;
         private ToolStripMenuItem userGuideToolStripMenuItem;
+        private ToolStripMenuItem aboutToolStripMenuItem;
     }
 }

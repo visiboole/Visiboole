@@ -784,5 +784,11 @@ namespace VisiBoole.Views
             tutorial.Show();
             
         }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
+            about.Show();
+        }
     }
 }

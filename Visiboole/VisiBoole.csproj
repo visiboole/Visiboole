@@ -212,6 +212,7 @@
     <Content Include="license.txt" />
     <Content Include="Resources\Close.png" />
     <None Include="Resources\Expand.png" />
+    <Content Include="Resources\Help Documentation\About.txt" />
     <Content Include="Resources\Help Documentation\Syntax.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
