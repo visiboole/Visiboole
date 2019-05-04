@@ -51,7 +51,6 @@ namespace VisiBoole.ParsingEngine.ObjectCode
             ObjHasNegation = text[0] == '~';
             ObjCodeText = (ObjHasNegation) ? text.Substring(1) : text;
             ObjCodeValue = Convert.ToInt32(ObjCodeText) == 1;
-            ObjCodeText = $"{{{ObjCodeText}}}";
         }
 	}
 }

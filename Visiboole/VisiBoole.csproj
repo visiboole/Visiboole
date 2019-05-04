@@ -82,6 +82,7 @@
     <Compile Include="Globals.cs" />
     <Compile Include="Models\DatabaseObjects\NamedExpression.cs" />
     <Compile Include="Models\NewTabControl.cs" />
+    <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
@@ -110,7 +111,6 @@
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
     <Compile Include="Models\DatabaseObjects\Variable.cs" />
     <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
-    <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Views\ErrorListBox.cs">
       <SubType>Form</SubType>

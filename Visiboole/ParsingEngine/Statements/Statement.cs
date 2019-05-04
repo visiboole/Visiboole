@@ -62,37 +62,6 @@ namespace VisiBoole.ParsingEngine.Statements
         }
 
         /// <summary>
-        /// Adds variables in the provided text that are not in the database to the database.
-        /// </summary>
-        /// <param name="text">Text that contains variables</param>
-        protected void InitVariables(string text)
-        {
-            // Get variables in the statement
-            MatchCollection variableMatches = Parser.ScalarRegex.Matches(text);
-            // Iterate through all variables in the statement
-            foreach (Match variableMatch in variableMatches)
-            {
-                // Get variable
-                string variable = variableMatch.Value;
-                // Get value of variable
-                bool value = variable.Contains("*");
-                // If value is true
-                if (value)
-                {
-                    // Remove * from variable
-                    variable = variable.TrimStart('*');
-                }
-
-                // If variable isn't in the database
-                if (DesignController.ActiveDesign.Database.TryGetVariable<Variable>(variable) == null)
-                {
-                    // Add variable to the database
-                    DesignController.ActiveDesign.Database.AddVariable(new IndependentVariable(variable, value));
-                }
-            }
-        }
-
-        /// <summary>
         /// Outputs the provided variable to the output list.
         /// </summary>
         /// <param name="var">Variable to output</param>

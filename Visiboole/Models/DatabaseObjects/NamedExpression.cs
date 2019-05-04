@@ -23,6 +23,11 @@ namespace VisiBoole.Models
         public string[] Delays { get; private set; }
 
         /// <summary>
+        /// Binary values of the delays.
+        /// </summary>
+        public string DelayBinary { get; private set; }
+
+        /// <summary>
         /// Dependent of the expression.
         /// </summary>
         public string Dependent { get; private set; }
@@ -33,9 +38,9 @@ namespace VisiBoole.Models
         public string[] Dependents { get; private set; }
 
         /// <summary>
-        /// Max value of the dependents. 2^(# of Dependents)
+        /// Binary values of the dependents.
         /// </summary>
-        private int MaxValue;
+        public string DependentBinary { get; private set; }
 
         /// <summary>
         /// Operation of the expression.
@@ -91,7 +96,6 @@ namespace VisiBoole.Models
             }
 
             Dependents = GetVariables(Dependent);
-            MaxValue = (int)Math.Pow(2, Dependents.Length) - 1;
 
             Expression = Expression.Substring(Expression.IndexOf(Operation) + Operation.Length).Trim();
             ExpressionIndex = fullExpression.IndexOf(Expression);
@@ -222,31 +226,12 @@ namespace VisiBoole.Models
                     binary.Append(GetValue(var));
                 }
 
-                return Convert.ToInt32(binary.ToString(), 2);
+                int value = Convert.ToInt32(binary.ToString(), 2);
+                return value;
             }
             else if (char.IsDigit(token[0]))
             {
                 return Convert.ToInt32(token);
-                /*
-                Match constant = Parser.ConstantRegex.Match(token);
-
-                // Get binary bits from format type
-                string outputBinary;
-                if (constant.Groups["Format"].Value == "h" || constant.Groups["Format"].Value == "H")
-                {
-                    outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 16), 2);
-                }
-                else if (constant.Groups["Format"].Value == "d" || constant.Groups["Format"].Value == "D")
-                {
-                    outputBinary = Convert.ToString(Convert.ToInt32(constant.Groups["Value"].Value, 10), 2);
-                }
-                else
-                {
-                    outputBinary = constant.Groups["Value"].Value;
-                }
-
-                return Convert.ToInt32(outputBinary, 2);
-                */
             }
             else
             {
@@ -298,49 +283,57 @@ namespace VisiBoole.Models
         /// <returns>Whether the value of the dependent changed</returns>
         public bool Evaluate()
         {
-            int expressionValue = Solve();
-            if (expressionValue > MaxValue)
+            // Get binary of delay value if present
+            if (!string.IsNullOrEmpty(Delay))
             {
-                expressionValue = MaxValue;
-            }
-            else if (expressionValue < 0)
-            {
-                expressionValue = Convert.ToInt32(Convert.ToString(expressionValue & MaxValue, 2), 2);
-            }
-
-            int dependentValue = GetValue(Dependent);
-
-            if (expressionValue != dependentValue)
-            {
-                string[] vars = Dependents;
-                if (vars.Length > 1)
+                DelayBinary = Convert.ToString(GetValue(Delay), 2);
+                if (DelayBinary.Length < Delays.Length)
                 {
-                    vars = vars.Reverse().ToArray();
+                    DelayBinary = string.Concat(new string('0', Delays.Length - DelayBinary.Length), DelayBinary);
                 }
-                string binary = Convert.ToString(expressionValue, 2);
-                if (binary.Length < vars.Length)
+                else if (DelayBinary.Length > Delays.Length)
                 {
-                    binary = binary.PadLeft(vars.Length, '0');
+                    DelayBinary = DelayBinary.Substring(DelayBinary.Length - Delays.Length);
                 }
-                if (binary.Length > 1)
-                {
-                    char[] reverseBinary = binary.ToCharArray();
-                    Array.Reverse(reverseBinary);
-                    binary = new string(reverseBinary);
-                }
-
-                // Get binary value
-                for (int i = 0; i < vars.Length; i++)
-                {
-                    string var = vars[i];
-                    int val = int.Parse(binary[i].ToString());
-                    DesignController.ActiveDesign.Database.SetValue(var, val == 1);
-                }
-
-                return true;
             }
 
-            return false;
+            // Get binary of expression value
+            string expressionBinary = Convert.ToString(Solve(), 2);
+            if (expressionBinary.Length < Dependents.Length)
+            {
+                expressionBinary = string.Concat(new string('0', Dependents.Length - expressionBinary.Length), expressionBinary);
+            }
+            else if (expressionBinary.Length > Dependents.Length)
+            {
+                expressionBinary = expressionBinary.Substring(expressionBinary.Length - Dependents.Length);
+            }
+
+            // Get binary of dependent value
+            string dependentBinary = Convert.ToString(GetValue(Dependent), 2);
+            if (dependentBinary.Length < Dependents.Length)
+            {
+                dependentBinary = string.Concat(new string('0', Dependents.Length - dependentBinary.Length), dependentBinary);
+            }
+            else if (dependentBinary.Length > Dependents.Length)
+            {
+                dependentBinary = dependentBinary.Substring(dependentBinary.Length - Dependents.Length);
+            }
+
+            // Change each dependent bit to its expression bit
+            bool wasABitChanged = false;
+            for (int i = 0; i < Dependents.Length; i++)
+            {
+                if (dependentBinary[i] != expressionBinary[i])
+                {
+                    DesignController.ActiveDesign.Database.SetValue(Dependents[i], expressionBinary[i] == '1');
+                    wasABitChanged = true;
+                }
+            }
+
+            // Store new dependent binary
+            DependentBinary = expressionBinary;
+
+            return wasABitChanged;
         }
     }
 }

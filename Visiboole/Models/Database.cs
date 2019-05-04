@@ -49,14 +49,19 @@ namespace VisiBoole.ParsingEngine
         public Dictionary<string, Variable> AllVars;
 
         /// <summary>
-        /// List of variable namespaces.
+        /// Dictionary of variable namespaces.
         /// </summary>
-        private Dictionary<string, List<string>> Namespaces;
+        private Dictionary<string, List<int>> Namespaces;
 
         /// <summary>
         /// List of the expressions in the design.
         /// </summary>
         private List<KeyValuePair<string, NamedExpression>> Expressions;
+
+        /// <summary>
+        /// Dictionary of variable dependency lists.
+        /// </summary>
+        private Dictionary<string, List<string>> DependencyLists;
 
         /// <summary>
         /// Dictionary of alternating clocks in the design.
@@ -70,82 +75,76 @@ namespace VisiBoole.ParsingEngine
             IndVars = new Dictionary<string, IndependentVariable>();
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
-            Namespaces = new Dictionary<string, List<string>>();
+            Namespaces = new Dictionary<string, List<int>>();
             Expressions = new List<KeyValuePair<string, NamedExpression>>();
+            DependencyLists = new Dictionary<string, List<string>>();
             AltClocks = new Dictionary<string, AltClock>();
         }
 
         /// <summary>
-        /// Checks whether a variable namespace can be created.
+        /// Returns whether the provided namespace exists.
         /// </summary>
-        /// <param name="name">Namespace of the variable</param>
-        /// <returns>Whether the namespace already exists or not</returns>
-        public bool HasNamespace(string name)
+        /// <param name="name">Namespace to check for existance</param>
+        /// <returns>Whether the provided namespace exists</returns>
+        public bool NamespaceExists(string name)
         {
             return Namespaces.ContainsKey(name);
         }
 
-        private string PadNumbers(string input)
+        /// <summary>
+        /// Checks whether the provided namespace belongs to a vector.
+        /// </summary>
+        /// <param name="name">Namespace to check</param>
+        /// <returns>Whether the provided namespace belongs to a vector</returns>
+        public bool NamespaceBelongsToVector(string name)
         {
-            return Regex.Replace(input, @"\d+", match => match.Value.PadLeft(2, '0'));
+            return NamespaceExists(name) && Namespaces[name] != null;
         }
 
         /// <summary>
-        /// Inserts the provided component into the provided namespace.
+        /// Updates/adds the provided namespace with the provided/not provided bit.
         /// </summary>
-        /// <param name="name">Namepsace to insert into</param>
-        /// <param name="component">Component to insert</param>
-        private void InsertNamespaceComponent(string name, string component)
+        /// <param name="name">Namepsace to update/add</param>
+        /// <param name="bit">Bit to add</param>
+        public void UpdateNamespace(string name, int bit)
         {
-            int componentCount = Namespaces[name].Count;
-            if (componentCount != 0)
+            if (!NamespaceExists(name))
             {
-                int newBit = int.Parse(component.Substring(name.Length)); // Bit of the new component
-                bool bitInserted = false;
-                for (int i = 0; i < componentCount; i++)
+                if (bit != -1)
                 {
-                    int componentBit = int.Parse(Namespaces[name][i].Substring(name.Length)); // Bit of the list component
-                    if (newBit > componentBit)
-                    {
-                        Namespaces[name].Insert(i, component);
-                        bitInserted = true;
-                    }
-                }
-
-                if (!bitInserted)
-                {
-                    Namespaces[name].Add(component);
-                }
-            }
-            else
-            {
-                Namespaces[name].Add(component);
-            }
-        }
-
-        /// <summary>
-        /// Adds the provided component into the provided namespace.
-        /// </summary>
-        /// <param name="name">Namepsace to add to</param>
-        /// <param name="component">Component to add</param>
-        public void AddNamespaceComponent(string name, string component)
-        {
-            if (!HasNamespace(name))
-            {
-                if (component != null)
-                {
-                    Namespaces.Add(name, new List<string>(new string[] { component })); // Namespace now belongs to a vector
+                    Namespaces.Add(name, new List<int>());
                 }
                 else
                 {
-                    Namespaces.Add(name, null); // Namespace now belongs to a scalar
+                    Namespaces.Add(name, null);
                 }
             }
-            else
+
+            if (bit != -1 && !Namespaces[name].Contains(bit))
             {
-                if (!Namespaces[name].Contains(component))
+                int componentCount = Namespaces[name].Count;
+                if (componentCount == 0)
                 {
-                    InsertNamespaceComponent(name, component); // Insert component if not in the list of components
+                    Namespaces[name].Add(bit);
+                }
+                else
+                {
+                    int currentMaxBit = Namespaces[name][0];
+                    if (bit > currentMaxBit)
+                    {
+                        for (int i = currentMaxBit + 1; i <= bit; i++)
+                        {
+                            Namespaces[name].Insert(0, i);
+                        }
+                    }
+                    else
+                    {
+                        int currentMinBit = Namespaces[name][componentCount - 1];
+                        for (int i = currentMinBit - 1; i >= bit; i--)
+                        {
+                            Namespaces[name].Add(i);
+                        }
+                    }
                 }
             }
         }
@@ -157,9 +156,14 @@ namespace VisiBoole.ParsingEngine
         /// <returns>List of components that belong to the namespace</returns>
         public List<string> GetComponents(string name)
         {
-            if (HasNamespace(name))
+            if (NamespaceBelongsToVector(name))
             {
-                return Namespaces[name];
+                List<string> components = new List<string>();
+                foreach (int bit in Namespaces[name])
+                {
+                    components.Add($"{name}{bit}");
+                }
+                return components;
             }
             else
             {
@@ -351,6 +355,74 @@ namespace VisiBoole.ParsingEngine
                     AltClocks.Add(name, new AltClock(name, TryGetValue(name) == 1));
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns whether the provided variable has an existing dependency list.
+        /// </summary>
+        /// <param name="variable">Variable</param>
+        /// <returns>Whether the provided variable has an existing dependency list</returns>
+        public bool HasDependencyList(string variable)
+        {
+            return DependencyLists.ContainsKey(variable);
+        }
+
+        /// <summary>
+        /// Tries to add a dependent and its dependencies to the database.
+        /// </summary>
+        /// <param name="dependent">Dependent</param>
+        /// <param name="dependencyList">Dependent's dependencies</param>
+        /// <returns>Whether the dependent and its dependencies were added to the database</returns>
+        public bool TryAddDependencyList(string dependent, List<string> dependencyList)
+        {
+            List<string> variablesToRemove = new List<string>();
+            List<string> variablesToAdd = new List<string>();
+            // Iterate through the dependency list
+            foreach (string variable in dependencyList)
+            {
+                // If varaible in the dependency list has dependencies
+                if (HasDependencyList(variable))
+                {
+                    // Get variable's dependency list
+                    List<string> additionalDependencyList = DependencyLists[variable];
+                    // If variable's dependency list contains the dependent
+                    if (additionalDependencyList.Contains(dependent))
+                    {
+                        // Return false (cycle)
+                        return false;
+                    }
+
+                    // Add variable to removal list
+                    variablesToRemove.Add(variable);
+                    // Add new variables to addition list
+                    variablesToAdd.AddNew(additionalDependencyList);
+                }
+            }
+
+            foreach (string variable in variablesToRemove)
+            {
+                dependencyList.Remove(variable);
+            }
+            dependencyList.AddNew(variablesToAdd);
+
+            foreach (KeyValuePair<string, List<string>> dependecy in DependencyLists)
+            {
+                if (dependecy.Value.Contains(dependent))
+                {
+                    if (dependencyList.Contains(dependecy.Key))
+                    {
+                        return false;
+                    }
+
+                    // Remove new dependent from existing dependency list
+                    dependecy.Value.Remove(dependent);
+                    // Add dependent's dependencies to the existing dependency
+                    dependecy.Value.AddNew(dependencyList);
+                }
+            }
+
+            DependencyLists.Add(dependent, dependencyList);
+            return true;
         }
     }
 }

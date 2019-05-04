@@ -21,8 +21,6 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="text">Text of the statement</param>
 		public ModuleDeclarationStmt(string text) : base(text)
         {
-            // Initialize variables in the statement
-            InitVariables(text);
         }
 
         public override void Parse()

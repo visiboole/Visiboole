@@ -77,32 +77,6 @@ namespace VisiBoole.ParsingEngine.Statements
             // Get whether the expression is a mathematical expression
             IsMathExpression = Expression.Expression.Contains("+") || Expression.Expression.Contains("-");
 
-            // Initialize delay variable
-            InitVariables(Expression.Delay);
-
-            // Iterate through all dependent variables
-            for (int i = 0; i < Expression.Dependents.Length; i++)
-            {
-                // Get dependent
-                string dependent = Expression.Dependents[i];
-                // If the dependent isn't in the database
-                if (DesignController.ActiveDesign.Database.TryGetVariable<Variable>(dependent) == null)
-                {
-                    // Add dependent to the database
-                    DesignController.ActiveDesign.Database.AddVariable(new DependentVariable(dependent, false));
-                }
-            }
-
-            // If there is an alternate clock
-            if (AltClock != null)
-            {
-                // Initialize alternate clock variable
-                InitVariables(AltClock);
-            }
-
-            // Initialize variables in the expression
-            InitVariables(Expression.Expression);
-
             // Evaluate the expression
             Expression.Evaluate();
             // Add expression to the database
@@ -114,14 +88,14 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public void Tick()
         {
-            int delayValue = Expression.GetValue(Expression.Delay);
-            int dependentValue = Expression.GetValue(Expression.Dependent);
-            if (delayValue != dependentValue)
+            string dependentBinary = Expression.DependentBinary;
+            string delayBinary = Expression.DelayBinary;
+
+            for (int i = 0; i < dependentBinary.Length; i++)
             {
-                for(int i = 0; i < Expression.Delays.Length; i++)
+                if (delayBinary[i] != dependentBinary[i])
                 {
-                    bool val = DesignController.ActiveDesign.Database.TryGetValue(Expression.Dependents[i]) == 1;
-                    DesignController.ActiveDesign.Database.SetValue(Expression.Delays[i], val);
+                    DesignController.ActiveDesign.Database.SetValue(Expression.Delays[i], dependentBinary[i] == '1');
                 }
             }
         }
@@ -154,7 +128,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     // Output <= with dependent value
                     if (!IsMathExpression)
                     {
-                        Output.Add(new DependentVariable("<=", Expression.GetValue(Expression.Dependent) >= 1));
+                        Output.Add(new DependentVariable("<=", Expression.DependentBinary.Contains('1')));
                     }
                     else
                     {

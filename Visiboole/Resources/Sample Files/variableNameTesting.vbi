@@ -1,0 +1,14 @@
++"Should have no errors.";
+a[3..0];
+
++"Should say a namespace is already being used by a vector.";
+a;
+
++"Should have no errors.";
+b;
+
++"Should say b namespace is already being used by a scalar.";
+b0;
+
++"Should complain namespace ends in a number";
+test1[3..0];

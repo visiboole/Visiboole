@@ -35,7 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"{Parser.ScalarPattern}|('b[0-1])|[\s]");
+        private Regex OutputRegex = new Regex($@"{Parser.ScalarPattern}|([\s01])");
 
         /// <summary>
         /// Constructs a VariableListStmt instance.
@@ -43,8 +43,6 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <param name="text">Text of the statement</param>
 		public VariableListStmt(string text) : base(text)
 		{
-            // Initialize variables in the statement
-            InitVariables(text);
         }
 
         /// <summary>

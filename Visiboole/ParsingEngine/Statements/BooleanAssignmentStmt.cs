@@ -51,31 +51,6 @@ namespace VisiBoole.ParsingEngine.Statements
         {
             // Create expression with the provided text
             Expression = new NamedExpression(text);
-
-            // Iterate through all dependent variables
-            foreach (string dependent in Expression.Dependents)
-            {
-                // If the dependent isn't in the database
-                if (DesignController.ActiveDesign.Database.TryGetVariable<Variable>(dependent) == null)
-                {
-                    // Add dependent to the database
-                    DesignController.ActiveDesign.Database.AddVariable(new DependentVariable(dependent, false));
-                }
-                // If the dependent is in the database
-                else
-                {
-                    // If the dependent is in the database as an independent variable
-                    if (DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(dependent) as IndependentVariable != null)
-                    {
-                        // Make independent variable a dependent variable
-                        DesignController.ActiveDesign.Database.MakeDependent(dependent);
-                    }
-                }
-            }
-
-            // Initialize variables in the expression
-            InitVariables(Expression.Expression);
-
             // Evaluate the expression
             Expression.Evaluate();
             // Add expression to the database

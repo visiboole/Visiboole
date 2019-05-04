@@ -56,9 +56,6 @@ namespace VisiBoole.ParsingEngine.Statements
 		{
             DesignPath = designPath;
             NoContactValues = new List<bool>();
-
-            // Initialize variables in the statement
-            InitVariables(text);
         }
 
         /// <summary>
@@ -143,11 +140,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else
                 {
-                    if (match.Index > seperatorIndex && token == "NC")
-                    {
-                        Output.Add(new DependentVariable(token, NoContactValues[currentNoContactIndex++]));
-                    }
-                    else
+                    if (match.Index < seperatorIndex)
                     {
                         // Output each input var in the input list
                         IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
@@ -161,7 +154,13 @@ namespace VisiBoole.ParsingEngine.Statements
                             Output.Add(depVar);
                         }
                     }
-
+                    else
+                    {
+                        bool value = token != "NC"
+                            ? DesignController.ActiveDesign.Database.TryGetValue(token) == 1
+                            : NoContactValues[currentNoContactIndex++];
+                        Output.Add(new DependentVariable(token, value));
+                    }
                 }
             }
 

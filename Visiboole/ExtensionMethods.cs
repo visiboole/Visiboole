@@ -46,5 +46,16 @@ namespace VisiBoole
 			}
 			return null;
 		}
+
+        public static void AddNew<T>(this List<T> collection, IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                if (!collection.Contains(item))
+                {
+                    collection.Add(item);
+                }
+            }
+        }
 	}
 }
