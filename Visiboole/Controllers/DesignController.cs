@@ -278,8 +278,7 @@ namespace VisiBoole.Controllers
 
             string designName = instantiation.Split('.')[0];
             string instantName = instantiation.Split('.')[1].TrimEnd('(');
-            string designPath = Parser.Subdesigns[designName];
-            Design subDesign = new Design(designPath);
+            Design subDesign = Parser.Subdesigns[designName];
 
             // Get input variables
             List<Variable> inputVariables = Parser.GetModuleInputs(instantName, subDesign.ModuleDeclaration);

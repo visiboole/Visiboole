@@ -149,20 +149,62 @@ namespace VisiBoole.Models
         private string GetFileText()
         {
             string text = string.Empty;
+            bool lookingForModule = true;
 
             using (StreamReader reader = FileSource.OpenText())
             {
+                // nextLine = nextLine.TrimEnd();
+                string currentStatement = string.Empty;
                 string nextLine = string.Empty;
-
                 while ((nextLine = reader.ReadLine()) != null)
                 {
                     // Clean line
                     nextLine = nextLine.Replace("\t", new string(' ', 4));
-                    nextLine = nextLine.TrimEnd();
 
-                    if (ModuleRegex.IsMatch(nextLine))
+                    if (lookingForModule)
                     {
-                        ModuleDeclaration = nextLine;
+                        string trimmedLine = nextLine.Trim();
+                        if (trimmedLine.Length > 0)
+                        {
+                            if (nextLine[nextLine.Length - 1] != ';')
+                            {
+                                // If the current statement is an on going statement
+                                if (currentStatement.Length > 0)
+                                {
+                                    // Add a newline seperator
+                                    currentStatement += '\n';
+                                }
+                                // Add line to current statement
+                                currentStatement += nextLine;
+                            }
+                            else
+                            {
+                                if (currentStatement.Length == 0)
+                                {
+                                    currentStatement = nextLine;
+                                }
+                                else
+                                {
+                                    currentStatement = string.Concat(currentStatement, "\n", nextLine);
+                                }
+
+                                if (currentStatement[0] != '#')
+                                {
+                                    if (ModuleRegex.IsMatch(currentStatement))
+                                    {
+                                        ModuleDeclaration = currentStatement;
+                                    }
+                                    else
+                                    {
+                                        lookingForModule = false;
+                                    }
+                                }
+                                else
+                                {
+                                    currentStatement = string.Empty;
+                                }
+                            }
+                        }
                     }
 
                     // Append line to text

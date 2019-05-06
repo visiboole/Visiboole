@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019 John Devore
  * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
  * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
@@ -25,6 +25,7 @@ using VisiBoole.ParsingEngine.ObjectCode;
 using System.Linq;
 using VisiBoole.ParsingEngine.Statements;
 using VisiBoole.Models;
+using System.Text;
 
 namespace VisiBoole.ParsingEngine
 {
@@ -49,6 +50,11 @@ namespace VisiBoole.ParsingEngine
         public Dictionary<string, Variable> AllVars;
 
         /// <summary>
+        /// All module inputs of the design being parsed by the parsing engine.
+        /// </summary>
+        private List<string> Inputs;
+
+        /// <summary>
         /// Dictionary of variable namespaces.
         /// </summary>
         private Dictionary<string, List<int>> Namespaces;
@@ -56,7 +62,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// List of the expressions in the design.
         /// </summary>
-        private List<KeyValuePair<string, NamedExpression>> Expressions;
+        private Dictionary<string, NamedExpression> Expressions;
 
         /// <summary>
         /// Dictionary of variable dependency lists.
@@ -66,7 +72,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Dictionary of alternating clocks in the design.
         /// </summary>
-        public Dictionary<string, AltClock> AltClocks;
+        public Dictionary<string, bool> AltClocks;
 
 	    #region Accessor methods
 
@@ -75,10 +81,11 @@ namespace VisiBoole.ParsingEngine
             IndVars = new Dictionary<string, IndependentVariable>();
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
+            Inputs = new List<string>();
             Namespaces = new Dictionary<string, List<int>>();
-            Expressions = new List<KeyValuePair<string, NamedExpression>>();
+            Expressions = new Dictionary<string, NamedExpression>();
             DependencyLists = new Dictionary<string, List<string>>();
-            AltClocks = new Dictionary<string, AltClock>();
+            AltClocks = new Dictionary<string, bool>();
         }
 
         /// <summary>
@@ -177,7 +184,7 @@ namespace VisiBoole.ParsingEngine
         /// <typeparam name="T">The type matching the target collection of variables</typeparam>
         /// <param name="v">The variable to add to the collection of matching type</param>
         /// <returns>Returns true if the variable was successfully added</returns>
-        public bool AddVariable<T>(T v)
+        public bool AddVariable<T>(T v, bool IsInput = false)
         {
             Type varType = typeof(T);
             if (varType == typeof(IndependentVariable))
@@ -190,6 +197,10 @@ namespace VisiBoole.ParsingEngine
                 if (!AllVars.ContainsKey(iv.Name))
                 {
                     AllVars.Add(iv.Name, iv);
+                }
+                if (IsInput && !Inputs.Contains(iv.Name))
+                {
+                    Inputs.Add(iv.Name);
                 }
             }
             else
@@ -236,40 +247,95 @@ namespace VisiBoole.ParsingEngine
 		}
 
         /// <summary>
-        /// Converts an independent variable to a dependent variable
+        /// Attemps to convert an independent variable to a dependent variable.
         /// </summary>
         /// <param name="name">Variable to convert</param>
-        public void MakeDependent(string name)
+        /// <returns>Whether the conversion was successful</returns>
+        public bool MakeDependent(string name)
         {
+            if (Inputs.Contains(name))
+            {
+                return false;
+            }
+
             bool value = IndVars[name].Value;
             IndVars.Remove(name);
             AllVars.Remove(name);
             AddVariable(new DependentVariable(name, value));
+            return true;
         }
 
         /// <summary>
-        /// Tries to get the value of a variable
+        /// Returns an array of variables from the provided token.
         /// </summary>
-        /// <param name="var">The name of a variable</param>
-        /// <returns>The value or -1 for no value</returns>
-        public int TryGetValue(string var)
+        /// <param name="token">String of variables</param>
+        /// <returns>An array of variables</returns>
+        public string[] GetVariables(string token)
         {
-            IndependentVariable indVar = TryGetVariable<IndependentVariable>(var) as IndependentVariable;
-            DependentVariable depVar = TryGetVariable<DependentVariable>(var) as DependentVariable;
-
-            if (indVar != null)
+            if (!token.Contains("{"))
             {
-                if (indVar.Value) return 1;
-                else return 0;
+                return new string[] { token };
             }
-            else if (depVar != null)
+            else if (!token.Contains(".d"))
             {
-                if (depVar.Value) return 1;
-                else return 0;
+                token = token.Substring(1, token.Length - 2);
+                return Parser.WhitespaceRegex.Split(token);
             }
             else
             {
-                return -1; // If variable doesn't exist
+                token = token.Substring(1, token.Length - 4);
+                string[] variables = Parser.WhitespaceRegex.Split(token);
+                for (int i = 0; i < variables.Length; i++)
+                {
+                    variables[i] = variables[i] + ".d";
+                }
+                return variables;
+            }
+        }
+
+        /// <summary>
+        /// Returns the value of the provided token.
+        /// </summary>
+        /// <param name="token">String of variables</param>
+        /// <returns>Value of the provided token</returns>
+        public int GetValue(string token)
+        {
+            if (char.IsDigit(token[0]))
+            {
+                // Return int converted value of token
+                return Convert.ToInt32(token);
+            }
+            else if (token[0] != '{')
+            {
+                IndependentVariable indVar = TryGetVariable<IndependentVariable>(token) as IndependentVariable;
+                DependentVariable depVar = TryGetVariable<DependentVariable>(token) as DependentVariable;
+                if (indVar != null)
+                {
+                    if (indVar.Value) return 1;
+                    else return 0;
+                }
+                else if (depVar != null)
+                {
+                    if (depVar.Value) return 1;
+                    else return 0;
+                }
+                else
+                {
+                    return -1; // If variable doesn't exist
+                }
+            }
+            else
+            {
+                // Create binary string builder
+                StringBuilder binary = new StringBuilder();
+                // For each variable in the token
+                foreach (string var in GetVariables(token))
+                {
+                    // Add variable's value to binary string
+                    binary.Append(GetValue(var));
+                }
+                // Return int converted binary string as value
+                return Convert.ToInt32(binary.ToString(), 2);
             }
         }
 
@@ -283,7 +349,7 @@ namespace VisiBoole.ParsingEngine
         {
             if(IndVars.ContainsKey(variableName))
             {
-                IndVars[variableName].Value = !IndVars[variableName].Value;
+                SetValue(variableName, !IndVars[variableName].Value);
             }
         }
 
@@ -302,58 +368,78 @@ namespace VisiBoole.ParsingEngine
             {
                 DepVars[variableName].Value = value;
             }
-            else
-            {
-                IndependentVariable Ind = new IndependentVariable(variableName, value);
-                IndVars.Add(variableName, Ind);
-            }
         }
 
         /// <summary>
-        /// Reevaluates all expressions till all variables are the correct value.
+        /// Sets each binary value to the corresponding variable.
         /// </summary>
-        public void ReevaluateExpressions()
+        /// <param name="variables">Variables to set</param>
+        /// <param name="binary">Values to set</param>
+        public bool SetValues(IList<string> variables, string binary)
         {
-            // Iterate through all expressions
-            for (int i = 0; i < Expressions.Count; i++)
+            bool valueChanged = false;
+            for (int i = 0; i < binary.Length; i++)
             {
-                // Get expression
-                var expression = Expressions[i].Value;
-                // If expression was reevaluated
-                if (expression.Evaluate())
+                if (GetValue(variables[i]) != char.GetNumericValue(binary[i]))
                 {
-                    // Reset loop
-                    i = -1;
+                    SetValue(variables[i], binary[i] == '1');
+                    valueChanged = true;
                 }
             }
+            return valueChanged;
         }
 
         /// <summary>
         /// Updates all expression values then adds the expression to the expressions dictionary.
         /// </summary>
         /// <param name="expression">Expression to add</param>
-        public void AddExpression(NamedExpression expression)
+        public void AddExpression(NamedExpression expression, string clock = null)
         {
-            // Reevaluate all expressions before adding new expression
-            ReevaluateExpressions();
-
             // Add expression to expressions list
-            Expressions.Add(new KeyValuePair<string, NamedExpression>(expression.Dependent, expression));
-
-            // If expression has an alternate clock
-            if (expression.Operation.Contains("@"))
+            foreach (string dependent in expression.Dependents)
             {
-                // Get alternate clock
-                string altClock = Regex.Match(expression.Operation, @"@\S+").Value;
-                // Get alternate clock variable
-                string name = altClock.Substring(1);
+                Expressions.Add(dependent, expression);
+            }
 
-                // If alternate clock dictionary doesn't have the alternate clock variable
-                if (!AltClocks.ContainsKey(name))
+            // If expression has an alternate clock and that alternate clock isn't in the alternate clocks dictionary
+            if (clock != null && !AltClocks.ContainsKey(clock))
+            {
+                // Add new alternate clock to alternate clocks dictionary
+                AltClocks.Add(clock, GetValue(clock) == 1);
+            }
+        }
+
+        public void ProcessUpdate(List<string> variables)
+        {
+            bool varChanged;
+            do
+            {
+                varChanged = false;
+                foreach (string dependent in DependencyLists.Keys)
                 {
-                    // Add alternate clock to alternate clock dictionary
-                    AltClocks.Add(name, new AltClock(name, TryGetValue(name) == 1));
+                    if (DependencyLists[dependent].Intersect(variables).Any())
+                    {
+                        if (Expressions[dependent].Evaluate())
+                        {
+                            if (varChanged == false)
+                            {
+                                varChanged = true;
+                            }
+                        }
+                    }
                 }
+            } while (varChanged);
+        }
+
+        /// <summary>
+        /// Update all alternate clock previous values.
+        /// </summary>
+        public void UpdateAltClocks()
+        {
+            // Update alt clock values
+            foreach (string altClock in AltClocks.Keys)
+            {
+                AltClocks[altClock] = GetValue(altClock) == 1;
             }
         }
 

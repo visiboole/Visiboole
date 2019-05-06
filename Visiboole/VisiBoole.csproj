@@ -84,9 +84,9 @@
     <Compile Include="Models\NewTabControl.cs" />
     <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />
+    <Compile Include="ParsingEngine\ObjectCode\Formatter.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Instantiation.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Comment.cs" />
-    <Compile Include="Models\DatabaseObjects\AltClock.cs" />
     <Compile Include="ParsingEngine\ObjectCode\SpaceFeed.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Parenthesis.cs" />
     <Compile Include="ParsingEngine\Statements\BooleanAssignmentStmt.cs" />
@@ -95,7 +95,6 @@
     <Compile Include="ParsingEngine\ObjectCode\DependentVariable.cs" />
     <Compile Include="ParsingEngine\Statements\DffClockStmt.cs" />
     <Compile Include="ParsingEngine\Statements\EmptyStmt.cs" />
-    <Compile Include="Models\FormatSpecifier.cs" />
     <Compile Include="ParsingEngine\Statements\FormatSpecifierStmt.cs" />
     <Compile Include="Models\HtmlBuilder.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IObjectCodeElement.cs" />

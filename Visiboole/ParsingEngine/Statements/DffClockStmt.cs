@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019 John Devore
  * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
  * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
@@ -46,14 +46,9 @@ namespace VisiBoole.ParsingEngine.Statements
         private NamedExpression Expression;
 
         /// <summary>
-        /// Whether the expression is a mathematical expression. (Contains + or -)
+        /// Driving clock of statement. (if any)
         /// </summary>
-        private bool IsMathExpression;
-
-        /// <summary>
-        /// Alternate clock of statement. (if any)
-        /// </summary>
-        public string AltClock;
+        public string Clock;
 
         /// <summary>
         /// Constructs a DffClockStmt instance.
@@ -63,40 +58,26 @@ namespace VisiBoole.ParsingEngine.Statements
         {
             // Create expression with the provided text
             Expression = new NamedExpression(text);
-            // If expression contains an alternate clock
-            if (Expression.Operation.Contains("@"))
-            {
-                // Get alternate clock
-                AltClock = Expression.Operation.Substring(Expression.Operation.IndexOf("@") + 1);
-            }
-            else
-            {
-                // Set alternate clock to null
-                AltClock = null;
-            }
-            // Get whether the expression is a mathematical expression
-            IsMathExpression = Expression.Expression.Contains("+") || Expression.Expression.Contains("-");
-
+            // Get clock of expression
+            Clock = text.Contains("@") ? Regex.Match(text, @"(?<=@)\w+").Value : null;
             // Evaluate the expression
             Expression.Evaluate();
             // Add expression to the database
-            DesignController.ActiveDesign.Database.AddExpression(Expression);
+            DesignController.ActiveDesign.Database.AddExpression(Expression, Clock);
         }
 
         /// <summary>
         /// Ticks the statement (delay value is set to its dependent value)
         /// </summary>
-        public void Tick()
+        public IEnumerable<string> Tick()
         {
-            string dependentBinary = Expression.DependentBinary;
-            string delayBinary = Expression.DelayBinary;
-
-            for (int i = 0; i < dependentBinary.Length; i++)
+            if (DesignController.ActiveDesign.Database.SetValues(Expression.Delays, Expression.DependentBinary))
             {
-                if (delayBinary[i] != dependentBinary[i])
-                {
-                    DesignController.ActiveDesign.Database.SetValue(Expression.Delays[i], dependentBinary[i] == '1');
-                }
+                return Expression.Delays;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -105,6 +86,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override void Parse()
         {
+
             // Output tokens
             MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
@@ -126,7 +108,7 @@ namespace VisiBoole.ParsingEngine.Statements
                 else if (token == "<=")
                 {
                     // Output <= with dependent value
-                    if (!IsMathExpression)
+                    if (!Expression.IsMathExpression)
                     {
                         Output.Add(new DependentVariable("<=", Expression.DependentBinary.Contains('1')));
                     }

@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace VisiBoole.ParsingEngine
 {
     public class Lexer
     {
-        #region Lexer Types
+        #region Lexer Enums and Classes
 
         /// <summary>
         /// Statement type proposed by the lexer.
@@ -31,16 +32,18 @@ namespace VisiBoole.ParsingEngine
             VariableList
         }
 
-        #endregion
-
-        #region Token Class and Types
-
-        private enum TokenType
+        /// <summary>
+        /// Token type proposed by the lexer.
+        /// </summary>
+        protected enum TokenType
         {
             Variable,
             Constant,
+            Comment,
+            Library,
             Assignment,
             Clock,
+            Asterick,
             NegationOperator,
             OrOperator,
             ExclusiveOrOperator,
@@ -60,12 +63,26 @@ namespace VisiBoole.ParsingEngine
             CloseBrace
         }
 
-        private class Token
+        /// <summary>
+        /// Represents a token recognized by the lexer.
+        /// </summary>
+        protected class Token
         {
+            /// <summary>
+            /// Gets the type of the token.
+            /// </summary>
             public TokenType Type { get; private set; }
 
+            /// <summary>
+            /// Gets the text of the token.
+            /// </summary>
             public string Text { get; private set; }
 
+            /// <summary>
+            /// Constructs a token with the provided text and type.
+            /// </summary>
+            /// <param name="text">Text of token</param>
+            /// <param name="type">Type of token</param>
             public Token(string text, TokenType type)
             {
                 Text = text;
@@ -76,6 +93,11 @@ namespace VisiBoole.ParsingEngine
         #endregion
 
         #region Lexer Patterns and Regular Expressions
+
+        /// <summary>
+        /// Pattern for identifying invalid characters.
+        /// </summary>
+        private static readonly string InvalidPattern = @"[^\sa-zA-Z0-9[\].(){}<=@~*|^+;%#'"":,-]";
 
         /// <summary>
         /// Pattern for identifying names.
@@ -111,6 +133,11 @@ namespace VisiBoole.ParsingEngine
         /// Pattern for identifying constants. (No ~)
         /// </summary>
         public static readonly string ConstantPattern = $@"({BinaryConstantPattern}|{HexConstantPattern}|{DecimalConstantPattern})";
+
+        /// <summary>
+        /// Pattern for identifying operators.
+        /// </summary>
+        private static readonly string OperatorPattern = $@"^(([=+*^|~-])|(<=(@{ScalarPattern})?)|(==))$";
 
         /// <summary>
         /// Pattern for identifying scalars, vectors and constants. (No ~ or *)
@@ -153,34 +180,29 @@ namespace VisiBoole.ParsingEngine
         public static readonly string ModulePattern = $@"(?<Components>(?<Inputs>{ModuleComponentPattern})\s+:\s+(?<Outputs>{ModuleComponentPattern}))";
 
         /// <summary>
-        /// Pattern for identifying operators.
+        /// Regex for identifying invalid characters.
         /// </summary>
-        private static readonly string OperatorPattern = $@"^(([=+^|-])|(<=(@{ScalarPattern})?)|(~+)|(==))$";
+        private static Regex InvalidRegex = new Regex(InvalidPattern, RegexOptions.Compiled);
 
         /// <summary>
-        /// Pattern for identifying seperators.
+        /// Regex for identifying scalar tokens.
         /// </summary>
-        private static readonly string SeperatorPattern = @"[\s{}():,;]";
+        private static Regex ScalarTokenRegex = new Regex($"^{ScalarPattern}$", RegexOptions.Compiled);
 
         /// <summary>
-        /// Pattern for identifying invalid characters.
+        /// Regex for identifying vector tokens.
         /// </summary>
-        private static readonly string InvalidPattern = @"[^\s_a-zA-Z0-9~@%^*()=#+[\]{}<|:;',.-]";
+        private static Regex VectorTokenRegex = new Regex($"^{VectorPattern}$", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying scalars. (Optional ~ or *)
+        /// Regex for identifying constant tokens.
         /// </summary>
-        private static Regex ScalarRegex { get; } = new Regex($"^[~*]*{ScalarPattern}$", RegexOptions.Compiled);
+        private static Regex ConstantTokenRegex = new Regex($"^{ConstantPattern}$", RegexOptions.Compiled);
 
         /// <summary>
-        /// Regex for identifying vectors. (Optional ~ or *)
+        /// Regex for identifying operator tokens.
         /// </summary>
-        private static Regex VectorRegex { get; } = new Regex($"^[~*]*{VectorPattern}$", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Regex for identifying constants. (Optional ~)
-        /// </summary>
-        public static Regex ConstantRegex { get; } = new Regex($"^~*{ConstantPattern}$", RegexOptions.Compiled);
+        private static Regex OperatorTokenRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying formatters.
@@ -192,37 +214,88 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         private static Regex InstantiationRegex = new Regex($"^{InstantiationPattern}$");
 
-        /// <summary>
-        /// Regex for identifying operators.
-        /// </summary>
-        private static Regex OperatorRegex = new Regex(OperatorPattern, RegexOptions.Compiled);
+        #endregion
+
+        #region Static Fields
 
         /// <summary>
-        /// Regex for identifying seperators.
+        /// List of separators.
         /// </summary>
-        private static Regex SeperatorRegex = new Regex(SeperatorPattern, RegexOptions.Compiled);
+        private static readonly IList<char> SeperatorsList = new ReadOnlyCollection<char>(new List<char> { ' ', '\n', ';', '(', ')', '{', '}', '~', '*', ',', ':' });
 
         /// <summary>
-        /// Regex for identifying invalid characters.
+        /// List of operators.
         /// </summary>
-        private static Regex InvalidRegex = new Regex(InvalidPattern, RegexOptions.Compiled);
+        public static readonly IList<string> OperatorsList = new ReadOnlyCollection<string>(new List<string> { "^", "|", "+", "-", "==", " " });
+
+        /// <summary>
+        /// List of exclusive operators.
+        /// </summary>
+        private static readonly IList<string> ExclusiveOperatorsList = new ReadOnlyCollection<string>(new List<string> { "^", "+", "-", "==" });
+
+        /// <summary>
+        /// Memo for vector expansions.
+        /// </summary>
+        protected static Dictionary<string, IEnumerable<string>> ExpansionMemo = new Dictionary<string, IEnumerable<string>>();
 
         #endregion
 
-        /// <summary>
-        /// Line number of the design being parsed.
-        /// </summary>
-        protected int LineNumber;
-
-        /// <summary>
-        /// List of errors.
-        /// </summary>
-        protected List<string> ErrorLog;
+        #region Instance Variables
 
         /// <summary>
         /// The design being parsed.
         /// </summary>
         protected Design Design;
+
+        /// <summary>
+        /// Dictionary of errors.
+        /// </summary>
+        protected Dictionary<int, string> ErrorLog;
+
+        /// <summary>
+        /// Line number of the design being parsed.
+        /// </summary>
+        protected int CurrentLineNumber;
+
+        /// <summary>
+        /// Number of lines in the design being parsed.
+        /// </summary>
+        protected int LineNumberCount;
+
+        /// <summary>
+        /// Indicates whether the current point of execution is inside a concatenation.
+        /// </summary>
+        private bool InsideConcat;
+
+        /// <summary>
+        /// Indicates whether the current point of execution is inside a formatter.
+        /// </summary>
+        private bool InsideFormatter;
+
+        /// <summary>
+        /// Indicates whether the current point of execution is inside a module declaration or instantiation.
+        /// </summary>
+        private bool InsideModule;
+
+        /// <summary>
+        /// Character groupings stack for the current execution.
+        /// </summary>
+        private Stack<char> Groupings;
+
+        /// <summary>
+        /// Indicates whether the current execution contains a math expression.
+        /// </summary>
+        private bool IsMathExpression;
+
+        /// <summary>
+        /// Exclusive operators list for the current execution.
+        /// </summary>
+        private List<Token> ExclusiveOperators;
+
+        /// <summary>
+        /// Operators lists for the current execution.
+        /// </summary>
+        private List<List<Token>> Operators;
 
         /// <summary>
         /// List of libraries included for this instance.
@@ -232,17 +305,14 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Dictionary of submodules for this instance.
         /// </summary>
-        public Dictionary<string, string> Subdesigns;
+        public Dictionary<string, Design> Subdesigns;
 
         /// <summary>
         /// Dictionary of instantiations for this instance.
         /// </summary>
         public Dictionary<string, string> Instantiations;
 
-        /// <summary>
-        /// Memo for vector expansions.
-        /// </summary>
-        protected static Dictionary<string, IEnumerable<string>> ExpansionMemo = new Dictionary<string, IEnumerable<string>>();
+        #endregion
 
         /// <summary>
         /// Constructs a lexer to verify the design.
@@ -250,693 +320,31 @@ namespace VisiBoole.ParsingEngine
         /// <param name="design">Design to parse</param>
         protected Lexer(Design design)
         {
-            ErrorLog = new List<string>();
             Design = design;
+            ErrorLog = new Dictionary<int, string>();
+            InsideConcat = false;
+            InsideFormatter = false;
+            InsideModule = false;
+            Groupings = new Stack<char>();
+            IsMathExpression = false;
+            ExclusiveOperators = new List<Token>();
+            Operators = new List<List<Token>>();
             Libraries = new List<string>();
-            Subdesigns = new Dictionary<string, string>();
+            Subdesigns = new Dictionary<string, Design>();
             Instantiations = new Dictionary<string, string>();
         }
 
-        #region Token Helper Functions
-
-        /// <summary>
-        /// Returns the token type of the provided lexeme.
-        /// </summary>
-        /// <param name="lexeme">Lexeme</param>
-        /// <param name="seperatorChar">Seperator character after lexeme</param>
-        /// <returns>Token type of lexeme</returns>
-        private TokenType? GetTokenType(string lexeme, char seperatorChar)
-        {
-            if (lexeme == Design.FileName && seperatorChar == '(')
-            {
-                return TokenType.Declaration;
-            }
-            else if (IsScalar(lexeme) || IsVector(lexeme))
-            {
-                return TokenType.Variable;
-            }
-            else if (OperatorRegex.IsMatch(lexeme))
-            {
-                if (lexeme == "|")
-                {
-                    return TokenType.OrOperator;
-                }
-                else if (lexeme == "^")
-                {
-                    return TokenType.ExclusiveOrOperator;
-                }
-                else if (lexeme == "==")
-                {
-                    return TokenType.EqualToOperator;
-                }
-                else if (lexeme.Contains('~'))
-                {
-                    return TokenType.NegationOperator;
-                }
-                else if (lexeme == "+" || lexeme == "-")
-                {
-                    return TokenType.MathOperator;
-                }
-                else if (lexeme == "=")
-                {
-                    return TokenType.Assignment;
-                }
-                else
-                {
-                    return TokenType.Clock;
-                }
-            }
-            else if (IsConstant(lexeme))
-            {
-                return TokenType.Constant;
-            }
-            else if (FormatterRegex.IsMatch(lexeme))
-            {
-                return TokenType.Formatter;
-            }
-            else if (InstantiationRegex.IsMatch(lexeme) && seperatorChar == '(')
-            {
-                return TokenType.Instantiation;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Returns a list of tokens from the provided line
-        /// </summary>
-        /// <param name="line">Line to generate tokens</param>
-        /// <returns>List of tokens from the line</returns>
-        private List<Token> GetTokens(string line)
-        {
-            // Create tokens list
-            List<Token> tokens = new List<Token>();
-            // Create string builder for current lexeme
-            StringBuilder lexeme = new StringBuilder();
-            // Create groupings stack
-            Stack<char> groupings = new Stack<char>();
-            // Save current line number
-            int lineNumber = LineNumber;
-
-            for (int i = 0; i < line.Length; i++)
-            {
-                // Get current character
-                char c = line[i];
-                // Get character as a string
-                string newChar = c.ToString();
-                // Get current lexme
-                string currentLexeme = lexeme.ToString();
-
-                if (c == '"' || c == '#')
-                {
-                    // Add invalid character error to error log
-                    ErrorLog.Add($"{lineNumber}: Invalid character '{c}'.");
-                    // Return null
-                    return null;
-                }
-                // If the character is an invalid character
-                else if (InvalidRegex.IsMatch(newChar))
-                {
-                    // Add invalid character error to error log
-                    ErrorLog.Add($"{lineNumber}: Unrecognized character '{c}'.");
-                    // Return null
-                    return null;
-                }
-                // If the character is a seperator character
-                else if (SeperatorRegex.IsMatch(newChar))
-                {
-                    if (currentLexeme.Length > 0)
-                    {
-                        TokenType? tokenType = GetTokenType(currentLexeme, c);
-                        if (tokenType == null)
-                        {
-                            return null;
-                        }
-
-                        // Add current token to tokens list
-                        tokens.Add(new Token(currentLexeme, (TokenType)tokenType));
-                        // Clear current lexeme
-                        lexeme = lexeme.Clear();
-                    }
-
-                    if (c == ' ')
-                    {
-                        tokens.Add(new Token(newChar, TokenType.Whitespace));
-                    }
-                    else if (c == '\n')
-                    {
-                        lineNumber++;
-                        tokens.Add(new Token(newChar, TokenType.Newline));
-                    }
-                    else if (c == ';')
-                    {
-                        if (tokens.Count == 0)
-                        {
-                            ErrorLog.Add($"{LineNumber}: ';' can only be used to end non-empty statements.");
-                            return null;
-                        }
-
-                        tokens.Add(new Token(newChar, TokenType.Semicolon));
-                    }
-                    else if (c == ':')
-                    {
-                        tokens.Add(new Token(newChar, TokenType.Colon));
-                    }
-                    else if (c == ',')
-                    {
-                        tokens.Add(new Token(newChar, TokenType.Comma));
-                    }
-                    else if (c == '(' || c == '{')
-                    {
-                        if (groupings.Count > 0 && groupings.Peek() == '{')
-                        {
-                            if (c == '{')
-                            {
-                                // Concatenation inside concatenation error
-                                ErrorLog.Add($"{lineNumber}: Concatenations can't be used inside other concatenations.");
-                            }
-                            else
-                            {
-                                // Parenthesis inside concatenation error
-                                ErrorLog.Add($"{lineNumber}: Parenthesis can't be used inside concatenations.");
-                            }
-                            return null;
-                        }
-
-                        if (c == '(')
-                        {
-                            tokens.Add(new Token(newChar, TokenType.OpenParenthesis));
-                        }
-                        else
-                        {
-                            tokens.Add(new Token(newChar, TokenType.OpenBrace));
-                        }
-                        groupings.Push(c);
-                    }
-                    else if (c == ')' || c == '}')
-                    {
-                        char top = groupings.Count > 0 ? groupings.Pop() : '\0';
-                        if ((c == ')' && top != '(') || (c == '}' && top != '{'))
-                        {
-                            if (top == '\0')
-                            {
-                                // New grouping error
-                                ErrorLog.Add($"{lineNumber}: '{c}' doesn't have a matching opening.");
-                            }
-                            else
-                            {
-                                // Unmatched grouping error
-                                ErrorLog.Add($"{lineNumber}: '{c}' cannot be matched. '{top}' must be closed first.");
-                            }
-                            return null;
-                        }
-
-                        if (c == ')')
-                        {
-                            tokens.Add(new Token(newChar, TokenType.CloseParenthesis));
-                        }
-                        else
-                        {
-                            tokens.Add(new Token(newChar, TokenType.CloseBrace));
-                        }
-                    }
-                }
-                // If the character is not a seperator character
-                else
-                {
-                    // Append new character to the current lexeme
-                    lexeme.Append(c);
-                }
-            }
-
-            if (groupings.Count > 0)
-            {
-                // Unmatched grouping error
-                ErrorLog.Add($"{lineNumber}: '{groupings.Peek()}' was not matched.");
-                return null;
-            }
-
-            return tokens;
-        }
-
-        /// <summary>
-        /// Returns the previous token that isn't whitespace or a newline.
-        /// </summary>
-        /// <param name="tokens">List of tokens</param>
-        /// <param name="currentIndex">Current token index</param>
-        /// <returns>The previous token that isn't whitespace or a newline</returns>
-        private Token GetNextNonWhitespaceToken(List<Token> tokens, int currentIndex)
-        {
-            for (int i = currentIndex + 1; i < tokens.Count; i++)
-            {
-                if (tokens[i].Type != TokenType.Whitespace && tokens[i].Type != TokenType.Newline)
-                {
-                    return tokens[i];
-                }
-            }
-
-            // No non whitespace token found
-            return null;
-        }
-
-        private bool IsTokenLeftOperand(Token token)
-        {
-            return token.Type == TokenType.Variable || token.Type == TokenType.Constant
-                || token.Type == TokenType.CloseBrace || token.Type == TokenType.CloseParenthesis;
-        }
-
-        private bool IsTokenRightOperand(Token token)
-        {
-            return token.Type == TokenType.Variable || token.Type == TokenType.Constant
-                || token.Type == TokenType.OpenBrace || token.Type == TokenType.OpenParenthesis
-                || token.Type == TokenType.NegationOperator;
-        }
-
-        private bool IsTokenOperator(Token currentToken, Token previousToken, Token nextToken, StatementType? statementType)
-        {
-            if (currentToken.Type == TokenType.EqualToOperator || currentToken.Type == TokenType.ExclusiveOrOperator
-                || currentToken.Type == TokenType.MathOperator || currentToken.Type == TokenType.NegationOperator
-                || currentToken.Type == TokenType.OrOperator)
-            {
-                return true;
-            }
-
-            if ((statementType == StatementType.Boolean || statementType == StatementType.Clock)
-                && (currentToken.Type == TokenType.Whitespace || currentToken.Type == TokenType.Newline)
-                && (previousToken != null && IsTokenLeftOperand(previousToken) && nextToken != null && IsTokenRightOperand(nextToken)))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool IsTokenExclusiveOperator(Token currentToken)
-        {
-            return currentToken.Type == TokenType.EqualToOperator || currentToken.Type == TokenType.ExclusiveOrOperator
-                || currentToken.Type == TokenType.MathOperator;
-        }
-
-        #endregion
-
-        protected StatementType? GetStatementType(string line)
-        {
-            // If line is a comment statement
-            if (Parser.CommentStmtRegex.IsMatch(line))
-            {
-                // Return comment statement type
-                return StatementType.Comment;
-            }
-            // If line is a library statement
-            else if (Parser.LibraryStmtRegex.IsMatch(line))
-            {
-                // Return library statement type
-                return StatementType.Library;
-            }
-
-            // Create statement type
-            StatementType? statementType = null;
-
-            // Get tokens list
-            List<Token> tokens = GetTokens(line);
-            // If tokens list is empty
-            if (tokens == null)
-            {
-                return statementType;
-            }
-
-            // Declare last token
-            Token lastToken = null;
-            // Declare next token
-            Token nextToken = null;
-
-            // Whether the current token is inside a module
-            bool insideModule = false;
-            // Whether the current token is inside a formatter
-            bool insideFormat = false;
-            // Whether the current token is inside a concat
-            bool insideConcat = false;
-
-            // Whether the current expression is a math expression
-            bool isMathExpression = false;
-            // Whether the last token is an operator
-            bool wasLastTokenOperator = false;
-            // Init operators list
-            List<List<Token>> operators = new List<List<Token>>();
-            // Init exclusive operators list
-            List<Token> exclusiveOperators = new List<Token>();
-
-            for (int i = 0; i < tokens.Count; i++)
-            {
-                Token token = tokens[i];
-                nextToken = GetNextNonWhitespaceToken(tokens, i);
-                List<Token> previousTokens = i != 0 ? tokens.GetRange(0, i) : new List<Token>();
-
-                bool isTokenOperator = IsTokenOperator(token, lastToken, nextToken, statementType);
-
-                if (token.Type == TokenType.Newline)
-                {
-                    // Increment line number
-                    LineNumber++;
-                }
-                else if (token.Type == TokenType.OpenParenthesis)
-                {
-                    if (statementType == StatementType.FormatSpecifier || statementType == null)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '(' can't be used in a format specifier or variable list statement.");
-                        return null;
-                    }
-
-                    insideModule = lastToken != null && (lastToken.Type == TokenType.Declaration || lastToken.Type == TokenType.Instantiation);
-                    operators.Add(new List<Token>());
-                    exclusiveOperators.Add(null);
-                }
-                else if (token.Type == TokenType.CloseParenthesis)
-                {
-                    if (statementType == StatementType.FormatSpecifier || statementType == null)
-                    {
-                        ErrorLog.Add($"{LineNumber}: ')' can't be used in a format specifier or variable list statement.");
-                        return null;
-                    }
-
-                    if (lastToken != null && lastToken.Type == TokenType.OpenParenthesis)
-                    {
-                        ErrorLog.Add($"{LineNumber}: () can't be empty.");
-                        return null;
-                    }
-
-                    insideModule = false;
-                    operators.RemoveAt(operators.Count - 1);
-                    exclusiveOperators.RemoveAt(exclusiveOperators.Count - 1);
-                }
-                else if (token.Type == TokenType.OpenBrace)
-                {
-                    insideConcat = true;
-                    insideFormat = lastToken != null && tokens[i - 1].Type == TokenType.Formatter;
-                }
-                else if (token.Type == TokenType.CloseBrace)
-                {
-                    if (lastToken != null && lastToken.Type == TokenType.OpenBrace)
-                    {
-                        ErrorLog.Add($"{LineNumber}: {{}} can't be empty.");
-                        return null;
-                    }
-
-                    insideConcat = false;
-                    insideFormat = false;
-                }
-                else if (token.Type == TokenType.Comma)
-                {
-                    if (!insideModule)
-                    {
-                        ErrorLog.Add($"{LineNumber}: ',' can only be used to separate variables in a module or submodule statement.");
-                        return null;
-                    }
-                }
-                else if (token.Type == TokenType.Colon)
-                {
-                    if (!insideModule)
-                    {
-                        ErrorLog.Add($"{LineNumber}: ':' can only be used to seperate input and output variables in a module or submodule statement.");
-                        return null;
-                    }
-
-                    if (previousTokens.Any(t => t.Type == TokenType.Colon))
-                    {
-                        ErrorLog.Add($"{LineNumber}: ':' can only be used once in a module or submodule statement.");
-                        return null;
-                    }
-                }
-                else if (token.Type == TokenType.Declaration)
-                {
-                    if (statementType != null)
-                    {
-                        ErrorLog.Add($"{LineNumber}: Module declarations must be there own statement.");
-                        return null;
-                    }
-
-                    statementType = StatementType.Module;
-                    insideModule = true;
-                }
-                else if (token.Type == TokenType.Instantiation)
-                {
-                    if (statementType != null || previousTokens.Count(t => t.Type != TokenType.Whitespace && t.Type != TokenType.Newline) > 0)
-                    {
-                        ErrorLog.Add($"{LineNumber}: Module instantiations must be there own statement.");
-                        return null;
-                    }
-
-                    if (!ValidateInstantiation(InstantiationRegex.Match(token.Text), line))
-                    {
-                        return null;
-                    }
-
-                    statementType = StatementType.Submodule;
-                    insideModule = true;
-                }
-                else if (token.Type == TokenType.Variable || token.Type == TokenType.Constant)
-                {
-                    if (statementType == StatementType.Boolean || statementType == StatementType.Clock)
-                    {
-                        if (token.Text.Contains('*'))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '{token.Text}' can only be used with an '*' in variable list statements.");
-                            return null;
-                        }
-
-                        if (insideConcat && token.Text.Contains('~'))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '~' can't be used inside a concatenation.");
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        if (token.Text.Contains('~'))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '~' can only be used on the right side of a boolean or clock statement.");
-                            return null;
-                        }
-
-                        if (statementType == StatementType.FormatSpecifier)
-                        {
-                            if (!insideFormat)
-                            {
-                                ErrorLog.Add($"{LineNumber}: Variables or constants in a format specifier statement must be inside a format specifier.");
-                                return null;
-                            }
-                        }
-                        else if (statementType == StatementType.Module || statementType == StatementType.Submodule)
-                        {
-                            if (!insideModule)
-                            {
-                                ErrorLog.Add($"{LineNumber}: Variables or constants in module or submodule statements must be inside an instantiation or declaration.");
-                                return null;
-                            }
-                        }
-                    }
-
-                    if (token.Type == TokenType.Constant && insideConcat && !(char.IsDigit(token.Text.TrimStart('~')[0]) && token.Text.Contains('\'')))
-                    {
-                        ErrorLog.Add($"{LineNumber}: Constants in concatenations must specify a bit count.");
-                        return null;
-                    }
-                }
-                else if (token.Type == TokenType.Assignment || token.Type == TokenType.Clock)
-                {
-                    if (statementType == StatementType.Boolean || statementType == StatementType.Clock)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '{token.Text}' can only precede dependent(s) once in a boolean or clock statement.");
-                        return null;
-                    }
-                    else if (statementType != null)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '{token.Text}' can only be used in a boolean or clock statement.");
-                        return null;
-                    }
-                    else
-                    {
-                        statementType = token.Type == TokenType.Assignment ? StatementType.Boolean : StatementType.Clock;
-                        
-                        // Add new operator list
-                        operators.Add(new List<Token>());
-                        // Add empty exclusive operator
-                        exclusiveOperators.Add(null);
-                    }
-
-                    int variableCount = 0;
-                    foreach (Token previousToken in previousTokens)
-                    {
-                        if (previousToken.Text.Contains('*'))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '{token.Text}' can only be used with an '*' in variable list statements.");
-                            return null;
-                        }
-
-                        if (previousToken.Type == TokenType.Constant)
-                        {
-                            ErrorLog.Add($"{LineNumber}: Constants can't be used on the left side of a boolean or clock statement.");
-                            return null;
-                        }
-                        else if (previousToken.Type == TokenType.Variable)
-                        {
-                            variableCount++;
-                        }
-                    }
-
-                    if (variableCount == 0)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '{token.Text}' can only be used after a dependent in boolean or clock statements.");
-                        return null;
-                    }
-
-                    /*
-                    if (previousTokens.Count(t => t.Type == TokenType.Variable) > 1)
-                    {
-                        ErrorLog.Add($"{LineNumber}: In order to use multiple variables for a dependent, you must place the variables inside a concatenation.");
-                        return null;
-                    }
-                    */
-                }
-                else if (isTokenOperator)
-                {
-                    if (insideConcat && (token.Type == TokenType.Whitespace || token.Type == TokenType.Newline))
-                    {
-                        continue;
-                    }
-
-                    if (insideConcat)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '{token.Text}' can't be used inside a concatenation.");
-                        return null;
-                    }
-
-                    if (statementType != StatementType.Boolean && statementType != StatementType.Clock)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '{token.Text}' operator can only be used in a boolean or clock statement.");
-                        return null;
-                    }
-
-                    if (token.Type == TokenType.NegationOperator)
-                    {
-                        if (nextToken == null || (nextToken.Type != TokenType.OpenParenthesis && nextToken.Type != TokenType.OpenBrace))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '~' must be attached to a scalar, vector, constant, parenthesis or concatenation.");
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        if (nextToken == null || !IsTokenRightOperand(nextToken))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '{token.Text}' is missing its right operand.");
-                            return null;
-                        }
-
-                        if (lastToken == null || !IsTokenLeftOperand(lastToken))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '{token.Text}' is missing its left operand.");
-                            return null;
-                        }
-                    }
-
-                    // Get current exclusive operator
-                    Token currentExclusiveOperator = exclusiveOperators[exclusiveOperators.Count - 1];
-                    if (IsTokenExclusiveOperator(token) && currentExclusiveOperator == null)
-                    {
-                        if (operators[operators.Count - 1].Any(t => t.Type != token.Type))
-                        {
-                            ErrorLog.Add($"{LineNumber}: '{token.Text}' operator must be the only operator in its parentheses level.");
-                            return null;
-                        }
-
-                        // Save exclusive operator
-                        exclusiveOperators[exclusiveOperators.Count - 1] = token;
-
-                        if (!isMathExpression && token.Type == TokenType.MathOperator)
-                        {
-                            foreach (List<Token> tokenOperators in operators)
-                            {
-                                if (tokenOperators.Count > 0)
-                                {
-                                    ErrorLog.Add($"{LineNumber}: Math operators (+ and -) cannot be used with boolean operators in a boolean or clock statement.");
-                                    return null;
-                                }
-                            }
-
-                            isMathExpression = true;
-                        }
-                    }
-                    else if (currentExclusiveOperator != null)
-                    {
-                        if (currentExclusiveOperator.Type != token.Type)
-                        {
-                            ErrorLog.Add($"{LineNumber}: '{currentExclusiveOperator.Text}' operator must be the only operator in its parentheses level.");
-                            return null;
-                        }
-                    }
-
-                    if (!operators[operators.Count - 1].Any(o => o.Type == token.Type))
-                    {
-                        operators[operators.Count - 1].Add(token);
-                    }
-                }
-                else if (token.Type == TokenType.Formatter)
-                {
-                    if (insideFormat)
-                    {
-                        ErrorLog.Add($"{LineNumber}: Formatters can't be used inside another format specifier.");
-                        return null;
-                    }
-
-                    if (statementType != null && statementType != StatementType.FormatSpecifier)
-                    {
-                        ErrorLog.Add($"{LineNumber}: '{token.Text}' can only be used in a format specifier statement.");
-                        return null;
-                    }
-                    else if (statementType == null)
-                    {
-                        if (previousTokens.Any(t => token.Type == TokenType.Variable || token.Type == TokenType.Constant))
-                        {
-                            ErrorLog.Add($"{LineNumber}: All variables or constants in a format specifier statement must be inside a format specifier.");
-                            return null;
-                        }
-
-                        statementType = StatementType.FormatSpecifier;
-                    }
-                }
-
-                if (token.Type != TokenType.Whitespace && token.Type != TokenType.Newline)
-                {
-                    lastToken = token;
-                    wasLastTokenOperator = isTokenOperator;
-                }
-            }
-
-            // If there are no errors and the statement type is still null
-            if (statementType == null)
-            {
-                // Set statement type to variable list
-                statementType = StatementType.VariableList;
-            }
-
-            // Return statement type
-            return statementType;
-        }
-
-        #region Token Verifications
+        #region Token Identification
 
         /// <summary>
         /// Returns whether a lexeme is a scalar.
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
-        /// <returns>Whether the lexeme is a scalar</returns>
-        private bool IsScalar(string lexeme)
+        /// <returns>Whether the lexeme is a scalar or an error message</returns>
+        private bool IsLexemeScalar(string lexeme)
         {
             // Try to match lexeme as a scalar
-            Match scalarMatch = ScalarRegex.Match(lexeme);
+            Match scalarMatch = ScalarTokenRegex.Match(lexeme);
             // If lexeme is a scalar
             if (scalarMatch.Success)
             {
@@ -952,8 +360,7 @@ namespace VisiBoole.ParsingEngine
                 // If scalar bit is larger than 31
                 if (bit > 31)
                 {
-                    ErrorLog.Add($"{LineNumber}: Bit count of '{lexeme}' must be between 0 and 31.");
-                    return false;
+                    ErrorLog.Add(CurrentLineNumber, $"Bit count of '{lexeme}' must be between 0 and 31.");
                 }
 
                 // If scalar doesn't contain a bit
@@ -963,7 +370,7 @@ namespace VisiBoole.ParsingEngine
                     if (Design.Database.NamespaceBelongsToVector(name))
                     {
                         // Add namespace error to error log
-                        ErrorLog.Add($"{LineNumber}: Namespace '{name}' is already being used by a vector.");
+                        ErrorLog.Add(CurrentLineNumber, $"Namespace '{name}' is already being used by a vector.");
                         return false;
                     }
                     // If namespace doesn't exist
@@ -980,7 +387,7 @@ namespace VisiBoole.ParsingEngine
                     if (Design.Database.NamespaceExists(name) && !Design.Database.NamespaceBelongsToVector(name))
                     {
                         // Add namespace error to error log
-                        ErrorLog.Add($"{LineNumber}: Namespace '{name}' is already being used by a scalar.");
+                        ErrorLog.Add(CurrentLineNumber, $"Namespace '{name}' is already being used by a scalar.");
                         return false;
                     }
                     // If namespace doesn't exist or belongs to a vector
@@ -990,14 +397,9 @@ namespace VisiBoole.ParsingEngine
                         Design.Database.UpdateNamespace(name, bit);
                     }
                 }
+            }
 
-                return true;
-            }
-            // If lexeme is not a scalar
-            else
-            {
-                return false;
-            }
+            return scalarMatch.Success;
         }
 
         /// <summary>
@@ -1005,10 +407,10 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a vector</returns>
-        private bool IsVector(string lexeme)
+        private bool IsLexemeVector(string lexeme)
         {
             // Try to match lexeme as a vector
-            Match vectorMatch = VectorRegex.Match(lexeme);
+            Match vectorMatch = VectorTokenRegex.Match(lexeme);
             // If lexeme is a vector
             if (vectorMatch.Success)
             {
@@ -1019,7 +421,7 @@ namespace VisiBoole.ParsingEngine
                 if (char.IsDigit(name[name.Length - 1]))
                 {
                     // Add vector name error to error log
-                    ErrorLog.Add($"{LineNumber}: Vector name '{name}' cannot end in a number.");
+                    ErrorLog.Add(CurrentLineNumber, $"Vector name '{name}' cannot end in a number.");
                     return false;
                 }
 
@@ -1032,14 +434,14 @@ namespace VisiBoole.ParsingEngine
                 if (leftBound > 31 || rightBound > 31)
                 {
                     // Add vector bounds error to error log
-                    ErrorLog.Add($"{LineNumber}: Vector bounds of '{lexeme}' must be between 0 and 31.");
+                    ErrorLog.Add(CurrentLineNumber, $"Vector bounds of '{lexeme}' must be between 0 and 31.");
                     return false;
                 }
                 // If step is not between 1 and 31
                 else if (step == 0 || step > 31)
                 {
                     // Add vector step error to error log
-                    ErrorLog.Add($"{LineNumber}: Vector step of '{lexeme}' must be between 1 and 31.");
+                    ErrorLog.Add(CurrentLineNumber, $"Vector step of '{lexeme}' must be between 1 and 31.");
                     return false;
                 }
 
@@ -1047,7 +449,7 @@ namespace VisiBoole.ParsingEngine
                 if (Design.Database.NamespaceExists(name) && !Design.Database.NamespaceBelongsToVector(name))
                 {
                     // Add namespace error to error log
-                    ErrorLog.Add($"{LineNumber}: Namespace '{name}' is already being used by a scalar.");
+                    ErrorLog.Add(CurrentLineNumber, $"Namespace '{name}' is already being used by a scalar.");
                     return false;
                 }
 
@@ -1070,14 +472,9 @@ namespace VisiBoole.ParsingEngine
                         Design.Database.UpdateNamespace(name, i);
                     }
                 }
+            }
 
-                return true;
-            }
-            // If lexeme is not a vector
-            else
-            {
-                return false;
-            }
+            return vectorMatch.Success;
         }
 
         /// <summary>
@@ -1085,10 +482,10 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexeme">Lexeme to interpret</param>
         /// <returns>Whether the lexeme is a constant</returns>
-        private bool IsConstant(string lexeme)
+        private bool IsLexemeConstant(string lexeme)
         {
             // Try to match lexeme as a constant
-            Match constantMatch = ConstantRegex.Match(lexeme);
+            Match constantMatch = ConstantTokenRegex.Match(lexeme);
             // If lexeme is a constant
             if (constantMatch.Success)
             {
@@ -1096,17 +493,895 @@ namespace VisiBoole.ParsingEngine
                 if (!string.IsNullOrEmpty(constantMatch.Groups["BitCount"].Value) && Convert.ToInt32(constantMatch.Groups["BitCount"].Value) > 32)
                 {
                     // Add constant bit count error to error log
-                    ErrorLog.Add($"{LineNumber}: Constant '{lexeme}' can    have at most 32 bits.");
+                    ErrorLog.Add(CurrentLineNumber, $"Constant '{lexeme}' can have at most 32 bits.");
+                    return false;
+                }
+            }
+
+            return constantMatch.Success;
+        }
+
+        /// <summary>
+        /// Gets the token type of the provided lexeme or seperator
+        /// </summary>
+        /// <param name="lexeme">Lexeme</param>
+        /// <param name="seperator">Seperator</param>
+        /// <returns>Token type of the provided lexeme or seperator</returns>
+        protected TokenType? GetTokenType(string lexeme, char seperator)
+        {
+            if (lexeme.Length > 0)
+            {
+                if (lexeme == Design.FileName && seperator == '(')
+                {
+                    return TokenType.Declaration;
+                }
+                else if (IsLexemeScalar(lexeme) || IsLexemeVector(lexeme))
+                {
+                    if (seperator != ' ' && seperator != '\n' && seperator != ';' && seperator != ')' && seperator != '}' && seperator != ',')
+                    {
+                        if (seperator == '~')
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, parenthesis or concatenation.");
+                        }
+                        else if (seperator == '*')
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, or concatenation.");
+                        }
+                        else
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"Unrecognized '{lexeme}{seperator}'. Are you missing a space?");
+                        }
+                        return null;
+                    }
+
+                    return TokenType.Variable;
+                }
+                else if (OperatorTokenRegex.IsMatch(lexeme))
+                {
+                    if (seperator != ' ' && seperator != '\n')
+                    {
+                        if (seperator == '~')
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, parenthesis or concatenation.");
+                        }
+                        else if (seperator == '*')
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, or concatenation.");
+                        }
+                        else
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"Unrecognized '{lexeme}{seperator}'. Are you missing a space?");
+                        }
+                        return null;
+                    }
+
+                    if (lexeme == "|")
+                    {
+                        return TokenType.OrOperator;
+                    }
+                    else if (lexeme == "+" || lexeme == "-")
+                    {
+                        return TokenType.MathOperator;
+                    }
+                    else if (lexeme == "^")
+                    {
+                        return TokenType.ExclusiveOrOperator;
+                    }
+                    else if (lexeme == "==")
+                    {
+                        return TokenType.EqualToOperator;
+                    }
+                    else if (lexeme == "=")
+                    {
+                        return TokenType.Assignment;
+                    }
+                    else if (lexeme.Contains("<"))
+                    {
+                        return TokenType.Clock;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else if (IsLexemeConstant(lexeme))
+                {
+                    if (seperator != ' ' && seperator != '\n' && seperator != ';' && seperator != ')' && seperator != '}' && seperator != ',')
+                    {
+                        if (seperator == '~')
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, parenthesis or concatenation.");
+                        }
+                        else if (seperator == '*')
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, or concatenation.");
+                        }
+                        else
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"Unrecognized '{lexeme}{seperator}'. Are you missing a space?");
+                        }
+                        return null;
+                    }
+
+                    return TokenType.Constant;
+                }
+                else if (FormatterRegex.IsMatch(lexeme))
+                {
+                    if (seperator != '{')
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"Invalid formatter '{lexeme}{seperator}'. Formatters must end with a '{{'.");
+                        return null;
+                    }
+
+                    return TokenType.Formatter;
+                }
+                else if (InstantiationRegex.IsMatch(lexeme) && seperator == '(')
+                {
+                    return TokenType.Instantiation;
+                }
+                else
+                {
+                    if (!ErrorLog.ContainsKey(CurrentLineNumber))
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"Unrecognized '{lexeme}'.");
+                    }
+                    return null;
+                }
+            }
+            else
+            {
+                if (seperator == ' ')
+                {
+                    return TokenType.Whitespace;
+                }
+                else if (seperator == '\n')
+                {
+                    return TokenType.Newline;
+                }
+                else if (seperator == ';')
+                {
+                    return TokenType.Semicolon;
+                }
+                else if (seperator == '(')
+                {
+                    return TokenType.OpenParenthesis;
+                }
+                else if (seperator == ')')
+                {
+                    return TokenType.CloseParenthesis;
+                }
+                else if (seperator == '{')
+                {
+                    return TokenType.OpenBrace;
+                }
+                else if (seperator == '}')
+                {
+                    return TokenType.CloseBrace;
+                }
+                else if (seperator == '~')
+                {
+                    return TokenType.NegationOperator;
+                }
+                else if (seperator == '*')
+                {
+                    return TokenType.Asterick;
+                }
+                else if (seperator == ',')
+                {
+                    return TokenType.Comma;
+                }
+                else if (seperator == ':')
+                {
+                    return TokenType.Colon;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Token Validation
+
+        /// <summary>
+        /// Returns whether the provided token is valid from the provided statement type.
+        /// </summary>
+        /// <param name="token">Token to validate</param>
+        /// <param name="statementType">Statement type</param>
+        /// <param name="line">Line</param>
+        /// <returns>Whether the provided token is valid from the provided statement type</returns>
+        protected bool IsTokenValid(Token token, StatementType? statementType, string line)
+        {
+            if (token.Type == TokenType.Whitespace || token.Type == TokenType.Newline || token.Type == TokenType.Semicolon)
+            {
+                return true;
+            }
+            else if (token.Type == TokenType.Variable || token.Type == TokenType.Constant)
+            {
+                if (statementType == StatementType.Comment || statementType == StatementType.Library)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Variables and constants can't be used in Comment or Library statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.EqualToOperator || token.Type == TokenType.ExclusiveOrOperator
+                || token.Type == TokenType.MathOperator || token.Type == TokenType.NegationOperator
+                || token.Type == TokenType.OrOperator)
+            {
+                if (statementType != StatementType.Boolean && statementType != StatementType.Clock)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Operator '{token.Text}' can only be used in Boolean or Clock statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.CloseParenthesis || token.Type == TokenType.OpenParenthesis)
+            {
+                if (statementType != StatementType.Boolean && statementType != StatementType.Clock
+                    && statementType != StatementType.Module && statementType != StatementType.Submodule)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Parentheses can't be used in Boolean, Clock, Module or Submodule statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.CloseBrace || token.Type == TokenType.OpenBrace)
+            {
+                if (statementType == StatementType.Comment || statementType == StatementType.Library)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Concatenations can't be used in Comment or Library statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Assignment)
+            {
+                if (statementType == StatementType.Empty)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Assignment operator '{token.Text}' is missing a dependent.");
+                    return false;
+                }
+                else if (statementType == StatementType.Boolean)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Assignment operator '{token.Text}' can only precede dependent(s) once in a Boolean statement.");
+                    return false;
+                }
+                else if (statementType != StatementType.VariableList)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Assignment operators can only be used in Boolean statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Clock)
+            {
+                if (statementType == StatementType.Empty)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Sequential assignment operator '{token.Text}' is missing a dependent.");
+                    return false;
+                }
+                else if (statementType == StatementType.Clock)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Sequential assignment operator '{token.Text}' can only precede dependent(s) once in a Clock statement.");
+                    return false;
+                }
+                else if (statementType != StatementType.VariableList)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Sequential assignment operators can only be used in Clock statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Formatter)
+            {
+                if (statementType == StatementType.VariableList)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"All variables or constants in a Format Specifier statement must be in a format specifier.");
+                    return false;
+                }
+                else if (statementType != StatementType.Empty && statementType != StatementType.FormatSpecifier)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Format specifiers can only be used in Format Specifier statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Asterick)
+            {
+                if (statementType != StatementType.Empty && statementType != StatementType.VariableList)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in Variable List statements.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Comment)
+            {
+                if (statementType != StatementType.Empty)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Comments must be their own statement.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Colon)
+            {
+                if (statementType != StatementType.Module && statementType != StatementType.Submodule)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"':' can only be used to seperate input and output variables in a Module or Submodule statement.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Comma)
+            {
+                if (statementType != StatementType.Module && statementType != StatementType.Submodule)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"',' can only be used to separate variables in a Module or Submodule statement.");
+                    return false;
+                }
+            }
+            else if (token.Type == TokenType.Instantiation)
+            {
+                if (statementType == StatementType.VariableList)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"All variables or constants in a Submodule statement must be in a module instantiaton.");
+                    return false;
+                }
+                else if (statementType != StatementType.Empty)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Module instantiations must be there own statement.");
                     return false;
                 }
 
+                return ValidateInstantiation(InstantiationRegex.Match(token.Text), line);
+            }
+            else if (token.Type == TokenType.Declaration)
+            {
+                if (statementType == StatementType.VariableList)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"All variables or constants in a Module statement must be in a module declaration.");
+                    return false;
+                }
+                else if (statementType != StatementType.Empty)
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Module declarations must be there own statement.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Token Helper Functions
+
+        /// <summary>
+        /// Return whether the token is a left operand.
+        /// </summary>
+        /// <param name="token">Token</param>
+        /// <returns>Whether the token is a left operand</returns>
+        private bool IsTokenLeftOperand(Token token)
+        {
+            return token != null && (token.Type == TokenType.Variable || token.Type == TokenType.Constant
+                || token.Type == TokenType.CloseBrace || token.Type == TokenType.CloseParenthesis);
+        }
+
+        /// <summary>
+        /// Returns whether the next character belongs to a variable or constant.
+        /// </summary>
+        /// <param name="nextChar">Next character</param>
+        /// <returns>Whether the next character belongs to a variable or constant</returns>
+        private bool DoesNextCharBelongToVariableOrConstant(char nextChar)
+        {
+            return char.IsLetterOrDigit(nextChar) || nextChar == '\'';
+        }
+
+        /// <summary>
+        /// Return whether the next character is a right operand.
+        /// </summary>
+        /// <param name="nextChar">Next character</param>
+        /// <returns>Whether the next character is a right operand</returns>
+        private bool IsNextCharRightOperand(char nextChar)
+        {
+            return DoesNextCharBelongToVariableOrConstant(nextChar) || nextChar == '(' || nextChar == '{' || nextChar == '~';
+        }
+
+        /// <summary>
+        /// Returns whether the new token is an operator.
+        /// </summary>
+        /// <param name="newToken">New token</param>
+        /// <param name="previousToken">Previous token</param>
+        /// <param name="nextChar">Next character</param>
+        /// <returns>Whether the new token is an operator</returns>
+        private bool IsNewTokenOperator(Token newToken, Token previousToken, char nextChar, StatementType? type)
+        {
+            // If new token is a boolean or math operator
+            if (newToken.Type == TokenType.OrOperator || newToken.Type == TokenType.NegationOperator
+                || newToken.Type == TokenType.ExclusiveOrOperator || newToken.Type == TokenType.MathOperator
+                || newToken.Type == TokenType.EqualToOperator)
+            {
                 return true;
             }
-            // If lexeme is not a constant
+
+            // If new token is whitespace or newline and seperates two operands
+            if ((newToken.Type == TokenType.Whitespace || newToken.Type == TokenType.Newline)
+                && (type == StatementType.Boolean || type == StatementType.Clock)
+                && IsTokenLeftOperand(previousToken) && IsNextCharRightOperand(nextChar))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the next character that is not whitespace or a newline character.
+        /// </summary>
+        /// <param name="line">Line</param>
+        /// <param name="index">Index in line</param>
+        /// <returns>Next character that is not whitespace or a newline character</returns>
+        private char GetNextChar(string line, int index)
+        {
+            // For all characters in the rest of the line
+            for (int i = index; i < line.Length; i++)
+            {
+                // If the current character is not a whitespace or newline character
+                if (line[i] != ' ' && line[i] != '\n')
+                {
+                    // Return current character
+                    return line[i];
+                }
+            }
+            return '\0';
+        }
+
+        #endregion
+
+        #region Token Verification
+
+        /// <summary>
+        /// Updates the statement type from the knowledge of the new token and the previous tokens.
+        /// </summary>
+        /// <param name="previousTokens">Previous tokens</param>
+        /// <param name="newToken">New token</param>
+        /// <param name="statementType">Current statement type</param>
+        /// <returns>New statement type from the knowledge of the new token and the previous tokens</returns>
+        private StatementType? UpdateStatementType(List<Token> previousTokens, Token newToken, StatementType? statementType)
+        {
+            if (newToken.Type == TokenType.Whitespace || newToken.Type == TokenType.Newline || newToken.Type == TokenType.Semicolon)
+            {
+                return statementType;
+            }
+            else if (statementType == StatementType.Empty)
+            {
+                if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant || newToken.Type == TokenType.Asterick
+                    || newToken.Type == TokenType.OpenBrace || newToken.Type == TokenType.CloseBrace)
+                {
+                    return StatementType.VariableList;
+                }
+                else if (newToken.Type == TokenType.Formatter)
+                {
+                    return StatementType.FormatSpecifier;
+                }
+                else if (newToken.Type == TokenType.Comment)
+                {
+                    return StatementType.Comment;
+                }
+                else if (newToken.Type == TokenType.Instantiation)
+                {
+                    InsideModule = true;
+                    return StatementType.Submodule;
+                }
+                else if (newToken.Type == TokenType.Declaration)
+                {
+                    InsideModule = true;
+                    return StatementType.Module;
+                }
+                else if (newToken.Type == TokenType.Library)
+                {
+                    return StatementType.Library;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (statementType == StatementType.VariableList)
+            {
+                if (newToken.Type == TokenType.Assignment || newToken.Type == TokenType.Clock)
+                {
+                    int groupingCount = 0;
+                    bool insideGroup = false;
+                    int variableOutsideGroupCount = 0;
+                    foreach (Token previousToken in previousTokens)
+                    {
+                        if (previousToken.Type == TokenType.Variable)
+                        {
+                            if (variableOutsideGroupCount == 1)
+                            {
+                                // Add invalid token error to error log
+                                ErrorLog.Add(CurrentLineNumber, $"Multiple dependents can only be used inside a concatenation.");
+                                return null;
+                            }
+
+                            if (!insideGroup)
+                            {
+                                if (groupingCount == 1)
+                                {
+                                    // Add invalid token error to error log
+                                    ErrorLog.Add(CurrentLineNumber, $"Multiple dependents can only be used inside a concatenation.");
+                                    return null;
+                                }
+
+                                variableOutsideGroupCount++;
+                            }
+                        }
+                        else if (previousToken.Type == TokenType.OpenBrace)
+                        {
+                            if (groupingCount == 1)
+                            {
+                                // Add invalid token error to error log
+                                ErrorLog.Add(CurrentLineNumber, $"Only one concatenation can't be used on the left side of a boolean or clock statement.");
+                                return null;
+                            }
+
+                            insideGroup = true;
+                            groupingCount++;
+                        }
+                        else if (previousToken.Type == TokenType.CloseBrace)
+                        {
+                            insideGroup = false;
+                        }
+                        else if (previousToken.Type == TokenType.Constant)
+                        {
+                            // Add invalid token error to error log
+                            ErrorLog.Add(CurrentLineNumber, $"Constants can't be used on the left side of a boolean or clock statement.");
+                            return null;
+                        }
+                        else if (previousToken.Type == TokenType.Asterick)
+                        {
+                            // Add invalid token error to error log
+                            ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in Variable List statements.");
+                            return null;
+                        }
+                    }
+
+                    // Add new operator list
+                    Operators.Add(new List<Token>());
+                    // Add empty exclusive operator
+                    ExclusiveOperators.Add(null);
+                    return newToken.Type == TokenType.Assignment ? StatementType.Boolean : StatementType.Clock;
+                }
+                else if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant
+                    || newToken.Type == TokenType.Asterick || newToken.Type == TokenType.OpenBrace
+                    || newToken.Type == TokenType.CloseBrace)
+                {
+                    return statementType;
+                }
+                else
+                {
+                    return null;
+                }
+            }
             else
             {
+                return statementType;
+            }
+        }
+
+        /// <summary>
+        /// Verifies whether the new token in the current execution follows valid syntax.
+        /// </summary>
+        /// <param name="previousTokens">Tokens before the new token</param>
+        /// <param name="newToken">New token</param>
+        /// <param name="nextChar">Next non-whitespace character</param>
+        /// <param name="statementType">Current statement type</param>
+        /// <returns>Whether the new token follows valid syntax.</returns>
+        private bool VerifySyntax(List<Token> previousTokens, Token newToken, char nextChar, StatementType? statementType)
+        {
+            if (newToken.Type == TokenType.Semicolon)
+            {
+                return true;
+            }
+
+            // If new token is inside a concat, check the new token is allowed to be inside a concat
+            if (InsideConcat && newToken.Type != TokenType.Whitespace && newToken.Type != TokenType.Newline
+                && newToken.Type != TokenType.Variable && newToken.Type != TokenType.Constant && newToken.Type != TokenType.CloseBrace)
+            {
+                if (InsideFormatter)
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' can't be used inside a format specifier.");
+                }
+                else
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' can't be used inside a concatenation.");
+                }
+                
                 return false;
             }
+
+            // Init last token
+            Token lastToken = null;
+            // For all previous tokens in reverse
+            foreach (Token previousToken in previousTokens.ToArray().Reverse())
+            {
+                // If token isn't a whitespace or newline token
+                if (previousToken.Type != TokenType.Whitespace && previousToken.Type != TokenType.Newline)
+                {
+                    // Set last token to this token
+                    lastToken = previousToken;
+                    break;
+                }
+            }
+
+            // Get whether the new token is an operator
+            bool isNewTokenOperator = IsNewTokenOperator(newToken, lastToken, nextChar, statementType);
+
+            // If the new token is a whitespace or newline token and isn't an operator
+            if ((newToken.Type == TokenType.Whitespace || newToken.Type == TokenType.Newline) && !isNewTokenOperator)
+            {
+                return true;
+            }
+
+            if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant)
+            {
+                if (statementType == StatementType.FormatSpecifier && !InsideFormatter)
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"Variables and constants in a Format Specifier statement must be inside a format specifier.");
+                    return false;
+                }
+                else if ((statementType == StatementType.Module || statementType == StatementType.Submodule)
+                    && !InsideModule)
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"Variables and constants in Module or Submodule statements must be inside an instantiation or declaration.");
+                    return false;
+                }
+
+                if (newToken.Type == TokenType.Constant)
+                {
+                    bool containsBitCount = char.IsDigit(newToken.Text[0]) && newToken.Text.Contains('\'');
+                    if (InsideConcat && !containsBitCount)
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"Constants in concatenations must specify a bit count.");
+                        return false;
+                    }
+                    else if (InsideModule)
+                    {
+                        if (!containsBitCount)
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"Constants in module declarations or instantiations must specify a bit count.");
+                            return false;
+                        }
+                        else if (previousTokens.Any(t => t.Type == TokenType.Colon))
+                        {
+                            ErrorLog.Add(CurrentLineNumber, $"Constants can't be used as outputs in module declarations or instantiations.");
+                            return false;
+                        }
+                    }
+                }
+            }
+            else if (isNewTokenOperator)
+            {
+                if (newToken.Type == TokenType.NegationOperator)
+                {
+                    if (!DoesNextCharBelongToVariableOrConstant(nextChar) && nextChar != '(' && nextChar != '{' && nextChar != '~')
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"'~' must be attached to the start of a variable, constant, parenthesis or concatenation.");
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (!IsTokenLeftOperand(lastToken))
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' is missing a left operand.");
+                        return false;
+                    }
+
+                    if (!IsNextCharRightOperand(nextChar))
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' is missing a right operand.");
+                        return false;
+                    }
+                }
+
+                // Get current exclusive operator
+                Token currentExclusiveOperator = ExclusiveOperators[ExclusiveOperators.Count - 1];
+                if (ExclusiveOperatorsList.Contains(newToken.Text) && currentExclusiveOperator == null)
+                {
+                    if (Operators[Operators.Count - 1].Any(o => o.Type != newToken.Type))
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' operator must be the only operator in its parentheses level.");
+                        return false;
+                    }
+
+                    // Save exclusive operator
+                    ExclusiveOperators[ExclusiveOperators.Count - 1] = newToken;
+
+                    if (!IsMathExpression && newToken.Type == TokenType.MathOperator)
+                    {
+                        foreach (List<Token> tokenOperators in Operators)
+                        {
+                            if (tokenOperators.Count > 0)
+                            {
+                                ErrorLog.Add(CurrentLineNumber, $"Math operators (+ and -) cannot be used with boolean operators in a boolean or clock statement.");
+                                return false;
+                            }
+                        }
+
+                        IsMathExpression = true;
+                    }
+                }
+                else if (currentExclusiveOperator != null)
+                {
+                    if (currentExclusiveOperator.Type != newToken.Type)
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"'{currentExclusiveOperator.Text}' operator must be the only operator in its parentheses level.");
+                        return false;
+                    }
+                }
+
+                if (!Operators[Operators.Count - 1].Any(o => o.Type == newToken.Type))
+                {
+                    Operators[Operators.Count - 1].Add(newToken);
+                }
+            }
+            else if (newToken.Type == TokenType.OpenParenthesis || newToken.Type == TokenType.OpenBrace)
+            {
+                if (Groupings.Count > 0 && Groupings.Peek() == '{')
+                {
+                    if (newToken.Type == TokenType.OpenBrace)
+                    {
+                        // Concatenation inside concatenation error
+                        ErrorLog.Add(CurrentLineNumber, $"Concatenations can't be used inside other concatenations.");
+                    }
+                    else
+                    {
+                        // Parenthesis inside concatenation error
+                        ErrorLog.Add(CurrentLineNumber, $"Parenthesis can't be used inside concatenations.");
+                    }
+                    return false;
+                }
+
+                Groupings.Push(newToken.Text[0]);
+
+                if (newToken.Type == TokenType.OpenParenthesis)
+                {
+                    InsideModule = lastToken != null && (lastToken.Type == TokenType.Declaration || lastToken.Type == TokenType.Instantiation);
+                    Operators.Add(new List<Token>());
+                    ExclusiveOperators.Add(null);
+                }
+                else
+                {
+                    InsideConcat = true;
+                    InsideFormatter = lastToken != null && lastToken.Type == TokenType.Formatter;
+                }
+            }
+            else if (newToken.Type == TokenType.CloseParenthesis || newToken.Type == TokenType.CloseBrace)
+            {
+                char top = Groupings.Count > 0 ? Groupings.Pop() : '\0';
+                if ((newToken.Type == TokenType.CloseParenthesis && top != '(') || (newToken.Type == TokenType.CloseBrace && top != '{'))
+                {
+                    if (top == '\0')
+                    {
+                        // New grouping error
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' doesn't have a matching opening.");
+                    }
+                    else
+                    {
+                        // Unmatched grouping error
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' cannot be matched. '{top}' must be closed first.");
+                    }
+                    return false;
+                }
+
+                if (newToken.Type == TokenType.CloseParenthesis)
+                {
+                    if (lastToken != null && lastToken.Type == TokenType.OpenParenthesis)
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"() can't be empty.");
+                        return false;
+                    }
+
+                    InsideModule = false;
+                    Operators.RemoveAt(Operators.Count - 1);
+                    ExclusiveOperators.RemoveAt(ExclusiveOperators.Count - 1);
+                }
+                else
+                {
+                    if (lastToken != null && lastToken.Type == TokenType.OpenBrace)
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"{{}} can't be empty.");
+                        return false;
+                    }
+
+                    InsideConcat = false;
+                    InsideFormatter = false;
+                }
+            }
+            else if (newToken.Type == TokenType.Asterick)
+            {
+                if (!char.IsLetter(nextChar) && nextChar != '{' && nextChar != '*')
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"'*' must be attached to the start of a variable, constant, or concatenation.");
+                    return false;
+                }
+            }
+            else if (newToken.Type == TokenType.Assignment)
+            {
+                if (nextChar == '\0' || nextChar == ';')
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"Assignment operator '{newToken.Text}' must have a right-hand expression.");
+                    return false;
+                }
+            }
+            else if (newToken.Type == TokenType.Clock)
+            {
+                if (nextChar == '\0' || nextChar == ';')
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"Sequential assignment operator '{newToken.Text}' must have a right-hand expression.");
+                    return false;
+                }
+            }
+            else if (newToken.Type == TokenType.Formatter)
+            {
+                return true;
+            }
+            else if (newToken.Type == TokenType.Comment)
+            {
+                if (nextChar != '\0')
+                {
+                    // Add invalid token error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Comments must be their own statement.");
+                    return false;
+                }
+            }
+            else if (newToken.Type == TokenType.Comma)
+            {
+                // Make sure comma is inside a module, doesn't start a module, doesn't end a module
+                // and seperates variables, constants and concatenations.
+                if (!InsideModule || (lastToken != null && lastToken.Type != TokenType.Variable
+                    && lastToken.Type != TokenType.Constant && lastToken.Type != TokenType.CloseBrace))
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"',' can only be used to separate variables, constants or concatenations in a module or submodule statement.");
+                    return false;
+                }
+            }
+            else if (newToken.Type == TokenType.Colon)
+            {
+                // Make sure colon is inside a module, doesn't start a module, doesn't end a module
+                // and seperates variables, constants and concatenations.
+                if (!InsideModule || (!DoesNextCharBelongToVariableOrConstant(nextChar) && nextChar != '{')
+                    || (lastToken != null && lastToken.Type != TokenType.Variable
+                    && lastToken.Type != TokenType.Constant && lastToken.Type != TokenType.CloseBrace))
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"':' can only be used to seperate input and output variables in a module or submodule statement.");
+                    return false;
+                }
+
+                if (previousTokens.Any(t => t.Type == TokenType.Colon))
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"':' can only be used once in a module or submodule statement.");
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #endregion
@@ -1126,13 +1401,13 @@ namespace VisiBoole.ParsingEngine
 
             if (designName == Design.FileName)
             {
-                ErrorLog.Add($"{LineNumber}: You cannot instantiate from the current design.");
+                ErrorLog.Add(CurrentLineNumber, $"You cannot instantiate from the current design.");
                 return false;
             }
 
             if (Instantiations.ContainsKey(instantiationName))
             {
-                ErrorLog.Add($"{LineNumber}: Instantiation name '{instantiationName}' is already being used.");
+                ErrorLog.Add(CurrentLineNumber, $"Instantiation name '{instantiationName}' is already being used.");
                 return false;
             }
             else
@@ -1141,18 +1416,15 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (!Subdesigns.ContainsKey(designName))
                     {
-                        string file = null;
+                        Design subDesign = null;
                         string[] files = Directory.GetFiles(Design.FileSource.DirectoryName, String.Concat(designName, ".vbi"));
                         if (files.Length > 0)
                         {
                             // Check for module Declaration
-                            if (DesignHasModuleDeclaration(files[0]))
-                            {
-                                file = files[0];
-                            }
+                            subDesign = DesignHasModuleDeclaration(files[0]);
                         }
 
-                        if (file == null)
+                        if (subDesign == null)
                         {
                             for (int i = 0; i < Libraries.Count; i++)
                             {
@@ -1160,24 +1432,24 @@ namespace VisiBoole.ParsingEngine
                                 if (files.Length > 0)
                                 {
                                     // Check for module Declaration
-                                    if (DesignHasModuleDeclaration(files[0]))
+                                    subDesign = DesignHasModuleDeclaration(files[0]);
+                                    if (subDesign != null)
                                     {
-                                        file = files[0];
                                         break;
                                     }
                                 }
                             }
 
                             // If file is not found
-                            if (file == null)
+                            if (subDesign == null)
                             {
                                 // Add file not found to error log
-                                ErrorLog.Add($"{LineNumber}: Unable to find a design named '{designName}' with a module declaration.");
+                                ErrorLog.Add(CurrentLineNumber, $"Unable to find a design named '{designName}' with a module declaration.");
                                 return false;
                             }
                         }
 
-                        Subdesigns.Add(designName, file);
+                        Subdesigns.Add(designName, subDesign);
                         Instantiations.Add(instantiationName, line);
                     }
                     else
@@ -1189,37 +1461,208 @@ namespace VisiBoole.ParsingEngine
                 }
                 catch (Exception)
                 {
-                    ErrorLog.Add($"{LineNumber}: Error locating '{designName}'.");
+                    ErrorLog.Add(CurrentLineNumber, $"Error locating '{designName}'.");
                     return false;
                 }
             }
         }
 
         /// <summary>
-        /// Returns whether the design has a module declaration.
+        /// Returns the design if it has a module declaration.
         /// </summary>
         /// <param name="designPath">Path to design</param>
-        /// <returns>Whether the design has a module declaration</returns>
-        private bool DesignHasModuleDeclaration(string designPath)
+        /// <returns>Design if it has a module declaration.</returns>
+        private Design DesignHasModuleDeclaration(string designPath)
         {
-            FileInfo fileInfo = new FileInfo(designPath);
-            string name = fileInfo.Name.Split('.')[0];
-            using (StreamReader reader = fileInfo.OpenText())
-            {
-                string nextLine = string.Empty;
-                while ((nextLine = reader.ReadLine()) != null)
-                {
-                    if (Regex.IsMatch(nextLine, $@"^\s*{name}\({ModulePattern}\);$"))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            Design newDesign = new Design(designPath);
+            return newDesign.ModuleDeclaration != null ? newDesign : null;
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns the statement type of the provided line.
+        /// </summary>
+        /// <param name="line">Line</param>
+        /// <returns>Statement type of the provided line</returns>
+        protected StatementType? GetStatementType(string line)
+        {
+            // If line is a comment statement
+            if (Parser.CommentStmtRegex.IsMatch(line))
+            {
+                // Return comment statement type
+                return StatementType.Comment;
+            }
+            // If line is a library statement
+            else if (Parser.LibraryStmtRegex.IsMatch(line))
+            {
+                // Return library statement type
+                return StatementType.Library;
+            }
+
+            // Statement type to return
+            StatementType? statementType = StatementType.Empty;
+            // Create tokens list
+            List<Token> tokens = new List<Token>();
+            // Create string builder for current lexeme
+            StringBuilder lexeme = new StringBuilder();
+            // Create groupings stack
+            Stack<char> groupings = new Stack<char>();
+            // Save current line number
+            int lineNumber = CurrentLineNumber;
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                // Get current character
+                char c = line[i];
+                // Get character as a string
+                string newChar = c.ToString();
+                // Get current lexme
+                string currentLexeme = lexeme.ToString();
+
+                if (statementType == StatementType.Comment || statementType == StatementType.Library)
+                {
+                    lexeme.Append(c);
+                }
+                else if (c == '"')
+                {
+                    // Make sure current lexeme is empty, + or -
+                    if (!(currentLexeme == "+" || currentLexeme == "-" || currentLexeme == ""))
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"Invalid '\"'.");
+                        return null;
+                    }
+
+                    // Make sure no other tokens exist
+                    if (tokens.Any(token => token.Text != " "))
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"Invalid '\"'.");
+                        return null;
+                    }
+
+                    statementType = StatementType.Comment;
+                    lexeme.Append(c);
+                }
+                else if (currentLexeme == "#library")
+                {
+                    statementType = StatementType.Library;
+                }
+                // If the character is an invalid character
+                else if (InvalidRegex.IsMatch(newChar))
+                {
+                    // Add invalid character error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Unrecognized character '{c}'.");
+                    // Return null
+                    return null;
+                }
+                // If the character is a seperator character
+                else if (SeperatorsList.Contains(c))
+                {
+                    TokenType? tokenType;
+                    Token newToken;
+                    char nextChar = GetNextChar(line, i + 1);
+
+                    // If current lexeme contains characters
+                    if (currentLexeme.Length > 0)
+                    {
+                        // Get token type of current lexeme
+                        tokenType = GetTokenType(currentLexeme, c);
+                        // If token type is null
+                        if (tokenType == null)
+                        {
+                            // Return null for statement type
+                            return null;
+                        }
+                        // Create new token from current lexeme and its type
+                        newToken = new Token(currentLexeme, (TokenType)tokenType);
+                        // If new token isn't valid
+                        if (!IsTokenValid(newToken, statementType, line))
+                        {
+                            // Return null for statement type
+                            return null;
+                        }
+
+                        // Update statement type with the new token
+                        statementType = UpdateStatementType(tokens, newToken, statementType);
+                        // If new statement type is null
+                        if (statementType == null)
+                        {
+                            // Return for error
+                            return null;
+                        }
+                        // If new token doesn't follow syntax
+                        if (!VerifySyntax(tokens, newToken, nextChar, statementType))
+                        {
+                            // Return for error
+                            return null;
+                        }
+
+                        // Add new token to tokens list
+                        tokens.Add(newToken);
+                        // Clear current lexeme
+                        lexeme = lexeme.Clear();
+                    }
+
+                    // Get token type of seperator char
+                    tokenType = GetTokenType("", c);
+                    // If token type is null
+                    if (tokenType == null)
+                    {
+                        // Return null for statement type
+                        return null;
+                    }
+
+                    // Create new token from seperator and its type
+                    newToken = new Token(newChar, (TokenType)tokenType);
+                    // If new token isn't valid
+                    if (!IsTokenValid(newToken, statementType, line))
+                    {
+                        // Return null for statement type
+                        return null;
+                    }
+                    // Update statement type with the new token
+                    statementType = UpdateStatementType(tokens, newToken, statementType);
+                    // If new statement type is null
+                    if (statementType == null)
+                    {
+                        // Return for error
+                        return null;
+                    }
+                    // If new token doesn't follow syntax
+                    if (!VerifySyntax(tokens, newToken, nextChar, statementType))
+                    {
+                        // Return for error
+                        return null;
+                    }
+
+                    // If seperator token is a new line token
+                    if (tokenType == TokenType.Newline)
+                    {
+                        CurrentLineNumber++;
+                    }
+
+                    // Add new token to tokens list
+                    tokens.Add(newToken);
+                }
+                // If the character is not a seperator character
+                else
+                {
+                    // Append new character to the current lexeme
+                    lexeme.Append(c);
+                }
+            }
+
+            // Check for unmatched groupings
+            if (groupings.Count > 0)
+            {
+                // Unmatched grouping error
+                ErrorLog.Add(CurrentLineNumber, $"'{groupings.Peek()}' was not matched.");
+                return null;
+            }
+
+            // Return statement type
+            return statementType;
+        }
 
         #region Expansion Methods
 

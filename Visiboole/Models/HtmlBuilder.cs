@@ -41,6 +41,26 @@ namespace VisiBoole.Models
         /// </summary>
         private string FalseColor;
 
+        private List<List<IObjectCodeElement>> PreParseHTML(List<IObjectCodeElement> output)
+        {
+            List<List<IObjectCodeElement>> fullText = new List<List<IObjectCodeElement>>();
+            List<IObjectCodeElement> subText = new List<IObjectCodeElement>();
+            foreach (IObjectCodeElement element in output)
+            {
+                Type elementType = element.GetType();
+                if (elementType == typeof(LineFeed))
+                {
+                    fullText.Add(subText);
+                    subText = new List<IObjectCodeElement>();
+                }
+                else
+                {
+                    subText.Add(element);
+                }
+            }
+            return fullText;
+        }
+
         public string GetHTML(List<IObjectCodeElement> output)
         {
             string html = "";
@@ -82,6 +102,7 @@ namespace VisiBoole.Models
                         else
                         {
                             bool isInstantiation = varType == typeof(Instantiation);
+                            bool isFormatter = varType == typeof(Formatter);
                             string color = "'black'";
                             string cursor = isInstantiation ? "hand" : "text";
                             string decoration = "";
@@ -115,26 +136,6 @@ namespace VisiBoole.Models
             }
 
             return html;
-        }
-
-        private List<List<IObjectCodeElement>> PreParseHTML(List<IObjectCodeElement> output)
-        {
-            List<List<IObjectCodeElement>> fullText = new List<List<IObjectCodeElement>>();
-            List<IObjectCodeElement> subText = new List<IObjectCodeElement>();
-            foreach (IObjectCodeElement element in output)
-            {
-                Type elementType = element.GetType();
-                if (elementType == typeof(LineFeed))
-                {
-                    fullText.Add(subText);
-                    subText = new List<IObjectCodeElement>();
-                }
-                else
-                {
-                    subText.Add(element);
-                }
-            }
-            return fullText;
         }
 
         /// <summary>

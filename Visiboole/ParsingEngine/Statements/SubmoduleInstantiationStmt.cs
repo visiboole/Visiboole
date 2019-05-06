@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019 John Devore
  * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
  * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
@@ -38,9 +38,9 @@ namespace VisiBoole.ParsingEngine.Statements
         private Regex OutputRegex = new Regex($@"({Parser.InstantiationPattern}\()|(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|[\s:,{{}})]");
 
         /// <summary>
-        /// Design path of the instantiation.
+        /// Subdesign of the instantiation.
         /// </summary>
-        private string DesignPath;
+        private Design Subdesign;
 
         /// <summary>
         /// List of no concant values in the instaniation.
@@ -51,10 +51,10 @@ namespace VisiBoole.ParsingEngine.Statements
         /// Constructs a SubmoduleInstatiationStmt instance.
         /// </summary>
         /// <param name="text">Text of the statement</param>
-        /// <param name="designPath">Path to the design</param>
-		public SubmoduleInstantiationStmt(string text, string designPath) : base(text)
+        /// <param name="subdesign">Subdesign of instantiation</param>
+		public SubmoduleInstantiationStmt(string text, Design subdesign) : base(text)
 		{
-            DesignPath = designPath;
+            Subdesign = subdesign;
             NoContactValues = new List<bool>();
         }
 
@@ -76,15 +76,15 @@ namespace VisiBoole.ParsingEngine.Statements
             MatchCollection matches = Parser.VariableRegex.Matches(inputSideText);
             foreach (Match match in matches)
             {
-                inputValues.Add(currentDesign.Database.TryGetValue(match.Value) == 1);
+                inputValues.Add(currentDesign.Database.GetValue(match.Value) == 1);
             }
 
-            Design subDesign = new Design(DesignPath);
-            Parser subParser = new Parser(subDesign);
-            DesignController.ActiveDesign = subDesign;
+            Parser subParser = new Parser(Subdesign);
+            DesignController.ActiveDesign = Subdesign;
             List<bool> outputValues = subParser.ParseAsModule(inputValues);
             if (outputValues == null)
             {
+                DesignController.ActiveDesign = currentDesign;
                 return false;
             }
 
@@ -140,26 +140,13 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else
                 {
-                    if (match.Index < seperatorIndex)
+                    if (match.Index > seperatorIndex && token == "NC")
                     {
-                        // Output each input var in the input list
-                        IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
-                        DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
-                        if (indVar != null)
-                        {
-                            Output.Add(indVar);
-                        }
-                        else
-                        {
-                            Output.Add(depVar);
-                        }
+                        Output.Add(new DependentVariable(token, NoContactValues[currentNoContactIndex++]));
                     }
                     else
                     {
-                        bool value = token != "NC"
-                            ? DesignController.ActiveDesign.Database.TryGetValue(token) == 1
-                            : NoContactValues[currentNoContactIndex++];
-                        Output.Add(new DependentVariable(token, value));
+                        OutputVariable(token);
                     }
                 }
             }

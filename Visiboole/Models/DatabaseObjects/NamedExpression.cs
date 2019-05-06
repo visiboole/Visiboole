@@ -43,11 +43,6 @@ namespace VisiBoole.Models
         public string DependentBinary { get; private set; }
 
         /// <summary>
-        /// Operation of the expression.
-        /// </summary>
-        public string Operation { get; private set; }
-
-        /// <summary>
         /// Expression for the dependent.
         /// </summary>
         public string Expression { get; private set; }
@@ -56,6 +51,11 @@ namespace VisiBoole.Models
         /// Index of the expression.
         /// </summary>
         private int ExpressionIndex;
+
+        /// <summary>
+        /// Returns whether the expression is a mathematical expression.
+        /// </summary>
+        public bool IsMathExpression { get; private set; }
 
         /// <summary>
         /// Dictionary of parentheses contained in the expression.
@@ -70,35 +70,28 @@ namespace VisiBoole.Models
         {
             int startIndex = fullExpression.ToList<char>().FindIndex(c => char.IsWhiteSpace(c) == false); // First non whitespace character
             Expression = fullExpression.Substring(startIndex); // Start expression with first non whitespace character
-            //Expression = Expression.TrimEnd(';');
 
             if (!Expression.Contains("<"))
             {
-                Dependent = Expression.Substring(0, Expression.IndexOf('=')).Trim();
+                int seperatorIndex = Expression.IndexOf('=');
                 Delay = null;
                 Delays = null;
-                Operation = "=";
+                Dependent = Expression.Substring(0, seperatorIndex).Trim();
+                Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent);
+                Expression = Expression.Substring(seperatorIndex).Trim();
             }
             else
             {
-                Delay = Expression.Substring(0, Expression.IndexOf('<')).Trim();
-                Delays = GetVariables(Delay);
+                int seperatorIndex = Expression.IndexOf('<');
+                Delay = Expression.Substring(0, seperatorIndex).Trim();
+                Delays = DesignController.ActiveDesign.Database.GetVariables(Delay);
                 Dependent = Delay + ".d";
-
-                if (!Expression.Contains("@"))
-                {
-                    Operation = "<=";
-                }
-                else
-                {
-                    Operation = Regex.Match(Expression, @"<=@\S+").Value;
-                }
+                Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent);
+                Expression = Expression.Substring(Expression.Substring(seperatorIndex).IndexOf(' ') + seperatorIndex).Trim();
             }
 
-            Dependents = GetVariables(Dependent);
-
-            Expression = Expression.Substring(Expression.IndexOf(Operation) + Operation.Length).Trim();
-            ExpressionIndex = fullExpression.IndexOf(Expression);
+            IsMathExpression = Expression.Any(c => c == '+' || c == '-');
+            ExpressionIndex = fullExpression.LastIndexOf(Expression);
         }
 
         /// <summary>
@@ -114,7 +107,7 @@ namespace VisiBoole.Models
 
             // Obtain scalars, constants and operators
             string expression = $"({Expression})"; // Add () to expression
-            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatPattern}|(~?(?<Name>[_a-zA-Z]\w{{0,19}}))|(~?[0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
+            MatchCollection matches = Regex.Matches(expression, $@"{Parser.ConcatPattern}|(~?(?<Name>\w+))|(~?[0-1])|([~^()|+-])|(==)|((?<=[\w)}}])\s+(?=[\w({{~'])(?![^{{}}]*\}}))");
             foreach (Match match in matches)
             {
                 if (match.Value == ")")
@@ -144,7 +137,7 @@ namespace VisiBoole.Models
                         Parentheses.Add(parenthesisIndicesStack.Pop(), new Parenthesis("(", parenthesesValue, areParenthesesNegated));
                     }
                 }
-                else if (match.Value == "(" || Parser.OperatorsList.Contains(match.Value))
+                else if (match.Value == "(" || Lexer.OperatorsList.Contains(match.Value))
                 {
                     string operation = match.Value;
 
@@ -171,72 +164,17 @@ namespace VisiBoole.Models
                         containsNot = true;
                         variable = variable.Substring(1);
                     }
-                    int value = GetValue(variable);
+
+                    int value = DesignController.ActiveDesign.Database.GetValue(variable);
                     if (containsNot)
                     {
                         value = Convert.ToInt32(!Convert.ToBoolean(value));
                     }
-
                     valueStack.Push(value);
                 }
             }
 
             return valueStack.Pop();
-        }
-
-        private string[] GetVariables(string token)
-        {
-            if (!token.Contains("{"))
-            {
-                return new string[] { token };
-            }
-
-            if (!token.Contains(".d"))
-            {
-                token = token.Substring(1, token.Length - 2);
-                return Parser.WhitespaceRegex.Split(token);
-            }
-            else
-            {
-                token = token.Substring(1, token.Length - 4);
-                string[] variables = Parser.WhitespaceRegex.Split(token);
-                for (int i = 0; i < variables.Length; i++)
-                {
-                    variables[i] = variables[i] + ".d";
-                }
-                return variables;
-            }
-        }
-
-        /// <summary>
-        /// Gets the value of the provided token.
-        /// </summary>
-        /// <param name="token">Token to get value of</param>
-        /// <returns>Value of the token</returns>
-        public int GetValue(string token)
-        {
-            if (token.Contains("{"))
-            {
-                string[] vars = GetVariables(token);
-
-                // Get binary value
-                StringBuilder binary = new StringBuilder();
-                foreach (string var in vars)
-                {
-                    binary.Append(GetValue(var));
-                }
-
-                int value = Convert.ToInt32(binary.ToString(), 2);
-                return value;
-            }
-            else if (char.IsDigit(token[0]))
-            {
-                return Convert.ToInt32(token);
-            }
-            else
-            {
-                return DesignController.ActiveDesign.Database.TryGetValue(token);
-            }
         }
 
         /// <summary>
@@ -283,20 +221,6 @@ namespace VisiBoole.Models
         /// <returns>Whether the value of the dependent changed</returns>
         public bool Evaluate()
         {
-            // Get binary of delay value if present
-            if (!string.IsNullOrEmpty(Delay))
-            {
-                DelayBinary = Convert.ToString(GetValue(Delay), 2);
-                if (DelayBinary.Length < Delays.Length)
-                {
-                    DelayBinary = string.Concat(new string('0', Delays.Length - DelayBinary.Length), DelayBinary);
-                }
-                else if (DelayBinary.Length > Delays.Length)
-                {
-                    DelayBinary = DelayBinary.Substring(DelayBinary.Length - Delays.Length);
-                }
-            }
-
             // Get binary of expression value
             string expressionBinary = Convert.ToString(Solve(), 2);
             if (expressionBinary.Length < Dependents.Length)
@@ -308,32 +232,10 @@ namespace VisiBoole.Models
                 expressionBinary = expressionBinary.Substring(expressionBinary.Length - Dependents.Length);
             }
 
-            // Get binary of dependent value
-            string dependentBinary = Convert.ToString(GetValue(Dependent), 2);
-            if (dependentBinary.Length < Dependents.Length)
-            {
-                dependentBinary = string.Concat(new string('0', Dependents.Length - dependentBinary.Length), dependentBinary);
-            }
-            else if (dependentBinary.Length > Dependents.Length)
-            {
-                dependentBinary = dependentBinary.Substring(dependentBinary.Length - Dependents.Length);
-            }
-
-            // Change each dependent bit to its expression bit
-            bool wasABitChanged = false;
-            for (int i = 0; i < Dependents.Length; i++)
-            {
-                if (dependentBinary[i] != expressionBinary[i])
-                {
-                    DesignController.ActiveDesign.Database.SetValue(Dependents[i], expressionBinary[i] == '1');
-                    wasABitChanged = true;
-                }
-            }
-
-            // Store new dependent binary
+            // Store dependent binary
             DependentBinary = expressionBinary;
-
-            return wasABitChanged;
+            // Set values
+            return DesignController.ActiveDesign.Database.SetValues(Dependents, expressionBinary);
         }
     }
 }

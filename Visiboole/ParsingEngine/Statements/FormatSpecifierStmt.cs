@@ -34,7 +34,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"{Parser.FormatSpecifierPattern}|[\s;]");
+        private Regex OutputRegex = new Regex($@"{Parser.FormatSpecifierPattern}|[\s]");
 
         /// <summary>
         /// Constructs a FormatSpecifierStmt instance.
@@ -71,19 +71,35 @@ namespace VisiBoole.ParsingEngine.Statements
                     List<int> values = new List<int>(); // Values of variables
                     foreach (string var in variables)
                     {
-                        // Add value of each variable to output values
-                        values.Add(DesignController.ActiveDesign.Database.TryGetValue(var));
+                        if (var == "0" || var == "1")
+                        {
+                            values.Add(Convert.ToInt32(var));
+                        }
+                        else
+                        {
+                            // Add value of each variable to output values
+                            values.Add(DesignController.ActiveDesign.Database.GetValue(var));
+                        }
                     }
 
                     // Output Format Specifier
                     string output = Calculate(match.Groups["Format"].Value, values); // Output values with format
-                    Operator val = new Operator(output); // Operator of outpute values
-                    Output.Add(val); // Add operator of output to output
+                    /*
+                    Output.Add(new Formatter(output, match.Groups["Vars"].Value, GetNextValue(output)));
+                    */
+                    OutputOperator(output);
                 }
             }
 
             base.Parse();
         }
+
+        /*
+        private string GetNextValue(string value)
+        {
+
+        }
+        */
 
         /// <summary>
         /// Converts the list of boolean values into a string representation of the 

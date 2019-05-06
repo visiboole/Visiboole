@@ -1,2 +1,2 @@
-a = a == b;
-c = a;
+testing(a, b : c);
+c = a | b;
