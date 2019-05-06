@@ -508,6 +508,7 @@ namespace VisiBoole.Views
             {
                 MainWindowController.SaveFileAs(saveFileDialog1.FileName);
             }
+            saveFileDialog1.FileName = "";
         }
 
         /// <summary>

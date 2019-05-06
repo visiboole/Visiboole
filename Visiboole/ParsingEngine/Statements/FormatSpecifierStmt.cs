@@ -66,6 +66,8 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else
                 {
+                    bool clickable = true;
+
                     // Get variables and values
                     string[] variables = Parser.WhitespaceRegex.Split(match.Groups["Vars"].Value); // Split variables by whitespace
                     List<int> values = new List<int>(); // Values of variables
@@ -74,32 +76,90 @@ namespace VisiBoole.ParsingEngine.Statements
                         if (var == "0" || var == "1")
                         {
                             values.Add(Convert.ToInt32(var));
+                            if (clickable)
+                            {
+                                clickable = false;
+                            }
                         }
                         else
                         {
-                            // Add value of each variable to output values
-                            values.Add(DesignController.ActiveDesign.Database.GetValue(var));
+                            IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(var) as IndependentVariable;
+                            DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(var) as DependentVariable;
+                            if (indVar != null)
+                            {
+                                if (indVar.Value) values.Add(1);
+                                else values.Add(0);
+                            }
+                            else
+                            {
+                                if (depVar.Value) values.Add(1);
+                                else values.Add(0);
+
+                                if (clickable)
+                                {
+                                    clickable = false;
+                                }
+                            }
                         }
                     }
 
                     // Output Format Specifier
+                    char format = match.Groups["Format"].Value[0];
                     string output = Calculate(match.Groups["Format"].Value, values); // Output values with format
-                    /*
-                    Output.Add(new Formatter(output, match.Groups["Vars"].Value, GetNextValue(output)));
-                    */
-                    OutputOperator(output);
+                    string nextOutput = null;
+                    if (clickable)
+                    {
+                        if (format == 'd' && values[0] == 1 && output == "0")
+                        {
+                            nextOutput = GetNextValue($"-{output}", format, values.Count);
+                        }
+                        else
+                        {
+                            nextOutput = GetNextValue(output, format, values.Count);
+                        }
+                    }
+                    Output.Add(new Formatter(output, $"{{{match.Groups["Vars"].Value}", nextOutput));
                 }
             }
 
             base.Parse();
         }
 
-        /*
-        private string GetNextValue(string value)
+        private string GetNextValue(string value, char format, int bitCount)
         {
+            int decValue;
+            if (format == 'h')
+            {
+                decValue = Convert.ToInt32(value, 16);
+            }
+            else if (format == 'b')
+            {
+                decValue = Convert.ToInt32(value, 2);
+            }
+            else
+            {
+                decValue = Convert.ToInt32(value);
+            }
 
+            if (value[0] == '-')
+            {
+                decValue = Math.Abs(decValue) - (int)Math.Pow(2, bitCount - 1);
+            }
+
+            string nextValue = Convert.ToString(decValue + 1, 2);
+            if (nextValue.Length > bitCount)
+            {
+                return nextValue.Substring(nextValue.Length - bitCount);
+            }
+            else if (nextValue.Length < bitCount)
+            {
+                return nextValue = string.Concat(new string('0', bitCount - nextValue.Length), nextValue);
+            }
+            else
+            {
+                return nextValue;
+            }
         }
-        */
 
         /// <summary>
         /// Converts the list of boolean values into a string representation of the 

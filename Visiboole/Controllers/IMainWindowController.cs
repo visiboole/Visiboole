@@ -155,7 +155,8 @@ namespace VisiBoole.Controllers
         /// Handles the event that occurs when the user clicks on an independent variable.
         /// </summary>
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        /// <param name="value">Value for formatter click</param>
         /// <returns></returns>
-        List<IObjectCodeElement> Variable_Click(string variableName);
+        List<IObjectCodeElement> Variable_Click(string variableName, string value = null);
     }
 }

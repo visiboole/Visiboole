@@ -78,7 +78,7 @@ namespace VisiBoole.Models
                 Delays = null;
                 Dependent = Expression.Substring(0, seperatorIndex).Trim();
                 Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent);
-                Expression = Expression.Substring(seperatorIndex).Trim();
+                Expression = Expression.Substring(seperatorIndex + 1).Trim();
             }
             else
             {
@@ -87,7 +87,7 @@ namespace VisiBoole.Models
                 Delays = DesignController.ActiveDesign.Database.GetVariables(Delay);
                 Dependent = Delay + ".d";
                 Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent);
-                Expression = Expression.Substring(Expression.Substring(seperatorIndex).IndexOf(' ') + seperatorIndex).Trim();
+                Expression = Expression.Substring(Expression.Substring(seperatorIndex).IndexOfAny(new char[] {' ', '\n'}) + seperatorIndex).Trim();
             }
 
             IsMathExpression = Expression.Any(c => c == '+' || c == '-');
@@ -137,7 +137,7 @@ namespace VisiBoole.Models
                         Parentheses.Add(parenthesisIndicesStack.Pop(), new Parenthesis("(", parenthesesValue, areParenthesesNegated));
                     }
                 }
-                else if (match.Value == "(" || Lexer.OperatorsList.Contains(match.Value))
+                else if (match.Value == "(" || match.Value == "~" || Lexer.OperatorsList.Contains(match.Value))
                 {
                     string operation = match.Value;
 

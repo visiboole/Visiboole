@@ -409,7 +409,7 @@ namespace VisiBoole.ParsingEngine
             }
         }
 
-        public void ProcessUpdate(List<string> variables)
+        public void ProcessUpdate(ICollection<string> variables)
         {
             bool varChanged;
             do
@@ -437,9 +437,9 @@ namespace VisiBoole.ParsingEngine
         public void UpdateAltClocks()
         {
             // Update alt clock values
-            foreach (string altClock in AltClocks.Keys)
+            foreach (var clock in AltClocks.Keys.ToList())
             {
-                AltClocks[altClock] = GetValue(altClock) == 1;
+                AltClocks[clock] = GetValue(clock) == 1;
             }
         }
 

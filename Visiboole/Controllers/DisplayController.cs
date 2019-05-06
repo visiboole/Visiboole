@@ -424,10 +424,11 @@ namespace VisiBoole.Controllers
         /// Handles the event that occurs when the user clicks on an independent variable.
         /// </summary>
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
-        public void Variable_Click(string variableName)
+        /// <param name="value">Value for formatter click</param>
+        public void Variable_Click(string variableName, string value = null)
         {
             //Browser.ObjectForScripting = this;
-            DisplayOutput(MainWindowController.Variable_Click(variableName), Browser.Document.Body.ScrollTop);
+            DisplayOutput(MainWindowController.Variable_Click(variableName, value), Browser.Document.Body.ScrollTop);
             MainWindowController.RetrieveFocus();
         }
 

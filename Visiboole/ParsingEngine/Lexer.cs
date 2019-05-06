@@ -322,13 +322,6 @@ namespace VisiBoole.ParsingEngine
         {
             Design = design;
             ErrorLog = new Dictionary<int, string>();
-            InsideConcat = false;
-            InsideFormatter = false;
-            InsideModule = false;
-            Groupings = new Stack<char>();
-            IsMathExpression = false;
-            ExclusiveOperators = new List<Token>();
-            Operators = new List<List<Token>>();
             Libraries = new List<string>();
             Subdesigns = new Dictionary<string, Design>();
             Instantiations = new Dictionary<string, string>();
@@ -1510,6 +1503,15 @@ namespace VisiBoole.ParsingEngine
             Stack<char> groupings = new Stack<char>();
             // Save current line number
             int lineNumber = CurrentLineNumber;
+
+            // Reset all instance variables
+            InsideConcat = false;
+            InsideFormatter = false;
+            InsideModule = false;
+            Groupings = new Stack<char>();
+            IsMathExpression = false;
+            ExclusiveOperators = new List<Token>();
+            Operators = new List<List<Token>>();
 
             for (int i = 0; i < line.Length; i++)
             {

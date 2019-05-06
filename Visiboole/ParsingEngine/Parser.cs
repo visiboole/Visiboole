@@ -274,7 +274,11 @@ namespace VisiBoole.ParsingEngine
                                 DffClockStmt clockStmt = ((DffClockStmt)stmt);
                                 if (clockStmt.Clock == kv.Key)
                                 {
-                                    updateList.AddRange(clockStmt.Tick());
+                                    IEnumerable<string> variables = clockStmt.Tick();
+                                    if (variables != null)
+                                    {
+                                        updateList.AddRange(variables);
+                                    }
                                 }
                             }
                         }
@@ -284,7 +288,6 @@ namespace VisiBoole.ParsingEngine
 
             if (updateList.Count > 0)
             {
-                Design.Database.UpdateAltClocks();
                 Design.Database.ProcessUpdate(updateList);
             }
         }
@@ -357,12 +360,22 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="variableName">Variable clicked</param>
         /// <returns>Parsed output</returns>
-        public List<IObjectCodeElement> ParseClick(string variableName)
+        public List<IObjectCodeElement> ParseClick(string variableName, string value = null)
         {
-            // Flip value of variable clicked and reevlaute expressions
-            Design.Database.FlipValue(variableName);
-            Design.Database.ProcessUpdate(new List<string>(new string[] { variableName }));
+            string[] variables;
+            if (variableName[0] != '{')
+            {
+                variables = new string[] { variableName };
+                Design.Database.FlipValue(variableName);
+            }
+            else
+            {
+                variables = WhitespaceRegex.Split(variableName.Substring(1));
+                Design.Database.SetValues(variables, value);
+            }
+            Design.Database.ProcessUpdate(variables);
             TickAltClocks();
+            Design.Database.UpdateAltClocks();
             TryRunSubmodules();
 
             // Get output
@@ -394,6 +407,7 @@ namespace VisiBoole.ParsingEngine
             }
             Design.Database.ProcessUpdate(updateList);
             TickAltClocks();
+            Design.Database.UpdateAltClocks();
             TryRunSubmodules();
 
             // Get output
@@ -1381,7 +1395,7 @@ namespace VisiBoole.ParsingEngine
             // If line contains a = (Math expression)
             if (line.Contains('='))
             {
-                Regex variableListRegex = new Regex($@"{VariableListPattern}(?![^{{}}]*\}})"); // Variable lists not inside {}
+                Regex variableListRegex = new Regex($@"(?<!@){VariableListPattern}(?![^{{}}]*\}})"); // Variable lists not inside {}
                 while ((match = variableListRegex.Match(expandedLine)).Success)
                 {
                     // Get variable list

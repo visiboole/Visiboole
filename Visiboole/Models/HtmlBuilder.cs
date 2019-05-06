@@ -103,10 +103,43 @@ namespace VisiBoole.Models
                         {
                             bool isInstantiation = varType == typeof(Instantiation);
                             bool isFormatter = varType == typeof(Formatter);
+                            Formatter formatter = null;
+                            if (isFormatter)
+                            {
+                                formatter = (Formatter)token;
+                            }
+
                             string color = "'black'";
-                            string cursor = isInstantiation ? "hand" : "text";
+
+                            string cursor;
+                            if (isInstantiation)
+                            {
+                                cursor = "hand";
+                            }
+                            else if (isFormatter)
+                            {
+                                cursor = formatter.NextValue != null ? "hand" : "no-drop";
+                            }
+                            else
+                            {
+                                cursor = "text";
+                            }
+
                             string decoration = "";
-                            string action = isInstantiation ? $" onclick=\"window.external.Instantiation_Click('{variable}')\"" : "";
+
+                            string action;
+                            if (isInstantiation)
+                            {
+                                action = $" onclick=\"window.external.Instantiation_Click('{variable}')\"";
+                            }
+                            else if (formatter != null)
+                            {
+                                action = $" onclick=\"window.external.Variable_Click('{formatter.Variables}', '{formatter.NextValue}')\"";
+                            }
+                            else
+                            {
+                                action = "";
+                            }
 
                             currentLine += string.Format(template, color, cursor, decoration, action, variable);
                         }

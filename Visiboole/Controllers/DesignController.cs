@@ -250,10 +250,11 @@ namespace VisiBoole.Controllers
         /// Parses a variable click for the active design.
         /// </summary>
         /// <param name="variableName">The name of the variable that was clicked by the user</param>
+        /// <param name="value">Value for formatter click</param>
         /// <returns>Output of the tick for the parsed design</returns>
-        public List<IObjectCodeElement> ParseVariableClick(string variableName)
+        public List<IObjectCodeElement> ParseVariableClick(string variableName, string value = null)
         {
-            return Parser.ParseClick(variableName);
+            return Parser.ParseClick(variableName, value);
         }
 
         /// <summary>
