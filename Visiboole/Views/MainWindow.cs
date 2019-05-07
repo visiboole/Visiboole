@@ -634,8 +634,22 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SyntaxDocumentationMenuClick(object sender, EventArgs e)
         {
-            HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
-            hw.Show();
+
+            //refocuses syntax window if it exists, refocusing or un-minimizing
+            //Creates and displays if doesn't exist
+            Form fc = Application.OpenForms["HelpWindow"];
+            if (fc != null)
+            {
+                fc.WindowState = System.Windows.Forms.FormWindowState.Normal;
+                fc.BringToFront();
+            }
+
+            else
+            {
+                HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
+                hw.Show();
+            }
+            
         }
 
         /// <summary>
@@ -788,8 +802,28 @@ namespace VisiBoole.Views
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
-            about.Show();
+            //refocuses syntax window if it exists, refocusing or un-minimizing
+            //Creates and displays if doesn't exist
+            Form fc = Application.OpenForms["HelpWindow"];
+
+            
+            if (fc != null)
+            {
+                fc.WindowState = System.Windows.Forms.FormWindowState.Normal;
+                fc.BringToFront();
+            }
+
+            else
+            {
+                HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
+                about.Show();
+            }
+
+
+
+
+            //
+            //about.Show();
 
             //HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
             //hw.Show();
