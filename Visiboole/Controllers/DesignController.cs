@@ -46,14 +46,19 @@ namespace VisiBoole.Controllers
         private Dictionary<string, Design> Designs;
 
         /// <summary>
+        /// All parsers of running designs in this application
+        /// </summary>
+        private Dictionary<string, Parser> Parsers;
+
+        /// <summary>
         /// The active Design.
         /// </summary>
         public static Design ActiveDesign { get; set; }
 
         /// <summary>
-        /// Parser used to parse designs.
+        /// Active parser instance
         /// </summary>
-        private Parser Parser;
+        private Parser ActiveParser;
 
         /// <summary>
         /// Constructs design controller
@@ -62,7 +67,8 @@ namespace VisiBoole.Controllers
         {
             Designs = new Dictionary<string, Design>();
             ActiveDesign = null;
-            Parser = null;
+            Parsers = new Dictionary<string, Parser>();
+            ActiveParser = null;
         }
 
         /// <summary>
@@ -112,12 +118,37 @@ namespace VisiBoole.Controllers
             }
         }
 
+        private Parser GetParser(string name)
+        {
+            Parser parser;
+            Parsers.TryGetValue(name, out parser);
+
+            if (parser != null)
+            {
+                return parser;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Selects a design with the provided name
         /// </summary>
         /// <param name="design">Design to select</param>
         public void SelectDesign(string design)
         {
+            ActiveDesign = design == null ? null : GetDesign(design);
+        }
+
+        /// <summary>
+        /// Selects a parser for the provided design name
+        /// </summary>
+        /// <param name="design"></param>
+        public void SelectParser(string design)
+        {
+            ActiveParser = GetParser(design);
             ActiveDesign = GetDesign(design);
         }
 
@@ -129,11 +160,7 @@ namespace VisiBoole.Controllers
         public Design CreateDesign(string path)
         {
             Design newDesign = new Design(path);
-            if (mwController != null)
-            {
-                newDesign.DesignEdit += new DesignEditEventHandler(mwController.OnDesignEdit);
-            }
-            
+
             if (!Designs.ContainsKey(newDesign.FileName))
             {
                 Designs.Add(newDesign.FileName, newDesign);
@@ -233,8 +260,14 @@ namespace VisiBoole.Controllers
         /// <returns>Output of the parsed design</returns>
         public List<IObjectCodeElement> Parse()
         {
-            Parser = new Parser(ActiveDesign);
-            return Parser.Parse();
+            Parser parser = new Parser(ActiveDesign);
+            var output = parser.Parse();
+            if (output != null)
+            {
+                Parsers.Add(ActiveDesign.FileName, parser);
+                ActiveParser = parser;
+            }
+            return output;
         }
 
         /// <summary>
@@ -243,7 +276,7 @@ namespace VisiBoole.Controllers
         /// <returns>Output of the tick for the parsed design</returns>
         public List<IObjectCodeElement> ParseTick()
         {
-            return Parser.ParseTick();
+            return ActiveParser.ParseTick();
         }
 
         /// <summary>
@@ -254,7 +287,7 @@ namespace VisiBoole.Controllers
         /// <returns>Output of the tick for the parsed design</returns>
         public List<IObjectCodeElement> ParseVariableClick(string variableName, string value = null)
         {
-            return Parser.ParseClick(variableName, value);
+            return ActiveParser.ParseClick(variableName, value);
         }
 
         /// <summary>
@@ -264,8 +297,14 @@ namespace VisiBoole.Controllers
         /// <returns>Parsed output</returns>
         public List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables)
         {
-            Parser = new Parser(ActiveDesign);
-            return Parser.ParseWithInput(inputVariables);
+            Parser parser = new Parser(ActiveDesign);
+            var output = parser.ParseWithInput(inputVariables);
+            if (output != null)
+            {
+                Parsers.Add(ActiveDesign.FileName, parser);
+                ActiveParser = parser;
+            }
+            return output;
         }
 
         /// <summary>
@@ -279,19 +318,26 @@ namespace VisiBoole.Controllers
 
             string designName = instantiation.Split('.')[0];
             string instantName = instantiation.Split('.')[1].TrimEnd('(');
-            Design subDesign = Parser.Subdesigns[designName];
+            Design subDesign = Parsers[ActiveDesign.FileName].Subdesigns[designName];
 
             // Get input variables
-            List<Variable> inputVariables = Parser.GetModuleInputs(instantName, subDesign.ModuleDeclaration);
+            List<Variable> inputVariables = Parsers[ActiveDesign.FileName].GetModuleInputs(instantName, subDesign.ModuleDeclaration);
 
             // Parse sub design
             ActiveDesign = subDesign;
             Parser subParser = new Parser(subDesign);
-            List<IObjectCodeElement> output = subParser.ParseWithInput(inputVariables); // Parse subdesign
-            ActiveDesign = currentDesign;
-            if (output == null)
+            var output = subParser.ParseWithInput(inputVariables); // Parse subdesign
+            if (output != null)
             {
-                return null;
+                if (Parsers.ContainsKey(designName))
+                {
+                    Parsers[designName] = subParser;
+                }
+                else
+                {
+                    Parsers.Add(designName, subParser);
+                }
+                ActiveParser = subParser;
             }
 
             return output;
@@ -303,7 +349,25 @@ namespace VisiBoole.Controllers
         /// <returns>Active designs current state</returns>
         public List<Variable> GetActiveDesignState()
         {
-            return Parser.ExportState();
+            return ActiveParser.ExportState();
+        }
+
+        public void ClearParsers()
+        {
+            Parsers.Clear();
+        }
+
+        /// <summary>
+        /// Removes a parser from the open parsers.
+        /// </summary>
+        /// <param name="name">Design name of the parser to close</param>
+        public void CloseParser(string name)
+        {
+            Parsers.Remove(name);
+            if (Parsers.Count == 0)
+            {
+                ActiveParser = null;
+            }
         }
     }
 }

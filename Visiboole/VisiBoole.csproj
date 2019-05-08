@@ -79,7 +79,6 @@
     <Compile Include="Controllers\IMainWindowController.cs" />
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="Globals.cs" />
     <Compile Include="Models\DatabaseObjects\NamedExpression.cs" />
     <Compile Include="Models\NewTabControl.cs" />
     <Compile Include="ParsingEngine\Lexer.cs" />
@@ -95,7 +94,7 @@
     <Compile Include="ParsingEngine\ObjectCode\DependentVariable.cs" />
     <Compile Include="ParsingEngine\Statements\DffClockStmt.cs" />
     <Compile Include="ParsingEngine\Statements\EmptyStmt.cs" />
-    <Compile Include="ParsingEngine\Statements\FormatSpecifierStmt.cs" />
+    <Compile Include="ParsingEngine\Statements\DisplayStmt.cs" />
     <Compile Include="Models\HtmlBuilder.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IObjectCodeElement.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IndependentVariable.cs" />
@@ -109,7 +108,6 @@
     </Compile>
     <Compile Include="ParsingEngine\Statements\SubmoduleInstantiationStmt.cs" />
     <Compile Include="Models\DatabaseObjects\Variable.cs" />
-    <Compile Include="ParsingEngine\Statements\VariableListStmt.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Views\ErrorListBox.cs">
       <SubType>Form</SubType>

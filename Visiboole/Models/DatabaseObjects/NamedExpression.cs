@@ -219,7 +219,7 @@ namespace VisiBoole.Models
         /// Evaluates the expression and returns whether the value of the dependent was changed.
         /// </summary>
         /// <returns>Whether the value of the dependent changed</returns>
-        public bool Evaluate()
+        public void Evaluate()
         {
             // Get binary of expression value
             string expressionBinary = Convert.ToString(Solve(), 2);
@@ -235,7 +235,7 @@ namespace VisiBoole.Models
             // Store dependent binary
             DependentBinary = expressionBinary;
             // Set values
-            return DesignController.ActiveDesign.Database.SetValues(Dependents, expressionBinary);
+            DesignController.ActiveDesign.Database.SetValues(Dependents, expressionBinary);
         }
     }
 }

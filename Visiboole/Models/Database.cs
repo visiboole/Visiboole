@@ -363,10 +363,26 @@ namespace VisiBoole.ParsingEngine
             if (IndVars.ContainsKey(variableName))
             {
                 IndVars[variableName].Value = value;
+
+                foreach (string dependent in DependencyLists.Keys)
+                {
+                    if (DependencyLists[dependent].Contains(variableName))
+                    {
+                        Expressions[dependent].Evaluate();
+                    }
+                }
             }
             else if (DepVars.ContainsKey(variableName))
             {
                 DepVars[variableName].Value = value;
+
+                foreach (string dependent in DependencyLists.Keys)
+                {
+                    if (DependencyLists[dependent].Contains(variableName))
+                    {
+                        Expressions[dependent].Evaluate();
+                    }
+                }
             }
         }
 
@@ -375,18 +391,15 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="variables">Variables to set</param>
         /// <param name="binary">Values to set</param>
-        public bool SetValues(IList<string> variables, string binary)
+        public void SetValues(IList<string> variables, string binary)
         {
-            bool valueChanged = false;
             for (int i = 0; i < binary.Length; i++)
             {
                 if (GetValue(variables[i]) != char.GetNumericValue(binary[i]))
                 {
                     SetValue(variables[i], binary[i] == '1');
-                    valueChanged = true;
                 }
             }
-            return valueChanged;
         }
 
         /// <summary>
@@ -409,28 +422,6 @@ namespace VisiBoole.ParsingEngine
             }
         }
 
-        public void ProcessUpdate(ICollection<string> variables)
-        {
-            bool varChanged;
-            do
-            {
-                varChanged = false;
-                foreach (string dependent in DependencyLists.Keys)
-                {
-                    if (DependencyLists[dependent].Intersect(variables).Any())
-                    {
-                        if (Expressions[dependent].Evaluate())
-                        {
-                            if (varChanged == false)
-                            {
-                                varChanged = true;
-                            }
-                        }
-                    }
-                }
-            } while (varChanged);
-        }
-
         /// <summary>
         /// Update all alternate clock previous values.
         /// </summary>
@@ -440,6 +431,14 @@ namespace VisiBoole.ParsingEngine
             foreach (var clock in AltClocks.Keys.ToList())
             {
                 AltClocks[clock] = GetValue(clock) == 1;
+            }
+        }
+
+        public void EvaluateExpressions()
+        {
+            foreach (var expression in Expressions.Values)
+            {
+                expression.Evaluate();
             }
         }
 
@@ -461,7 +460,7 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the dependent and its dependencies were added to the database</returns>
         public bool TryAddDependencyList(string dependent, List<string> dependencyList)
         {
-            List<string> variablesToRemove = new List<string>();
+            //List<string> variablesToRemove = new List<string>();
             List<string> variablesToAdd = new List<string>();
             // Iterate through the dependency list
             foreach (string variable in dependencyList)
@@ -478,17 +477,21 @@ namespace VisiBoole.ParsingEngine
                         return false;
                     }
 
+                    /*
                     // Add variable to removal list
                     variablesToRemove.Add(variable);
+                    */
                     // Add new variables to addition list
                     variablesToAdd.AddNew(additionalDependencyList);
                 }
             }
 
+            /*
             foreach (string variable in variablesToRemove)
             {
                 dependencyList.Remove(variable);
             }
+            */
             dependencyList.AddNew(variablesToAdd);
 
             foreach (KeyValuePair<string, List<string>> dependecy in DependencyLists)
@@ -500,8 +503,10 @@ namespace VisiBoole.ParsingEngine
                         return false;
                     }
 
+                    /*
                     // Remove new dependent from existing dependency list
                     dependecy.Value.Remove(dependent);
+                    */
                     // Add dependent's dependencies to the existing dependency
                     dependecy.Value.AddNew(dependencyList);
                 }

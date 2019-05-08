@@ -62,6 +62,12 @@ namespace VisiBoole.Controllers
         void SelectDesign(string design);
 
         /// <summary>
+        /// Selects a parser for the provided design name
+        /// </summary>
+        /// <param name="design"></param>
+        void SelectParser(string design);
+
+        /// <summary>
         /// Creates a Design with the given name.
         /// </summary>
         /// <param name="path">Name of Design</param>
@@ -137,5 +143,13 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <returns>Active designs current state</returns>
         List<Variable> GetActiveDesignState();
+
+        void ClearParsers();
+
+        /// <summary>
+        /// Removes a parser from the open parsers.
+        /// </summary>
+        /// <param name="name">Design name of the parser to close</param>
+        void CloseParser(string name);
     }
 }

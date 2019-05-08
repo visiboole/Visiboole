@@ -18,38 +18,57 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using CustomTabControl;
+using System.Drawing;
 using System.Windows.Forms;
 using VisiBoole.Controllers;
 
 namespace VisiBoole.Views
 {
-	/// <summary>
-	/// Exposes methods for the four displays hosted by the MainWindow
-	/// </summary>
-	public interface IDisplay
-	{
-		/// <summary>
-		/// Returns the type of this display
-		/// </summary>
-		DisplayType TypeOfDisplay { get; }
+    /// <summary>
+    /// Exposes methods for the four displays hosted by the MainWindow
+    /// </summary>
+    public interface IDisplay
+    {
+        /// <summary>
+        /// Returns the type of this display
+        /// </summary>
+        DisplayType DisplayType { get; }
 
-		/// <summary>
-		/// Saves the handle to the controller for this display
-		/// </summary>
-		/// <param name="controller">The handle to the controller to save</param>
-		void AttachController(IDisplayController controller);
+        /// <summary>
+        /// Saves the handle to the controller for this display
+        /// </summary>
+        /// <param name="controller">The handle to the controller to save</param>
+        void AttachController(IDisplayController controller);
 
-		/// <summary>
-		/// Loads the given tabcontrol into this display
+        /// <summary>
+		/// Loads the given tab control into this display.
 		/// </summary>
 		/// <param name="tabControl">The tabcontrol that will be loaded by this display</param>
-		void AddTabControl(TabControl tabControl);
+		void AttachTabControl(NewTabControl tabControl);
 
-		/// <summary>
-		/// Loads the given web browser into this display
-		/// </summary>
-        /// <param name="designName">Name of the design represented by the browser</param>
-		/// <param name="browser">The browser that will be loaded by this display</param>
-		void AddBrowser(string designName, WebBrowser browser);
+        /// <summary>
+        /// Adds/updates a tab page with the provided name and the provided component.
+        /// </summary>
+        /// <param name="name">Name of the tab page to add or update</param>
+        /// <param name="component">Component to add or update</param>
+        void AddTabComponent(string name, object component);
+
+        /// <summary>
+        /// Selects the tab with the provided name if present.
+        /// </summary>
+        /// <param name="name">Name of tab to select</param>
+        void SelectTab(string name);
+
+        /// <summary>
+        /// Closes the tab with the provided name if present.
+        /// </summary>
+        /// <param name="name"></param>
+        void CloseTab(string name);
+
+        /// <summary>
+        /// Sets the theme of the control.
+        /// </summary>
+        void SetTheme();
     }
 }

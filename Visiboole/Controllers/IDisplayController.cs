@@ -26,73 +26,56 @@ using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
 {
-	/// <summary>
-	/// Exposes methods in the controller for the four displays
-	/// </summary>
-	public interface IDisplayController
-	{
-		/// <summary>
-		/// The display that was hosted by the MainWindow before the current one
-		/// </summary>
-		IDisplay PreviousDisplay { get; set; }
-
-		/// <summary>
-		/// The display that is currently hosted by the MainWindow
-		/// </summary>
-		IDisplay CurrentDisplay { get; set; }
-
-		/// <summary>
-		/// Returns a handle to the display of the matching type
-		/// </summary>
-		/// <param name="dType">The type of the display to return</param>
-		/// <returns>Returns a handle to the display of the matching type</returns>
-		IDisplay GetDisplayOfType(DisplayType dType);
-
-		/// <summary>
-		/// Saves the handle to the controller for the MainWindow
-		/// </summary>
-		void AttachMainWindowController(IMainWindowController mwController);
-
+    /// <summary>
+    /// Exposes methods in the controller for the four displays
+    /// </summary>
+    public interface IDisplayController
+    {
         /// <summary>
-        /// Returns the TabPage that is currently selected
+        /// The display that was hosted by the MainWindow before the current one
         /// </summary>
-        /// <returns>Returns the TabPage that is currently selected</returns>
-        TabPage GetActiveTabPage();
+        IDisplay PreviousDisplay { get; set; }
 
         /// <summary>
-		/// Selects the tab page with the given index.
+        /// The display that is currently hosted by the MainWindow
+        /// </summary>
+        IDisplay CurrentDisplay { get; set; }
+
+        /// <summary>
+        /// Returns a handle to the display of the matching type
+        /// </summary>
+        /// <param name="dType">The type of the display to return</param>
+        /// <returns>Returns a handle to the display of the matching type</returns>
+        IDisplay GetDisplayOfType(DisplayType dType);
+
+        /// <summary>
+        /// Saves the handle to the controller for the MainWindow
+        /// </summary>
+        void AttachMainWindowController(IMainWindowController mwController);
+
+        /// <summary>
+        /// Loads into the MainWindow the display of the given type
+        /// </summary>
+        /// <param name="dType">The type of display that should be loaded</param>
+        void LoadDisplay(DisplayType dType);
+
+        /// <summary>
+		/// Selects the tab page with the provided name.
 		/// </summary>
-		/// <param name="index">Index of tabpage to select</param>
-        /// <returns>Design name that was selected</returns>
-		string SelectTabPage(int index);
+		/// <param name="name">Name of tabpage to select</param>
+		void SelectTabPage(string name);
 
         /// <summary>
-		/// Creates a new tab on the TabControl
+		/// Creates a new tab on the design tab control.
 		/// </summary>
-		/// <param name="design">The Design that is displayed in the new tab</param>
-		/// <returns>Returns true if a new tab was successfully created</returns>
-		bool CreateNewTab(Design design);
+		/// <param name="design">Design that is to be displayed in a tab</param>
+		void CreateDesignTab(Design design);
 
         /// <summary>
-        /// Closes a specific tab in the tab control.
+        /// Closes a specific tab in the design tab control.
         /// </summary>
         /// <param name="designName">Name of the design being closed</param>
-        /// <returns>Whether the operation was successful</returns>
-        bool CloseTab(string designName);
-
-        /// <summary>
-        /// Updates the provided tab with a new design. (Used for SaveAs operations)
-        /// </summary>
-        /// <param name="tabName">Name of tab</param>
-        /// <param name="newDesign">Design to add</param>
-        void UpdateTab(string tabName, Design newDesign);
-
-        /// <summary>
-        /// Updates the tab text to include or remove the dirty indicator.
-        /// </summary>
-        /// <param name="designName">Design name of the tab to update</param>
-        /// <param name="isDirty">Whether the design has unsaved changes</param>
-        void UpdateTabText(string designName, bool isDirty);
+        void CloseDesignTab(string name);
 
         /// <summary>
         /// Sets the theme of edit and run tab control
@@ -112,14 +95,9 @@ namespace VisiBoole.Controllers
         void RefreshOutput();
 
         /// <summary>
-        /// Switches the display to the edit mode.
-        /// </summary>
-        void SwitchDisplay();
-
-        /// <summary>
         /// Handles the event that occurs when the user ticks.
         /// </summary>
         /// <param name="count">Number of times to tick</param>
         void Tick(int count);
-	}
+    }
 }

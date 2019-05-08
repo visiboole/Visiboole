@@ -51,8 +51,6 @@ namespace VisiBoole.ParsingEngine.Statements
         {
             // Create expression with the provided text
             Expression = new NamedExpression(text);
-            // Evaluate the expression
-            Expression.Evaluate();
             // Add expression to the database
             DesignController.ActiveDesign.Database.AddExpression(Expression);
         }

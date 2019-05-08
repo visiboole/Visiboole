@@ -25,11 +25,10 @@ namespace VisiBoole.ParsingEngine
             Clock,
             Comment,
             Empty,
-            FormatSpecifier,
+            Display,
             Library,
             Module,
             Submodule,
-            VariableList
         }
 
         /// <summary>
@@ -744,7 +743,7 @@ namespace VisiBoole.ParsingEngine
                     ErrorLog.Add(CurrentLineNumber, $"Assignment operator '{token.Text}' can only precede dependent(s) once in a Boolean statement.");
                     return false;
                 }
-                else if (statementType != StatementType.VariableList)
+                else if (statementType != StatementType.Display)
                 {
                     // Add invalid token error to error log
                     ErrorLog.Add(CurrentLineNumber, $"Assignment operators can only be used in Boolean statements.");
@@ -765,7 +764,7 @@ namespace VisiBoole.ParsingEngine
                     ErrorLog.Add(CurrentLineNumber, $"Sequential assignment operator '{token.Text}' can only precede dependent(s) once in a Clock statement.");
                     return false;
                 }
-                else if (statementType != StatementType.VariableList)
+                else if (statementType != StatementType.Display)
                 {
                     // Add invalid token error to error log
                     ErrorLog.Add(CurrentLineNumber, $"Sequential assignment operators can only be used in Clock statements.");
@@ -774,25 +773,19 @@ namespace VisiBoole.ParsingEngine
             }
             else if (token.Type == TokenType.Formatter)
             {
-                if (statementType == StatementType.VariableList)
+                if (statementType != StatementType.Empty && statementType != StatementType.Display)
                 {
                     // Add invalid token error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"All variables or constants in a Format Specifier statement must be in a format specifier.");
-                    return false;
-                }
-                else if (statementType != StatementType.Empty && statementType != StatementType.FormatSpecifier)
-                {
-                    // Add invalid token error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"Format specifiers can only be used in Format Specifier statements.");
+                    ErrorLog.Add(CurrentLineNumber, $"Format specifiers can only be used in Display statements.");
                     return false;
                 }
             }
             else if (token.Type == TokenType.Asterick)
             {
-                if (statementType != StatementType.Empty && statementType != StatementType.VariableList)
+                if (statementType != StatementType.Empty && statementType != StatementType.Display)
                 {
                     // Add invalid token error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in Variable List statements.");
+                    ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in Display statements.");
                     return false;
                 }
             }
@@ -825,7 +818,7 @@ namespace VisiBoole.ParsingEngine
             }
             else if (token.Type == TokenType.Instantiation)
             {
-                if (statementType == StatementType.VariableList)
+                if (statementType == StatementType.Display)
                 {
                     // Add invalid token error to error log
                     ErrorLog.Add(CurrentLineNumber, $"All variables or constants in a Submodule statement must be in a module instantiaton.");
@@ -842,7 +835,7 @@ namespace VisiBoole.ParsingEngine
             }
             else if (token.Type == TokenType.Declaration)
             {
-                if (statementType == StatementType.VariableList)
+                if (statementType == StatementType.Display)
                 {
                     // Add invalid token error to error log
                     ErrorLog.Add(CurrentLineNumber, $"All variables or constants in a Module statement must be in a module declaration.");
@@ -963,13 +956,9 @@ namespace VisiBoole.ParsingEngine
             else if (statementType == StatementType.Empty)
             {
                 if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant || newToken.Type == TokenType.Asterick
-                    || newToken.Type == TokenType.OpenBrace || newToken.Type == TokenType.CloseBrace)
+                    || newToken.Type == TokenType.Formatter || newToken.Type == TokenType.OpenBrace || newToken.Type == TokenType.CloseBrace)
                 {
-                    return StatementType.VariableList;
-                }
-                else if (newToken.Type == TokenType.Formatter)
-                {
-                    return StatementType.FormatSpecifier;
+                    return StatementType.Display;
                 }
                 else if (newToken.Type == TokenType.Comment)
                 {
@@ -994,7 +983,7 @@ namespace VisiBoole.ParsingEngine
                     return null;
                 }
             }
-            else if (statementType == StatementType.VariableList)
+            else if (statementType == StatementType.Display)
             {
                 if (newToken.Type == TokenType.Assignment || newToken.Type == TokenType.Clock)
                 {
@@ -1133,12 +1122,7 @@ namespace VisiBoole.ParsingEngine
 
             if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant)
             {
-                if (statementType == StatementType.FormatSpecifier && !InsideFormatter)
-                {
-                    ErrorLog.Add(CurrentLineNumber, $"Variables and constants in a Format Specifier statement must be inside a format specifier.");
-                    return false;
-                }
-                else if ((statementType == StatementType.Module || statementType == StatementType.Submodule)
+                if ((statementType == StatementType.Module || statementType == StatementType.Submodule)
                     && !InsideModule)
                 {
                     ErrorLog.Add(CurrentLineNumber, $"Variables and constants in Module or Submodule statements must be inside an instantiation or declaration.");

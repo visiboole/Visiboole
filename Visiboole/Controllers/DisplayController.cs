@@ -33,79 +33,58 @@ using CustomTabControl;
 namespace VisiBoole.Controllers
 {
     /// <summary>
+    /// The different display types for the UserControl displays that are hosted by the MainWindow
+    /// </summary>
+    public enum DisplayType
+    {
+        EDIT,
+        RUN,
+        NONE
+    }
+
+    /// <summary>
     /// Handles the logic, and communication with other objects for the displays hosted by the MainWindow
     /// </summary>
 	[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
-	[System.Runtime.InteropServices.ComVisibleAttribute(true)]
-	public class DisplayController : IDisplayController
-	{
-		/// <summary>
-		/// No-split input view that is hosted by the MainWindow
-		/// </summary>
-		private IDisplay EditDisplay;
+    [System.Runtime.InteropServices.ComVisibleAttribute(true)]
+    public class DisplayController : IDisplayController
+    {
+        /// <summary>
+        /// No-split input view that is hosted by the MainWindow
+        /// </summary>
+        private IDisplay EditDisplay;
 
-		/// <summary>
-		/// Horizontal-split view that is hosted by the MainWindow
-		/// </summary>
-		private IDisplay RunDisplay;
+        /// <summary>
+        /// Horizontal-split view that is hosted by the MainWindow
+        /// </summary>
+        private IDisplay RunDisplay;
 
-		/// <summary>
-		/// Handle to the controller for the MainWindow
-		/// </summary>
-		private IMainWindowController MainWindowController;
-
-		/// <summary>
-		/// The TabControl that shows the input that is shared amongst the displays that are hosted by the MainWindow
-		/// </summary>
-		private NewTabControl TabControl;
+        /// <summary>
+        /// Handle to the controller for the MainWindow
+        /// </summary>
+        private IMainWindowController MainWindowController;
 
         /// <summary>
         /// HTMLBuilder for the web browser.
         /// </summary>
         private HtmlBuilder HtmlBuilder;
 
-		/// <summary>
-		/// The WebBrowser that shows the output that is shared amongst the displays that are hosted by the MainWindow
-		/// </summary>
-		private WebBrowser Browser;
-
-        /// <summary>
-        /// Html output template for the browser
-        /// </summary>
-        private string OutputTemplate = "<html><head><style type=\"text/css\"> p { margin: 0;} </style></head><body>{0}</body></html>";
-
         /// <summary>
         /// Last output of the browser.
         /// </summary>
         private List<IObjectCodeElement> LastOutput;
+
+        private TreeNode InstantiationClicks;
 
         /// <summary>
         /// The display that was hosted by the MainWindow before the current one
         /// </summary>
         public IDisplay PreviousDisplay { get; set; }
 
-		/// <summary>
-		/// The display that is currently hosted by the MainWindow
-		/// </summary>
-		private IDisplay currentDisplay;
-
-		/// <summary>
-		/// The display that is currently hosted by the MainWindow
-		/// </summary>
-		public IDisplay CurrentDisplay
-		{
-			get
-			{
-				return currentDisplay;
-			}
-			set
-			{
-				value.AddTabControl(TabControl);
-                string currentDesign = TabControl.SelectedTab != null ? TabControl.SelectedTab.Text.TrimStart('*') : "";
-				value.AddBrowser(currentDesign, Browser);
-				currentDisplay = value;
-			}
-		}
+        /// <summary>
+        /// The display that is currently hosted by the MainWindow
+        /// </summary>
+        public IDisplay CurrentDisplay { get; set; }
 
         /// <summary>
         /// Constructs an instance of DisplayController with a handle to the two displays.
@@ -113,73 +92,69 @@ namespace VisiBoole.Controllers
         /// <param name="editDisplay">Handle to the edit display hosted by the MainWindow</param>
         /// <param name="runDisplay">Handle to the run display hosted by the MainWindow</param>
         public DisplayController(IDisplay editDisplay, IDisplay runDisplay)
-		{
+        {
             // Init tab control
-			TabControl = new NewTabControl();
-            TabControl.Font = new Font("Segoe UI", 10.75F);
-            TabControl.SelectedTabColor = Color.DodgerBlue;
-            TabControl.TabBoundaryColor = Color.Black;
-            TabControl.SelectedTabTextColor = Color.White;
-
-            TabControl.SelectedIndexChanged += (sender, e) => {
-                MainWindowController.SelectFile(TabControl.SelectedIndex);
+            var designTabControl = new NewTabControl();
+            designTabControl.Font = new Font("Segoe UI", 10.75F);
+            designTabControl.SelectedTabColor = Color.DodgerBlue;
+            designTabControl.TabBoundaryColor = Color.Black;
+            designTabControl.SelectedTabTextColor = Color.White;
+            designTabControl.SelectedIndexChanged += (sender, e) => {
+                string fileSelection = designTabControl.SelectedIndex != -1 ? designTabControl.SelectedTab.Text.TrimStart('*') : null;
+                MainWindowController.SelectFile(fileSelection);
                 MainWindowController.LoadDisplay(DisplayType.EDIT);
             };
-            TabControl.MouseDown += (sender, e) => {
-                if (TabControl.SelectedIndex != -1)
+            designTabControl.TabClosing += (sender) => {
+                if (DesignController.ActiveDesign != null)
                 {
-                    Rectangle current = TabControl.GetTabRect(TabControl.SelectedIndex);
-                    Rectangle close = new Rectangle(current.Right - 18, current.Height - 16, 16, 16);
-                    if (close.Contains(e.Location))
-                    {
-                        MainWindowController.CloseActiveFile();
-                    }
+                    MainWindowController.CloseActiveFile(false);
                 }
             };
-            TabControl.TabSwap += (sender, e) => {
+            designTabControl.TabSwap += (sender, e) => {
                 MainWindowController.SwapDesignNodes(e.SourceTabPageIndex, e.DestinationTabPageIndex);
             };
-            Globals.TabControl = TabControl;
 
-            HtmlBuilder = new HtmlBuilder();
-
-            // Init browser
-            Browser = new WebBrowser();
-            Browser.IsWebBrowserContextMenuEnabled = false;
-            Browser.AllowWebBrowserDrop = false;
-            Browser.WebBrowserShortcutsEnabled = false;
-            Browser.ObjectForScripting = this;
-            // Create browser with empty body
-            Browser.DocumentText = OutputTemplate.Replace("{0}", "");
-            Browser.PreviewKeyDown += (sender, eventArgs) => {
-                if (eventArgs.Control)
+            var browserTabControl = new NewTabControl();
+            browserTabControl.Font = new Font("Segoe UI", 10.75F);
+            browserTabControl.SelectedTabColor = Color.DodgerBlue;
+            browserTabControl.TabBoundaryColor = Color.Black;
+            browserTabControl.SelectedTabTextColor = Color.White;
+            browserTabControl.SelectedIndexChanged += (sender, e) => {
+                if (browserTabControl.SelectedIndex != -1)
                 {
-                    if (eventArgs.KeyCode == Keys.E)
+                    MainWindowController.SelectParser(browserTabControl.TabPages[browserTabControl.SelectedIndex].Text);
+                }
+            };
+            browserTabControl.TabClosing += (sender) => {
+                MainWindowController.CloseParser(((TabPage)sender).Text);
+            };
+            browserTabControl.TabClosed += (sender, e) => {
+                if (e.TabPagesCount == 0)
+                {
+                    MainWindowController.LoadDisplay(DisplayType.EDIT);
+                }
+                foreach (TreeNode treeNode in InstantiationClicks.Nodes)
+                {
+                    if (treeNode.Text.Split('.')[0] == ((TabPage)sender).Text)
                     {
-                        MainWindowController.LoadDisplay(DisplayType.EDIT);
-                    }
-                    else if (eventArgs.KeyCode == Keys.Add || eventArgs.KeyCode == Keys.Oemplus)
-                    {
-                        Properties.Settings.Default.FontSize += 2;
-                        MainWindowController.SetFontSize();
-                        MainWindowController.RefreshOutput();
-                    }
-                    else if (eventArgs.KeyCode == Keys.Subtract || eventArgs.KeyCode == Keys.OemMinus)
-                    {
-                        if (Properties.Settings.Default.FontSize > 9)
-                        {
-                            Properties.Settings.Default.FontSize -= 2;
-                            MainWindowController.SetFontSize();
-                            RefreshOutput();
-                        }
+                        InstantiationClicks.Nodes.Remove(treeNode);
                     }
                 }
             };
+
+            InstantiationClicks = new TreeNode();
+
+            // Create html builder
+            HtmlBuilder = new HtmlBuilder();
 
             // Init displays
             EditDisplay = editDisplay;
-			RunDisplay = runDisplay;
-			CurrentDisplay = editDisplay;
+            EditDisplay.AttachTabControl(designTabControl);
+
+            RunDisplay = runDisplay;
+            RunDisplay.AttachTabControl(browserTabControl);
+
+            CurrentDisplay = editDisplay;
         }
 
         /// <summary>
@@ -187,8 +162,8 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <param name="mainWindowController"></param>
         public void AttachMainWindowController(IMainWindowController mainWindowController)
-		{
-			MainWindowController = mainWindowController;
+        {
+            MainWindowController = mainWindowController;
         }
 
         /// <summary>
@@ -209,145 +184,39 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-		/// Returns the TabPage that is currently selected
-		/// </summary>
-		/// <returns>Returns the TabPage that is currently selected</returns>
-		public TabPage GetActiveTabPage()
-        {
-            return TabControl.SelectedTab;
-        }
-
-        /// <summary>
-        /// Gets the tab index of the provided design name.
+        /// Loads into the MainWindow the display of the given type
         /// </summary>
-        /// <param name="designName">Name of the design</param>
-        /// <returns>Index of the tab with the provided name</returns>
-        private int GetDesignTabIndex(string designName)
+        /// <param name="dType">The type of display that should be loaded</param>
+        public void LoadDisplay(DisplayType dType)
         {
-            for (int i = 0; i < TabControl.TabPages.Count; i++)
-            {
-                if (TabControl.TabPages[i].Text.TrimStart('*') == designName)
-                {
-                    return i; // Return index of tab with the provided name
-                }
-            }
-            return -1; // Not found
+            MainWindowController.LoadDisplay(dType);
         }
 
         /// <summary>
-		/// Selects the tab page with the given index.
+		/// Selects the tab page with the provided name.
 		/// </summary>
-		/// <param name="index">Index of tabpage to select</param>
-        /// <returns>Design name that was selected</returns>
-		public string SelectTabPage(int index)
+		/// <param name="name">Name of tabpage to select</param>
+		public void SelectTabPage(string name)
         {
-            if (index != -1)
-            {
-                TabControl.SelectTab(index);
-                return TabControl.SelectedTab.Text.TrimStart('*');
-            }
-            else
-            {
-                return "";
-            }
+            CurrentDisplay.SelectTab(name);
         }
 
         /// <summary>
-		/// Creates a new tab on the TabControl
+		/// Creates a new tab on the design tab control.
 		/// </summary>
-		/// <param name="design">The Design that is displayed in the new tab</param>
-		/// <returns>Returns true if a new tab was successfully created</returns>
-		public bool CreateNewTab(Design design)
+		/// <param name="design">Design that is to be displayed in a tab</param>
+		public void CreateDesignTab(Design design)
         {
-            TabPage tab = new TabPage(design.FileName);
-            tab.Name = $"designTab{TabControl.TabPages.Count}";
-            tab.Text = design.FileName;
-            tab.ToolTipText = $"{tab.Text}.vbi";
-            tab.Controls.Add(design);
-            design.Dock = DockStyle.Fill;
-
-            if (TabControl.TabPages.ContainsKey(design.FileName))
-            {
-                int index = TabControl.TabPages.IndexOfKey(design.FileName);
-
-                TabControl.TabPages.RemoveByKey(design.FileName);
-                TabControl.TabPages.Insert(index, tab);
-                TabControl.SelectTab(tab);
-                return false;
-            }
-            else
-            {
-                TabControl.TabPages.Add(tab);
-                TabControl.SelectTab(tab);
-                return true;
-            }
+            CurrentDisplay.AddTabComponent(design.FileName, design);
         }
 
         /// <summary>
-        /// Closes a specific tab in the tab control.
+        /// Closes a specific tab in the design tab control.
         /// </summary>
         /// <param name="designName">Name of the design being closed</param>
-        /// <returns>Whether the operation was successful</returns>
-        public bool CloseTab(string designName)
+        public void CloseDesignTab(string name)
         {
-            TabPage tab = TabControl.TabPages[GetDesignTabIndex(designName)];
-
-            if (tab != null)
-            {
-                if (TabControl.SelectedIndex != 0)
-                {
-                    TabControl.SelectedIndex -= 1;
-                }
-                else
-                {
-                    TabControl.SelectedIndex += 1;
-                }
-
-                TabControl.TabPages.Remove(tab); // Remove tab page
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Updates the provided tab with a new design. (Used for SaveAs operations)
-        /// </summary>
-        /// <param name="tabName">Name of tab</param>
-        /// <param name="newDesign">Design to add</param>
-        public void UpdateTab(string tabName, Design newDesign)
-        {
-            // Get index of tab
-            int designTabIndex = GetDesignTabIndex(tabName);
-            // Get tab from tab control
-            TabPage tab = TabControl.TabPages[designTabIndex];
-            // Remove design from tab's controls
-            tab.Controls.Clear();
-            // Update tab text
-            tab.Text = newDesign.FileName;
-            // Update tab tool tip text
-            tab.ToolTipText = $"{tab.Text}.vbi";
-            // Add new design to tab
-            tab.Controls.Add(newDesign);
-            // Fill tab with new design
-            newDesign.Dock = DockStyle.Fill;
-        }
-
-        /// <summary>
-        /// Updates the tab text to include or remove the dirty indicator.
-        /// </summary>
-        /// <param name="designName">Design name of the tab to update</param>
-        /// <param name="isDirty">Whether the design has unsaved changes</param>
-        public void UpdateTabText(string designName, bool isDirty)
-        {
-            int designTabIndex = GetDesignTabIndex(designName);
-            if (designTabIndex != -1)
-            {
-                TabControl.TabPages[designTabIndex].Text = isDirty ? $"*{designName}" : designName;
-            }
+            CurrentDisplay.CloseTab(name);
         }
 
         /// <summary>
@@ -355,18 +224,7 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void SetTheme()
         {
-            TabControl.BackgroundColor = Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
-            TabControl.TabColor = Properties.Settings.Default.Theme == "Light" ? Color.White : Color.FromArgb(66, 66, 66);
-            TabControl.TabTextColor = Properties.Settings.Default.Theme == "Light" ? Color.Black : Color.White;
-
-            if (CurrentDisplay is DisplayEdit)
-            {
-                TabControl.Refresh();
-            }
-            else
-            {
-                
-            }
+            CurrentDisplay.SetTheme();
         }
 
         /// <summary>
@@ -376,14 +234,12 @@ namespace VisiBoole.Controllers
         /// <param name="position">Scroll position of the Browser</param>
 		public void DisplayOutput(List<IObjectCodeElement> output, int position = 0)
         {
-            //Browser.ObjectForScripting = this;
-            Browser.Document.Body.ScrollTop = position;
-            Browser.Document.Body.InnerHtml = HtmlBuilder.GetHTML(output);
-
             if (CurrentDisplay is DisplayEdit)
             {
                 MainWindowController.LoadDisplay(DisplayType.RUN);
+                InstantiationClicks = new TreeNode();
             }
+            CurrentDisplay.AddTabComponent(DesignController.ActiveDesign.FileName, HtmlBuilder.GetHTML(output));
 
             LastOutput = output;
         }
@@ -393,16 +249,7 @@ namespace VisiBoole.Controllers
         /// </summary>
         public void RefreshOutput()
         {
-            //Browser.ObjectForScripting = this;
-            DisplayOutput(LastOutput, Browser.Document.Body.ScrollTop);
-        }
-
-        /// <summary>
-        /// Switches the display to the edit mode.
-        /// </summary>
-        public void SwitchDisplay()
-        {
-            MainWindowController.LoadDisplay(DisplayType.EDIT);
+            DisplayOutput(LastOutput);
         }
 
         /// <summary>
@@ -411,12 +258,9 @@ namespace VisiBoole.Controllers
         /// <param name="count">Number of times to tick</param>
         public void Tick(int count)
         {
-            //Browser.ObjectForScripting = this;
-            int position = Browser.Document.Body.ScrollTop;
-
             for (int i = 0; i < count; i++)
             {
-                DisplayOutput(MainWindowController.Tick(), position);
+                DisplayOutput(MainWindowController.Tick());
             }
         }
 
@@ -427,8 +271,14 @@ namespace VisiBoole.Controllers
         /// <param name="value">Value for formatter click</param>
         public void Variable_Click(string variableName, string value = null)
         {
-            //Browser.ObjectForScripting = this;
-            DisplayOutput(MainWindowController.Variable_Click(variableName, value), Browser.Document.Body.ScrollTop);
+            DisplayOutput(MainWindowController.Variable_Click(variableName, value));
+            if (InstantiationClicks.Nodes.Count > 0)
+            {
+                foreach (TreeNode node in InstantiationClicks.Nodes)
+                {
+                    Instantiation_Click(node.Text, false);
+                }
+            }
             MainWindowController.RetrieveFocus();
         }
 
@@ -436,46 +286,33 @@ namespace VisiBoole.Controllers
         /// Handles the event that occurs when the user clicks on an instantiation.
         /// </summary>
         /// <param name="instantiation">The instantiation that was clicked by the user</param>
-        public void Instantiation_Click(string instantiation)
+        public void Instantiation_Click(string instantiation, bool addNode = true)
         {
+            if (addNode)
+            {
+                if (InstantiationClicks.Nodes.Count != 0)
+                {
+                    foreach (TreeNode node in InstantiationClicks.Nodes)
+                    {
+                        if (node.Text.Split('.')[0] == DesignController.ActiveDesign.FileName)
+                        {
+                            node.Nodes.Add(instantiation);
+                        }
+                    }
+                }
+                else
+                {
+                    InstantiationClicks.Nodes.Add(instantiation);
+                }
+            }
+
             List<IObjectCodeElement> output = MainWindowController.RunSubdesign(instantiation);
             if (output == null)
             {
                 return;
             }
 
-            WebBrowser subBrowser = new WebBrowser();
-            subBrowser.IsWebBrowserContextMenuEnabled = false;
-            subBrowser.AllowWebBrowserDrop = false;
-            subBrowser.WebBrowserShortcutsEnabled = false;
-            subBrowser.ObjectForScripting = this;
-            subBrowser.DocumentText = OutputTemplate.Replace("{0}", HtmlBuilder.GetHTML(output));
-            subBrowser.PreviewKeyDown += (sender, eventArgs) => {
-                if (eventArgs.Control)
-                {
-                    if (eventArgs.KeyCode == Keys.E)
-                    {
-                        MainWindowController.LoadDisplay(DisplayType.EDIT);
-                    }
-                    else if (eventArgs.KeyCode == Keys.Add || eventArgs.KeyCode == Keys.Oemplus)
-                    {
-                        Properties.Settings.Default.FontSize += 2;
-                        MainWindowController.SetFontSize();
-                        MainWindowController.RefreshOutput();
-                    }
-                    else if (eventArgs.KeyCode == Keys.Subtract || eventArgs.KeyCode == Keys.OemMinus)
-                    {
-                        if (Properties.Settings.Default.FontSize > 9)
-                        {
-                            Properties.Settings.Default.FontSize -= 2;
-                            MainWindowController.SetFontSize();
-                            RefreshOutput();
-                        }
-                    }
-                }
-            };
-
-            CurrentDisplay.AddBrowser(instantiation.Split('.')[0], subBrowser);
+            CurrentDisplay.AddTabComponent(instantiation.Split('.')[0], HtmlBuilder.GetHTML(output, true));
         }
     }
 }

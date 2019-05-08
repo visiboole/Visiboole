@@ -61,7 +61,13 @@ namespace VisiBoole.Models
             return fullText;
         }
 
-        public string GetHTML(List<IObjectCodeElement> output)
+        /// <summary>
+        /// Gets the html output from the provided object code.
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="isSubdesign">Indicates whether a subdesign is being outputted</param>
+        /// <returns></returns>
+        public string GetHTML(List<IObjectCodeElement> output, bool isSubdesign = false)
         {
             string html = "";
             string currentLine = "";
@@ -78,12 +84,17 @@ namespace VisiBoole.Models
                     currentLine += "<br>";
                 }
 
+                bool outputSemicolons = Properties.Settings.Default.OutputSemicolons;
                 foreach (IObjectCodeElement token in line)
                 {
                     if (token is Comment)
                     {
                         // Add coloring tags to comment
                         currentLine += ColorComment(token.ObjCodeText);
+                        continue;
+                    }
+                    else if (!outputSemicolons && token is Operator && token.ObjCodeText == ";")
+                    {
                         continue;
                     }
 
@@ -118,7 +129,7 @@ namespace VisiBoole.Models
                             }
                             else if (isFormatter)
                             {
-                                cursor = formatter.NextValue != null ? "hand" : "no-drop";
+                                cursor = formatter.NextValue != null && !isSubdesign ? "hand" : "no-drop";
                             }
                             else
                             {
@@ -132,7 +143,7 @@ namespace VisiBoole.Models
                             {
                                 action = $" onclick=\"window.external.Instantiation_Click('{variable}')\"";
                             }
-                            else if (formatter != null)
+                            else if (formatter != null && !isSubdesign)
                             {
                                 action = $" onclick=\"window.external.Variable_Click('{formatter.Variables}', '{formatter.NextValue}')\"";
                             }
@@ -156,9 +167,10 @@ namespace VisiBoole.Models
                         {
                             color = ((bool)value) ? FalseColor : TrueColor;
                         }
-                        string cursor = isIndependentVariable ? "hand" : "no-drop";
+
+                        string cursor = isIndependentVariable && !isSubdesign ? "hand" : "no-drop";
                         string decoration = hasNegation ? " text-decoration: overline;" : "";
-                        string action = isIndependentVariable ? $" onclick=\"window.external.Variable_Click('{variable}')\"" : "";
+                        string action = cursor[0] == 'h' ? $" onclick=\"window.external.Variable_Click('{variable}')\"" : "";
 
                         currentLine += string.Format(template, color, cursor, decoration, action, variable);
                     }

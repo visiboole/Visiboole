@@ -82,6 +82,7 @@ namespace VisiBoole.Views
             this.runStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.previousStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleSimulatorSemicolonsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutVisiBooleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
@@ -289,7 +290,8 @@ namespace VisiBoole.Views
             this.darkThemeToolStripMenuItem,
             this.toolStripSeparator5,
             this.colorBlindModeToolStripMenuItem,
-            this.simulationCommentsToolStripMenuItem});
+            this.simulationCommentsToolStripMenuItem,
+            this.toggleSimulatorSemicolonsToolStripMenuItem});
             this.viewToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.viewToolStripMenuItem.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
@@ -301,7 +303,7 @@ namespace VisiBoole.Views
             this.increaseFontToolStripMenuItem.Enabled = false;
             this.increaseFontToolStripMenuItem.Name = "increaseFontToolStripMenuItem";
             this.increaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+";
-            this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.increaseFontToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.increaseFontToolStripMenuItem.Text = "Increase Font";
             this.increaseFontToolStripMenuItem.Click += new System.EventHandler(this.IncreaseFontMenuClick);
             // 
@@ -310,39 +312,39 @@ namespace VisiBoole.Views
             this.decreaseFontToolStripMenuItem.Enabled = false;
             this.decreaseFontToolStripMenuItem.Name = "decreaseFontToolStripMenuItem";
             this.decreaseFontToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl-";
-            this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.decreaseFontToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.decreaseFontToolStripMenuItem.Text = "Decrease Font";
             this.decreaseFontToolStripMenuItem.Click += new System.EventHandler(this.DecreaseFontMenuClick);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(223, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(225, 6);
             // 
             // lightThemeToolStripMenuItem
             // 
             this.lightThemeToolStripMenuItem.Name = "lightThemeToolStripMenuItem";
-            this.lightThemeToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.lightThemeToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.lightThemeToolStripMenuItem.Text = "Light Theme";
             this.lightThemeToolStripMenuItem.Click += new System.EventHandler(this.LightThemeMenuClick);
             // 
             // darkThemeToolStripMenuItem
             // 
             this.darkThemeToolStripMenuItem.Name = "darkThemeToolStripMenuItem";
-            this.darkThemeToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.darkThemeToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.darkThemeToolStripMenuItem.Text = "Dark Theme";
             this.darkThemeToolStripMenuItem.Click += new System.EventHandler(this.DarkThemeMenuClick);
             // 
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(223, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(225, 6);
             // 
             // colorBlindModeToolStripMenuItem
             // 
             this.colorBlindModeToolStripMenuItem.CheckOnClick = true;
             this.colorBlindModeToolStripMenuItem.Name = "colorBlindModeToolStripMenuItem";
-            this.colorBlindModeToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.colorBlindModeToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.colorBlindModeToolStripMenuItem.Text = "Toggle Colorblind Mode";
             this.colorBlindModeToolStripMenuItem.Click += new System.EventHandler(this.ColorblindModeMenuClick);
             // 
@@ -350,7 +352,7 @@ namespace VisiBoole.Views
             // 
             this.simulationCommentsToolStripMenuItem.CheckOnClick = true;
             this.simulationCommentsToolStripMenuItem.Name = "simulationCommentsToolStripMenuItem";
-            this.simulationCommentsToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.simulationCommentsToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.simulationCommentsToolStripMenuItem.Text = "Toggle Simulator Comments";
             this.simulationCommentsToolStripMenuItem.Click += new System.EventHandler(this.SimulatorCommentsMenuClick);
             // 
@@ -602,6 +604,13 @@ namespace VisiBoole.Views
             this.previousStateToolStripMenuItem.Text = "Previous State";
             this.previousStateToolStripMenuItem.Click += new System.EventHandler(this.previousStateToolStripMenuItem_Click);
             // 
+            // toggleSimulatorSemicolonsToolStripMenuItem
+            // 
+            this.toggleSimulatorSemicolonsToolStripMenuItem.CheckOnClick = true;
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Name = "toggleSimulatorSemicolonsToolStripMenuItem";
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Text = "Toggle Simulator Semicolons";
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Click += new System.EventHandler(this.toggleSimulatorSemicolonsToolStripMenuItem_Click);
             // aboutVisiBooleToolStripMenuItem
             // 
             this.aboutVisiBooleToolStripMenuItem.Name = "aboutVisiBooleToolStripMenuItem";
@@ -692,6 +701,7 @@ namespace VisiBoole.Views
         private ToolStripMenuItem previousStateToolStripMenuItem;
         private ToolStripMenuItem userGuideToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
+        private ToolStripMenuItem toggleSimulatorSemicolonsToolStripMenuItem;
         private ToolStripMenuItem aboutVisiBooleToolStripMenuItem;
     }
 }

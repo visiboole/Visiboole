@@ -26,81 +26,37 @@ using VisiBoole.Controllers;
 
 namespace VisiBoole.Views
 {
-	/// <summary>
-	/// The horizontally-split display that is hosted by the MainWindow
-	/// </summary>
-	public partial class DisplayRun : UserControl, IDisplay
-	{
+    /// <summary>
+    /// The horizontally-split display that is hosted by the MainWindow
+    /// </summary>
+    public partial class DisplayRun : UserControl, IDisplay
+    {
         /// <summary>
-        /// Tab control for designs in run mode.
+        /// Controller for this display.
         /// </summary>
-        private NewTabControl BrowserTabControl;
-
-		/// <summary>
-		/// Handle to the controller for this display
-		/// </summary>
-		private IDisplayController Controller;
-
-		/// <summary>
-		/// Returns the type of this display
-		/// </summary>
-		public DisplayType TypeOfDisplay
-		{
-			get
-			{
-                return DisplayType.RUN;
-			}
-		}
-
-		/// <summary>
-		/// Constucts an instance of DisplaySingleOutput
-		/// </summary>
-		public DisplayRun()
-		{
-			InitializeComponent();
-
-            BrowserTabControl = new NewTabControl();
-            BrowserTabControl.Font = new Font("Segoe UI", 10.75F);
-            BrowserTabControl.SelectedTabColor = Color.DodgerBlue;
-            BrowserTabControl.TabBoundaryColor = Color.Black;
-            BrowserTabControl.SelectedTabTextColor = Color.White;
-            BrowserTabControl.MouseDown += new MouseEventHandler(TabMouseDownEvent);
-        }
+        private IDisplayController Controller;
 
         /// <summary>
-        /// Checks whether the user is trying to close a tab
+        /// Tab control for this display.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TabMouseDownEvent(object sender, MouseEventArgs e)
+        private NewTabControl TabControl;
+
+        /// <summary>
+        /// Html output template for the browser
+        /// </summary>
+        private string OutputTemplate = "<html><head><style type=\"text/css\"> p { margin: 0;} </style></head><body>{0}</body></html>";
+
+        /// <summary>
+        /// Type of this display.
+        /// </summary>
+        public DisplayType DisplayType { get { return DisplayType.RUN; } }
+
+        /// <summary>
+        /// Constucts an instance of DisplaySingleOutput
+        /// </summary>
+        public DisplayRun()
         {
-            if (BrowserTabControl.SelectedIndex != -1)
-            {
-                Rectangle current = BrowserTabControl.GetTabRect(BrowserTabControl.SelectedIndex);
-                Rectangle close = new Rectangle(current.Right - 18, current.Height - 16, 16, 16);
-                TabPage tab = BrowserTabControl.SelectedTab;
-                if (close.Contains(e.Location))
-                {
-                    if (BrowserTabControl.TabPages.Count > 1)
-                    {
-                        if (BrowserTabControl.SelectedIndex != 0)
-                        {
-                            BrowserTabControl.SelectedIndex -= 1;
-                        }
-                        else
-                        {
-                            BrowserTabControl.SelectedIndex += 1;
-                        }
-
-                    }
-                    BrowserTabControl.TabPages.Remove(tab); // Remove tab page
-                }
-            }
-
-            if (BrowserTabControl.TabPages.Count == 0)
-            {
-                Controller.SwitchDisplay();
-            }
+            InitializeComponent();
         }
 
         /// <summary>
@@ -108,39 +64,137 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="controller">The handle to the controller to save</param>
         public void AttachController(IDisplayController controller)
-		{
-			this.Controller = controller;
-		}
-
-        /// <summary>
-        /// Loads the given tabcontrol into this display
-        /// </summary>
-        /// <param name="tc">The tabcontrol that will be loaded by this display</param>
-        public void AddTabControl(TabControl tc)
-		{
-            pnlMain.Controls.Add(pnlOutputControls, 0, 0);
-            pnlMain.Controls.Add(BrowserTabControl, 0, 1);
-            BrowserTabControl.Dock = DockStyle.Fill;
-            BrowserTabControl.TabPages.Clear();
-            numericUpDown1.Value = 7; // Reset value
+        {
+            Controller = controller;
         }
 
         /// <summary>
-        /// Loads the given web browser into this display
-        /// </summary>
-        /// <param name="designName">Name of the design represented by the browser</param>
-        /// <param name="browser">The browser that will be loaded by this display</param>
-        public void AddBrowser(string designName, WebBrowser browser)
-		{
-            TabPage newTab = new TabPage(designName);
-            newTab.Controls.Add(browser);
-            browser.Dock = DockStyle.Fill;
+		/// Loads the given tab control into this display.
+		/// </summary>
+		/// <param name="tabControl">The tabcontrol that will be loaded by this display</param>
+		public void AttachTabControl(NewTabControl tabControl)
+        {
+            TabControl = tabControl;
+            pnlMain.Controls.Add(pnlOutputControls, 0, 0);
+            pnlMain.Controls.Add(TabControl, 0, 1);
+            TabControl.Dock = DockStyle.Fill;
+        }
 
-            BrowserTabControl.TabPages.Add(newTab);
-            BrowserTabControl.SelectedTab = newTab;
+        /// <summary>
+        /// Selects the tab with the provided name if present.
+        /// </summary>
+        /// <param name="name">Name of tab to select</param>
+        public void SelectTab(string name)
+        {
+            for (int i = 0; i < TabControl.TabPages.Count; i++)
+            {
+                TabPage tabPage = TabControl.TabPages[i];
+                if (tabPage.Text == name)
+                {
+                    TabControl.SelectTab(i);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Closes the tab with the provided name if present.
+        /// </summary>
+        /// <param name="name"></param>
+        public void CloseTab(string name)
+        {
+            for (int i = 0; i < TabControl.TabPages.Count; i++)
+            {
+                TabPage tabPage = TabControl.TabPages[i];
+                if (tabPage.Text == name)
+                {
+                    TabControl.TabPages.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the theme of edit and run tab control
+        /// </summary>
+        public void SetTheme()
+        {
+            TabControl.BackgroundColor = Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
+            TabControl.TabColor = Properties.Settings.Default.Theme == "Light" ? Color.White : Color.FromArgb(66, 66, 66);
+            TabControl.TabTextColor = Properties.Settings.Default.Theme == "Light" ? Color.Black : Color.White;
+            TabControl.Refresh();
+        }
+
+        /// <summary>
+        /// Adds/updates a tab page with the provided name and the provided component.
+        /// </summary>
+        /// <param name="name">Name of the tab page to add or update</param>
+        /// <param name="component">Component to add or update</param>
+        public void AddTabComponent(string name, object component)
+        {
+            string designName = name;
+            string html = (string)component;
+
+            TabPage existingTabPage = null;
+            foreach (TabPage tabPage in TabControl.TabPages)
+            {
+                if (tabPage.Text == name)
+                {
+                    existingTabPage = tabPage;
+                    break;
+                }
+            }
+
+            if (existingTabPage == null)
+            {
+                TabPage newTabPage = new TabPage(name);
+                newTabPage.Text = name;
+                newTabPage.ToolTipText = $"{name}.vbi";
+
+                // Init browser
+                WebBrowser browser = new WebBrowser();
+                browser.IsWebBrowserContextMenuEnabled = false;
+                browser.AllowWebBrowserDrop = false;
+                browser.WebBrowserShortcutsEnabled = false;
+                browser.ObjectForScripting = Controller;
+                // Create browser with empty body
+                browser.DocumentText = OutputTemplate.Replace("{0}", html);
+                browser.PreviewKeyDown += (sender, eventArgs) => {
+                    if (eventArgs.Control)
+                    {
+                        if (eventArgs.KeyCode == Keys.E)
+                        {
+                            Controller.LoadDisplay(DisplayType.EDIT);
+                        }
+                        else if (eventArgs.KeyCode == Keys.Add || eventArgs.KeyCode == Keys.Oemplus)
+                        {
+                            Properties.Settings.Default.FontSize += 2;
+                            Controller.RefreshOutput();
+                        }
+                        else if (eventArgs.KeyCode == Keys.Subtract || eventArgs.KeyCode == Keys.OemMinus)
+                        {
+                            if (Properties.Settings.Default.FontSize > 9)
+                            {
+                                Properties.Settings.Default.FontSize -= 2;
+                                Controller.RefreshOutput();
+                            }
+                        }
+                    }
+                };
+
+                newTabPage.Controls.Add(browser);
+                browser.Dock = DockStyle.Fill;
+                TabControl.TabPages.Add(newTabPage);
+                TabControl.SelectedTab = newTabPage;
+            }
+            else
+            {
+                ((WebBrowser)existingTabPage.Controls[0]).Document.Body.InnerHtml = html;
+                TabControl.SelectedTab = existingTabPage;
+            }
 
             pnlMain.Focus();
-		}
+        }
 
         /// <summary>
         /// Handles the event when the tick button is clicked

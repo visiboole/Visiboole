@@ -46,6 +46,11 @@ namespace VisiBoole.ParsingEngine.Statements
         private NamedExpression Expression;
 
         /// <summary>
+        /// Next value of the clock statement.
+        /// </summary>
+        private string NextValue;
+
+        /// <summary>
         /// Driving clock of statement. (if any)
         /// </summary>
         public string Clock;
@@ -60,25 +65,24 @@ namespace VisiBoole.ParsingEngine.Statements
             Expression = new NamedExpression(text);
             // Get clock of expression
             Clock = text.Contains("@") ? Regex.Match(text, @"(?<=@)\w+").Value : null;
-            // Evaluate the expression
-            Expression.Evaluate();
             // Add expression to the database
             DesignController.ActiveDesign.Database.AddExpression(Expression, Clock);
         }
 
         /// <summary>
+        /// Updates the next value for the clock statement.
+        /// </summary>
+        public void Update()
+        {
+            NextValue = Expression.DependentBinary;
+        }
+
+        /// <summary>
         /// Ticks the statement (delay value is set to its dependent value)
         /// </summary>
-        public IEnumerable<string> Tick()
+        public void Tick()
         {
-            if (DesignController.ActiveDesign.Database.SetValues(Expression.Delays, Expression.DependentBinary))
-            {
-                return Expression.Delays;
-            }
-            else
-            {
-                return null;
-            }
+            DesignController.ActiveDesign.Database.SetValues(Expression.Delays, NextValue);
         }
 
         /// <summary>
@@ -110,7 +114,7 @@ namespace VisiBoole.ParsingEngine.Statements
                     // Output <= with dependent value
                     if (!Expression.IsMathExpression)
                     {
-                        Output.Add(new DependentVariable("<=", Expression.DependentBinary.Contains('1')));
+                        Output.Add(new DependentVariable("<=", NextValue.Contains('1')));
                     }
                     else
                     {

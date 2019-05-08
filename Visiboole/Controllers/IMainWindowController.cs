@@ -26,21 +26,22 @@ using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
 {
-	/// <summary>
-	/// Exposes methods on the controller for the MainWindow
-	/// </summary>
-	public interface IMainWindowController
-	{
+    /// <summary>
+    /// Exposes methods on the controller for the MainWindow
+    /// </summary>
+    public interface IMainWindowController
+    {
         /// <summary>
         /// Gets the display of the main window.
         /// </summary>
         /// <returns>The display</returns>
-        IDisplay GetDisplay();
+        DisplayType GetCurrentDisplayType();
 
         /// <summary>
-        /// Switch display mode
+        /// Loads into the MainWindow the display of the given type
         /// </summary>
-        void SwitchDisplay();
+        /// <param name="dType">The type of display that should be loaded</param>
+        void LoadDisplay(DisplayType dType);
 
         /// <summary>
         /// Focuses the main window.
@@ -48,10 +49,11 @@ namespace VisiBoole.Controllers
         void RetrieveFocus();
 
         /// <summary>
-        /// Selects the file at the specified index.
+        /// Selects the provided file name.
         /// </summary>
-        /// <param name="index">The index of the file</param>
-        void SelectFile(int index);
+        /// <param name="name">Name of file to select</param>
+        /// <param name="updateTabControl">Indicates whether to update the tab control selection</param>
+        void SelectFile(string name, bool updateTabControl = false);
 
         /// <summary>
 		/// Processes a new file that is created or opened by the user
@@ -80,7 +82,7 @@ namespace VisiBoole.Controllers
         /// Closes the selected open file
         /// </summary>
         /// <returns>The name of the file closed</returns>
-        void CloseActiveFile();
+        void CloseActiveFile(bool updateDesignControl = true);
 
         /// <summary>
         /// Closes all files.
@@ -92,13 +94,6 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <param name="name">Name of the file to keep open</param>
         void CloseFilesExceptFor(string name);
-
-        /// <summary>
-        /// Handles the event that occurs when an edit has been made to a design.
-        /// </summary>
-        /// <param name="designName">Name of the design that was edited</param>
-        /// <param name="isDirty">Whether the design has unsaved changes</param>
-        void OnDesignEdit(string designName, bool isDirty);
 
         /// <summary>
         /// Swaps two nav tree nodes.
@@ -118,10 +113,10 @@ namespace VisiBoole.Controllers
         void SetFontSize();
 
         /// <summary>
-        /// Loads into the MainWindow the display of the given type
+        /// Selects the parser with the provided design name.
         /// </summary>
-        /// <param name="dType">The type of display that should be loaded</param>
-        void LoadDisplay(DisplayType dType);
+        /// <param name="designName"></param>
+        void SelectParser(string designName);
 
         /// <summary>
         /// Handles the event that occurs when the user runs the active design.
@@ -158,5 +153,16 @@ namespace VisiBoole.Controllers
         /// <param name="value">Value for formatter click</param>
         /// <returns></returns>
         List<IObjectCodeElement> Variable_Click(string variableName, string value = null);
+
+        /// <summary>
+        /// Removes all parsers.
+        /// </summary>
+        void ClearParsers();
+
+        /// <summary>
+        /// Closes the parser with the provided design name.
+        /// </summary>
+        /// <param name="designName"></param>
+        void CloseParser(string designName);
     }
 }

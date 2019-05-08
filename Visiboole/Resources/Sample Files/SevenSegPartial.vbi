@@ -1,0 +1,26 @@
+w x y z;
+
+zero = ~w ~x ~y ~z;
+one = ~w ~x ~y z;
+two = ~w ~x y ~z;
+three = ~w ~x y z;
+
+a = zero | two | three
+    | ~w x ~y z | ~w x y ~z | ~w x y z
+    | w ~x ~y ~z | w ~x ~y z;
+b = zero | one | two 
+  | three | ~w x ~y ~z | ~w x y z 
+  | w ~x ~y ~z; 
+e = zero | two
+  | ~w x y ~z | w ~x ~y ~z;
+
+
+       a a a a;
+      f       b;
+      f       b;
+      f       b;
+       g g g g;
+      e       c;
+      e       c;
+      e       c;
+       d d d d;

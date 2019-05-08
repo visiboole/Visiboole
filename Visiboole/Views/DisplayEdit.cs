@@ -18,70 +18,157 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using CustomTabControl;
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 using VisiBoole.Controllers;
+using VisiBoole.Models;
 
 namespace VisiBoole.Views
 {
-	/// <summary>
-	/// The no-split input display that is hosted by the MainWindow
-	/// </summary>
-	public partial class DisplayEdit : UserControl, IDisplay
-	{
-		/// <summary>
-		/// Handle to the controller for this display
-		/// </summary>
-		private IDisplayController Controller;
-
-		/// <summary>
-		/// Returns the type of this display
-		/// </summary>
-		public DisplayType TypeOfDisplay
-		{
-			get
-			{
-				return DisplayType.EDIT;
-			}
-		}
-
-		/// <summary>
-		/// Constructs an instance of DisplaySingle
-		/// </summary>
-		public DisplayEdit()
-		{
-			InitializeComponent();
-		}
-
-		/// <summary>
-		/// Saves the handle to the controller for this display
-		/// </summary>
-		/// <param name="controller">The handle to the controller to save</param>
-		public void AttachController(IDisplayController controller)
-		{
-			this.Controller = controller;
-		}
-
-		/// <summary>
-		/// Loads the given tabcontrol into this display
-		/// </summary>
-		/// <param name="tc">The tabcontrol that will be loaded by this display</param>
-		public void AddTabControl(TabControl tc)
-		{
-			if (!(tc == null))
-			{
-				this.pnlMain.Controls.Add(tc, 0, 0);
-				tc.Dock = DockStyle.Fill;
-			}
-		}
+    /// <summary>
+    /// The no-split input display that is hosted by the MainWindow
+    /// </summary>
+    public partial class DisplayEdit : UserControl, IDisplay
+    {
+        /// <summary>
+        /// Controller for this display.
+        /// </summary>
+        private IDisplayController Controller;
 
         /// <summary>
-        /// Loads the given web browser into this display
+        /// Tab control for this display.
         /// </summary>
-        /// <param name="designName">Name of the design represented by the browser</param>
-        /// <param name="browser">The browser that will be loaded by this display</param>
-        public void AddBrowser(string designName, WebBrowser browser)
-		{
-		}
+        private NewTabControl TabControl;
+
+        /// <summary>
+        /// Type of this display.
+        /// </summary>
+        public DisplayType DisplayType { get { return DisplayType.EDIT; } }
+
+        /// <summary>
+        /// Constucts an instance of DisplaySingleOutput
+        /// </summary>
+        public DisplayEdit()
+        {
+            InitializeComponent();
+        }
+
+        /// <summary>
+        /// Saves the handle to the controller for this display
+        /// </summary>
+        /// <param name="controller">The handle to the controller to save</param>
+        public void AttachController(IDisplayController controller)
+        {
+            Controller = controller;
+        }
+
+        /// <summary>
+		/// Loads the given tab control into this display.
+		/// </summary>
+		/// <param name="tabControl">The tabcontrol that will be loaded by this display</param>
+		public void AttachTabControl(NewTabControl tabControl)
+        {
+            TabControl = tabControl;
+            pnlMain.Controls.Add(TabControl, 0, 0);
+            TabControl.Dock = DockStyle.Fill;
+        }
+
+        private TabPage FindTab(string name)
+        {
+            foreach (TabPage tabPage in TabControl.TabPages)
+            {
+                if (tabPage.Text.TrimStart('*') == name)
+                {
+                    return tabPage;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Selects the tab with the provided name if present.
+        /// </summary>
+        /// <param name="name">Name of tab to select</param>
+        public void SelectTab(string name)
+        {
+            for (int i = 0; i < TabControl.TabPages.Count; i++)
+            {
+                TabPage tabPage = TabControl.TabPages[i];
+                if (tabPage.Text.TrimStart('*') == name)
+                {
+                    TabControl.SelectTab(i);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Closes the tab with the provided name if present.
+        /// </summary>
+        /// <param name="name"></param>
+        public void CloseTab(string name)
+        {
+            for (int i = 0; i < TabControl.TabPages.Count; i++)
+            {
+                TabPage tabPage = TabControl.TabPages[i];
+                if (tabPage.Text.TrimStart('*') == name)
+                {
+                    TabControl.TabPages.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the theme of edit and run tab control
+        /// </summary>
+        public void SetTheme()
+        {
+            TabControl.BackgroundColor = Properties.Settings.Default.Theme == "Light" ? Color.AliceBlue : Color.FromArgb(66, 66, 66);
+            TabControl.TabColor = Properties.Settings.Default.Theme == "Light" ? Color.White : Color.FromArgb(66, 66, 66);
+            TabControl.TabTextColor = Properties.Settings.Default.Theme == "Light" ? Color.Black : Color.White;
+            TabControl.Refresh();
+        }
+
+        /// <summary>
+        /// Adds/updates a tab page with the provided name and the provided component.
+        /// </summary>
+        /// <param name="name">Name of the tab page to add or update</param>
+        /// <param name="component">Component to add or update</param>
+        public void AddTabComponent(string name, object component)
+        {
+            var design = (Design)component;
+
+            TabPage existingTabPage = FindTab(name);
+            if (existingTabPage == null)
+            {
+                TabPage newTabPage = new TabPage(name);
+                newTabPage.Text = name;
+                newTabPage.ToolTipText = $"{name}.vbi";
+                newTabPage.Controls.Add(design);
+
+                design.Dock = DockStyle.Fill;
+                design.DesignEdit += (designName, isDirty) =>
+                {
+                    TabPage tabPage = FindTab(designName);
+                    tabPage.Text = isDirty ? $"*{designName}" : designName;
+                    Controller.LoadDisplay(DisplayType.EDIT);
+                };
+
+                TabControl.TabPages.Add(newTabPage);
+                TabControl.SelectedTab = newTabPage;
+            }
+            else
+            {
+                existingTabPage.Controls.Clear();
+                existingTabPage.Controls.Add(design);
+                design.Dock = DockStyle.Fill;
+            }
+
+            pnlMain.Focus();
+        }
     }
 }

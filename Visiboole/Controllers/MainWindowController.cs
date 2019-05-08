@@ -33,16 +33,16 @@ namespace VisiBoole.Controllers
     /// Handles the logic and communication with other objects for the actions in the MainWindow
     /// </summary>
     public class MainWindowController : IMainWindowController
-	{
-		/// <summary>
-		/// Handle to the MainWindow which is the view for this controller
-		/// </summary>
-		private IMainWindow MainWindow;
+    {
+        /// <summary>
+        /// Handle to the MainWindow which is the view for this controller
+        /// </summary>
+        private IMainWindow MainWindow;
 
-		/// <summary>
-		/// Handle to the controller for the displays that are hosted by the MainWindow
-		/// </summary>
-		private IDisplayController DisplayController;
+        /// <summary>
+        /// Handle to the controller for the displays that are hosted by the MainWindow
+        /// </summary>
+        private IDisplayController DisplayController;
 
         /// <summary>
         /// Handle to the controller for the designs that are viewed by the MainWindow
@@ -56,10 +56,10 @@ namespace VisiBoole.Controllers
         /// <param name="displayController">Handle to the controller for the displays that are hosted by the MainWindow</param>
         /// <param name="designController">Handle to the controller for the designs that are viewed by the MainWindow</param>
         public MainWindowController(IMainWindow mainWindow, IDisplayController displayController, IDesignController designController)
-		{
-			MainWindow = mainWindow;
-			MainWindow.AttachMainWindowController(this);
-			DisplayController = displayController;
+        {
+            MainWindow = mainWindow;
+            MainWindow.AttachMainWindowController(this);
+            DisplayController = displayController;
             DesignController = designController;
         }
 
@@ -67,17 +67,9 @@ namespace VisiBoole.Controllers
         /// Gets the display of the main window.
         /// </summary>
         /// <returns>The display</returns>
-        public IDisplay GetDisplay()
+        public DisplayType GetCurrentDisplayType()
         {
-            try
-            {
-                return DisplayController.CurrentDisplay;
-            }
-            catch (Exception)
-            {
-                DialogBox.New("Error", "An unexpected error has occured while retrieving the current display type.", DialogType.Ok);
-                return null;
-            }
+            return DisplayController.CurrentDisplay.DisplayType;
         }
 
         /// <summary>
@@ -86,34 +78,9 @@ namespace VisiBoole.Controllers
         /// <param name="dType">The type of display that should be loaded</param>
         public void LoadDisplay(DisplayType dType)
         {
-            try
-            {
-                DisplayController.PreviousDisplay = DisplayController.CurrentDisplay;
-                DisplayController.CurrentDisplay = DisplayController.GetDisplayOfType(dType);
-                MainWindow.LoadDisplay(DisplayController.PreviousDisplay, DisplayController.CurrentDisplay);
-            }
-            catch (Exception)
-            {
-                DialogBox.New("Error", "An unexpected error has occured while loading the display.", DialogType.Ok);
-            }
-        }
-
-        /// <summary>
-        /// Used to check if the display is the output, if it is, change it to editor.
-        /// </summary>
-        public void SwitchDisplay()
-        {
-            try
-            {
-                if (DisplayController.CurrentDisplay is DisplayRun)
-                {
-                    LoadDisplay(DisplayType.EDIT);
-                }
-            }
-            catch (Exception)
-            {
-                DialogBox.New("Error", "An unexpected error has occured while switching the display type.", DialogType.Ok);
-            }
+            DisplayController.PreviousDisplay = DisplayController.CurrentDisplay;
+            DisplayController.CurrentDisplay = DisplayController.GetDisplayOfType(dType);
+            MainWindow.LoadDisplay(DisplayController.PreviousDisplay, DisplayController.CurrentDisplay);
         }
 
         /// <summary>
@@ -141,13 +108,17 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Selects the file at the specified index.
+        /// Selects the provided file name.
         /// </summary>
-        /// <param name="index">The index of the file</param>
-        public void SelectFile(int index)
+        /// <param name="name">Name of file to select</param>
+        /// <param name="updateTabControl">Indicates whether to update the tab control selection</param>
+        public void SelectFile(string name, bool updateDesignControl = false)
         {
-            string designName = DisplayController.SelectTabPage(index);
-            DesignController.SelectDesign(designName);
+            if (updateDesignControl)
+            {
+                DisplayController.SelectTabPage(name);
+            }
+            DesignController.SelectDesign(name);
         }
 
         /// <summary>
@@ -163,12 +134,9 @@ namespace VisiBoole.Controllers
             }
 
             Design design = DesignController.CreateDesign(path);
-            if (DisplayController.CreateNewTab(design) == true)
-            {
-                MainWindow.AddNavTreeNode(design.FileName);
-            }
-
-            LoadDisplay(DisplayController.CurrentDisplay.TypeOfDisplay);
+            DisplayController.CreateDesignTab(design);
+            MainWindow.AddNavTreeNode(design.FileName);
+            LoadDisplay(DisplayType.EDIT);
         }
 
         /// <summary>
@@ -200,7 +168,7 @@ namespace VisiBoole.Controllers
             // Close old design
             DesignController.CloseDesign(currentDesignName, false);
             // Update tab with new design
-            DisplayController.UpdateTab(currentDesignName, newDesign);
+            DisplayController.CreateDesignTab(newDesign);
             // Update node with new design
             MainWindow.UpdateNavTreeNode(currentDesignName, newDesign.FileName);
             // Display success
@@ -220,7 +188,7 @@ namespace VisiBoole.Controllers
         /// </summary>
         /// <param name="designName">Name of file to close</param>
         /// <returns>The name of the file closed</returns>
-        private string CloseFile(string designName)
+        private string CloseFile(string designName, bool updateDesignControl = true)
         {
             Design design = DesignController.GetDesign(designName);
 
@@ -242,7 +210,10 @@ namespace VisiBoole.Controllers
                 }
 
                 // Otherwise close file
-                DisplayController.CloseTab(designName);
+                if (updateDesignControl)
+                {
+                    DisplayController.CloseDesignTab(designName);
+                }
                 DesignController.CloseDesign(designName, save);
                 MainWindow.RemoveNavTreeNode(designName);
                 return designName;
@@ -256,9 +227,9 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Closes the selected open file
         /// </summary>
-        public void CloseActiveFile()
+        public void CloseActiveFile(bool updateDesignControl = true)
         {
-            CloseFile(Controllers.DesignController.ActiveDesign.FileName);
+            CloseFile(Controllers.DesignController.ActiveDesign.FileName, updateDesignControl);
         }
 
         /// <summary>
@@ -299,17 +270,6 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Handles the event that occurs when an edit has been made to a design.
-        /// </summary>
-        /// <param name="designName">Name of the design that was edited</param>
-        /// <param name="isDirty">Whether the design has unsaved changes</param>
-        public void OnDesignEdit(string designName, bool isDirty)
-        {
-            DisplayController.UpdateTabText(designName, isDirty);
-            LoadDisplay(DisplayType.EDIT);
-        }
-
-        /// <summary>
         /// Swaps two nav tree nodes.
         /// </summary>
         /// <param name="srcIndex">Source index of the swap</param>
@@ -334,6 +294,15 @@ namespace VisiBoole.Controllers
         public void SetFontSize()
         {
             DesignController.SetDesignFontSizes();
+        }
+
+        /// <summary>
+        /// Selects the parser with the provided design name.
+        /// </summary>
+        /// <param name="designName"></param>
+        public void SelectParser(string designName)
+        {
+            DesignController.SelectParser(designName);
         }
 
         /// <summary>
@@ -415,5 +384,22 @@ namespace VisiBoole.Controllers
         {
             return DesignController.ParseVariableClick(variableName, value);
         }
-	}
+
+        /// <summary>
+        /// Removes all parsers.
+        /// </summary>
+        public void ClearParsers()
+        {
+            DesignController.ClearParsers();
+        }
+
+        /// <summary>
+        /// Closes the parser with the provided design name.
+        /// </summary>
+        /// <param name="designName"></param>
+        public void CloseParser(string designName)
+        {
+            DesignController.CloseParser(designName);
+        }
+    }
 }

@@ -70,5 +70,17 @@ namespace VisiBoole.Properties {
                 this["Colorblind"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool OutputSemicolons {
+            get {
+                return ((bool)(this["OutputSemicolons"]));
+            }
+            set {
+                this["OutputSemicolons"] = value;
+            }
+        }
     }
 }
