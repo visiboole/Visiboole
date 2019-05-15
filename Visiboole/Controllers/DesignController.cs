@@ -18,45 +18,39 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
-using CustomTabControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine;
 using VisiBoole.ParsingEngine.ObjectCode;
-using VisiBoole.Views;
 
 namespace VisiBoole.Controllers
 {
     public class DesignController : IDesignController
     {
         /// <summary>
-		/// Handle to the controller for the MainWindow
-		/// </summary>
-		private IMainWindowController mwController;
+        /// Handle to the controller for the MainWindow
+        /// </summary>
+        private IMainWindowController MainWindowController;
 
         /// <summary>
-		/// All opened Designs currently loaded by this application
+		/// All opened designs currently loaded by this application.
 		/// </summary>
         private Dictionary<string, Design> Designs;
 
         /// <summary>
-        /// All parsers of running designs in this application
+        /// All opened parsers currently loaded by this application.
         /// </summary>
         private Dictionary<string, Parser> Parsers;
 
         /// <summary>
-        /// The active Design.
+        /// The active design.
         /// </summary>
         public static Design ActiveDesign { get; set; }
 
         /// <summary>
-        /// Active parser instance
+        /// Active parsing instance.
         /// </summary>
         private Parser ActiveParser;
 
@@ -72,302 +66,398 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-		/// Saves the handle to the controller for the MainWindow
-		/// </summary>
-		/// <param name="mwController"></param>
-		public void AttachMainWindowController(IMainWindowController mwController)
+        /// Saves the handle to the controller for the MainWindow
+        /// </summary>
+        public void AttachMainWindowController(IMainWindowController mainWindowController)
         {
-            this.mwController = mwController;
+            MainWindowController = mainWindowController;
         }
 
         /// <summary>
-        /// Returns the names of all Designs.
+        /// Gets an array of design names that are currently opened.
         /// </summary>
-        /// <returns>Names of all Designs.</returns>
+        /// <returns>Array of design names that are currently opened.</returns>
         public string[] GetDesigns()
         {
+            // Return array containing the names of all designs currently opened
             return Designs.Keys.ToArray();
         }
 
         /// <summary>
-        /// Returns the active design.
+        /// Gets the active design.
         /// </summary>
-        /// <returns>Active design</returns>
+        /// <returns>Active design.</returns>
         public Design GetActiveDesign()
         {
+            // Return the active design
             return ActiveDesign;
         }
 
         /// <summary>
-        /// Gets a design by name.
+        /// Gets the design with the specified name.
         /// </summary>
-        /// <param name="name">Name of design</param>
-        /// <returns>Design with the provided name</returns>
+        /// <param name="name">Name of design to return.</param>
+        /// <returns>Design with the specified name.</returns>
         public Design GetDesign(string name)
         {
-            Design design;
-            Designs.TryGetValue(name, out design);
-
-            if (design != null)
-            {
-                return design;
-            }
-            else
-            {
-                return null;
-            }
+            // If design dictionary has a design for the specified name, return that design
+            // Otherwise, return null
+            return Designs.ContainsKey(name) ? Designs[name] : null;
         }
 
         private Parser GetParser(string name)
         {
-            Parser parser;
-            Parsers.TryGetValue(name, out parser);
+            // If parser dictionary has a parser for the specified name, return that parser
+            // Otherwise, return null
+            return Parsers.ContainsKey(name) ? Parsers[name] : null;
+        }
 
-            if (parser != null)
+        /// <summary>
+        /// Returns whether the specified design has a parser already opened.
+        /// </summary>
+        /// <param name="name">Name of the design.</param>
+        /// <returns>Whether the specified design has a parser already opened.</returns>
+        public bool DesignHasParser(string name)
+        {
+            return Parsers.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// Selects the design and parser with the specified name.
+        /// </summary>
+        /// <param name="name">Name of design to select.</param>
+        public void SelectFile(string name)
+        {
+            // If specified name is null
+            if (name == null)
             {
-                return parser;
+                // Set active design to null
+                ActiveDesign = null;
+                // Set active parser to null
+                ActiveParser = null;
             }
+            // If specified name is not null
             else
             {
-                return null;
+                // Set active design to the specified design
+                ActiveDesign = GetDesign(name);
+                // Set active parser to the specified parser
+                ActiveParser = GetParser(name);
             }
         }
 
         /// <summary>
-        /// Selects a design with the provided name
-        /// </summary>
-        /// <param name="design">Design to select</param>
-        public void SelectDesign(string design)
-        {
-            ActiveDesign = design == null ? null : GetDesign(design);
-        }
-
-        /// <summary>
-        /// Selects a parser for the provided design name
-        /// </summary>
-        /// <param name="design"></param>
-        public void SelectParser(string design)
-        {
-            ActiveParser = GetParser(design);
-            ActiveDesign = GetDesign(design);
-        }
-
-        /// <summary>
-        /// Creates a Design with the given name
+        /// Creates a design from the specified path.
         /// </summary>
         /// <param name="path">Path of the design</param>
-        /// <returns>The Design created</returns>
+        /// <returns>Created design</returns>
         public Design CreateDesign(string path)
         {
-            Design newDesign = new Design(path);
-
-            if (!Designs.ContainsKey(newDesign.FileName))
-            {
-                Designs.Add(newDesign.FileName, newDesign);
-                ActiveDesign = newDesign;
-            }
-
+            // Create new design with the specified path
+            var newDesign = new Design(path);
+            // Add new design to the designs dictionary
+            Designs.Add(newDesign.FileName, newDesign);
+            // Set new design as the active design
+            ActiveDesign = newDesign;
+            // Return new design
             return newDesign;
         }
 
         /// <summary>
-        /// Saves the provided Design.
+        /// Saves the specified design if it is dirty.
         /// </summary>
         /// <param name="design">Design to save.</param>
         private void SaveDesign(Design design)
         {
+            // If design is dirty
             if (design.IsDirty)
             {
+                // Save design
                 design.SaveTextToFile();
             }
         }
 
         /// <summary>
-        /// Saves the active Design.
+        /// Saves the design with the specified name.
         /// </summary>
-        /// <returns>Whether the save was successful</returns>
-        public bool SaveActiveDesign()
+        public void SaveDesign(string name = null)
         {
-            SaveDesign(ActiveDesign);
-            return true;
+            // If no name is specified, save the active design
+            // Otherwise, save the design with specified name
+            SaveDesign(name == null ? ActiveDesign : GetDesign(name));
         }
 
         /// <summary>
-        /// Saves all Designs
+        /// Saves all designs.
         /// </summary>
-        /// <returns>Whether the save was successful</returns>
-        public bool SaveDesigns()
+        public void SaveDesigns()
         {
+            // For each opened design
             foreach (Design design in Designs.Values)
             {
+                // Save design
                 SaveDesign(design);
             }
-            return true;
         }
 
         /// <summary>
-        /// Closes a given Design.
+        /// Saves and closes the design with the specified name.
         /// </summary>
-        /// <param name="name">Name of Design</param>
-        /// <param name="save">Indicates whether the user wants the design saved</param>
-        /// <returns>Indicates whether the Design was closed</returns>
-        public bool CloseDesign(string name, bool save)
+        /// <param name="name">Name of the design to close.</param>
+        /// <param name="save">Whether the closing design should be saved.</param>
+        public void CloseDesign(string name, bool save)
         {
-            Design design = GetDesign(name);
-
-            if (design != null)
+            // If design has a parser to close
+            if (Parsers.ContainsKey(name))
             {
-                if (save)
+                // Remove parser from parsers
+                Parsers.Remove(name);
+                // If there are no parsers opened
+                if (Parsers.Count == 0)
                 {
-                    SaveDesign(design);
+                    // Set active parser to none
+                    ActiveParser = null;
                 }
-
-                Designs.Remove(name);
-
-                return true;
             }
-            else
+
+            // If the closing design should be saved
+            if (save)
             {
-                return false;
+                // Save design
+                SaveDesign(name);
+            }
+            // Remove design from designs dictionary
+            Designs.Remove(name);
+            // If there are no designs opened
+            if (Designs.Count == 0)
+            {
+                // Set active design to none
+                ActiveDesign = null;
+                // Reload the display
+                MainWindowController.LoadDisplay(DisplayType.EDIT);
             }
         }
 
         /// <summary>
-        /// Update the font sizes of all Designs.
+        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
+        /// </summary>
+        /// <param name="name">Name of parser to close.</param>
+        public void CloseInstantiationParser(string name)
+        {
+            // If designs contains the parser to close
+            if (Designs.ContainsKey(name))
+            {
+                Designs.Remove(name);
+            }
+
+            // If parsers contains the parser to close
+            if (Parsers.ContainsKey(name))
+            {
+                // Remove parser from parsers
+                Parsers.Remove(name);
+                // If there are no parsers opened
+                if (Parsers.Count == 0)
+                {
+                    // Set active parser to none
+                    ActiveParser = null;
+                    // Reload the display
+                    MainWindowController.LoadDisplay(DisplayType.EDIT);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears all instantiation parsers from the parser dictionary.
+        /// </summary>
+        public void CloseInstantiationParsers()
+        {
+            // For each parser in the parser dictionary
+            foreach (string parserName in Parsers.Keys.ToList())
+            {
+                // If parser is an instantiation
+                if (parserName.Contains("."))
+                {
+                    // Remove parser from parser dictionary
+                    Parsers.Remove(parserName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates the font sizes of all designs.
         /// </summary>
         public void SetDesignFontSizes()
         {
+            // For each design in opened designs
             foreach (Design design in Designs.Values)
             {
+                // Set font size
                 design.SetFontSize();
             }
         }
 
         /// <summary>
-        /// Change the themes of all Designs
+        /// Changes the themes of all designs
         /// </summary>
         public void SetThemes()
         {
+            // For each design in opened designs
             foreach (Design design in Designs.Values)
             {
+                // Set theme
                 design.SetTheme();
             }
         }
 
         /// <summary>
+        /// Gets the current state of the active design.
+        /// </summary>
+        /// <returns>Current state of active design.</returns>
+        public List<Variable> GetActiveDesignState()
+        {
+            // Return current state of the active design
+            return ActiveParser.ExportState();
+        }
+
+        /// <summary>
         /// Parses the active design.
         /// </summary>
-        /// <returns>Output of the parsed design</returns>
+        /// <returns>Output of the parsed design.</returns>
         public List<IObjectCodeElement> Parse()
         {
-            Parser parser = new Parser(ActiveDesign);
+            // Create a parser for the active design
+            var parser = new Parser(ActiveDesign);
+            // Get output of the parsed active design
             var output = parser.Parse();
+            // If output is not null
             if (output != null)
             {
-                Parsers.Add(ActiveDesign.FileName, parser);
+                // If the parsers dictionary has a previous parser for the design
+                if (Parsers.ContainsKey(ActiveDesign.FileName))
+                {
+                    // Override the previous parser with the new parser
+                    Parsers[ActiveDesign.FileName] = parser;
+                }
+                // If the parsers dictionary doesn't have a previous parser for the design
+                else
+                {
+                    // Save parser for the design
+                    Parsers.Add(ActiveDesign.FileName, parser);
+                }
+                // Set parser to be the active parser
                 ActiveParser = parser;
             }
+            // Return output from the parsed active design
             return output;
         }
 
         /// <summary>
         /// Parses a tick for the active design.
         /// </summary>
-        /// <returns>Output of the tick for the parsed design</returns>
+        /// <returns>Output of the parsed tick.</returns>
         public List<IObjectCodeElement> ParseTick()
         {
+            // Return output from the parsed design tick
             return ActiveParser.ParseTick();
         }
 
         /// <summary>
         /// Parses a variable click for the active design.
         /// </summary>
-        /// <param name="variableName">The name of the variable that was clicked by the user</param>
-        /// <param name="value">Value for formatter click</param>
-        /// <returns>Output of the tick for the parsed design</returns>
-        public List<IObjectCodeElement> ParseVariableClick(string variableName, string value = null)
+        /// <param name="variableName">Name of the variable that was clicked by the user.</param>
+        /// <param name="nextValue">Next value if formatter click./param>
+        /// <returns>Output of the parsed variable click.</returns>
+        public List<IObjectCodeElement> ParseVariableClick(string variableName, string nextValue = null)
         {
-            return ActiveParser.ParseClick(variableName, value);
+            // Return ouput from the parsed design variable click
+            return ActiveParser.ParseClick(variableName, nextValue);
         }
 
         /// <summary>
-        /// Parsers the current design text with input variables.
+        /// Parsers the active design with the specified input variables.
         /// </summary>
-        /// <param name="inputVariables">Input variables</param>
-        /// <returns>Parsed output</returns>
+        /// <param name="inputVariables">Input variables.</param>
+        /// <returns>Output of the parsed design.</returns>
         public List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables)
         {
-            Parser parser = new Parser(ActiveDesign);
+            // Create a parser for the active design
+            var parser = new Parser(ActiveDesign);
+            // Get output of the parsed active design
             var output = parser.ParseWithInput(inputVariables);
+            // If output is not null
             if (output != null)
             {
-                Parsers.Add(ActiveDesign.FileName, parser);
+                // If the parsers dictionary has a previous parser for the design
+                if (Parsers.ContainsKey(ActiveDesign.FileName))
+                {
+                    // Override the previous parser with the new parser
+                    Parsers[ActiveDesign.FileName] = parser;
+                }
+                // If the parsers dictionary doesn't have a previous parser for the design
+                else
+                {
+                    // Save parser for the design
+                    Parsers.Add(ActiveDesign.FileName, parser);
+                }
+                // Set parser to be the active parser
                 ActiveParser = parser;
             }
+            // Return output from the parsed design
             return output;
         }
 
         /// <summary>
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
-        /// <param name="instantiation">Instnatiation</param>
+        /// <param name="instantiation">Instantiation</param>
         /// <returns>Output of the parsed design</returns>
         public List<IObjectCodeElement> ParseSubdesign(string instantiation)
         {
-            Design currentDesign = ActiveDesign;
+            // Save the active design
+            var currentDesign = ActiveDesign;
+            // Get the design name from the instantiations dictionary inside the active parser
+            string designName = ActiveParser.Instantiations[instantiation].Split('.').First().TrimStart();
+            // Get full instantiation name
+            string fullInstantName = string.Concat(designName, '.', instantiation);
+            
+            // Get the sub design from the design name
+            var subDesign = ActiveParser.Subdesigns[designName];
+            // If the sub design isn't in the design dictionary
+            if (!Designs.ContainsKey(fullInstantName))
+            {
+                // Add sub design to the design dictionary
+                Designs.Add(fullInstantName, subDesign);
+            }
+            // Get the input variables from the active parser
+            var inputVariables = ActiveParser.GetModuleInputs(instantiation, subDesign.HeaderLine);
 
-            string designName = instantiation.Split('.')[0];
-            string instantName = instantiation.Split('.')[1].TrimEnd('(');
-            Design subDesign = Parsers[ActiveDesign.FileName].Subdesigns[designName];
-
-            // Get input variables
-            List<Variable> inputVariables = Parsers[ActiveDesign.FileName].GetModuleInputs(instantName, subDesign.ModuleDeclaration);
-
-            // Parse sub design
+            // Set the sub design to be the active design
             ActiveDesign = subDesign;
-            Parser subParser = new Parser(subDesign);
-            var output = subParser.ParseWithInput(inputVariables); // Parse subdesign
+            // Create a parser for the sub design
+            var subParser = new Parser(subDesign);
+            // Get the output of the parsed sub design
+            var output = subParser.ParseWithInput(inputVariables);
+            // If output is not null
             if (output != null)
             {
-                if (Parsers.ContainsKey(designName))
+                // If the parsers dictionary has a previous parser for the current instantiation
+                if (Parsers.ContainsKey(fullInstantName))
                 {
-                    Parsers[designName] = subParser;
+                    // Override the previous parser with the new parser
+                    Parsers[fullInstantName] = subParser;
                 }
+                // If the parsers dictionary doesn't have a previous parser for the current instantiation
                 else
                 {
-                    Parsers.Add(designName, subParser);
+                    // Save parser for the current instantiation
+                    Parsers.Add(fullInstantName, subParser);
                 }
+                // Set active parser to the parser of the current instantiation
                 ActiveParser = subParser;
             }
 
+            // Return output of the instantiation
             return output;
-        }
-
-        /// <summary>
-        /// Gets the active designs current state.
-        /// </summary>
-        /// <returns>Active designs current state</returns>
-        public List<Variable> GetActiveDesignState()
-        {
-            return ActiveParser.ExportState();
-        }
-
-        public void ClearParsers()
-        {
-            Parsers.Clear();
-        }
-
-        /// <summary>
-        /// Removes a parser from the open parsers.
-        /// </summary>
-        /// <param name="name">Design name of the parser to close</param>
-        public void CloseParser(string name)
-        {
-            Parsers.Remove(name);
-            if (Parsers.Count == 0)
-            {
-                ActiveParser = null;
-            }
         }
     }
 }

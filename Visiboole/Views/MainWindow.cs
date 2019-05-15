@@ -95,7 +95,27 @@ namespace VisiBoole.Views
         public MainWindow()
         {
             InitializeComponent();
-            NavTree.NodeMouseClick += (sender, args) => NavTree.SelectedNode = args.Node;
+            NavTree.NodeMouseClick += (sender, args) =>
+            {
+                NavTree.SelectedNode = args.Node;
+                if (args.Button == MouseButtons.Right && args.Node.Level != 0)
+                {
+                    ContextMenu contextMenu = new ContextMenu();
+                    MenuItem item = new MenuItem("Save Design");
+                    item.Click += new EventHandler(SaveDesignContextMenuClick);
+                    item.Enabled = runModeToggle.Enabled;
+                    contextMenu.MenuItems.Add(item);
+                    item = new MenuItem("Close Design");
+                    item.Click += new EventHandler(CloseDesignContextMenuClick);
+                    item.Enabled = runModeToggle.Enabled;
+                    contextMenu.MenuItems.Add(item);
+                    item = new MenuItem("Close All Except This");
+                    item.Click += new EventHandler(CloseAllExceptMenuClick);
+                    item.Enabled = runModeToggle.Enabled;
+                    contextMenu.MenuItems.Add(item);
+                    args.Node.ContextMenu = contextMenu;
+                }
+            };
             NavTree.HideSelection = true;
             NavTree.SelectedNode = null;
             menuStrip1.Renderer = new ToolStripProfessionalRenderer(new DarkColorTable());
@@ -160,6 +180,7 @@ namespace VisiBoole.Views
                     MainWindowController.SetFontSize();
                 }
 
+                previousStateToolStripMenuItem.Enabled = MainWindowController.DesignHasParser(DesignController.ActiveDesign.FileName);
                 undoToolStripMenuItem.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
                 undoToolStripMenuItem1.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
                 redoToolStripMenuItem.Enabled = DesignController.ActiveDesign.UndoHistory.Count > 0;
@@ -170,6 +191,7 @@ namespace VisiBoole.Views
             }
             else
             {
+                previousStateToolStripMenuItem.Enabled = false;
                 undoToolStripMenuItem.Enabled = false;
                 undoToolStripMenuItem1.Enabled = false;
                 redoToolStripMenuItem.Enabled = false;
@@ -224,29 +246,9 @@ namespace VisiBoole.Views
         {
             string fileName = path.Substring(path.LastIndexOf("\\") + 1);
             TreeNode fileNode = new TreeNode(fileName);
-
             fileNode.Name = fileName;
-            ContextMenu contextMenu = new ContextMenu();
-            contextMenu.MenuItems.Add("Save Design", new EventHandler(SaveFileMenuClick));
-            contextMenu.MenuItems.Add("Close Design", new EventHandler(CloseFileMenuClick));
-            contextMenu.MenuItems.Add("Close All Except This", new EventHandler(CloseAllExceptMenuClick));
-            contextMenu.MenuItems.Add("Close All Designs", new EventHandler(CloseAllMenuClick));
-            fileNode.ContextMenu = contextMenu;
-
             NavTree.Nodes[0].Nodes.Add(fileNode);
             NavTree.ExpandAll();
-        }
-
-        /// <summary>
-        /// Updates the provided nav tree node with a new name.
-        /// </summary>
-        /// <param name="oldName">Name of node</param>
-        /// <param name="newName">New name of node</param>
-        public void UpdateNavTreeNode(string oldName, string newName)
-        {
-            int index = NavTree.Nodes[0].Nodes.IndexOfKey(oldName);
-            NavTree.Nodes[0].Nodes[index].Name = newName;
-            NavTree.Nodes[0].Nodes[index].Text = newName;
         }
 
         /// <summary>
@@ -453,8 +455,6 @@ namespace VisiBoole.Views
 
                 openFileDialog1.FileName = "";
             }
-
-            previousStateToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
@@ -472,8 +472,6 @@ namespace VisiBoole.Views
 
             MainWindowController.ProcessNewFile(saveFileDialog1.FileName, true);
             saveFileDialog1.FileName = "newFile1.vbi";
-
-            previousStateToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
@@ -522,8 +520,8 @@ namespace VisiBoole.Views
         {
             if (editModeToggle.Enabled)
             {
+                MainWindowController.SuspendRunDisplay();
                 MainWindowController.LoadDisplay(DisplayType.EDIT);
-                MainWindowController.ClearParsers();
             }
             MainWindowController.SelectFile(e.Node.Name, true);
         }
@@ -535,8 +533,10 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void RunButtonClick(object sender, EventArgs e)
         {
+            var currentCursor = Cursor.Current;
+            Cursor.Current = Cursors.WaitCursor;
             MainWindowController.Run();
-            previousStateToolStripMenuItem.Enabled = true;
+            Cursor.Current = currentCursor;
         }
 
         /// <summary>
@@ -546,8 +546,11 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void EditButtonClick(object sender, EventArgs e)
         {
+            var currentCursor = Cursor.Current;
+            Cursor.Current = Cursors.WaitCursor;
+            MainWindowController.SuspendRunDisplay();
             MainWindowController.LoadDisplay(DisplayType.EDIT);
-            MainWindowController.ClearParsers();
+            Cursor.Current = currentCursor;
         }
 
         /// <summary>
@@ -630,6 +633,7 @@ namespace VisiBoole.Views
 
             //refocuses syntax window if it exists, refocusing or un-minimizing
             //Creates and displays if doesn't exist
+            /*
             Form fc = Application.OpenForms["HelpWindow"];
             if (fc != null)
             {
@@ -642,15 +646,9 @@ namespace VisiBoole.Views
                 HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
                 hw.Show();
             }
-            
-        }
+            */
 
-        private void CheckToAddOpenFileLink()
-        {
-            if (NavTree.Nodes[0].Nodes.Count == 0)
-            {
-                MainWindowController.LoadDisplay(DisplayType.EDIT);
-            }
+            new SyntaxWindow().Show();
         }
 
         /// <summary>
@@ -660,8 +658,17 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void CloseFileMenuClick(object sender, EventArgs e)
         {
-            MainWindowController.CloseActiveFile();
-            CheckToAddOpenFileLink();
+            MainWindowController.CloseFile();
+        }
+
+        private void CloseDesignContextMenuClick(object sender, EventArgs e)
+        {
+            MainWindowController.CloseFile(NavTree.SelectedNode.Name);
+        }
+
+        private void SaveDesignContextMenuClick(object sender, EventArgs e)
+        {
+            MainWindowController.SaveFile(NavTree.SelectedNode.Name);
         }
 
         /// <summary>
@@ -682,7 +689,6 @@ namespace VisiBoole.Views
         private void CloseAllMenuClick(object sender, EventArgs e)
         {
             MainWindowController.CloseFiles();
-            CheckToAddOpenFileLink();
         }
 
         /// <summary>
@@ -726,7 +732,14 @@ namespace VisiBoole.Views
                 {
                     if (e.KeyCode == Keys.S)
                     {
-                        SaveFileMenuClick(sender, e);
+                        if (!e.Shift)
+                        {
+                            SaveFileMenuClick(sender, e);
+                        }
+                        else
+                        {
+                            SaveAllFileMenuClick(sender, e);
+                        }
                     }
                     else if (e.KeyCode == Keys.E && editModeToggle.Enabled)
                     {
@@ -793,14 +806,21 @@ namespace VisiBoole.Views
 
         private void previousStateToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            var currentCursor = Cursor.Current;
+            Cursor.Current = Cursors.WaitCursor;
             MainWindowController.RunPreviousState();
+            Cursor.Current = currentCursor;
         }
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            /*
             TutorialWindow tutorial = new TutorialWindow();
 
             tutorial.Show();
+            */
+
+            new TutorialWindow().Show();
 
         }
 

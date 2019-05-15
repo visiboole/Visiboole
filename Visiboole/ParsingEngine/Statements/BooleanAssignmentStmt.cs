@@ -25,6 +25,7 @@ using System.Text;
 using VisiBoole.Controllers;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
+using System.Collections.Generic;
 
 namespace VisiBoole.ParsingEngine.Statements
 {
@@ -36,7 +37,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|[\s{{}}()=^|+-]");
+        private Regex OutputRegex = new Regex($@"({Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|[\s{{}}()=^|+-]");
 
         /// <summary>
         /// Expression of the boolean statement.
@@ -58,37 +59,75 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Parses the text of this statement into a list of output elements.
         /// </summary>
-        public override void Parse()
+        public override List<IObjectCodeElement> Parse()
         {
-            // Output tokens
+            // Create output list to return
+            var output = new List<IObjectCodeElement>();
             MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
             {
                 string token = match.Value;
+
                 if (token == " ")
                 {
-                    Output.Add(new SpaceFeed());
+                    output.Add(new SpaceFeed());
                 }
                 else if (token == "\n")
                 {
                     // Output newline
-                    Output.Add(new LineFeed());
+                    output.Add(new LineFeed());
                 }
-                else if (token == "(" || token == ")")
+                else if(token == "(" || token == ")")
                 {
-                    Output.Add(Expression.Parentheses[match.Index]); // Output the corresponding parenthesis
+                    output.Add(Expression.Parentheses[match.Index]); // Output the corresponding parenthesis
                 }
-                else if (Parser.OperatorsList.Contains(token) || token == "=" || token == "{" || token == "}")
+                else if (Parser.OperatorsList.Contains(token) || token == "{" || token == "}" || token == "=")
                 {
-                    OutputOperator(token);
+                    output.Add(new Operator(token));
                 }
                 else
                 {
-                    OutputVariable(token); // Variable or constant
+                    if (!char.IsDigit(token[0]))
+                    {
+                        string name = token.TrimStart('~');
+                        IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
+                        DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
+                        if (indVar != null)
+                        {
+                            if (token[0] != '~')
+                            {
+                                output.Add(indVar);
+                            }
+                            else
+                            {
+                                output.Add(new IndependentVariable(token, !indVar.Value));
+                            }
+                        }
+                        else if (depVar != null)
+                        {
+                            if (token[0] != '~')
+                            {
+                                output.Add(depVar);
+                            }
+                            else
+                            {
+                                output.Add(new DependentVariable(token, !depVar.Value));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        output.Add(new Constant(token));
+                    }
                 }
             }
 
-            base.Parse();
+            // Output ending semicolon
+            output.Add(new Operator(";"));
+            // Output new line
+            output.Add(new LineFeed());
+            // Return output list
+            return output;
         }
     }
 }

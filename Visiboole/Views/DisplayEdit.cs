@@ -33,6 +33,21 @@ namespace VisiBoole.Views
     public partial class DisplayEdit : UserControl, IDisplay
     {
         /// <summary>
+        /// Event that occurs when the display tab is changed.
+        /// </summary>
+        public event DisplayTabChangeEventHandler DisplayTabChanged;
+
+        /// <summary>
+        /// Event that occurs when the display tab is closing.
+        /// </summary>
+        public event DisplayTabClosingEventHandler DisplayTabClosing;
+
+        /// <summary>
+        /// Event that occurs when the display tab is closed.
+        /// </summary>
+        public event DisplayTabClosedEventHandler DisplayTabClosed;
+
+        /// <summary>
         /// Controller for this display.
         /// </summary>
         private IDisplayController Controller;
@@ -71,6 +86,13 @@ namespace VisiBoole.Views
 		public void AttachTabControl(NewTabControl tabControl)
         {
             TabControl = tabControl;
+            tabControl.SelectedIndexChanged += (sender, eventArgs) => {
+                string tabName = tabControl.SelectedIndex != -1 ? tabControl.TabPages[TabControl.SelectedIndex].Text.TrimStart('*') : null;
+                DisplayTabChanged?.Invoke(tabName);
+            };
+            tabControl.TabXClicked += (sender, eventArgs) => {
+                DisplayTabClosing?.Invoke(((TabPage)sender).Text.TrimStart('*'));
+            };
             pnlMain.Controls.Add(TabControl, 0, 0);
             TabControl.Dock = DockStyle.Fill;
         }
@@ -116,9 +138,36 @@ namespace VisiBoole.Views
                 TabPage tabPage = TabControl.TabPages[i];
                 if (tabPage.Text.TrimStart('*') == name)
                 {
-                    TabControl.TabPages.RemoveAt(i);
+                    var closingTabPage = TabControl.TabPages[i];
+                    TabControl.SelectedIndex = -1;
+                    TabControl.TabPages.Remove(closingTabPage);
+                    if (TabControl.TabCount > 0)
+                    {
+                        if (TabControl.TabCount > i)
+                        {
+                            TabControl.SelectedIndex = i;
+                        }
+                        else
+                        {
+                            TabControl.SelectedIndex = i - 1;
+                        }
+                    }
+                    DisplayTabClosed?.Invoke(closingTabPage.Text, TabControl.TabCount);
                     break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Closes all tabs.
+        /// </summary>
+        public void CloseTabs()
+        {
+            for (int i = 0; i < TabControl.TabCount; i++)
+            {
+                var closingTabPage = TabControl.TabPages[0];
+                TabControl.TabPages.RemoveAt(0);
+                DisplayTabClosed?.Invoke(closingTabPage.Text, TabControl.TabCount);
             }
         }
 
@@ -138,7 +187,8 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="name">Name of the tab page to add or update</param>
         /// <param name="component">Component to add or update</param>
-        public void AddTabComponent(string name, object component)
+        /// <param name="swap">Whether to swap to the new component</param>
+        public void AddTabComponent(string name, object component, bool swap = false)
         {
             var design = (Design)component;
 
@@ -151,21 +201,27 @@ namespace VisiBoole.Views
                 newTabPage.Controls.Add(design);
 
                 design.Dock = DockStyle.Fill;
-                design.DesignEdit += (designName, isDirty) =>
-                {
+                design.DesignEdit += (designName, isDirty) => {
                     TabPage tabPage = FindTab(designName);
                     tabPage.Text = isDirty ? $"*{designName}" : designName;
                     Controller.LoadDisplay(DisplayType.EDIT);
                 };
 
                 TabControl.TabPages.Add(newTabPage);
-                TabControl.SelectedTab = newTabPage;
+                if (swap)
+                {
+                    TabControl.SelectedTab = newTabPage;
+                }
             }
             else
             {
                 existingTabPage.Controls.Clear();
                 existingTabPage.Controls.Add(design);
                 design.Dock = DockStyle.Fill;
+                if (swap)
+                {
+                    TabControl.SelectedTab = existingTabPage;
+                }
             }
 
             pnlMain.Focus();

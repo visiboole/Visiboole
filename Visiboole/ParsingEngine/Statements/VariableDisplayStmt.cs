@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using VisiBoole.Controllers;
@@ -29,7 +30,7 @@ namespace VisiBoole.ParsingEngine.Statements
     /// <summary>
     /// A display statement that outputs clickable variables or variable values in binary, decimal, unsigned and hex.
     /// </summary>
-	public class DisplayStmt : Statement
+	public class VariableDisplayStmt : Statement
 	{
         /// <summary>
         /// Regex for getting output tokens.
@@ -37,19 +38,20 @@ namespace VisiBoole.ParsingEngine.Statements
         private Regex OutputRegex = new Regex($@"{Parser.FormatSpecifierPattern}|{Parser.ScalarPattern}|[\s01]");
 
         /// <summary>
-        /// Constructs a FormatSpecifierStmt instance.
+        /// Constructs a Variable Display Statement
         /// </summary>
-        /// <param name="database">Database of the parsed design</param>
         /// <param name="text">Text of the statement</param>
-        public DisplayStmt(string text) : base(text)
+        public VariableDisplayStmt(string text) : base(text)
 		{
         }
 
         /// <summary>
         /// Parses the text of this statement into a list of output elements.
         /// </summary>
-        public override void Parse()
+        public override List<IObjectCodeElement> Parse()
 		{
+            List<IObjectCodeElement> output = new List<IObjectCodeElement>();
+
             // Find format specifiers and extra spacing
             MatchCollection matches = OutputRegex.Matches(Text);
             foreach (Match match in matches)
@@ -57,18 +59,34 @@ namespace VisiBoole.ParsingEngine.Statements
                 string token = match.Value;
                 if (token == " ")
                 {
-                    Output.Add(new SpaceFeed());
+                    output.Add(new SpaceFeed());
                 }
                 else if (token == "\n")
                 {
                     // Output newline
-                    Output.Add(new LineFeed());
+                    output.Add(new LineFeed());
                 }
                 else
                 {
                     if (token[0] != '%')
                     {
-                        OutputVariable(token);
+                        if (char.IsDigit(token[0]))
+                        {
+                            output.Add(new Constant(token));
+                        }
+                        else
+                        {
+                            IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
+                            DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
+                            if (indVar != null)
+                            {
+                                output.Add(indVar);
+                            }
+                            else if (depVar != null)
+                            {
+                                output.Add(depVar);
+                            }
+                        }
                     }
                     else
                     {
@@ -112,23 +130,36 @@ namespace VisiBoole.ParsingEngine.Statements
 
                         string binary = binaryBuilder.ToString();
                         char format = char.ToUpper(match.Groups["Format"].Value[0]);
-                        string output = format == 'B' ? binary : Format(format, binary);;
-                        int outputWidth = format == 'B' ? output.Length : GetWidth(format, variables.Length);
-                        string nextOutput = clickable ? GetNextValue(binary) : null;
 
-                        if (output.Length < outputWidth)
+                        string formatOutput = format == 'B' ? binary : Format(format, binary);                        
+                        string formatNextOutput = clickable ? GetNextValue(binary) : null;
+
+                        int outputWidth = format == 'B' ? formatOutput.Length : GetWidth(format, variables.Length);
+                        if (formatOutput.Length < outputWidth)
                         {
-                            for (int i = 0; i < outputWidth - output.Length; i++)
+                            if (format == 'H')
                             {
-                                Output.Add(new SpaceFeed());
+                                formatOutput = string.Concat(new string('0', outputWidth - formatOutput.Length), formatOutput);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < outputWidth - formatOutput.Length; i++)
+                                {
+                                    output.Add(new SpaceFeed());
+                                }
                             }
                         }
-                        Output.Add(new Formatter(output, $"{{{variableList}", nextOutput));
+                        output.Add(new Formatter(formatOutput, $"{{{variableList}", formatNextOutput));
                     }
                 }
             }
 
-            base.Parse();
+            // Output ending semicolon
+            output.Add(new Operator(";"));
+            // Output new line
+            output.Add(new LineFeed());
+            // Return output list
+            return output;
         }
 
         /// <summary>

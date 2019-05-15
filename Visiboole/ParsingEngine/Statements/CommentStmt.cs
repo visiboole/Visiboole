@@ -19,6 +19,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
@@ -31,20 +33,19 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class CommentStmt : Statement
 	{
         /// <summary>
-        /// Constructs a CommentStmt instance.
+        /// Constructs a Comment Statement with the provided comment text.
         /// </summary>
-        /// <param name="text">Text of the statement</param>
+        /// <param name="comment">Comment text</param>
         public CommentStmt(string text) : base(text)
-		{
-		}
+        {
+        }
 
         /// <summary>
-        /// Parses the text of this statement into a list of output elements.
+        /// Parses the tokens of this statement into a list of output elements.
         /// </summary>
-        public override void Parse()
-		{
-            Output.Add(new Comment(Text));
-            Output.Add(new LineFeed());
+        public override List<IObjectCodeElement> Parse()
+        {
+            return new List<IObjectCodeElement>(new IObjectCodeElement[] { new Comment(Text), new LineFeed() });
         }
 	}
 }

@@ -49,7 +49,7 @@ namespace VisiBoole.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("13")]
+        [global::System.Configuration.DefaultSettingValueAttribute("14")]
         public float FontSize {
             get {
                 return ((float)(this["FontSize"]));
@@ -73,7 +73,7 @@ namespace VisiBoole.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool OutputSemicolons {
             get {
                 return ((bool)(this["OutputSemicolons"]));

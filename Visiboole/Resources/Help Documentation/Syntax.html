@@ -1,0 +1,133 @@
+<html>
+  <head>
+    <style>
+      .o {
+        color: red;
+      }
+      
+      .r {
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <a name="top"></a>
+      <div id="toc_container" style="margin-left: 20px">
+      
+      <p class="toc_title"><h2><br>Contents</h2></p>
+        <ul class="toc_list">
+          <li><a href="#Variables">Variables</a></li>
+          <li><a href="#Constants">Constants</a></li>
+          <li><a href="#Concatenations">Concatenations</a></li>
+          <li><a href="#Operators">Operators</a></li>
+          <li><a href="#Comments">Comment Statements</a></li>
+          <li><a href="#VariableDisplays">Variable Display Statements</a></li>
+          <li><a href="#Assignments">Assignment Statements</a></li>
+          <li><a href="#Headers">Header Statements</a></li>
+          <li><a href="#Instantiations">Instantiation Statements</a></li>
+          <li><a href="#Libraries">Library Statements</a></li>
+          
+        </ul>
+      </div>
+
+      <div style="margin-left: 20px">
+      
+      <h2>How To Read</h2>
+      <p style="margin-left: 40px">
+        <span class=r>@Name</span> represents a required attribute named 'Name'.<br>
+        <span class=o>@Name</span> represents an optional attribute named 'Name'.<br>
+        [ represents a required '['.<br>
+        library represents a required 'library'.<br>
+      </p>
+
+      <h2 id="Variables">Variables</h2>
+        <p style="margin-left: 40px">
+        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.
+        <br>
+        <b>Valid Syntaxes:</b><br>
+        &emsp;<span class=r>@Namespace</span><span class=o>@Bit</span><br>
+        &emsp;&emsp;@Namespace represents any combination of alphanumeric characters that doesn't end in a number. This identifies the variable.<br>
+        &emsp;&emsp;@Bit represents the specific index or bit of a namespace. This identifies a single value in that variable's namespace.<br>
+        &emsp;&emsp;<b>Examples:</b> test a0 b31<br><br>
+        
+        &emsp;<span class=r>@Namespace</span>[<span class=r>@Bit</span>]<br>
+        &emsp;&emsp;@Namespace represents any combination of alphanumeric characters that doesn't end in a number. This identifies the variable.<br>
+        &emsp;&emsp;@Bit represents the specific index or bit of a namespace. This identifies a single value in that variable's namespace.<br>
+        &emsp;&emsp;<b>Examples:</b> a[0] b[31]<br><br>
+        
+        &emsp;<span class=r>@Namespace</span>[<span class=r>@LeftBound</span>.<span class=o>@Step</span>.<span class=r>@RightBound</span>]<br>
+        &emsp;&emsp;@Namespace represents any combination of alphanumeric characters that doesn't end in a number. This identifies the variable.<br>
+        &emsp;&emsp;@LeftBound represents the first index or bit you want to reference in that variable's namespace.<br>
+        &emsp;&emsp;@Step represents the difference between each index or bit. This value must not be negative. If no value is provided, the value will be 1.<br>
+        &emsp;&emsp;@RightBound represents the last index or bit you want to reference in that variable's namespace.<br>
+        &emsp;&emsp;<b>Examples:</b> a[3..0] b[0.1.4] c[2.3.6]<br>
+        &emsp;&emsp;<b>Note:</b> There is an enforced 32 bit limit. Bounds must be between 0 and 31 and the step must be between 1 and 31.
+
+      <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Constants">Constants</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Concatenations">Concatenations</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Operators">Operators</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Comments">Comment Statements</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+      
+      <h2 id="VariableDisplays">Variable Display Statements</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Assignments">Assignment Statements</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Headers">Header Statements</h2>
+        <p style="margin-left: 40px">
+        Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+      <h2 id="Instantiations">Instantiation Statements</h2>
+          <p style="margin-left: 40px">
+          Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        
+      <h2 id="Libraries">Library Statements</h2>
+          <p style="margin-left: 40px">
+          Text will go here for this section
+
+
+        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+
+        </div>
+  </body>
+</html>

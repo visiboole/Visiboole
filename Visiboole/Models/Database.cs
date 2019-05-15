@@ -57,7 +57,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Dictionary of variable namespaces.
         /// </summary>
-        private Dictionary<string, List<int>> Namespaces;
+        private Dictionary<string, List<int>> VectorNamespaces;
 
         /// <summary>
         /// List of the expressions in the design.
@@ -82,74 +82,55 @@ namespace VisiBoole.ParsingEngine
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
             Inputs = new List<string>();
-            Namespaces = new Dictionary<string, List<int>>();
+            VectorNamespaces = new Dictionary<string, List<int>>();
             Expressions = new Dictionary<string, NamedExpression>();
             DependencyLists = new Dictionary<string, List<string>>();
             AltClocks = new Dictionary<string, bool>();
         }
 
         /// <summary>
-        /// Returns whether the provided namespace exists.
-        /// </summary>
-        /// <param name="name">Namespace to check for existance</param>
-        /// <returns>Whether the provided namespace exists</returns>
-        public bool NamespaceExists(string name)
-        {
-            return Namespaces.ContainsKey(name);
-        }
-
-        /// <summary>
-        /// Checks whether the provided namespace belongs to a vector.
-        /// </summary>
-        /// <param name="name">Namespace to check</param>
-        /// <returns>Whether the provided namespace belongs to a vector</returns>
-        public bool NamespaceBelongsToVector(string name)
-        {
-            return NamespaceExists(name) && Namespaces[name] != null;
-        }
-
-        /// <summary>
-        /// Updates/adds the provided namespace with the provided/not provided bit.
+        /// Updates/adds the provided bit to the provided namespace.
         /// </summary>
         /// <param name="name">Namepsace to update/add</param>
         /// <param name="bit">Bit to add</param>
         public void UpdateNamespace(string name, int bit)
         {
-            if (!NamespaceExists(name))
+            // If vector namespace doesn't exist
+            if (!VectorNamespaces.ContainsKey(name))
             {
-                if (bit != -1)
-                {
-                    Namespaces.Add(name, new List<int>());
-                }
-                else
-                {
-                    Namespaces.Add(name, null);
-                }
+                // Create new namespace with the new bit
+                VectorNamespaces.Add(name, new List<int>(new int[] { bit }));
             }
-
-            if (bit != -1 && !Namespaces[name].Contains(bit))
+            // If vector namespace exists
+            else
             {
-                int componentCount = Namespaces[name].Count;
-                if (componentCount == 0)
+                // If vector namespace doesn't contain the bit
+                if (!VectorNamespaces[name].Contains(bit))
                 {
-                    Namespaces[name].Add(bit);
-                }
-                else
-                {
-                    int currentMaxBit = Namespaces[name][0];
+                    // Get current component count
+                    int componentCount = VectorNamespaces[name].Count;
+                    // Get current max bit
+                    int currentMaxBit = VectorNamespaces[name][0];
+                    // If new bit is larger than the current max bit
                     if (bit > currentMaxBit)
                     {
+                        // For all bits between the current max to the new max
                         for (int i = currentMaxBit + 1; i <= bit; i++)
                         {
-                            Namespaces[name].Insert(0, i);
+                            // Add bit
+                            VectorNamespaces[name].Insert(0, i);
                         }
                     }
+                    // If new bit is smaller than the current max bit
                     else
                     {
-                        int currentMinBit = Namespaces[name][componentCount - 1];
+                        // Get the current min bit
+                        int currentMinBit = VectorNamespaces[name][componentCount - 1];
+                        // For all bits between the min bit to the new min
                         for (int i = currentMinBit - 1; i >= bit; i--)
                         {
-                            Namespaces[name].Add(i);
+                            // Add bit
+                            VectorNamespaces[name].Add(i);
                         }
                     }
                 }
@@ -157,23 +138,30 @@ namespace VisiBoole.ParsingEngine
         }
 
         /// <summary>
-        /// Returns a list of components for the specified namespace.
+        /// Returns a list of components for the specified vector namespace.
         /// </summary>
         /// <param name="name">Namespace of the variable</param>
         /// <returns>List of components that belong to the namespace</returns>
-        public List<string> GetComponents(string name)
+        public List<string> GetVectorComponents(string name)
         {
-            if (NamespaceBelongsToVector(name))
+            // If the vector namespace exists
+            if (VectorNamespaces.ContainsKey(name))
             {
+                // Start components list
                 List<string> components = new List<string>();
-                foreach (int bit in Namespaces[name])
+                // For each bit in the vector's bits
+                foreach (int bit in VectorNamespaces[name])
                 {
+                    // Combine namespace with the bit to get the component
                     components.Add($"{name}{bit}");
                 }
+                // Return components list
                 return components;
             }
+            // If the vector namespace doesn't exist
             else
             {
+                // Return null for no list
                 return null;
             }
         }
@@ -253,15 +241,22 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the conversion was successful</returns>
         public bool MakeDependent(string name)
         {
+            // If the inputs list contains the variable to convert
             if (Inputs.Contains(name))
             {
+                // Return false for error
                 return false;
             }
 
+            // Get the value of the variable
             bool value = IndVars[name].Value;
+            // Remove variable from independent variables dictionary
             IndVars.Remove(name);
+            // Remove variable from variables dictionary
             AllVars.Remove(name);
+            // Add new dependent variable to the dictionaries
             AddVariable(new DependentVariable(name, value));
+            // Return true for success
             return true;
         }
 
@@ -477,21 +472,11 @@ namespace VisiBoole.ParsingEngine
                         return false;
                     }
 
-                    /*
-                    // Add variable to removal list
-                    variablesToRemove.Add(variable);
-                    */
                     // Add new variables to addition list
                     variablesToAdd.AddNew(additionalDependencyList);
                 }
             }
 
-            /*
-            foreach (string variable in variablesToRemove)
-            {
-                dependencyList.Remove(variable);
-            }
-            */
             dependencyList.AddNew(variablesToAdd);
 
             foreach (KeyValuePair<string, List<string>> dependecy in DependencyLists)
@@ -503,10 +488,6 @@ namespace VisiBoole.ParsingEngine
                         return false;
                     }
 
-                    /*
-                    // Remove new dependent from existing dependency list
-                    dependecy.Value.Remove(dependent);
-                    */
                     // Add dependent's dependencies to the existing dependency
                     dependecy.Value.AddNew(dependencyList);
                 }

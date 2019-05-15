@@ -30,7 +30,7 @@ namespace VisiBoole.Views
 		/// </summary>
 		private void InitializeComponent()
 		{
-            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Designs:");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Designs:");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,10 +61,12 @@ namespace VisiBoole.Views
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.colorBlindModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.simulationCommentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleSimulatorSemicolonsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.syntaxDocumentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutVisiBooleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.NavTree = new System.Windows.Forms.TreeView();
             this.OpenFileLinkLabel = new System.Windows.Forms.LinkLabel();
@@ -82,8 +84,6 @@ namespace VisiBoole.Views
             this.runStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.previousStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toggleSimulatorSemicolonsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutVisiBooleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainLayoutPanel.SuspendLayout();
             this.menuStrip2.SuspendLayout();
@@ -356,6 +356,14 @@ namespace VisiBoole.Views
             this.simulationCommentsToolStripMenuItem.Text = "Toggle Simulator Comments";
             this.simulationCommentsToolStripMenuItem.Click += new System.EventHandler(this.SimulatorCommentsMenuClick);
             // 
+            // toggleSimulatorSemicolonsToolStripMenuItem
+            // 
+            this.toggleSimulatorSemicolonsToolStripMenuItem.CheckOnClick = true;
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Name = "toggleSimulatorSemicolonsToolStripMenuItem";
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Text = "Toggle Simulator Semicolons";
+            this.toggleSimulatorSemicolonsToolStripMenuItem.Click += new System.EventHandler(this.toggleSimulatorSemicolonsToolStripMenuItem_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -390,6 +398,13 @@ namespace VisiBoole.Views
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
             this.aboutToolStripMenuItem.Text = "&About";
             // 
+            // aboutVisiBooleToolStripMenuItem
+            // 
+            this.aboutVisiBooleToolStripMenuItem.Name = "aboutVisiBooleToolStripMenuItem";
+            this.aboutVisiBooleToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            this.aboutVisiBooleToolStripMenuItem.Text = "About VisiBoole";
+            this.aboutVisiBooleToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
             // MainLayoutPanel
             // 
             this.MainLayoutPanel.BackColor = System.Drawing.Color.Transparent;
@@ -422,14 +437,14 @@ namespace VisiBoole.Views
             this.NavTree.Location = new System.Drawing.Point(1, 1);
             this.NavTree.Margin = new System.Windows.Forms.Padding(1);
             this.NavTree.Name = "NavTree";
-            treeNode9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            treeNode9.ForeColor = System.Drawing.Color.DodgerBlue;
-            treeNode9.Name = "Explorer";
-            treeNode9.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            treeNode9.SelectedImageIndex = -2;
-            treeNode9.Text = "Designs:";
+            treeNode1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            treeNode1.ForeColor = System.Drawing.Color.DodgerBlue;
+            treeNode1.Name = "Explorer";
+            treeNode1.NodeFont = new System.Drawing.Font("Tahoma", 11.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            treeNode1.SelectedImageIndex = -2;
+            treeNode1.Text = "Designs:";
             this.NavTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode9});
+            treeNode1});
             this.NavTree.ShowLines = false;
             this.NavTree.ShowPlusMinus = false;
             this.NavTree.ShowRootLines = false;
@@ -603,20 +618,6 @@ namespace VisiBoole.Views
             this.previousStateToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.previousStateToolStripMenuItem.Text = "Previous State";
             this.previousStateToolStripMenuItem.Click += new System.EventHandler(this.previousStateToolStripMenuItem_Click);
-            // 
-            // toggleSimulatorSemicolonsToolStripMenuItem
-            // 
-            this.toggleSimulatorSemicolonsToolStripMenuItem.CheckOnClick = true;
-            this.toggleSimulatorSemicolonsToolStripMenuItem.Name = "toggleSimulatorSemicolonsToolStripMenuItem";
-            this.toggleSimulatorSemicolonsToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
-            this.toggleSimulatorSemicolonsToolStripMenuItem.Text = "Toggle Simulator Semicolons";
-            this.toggleSimulatorSemicolonsToolStripMenuItem.Click += new System.EventHandler(this.toggleSimulatorSemicolonsToolStripMenuItem_Click);
-            // aboutVisiBooleToolStripMenuItem
-            // 
-            this.aboutVisiBooleToolStripMenuItem.Name = "aboutVisiBooleToolStripMenuItem";
-            this.aboutVisiBooleToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.aboutVisiBooleToolStripMenuItem.Text = "About VisiBoole";
-            this.aboutVisiBooleToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // MainWindow
             // 

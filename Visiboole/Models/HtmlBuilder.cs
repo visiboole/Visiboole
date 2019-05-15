@@ -31,16 +31,6 @@ namespace VisiBoole.Models
 {
     public class HtmlBuilder
 	{
-        /// <summary>
-        /// Color of true variables.
-        /// </summary>
-        private string TrueColor;
-
-        /// <summary>
-        /// Color of false variables.
-        /// </summary>
-        private string FalseColor;
-
         private List<List<IObjectCodeElement>> PreParseHTML(List<IObjectCodeElement> output)
         {
             List<List<IObjectCodeElement>> fullText = new List<List<IObjectCodeElement>>();
@@ -71,30 +61,31 @@ namespace VisiBoole.Models
         {
             string html = "";
             string currentLine = "";
-            TrueColor = "'crimson'";
-            FalseColor = (Properties.Settings.Default.Colorblind) ? "'royalblue'" : "'green'";
             List<List<IObjectCodeElement>> newOutput = PreParseHTML(output);
 
             foreach (List<IObjectCodeElement> line in newOutput)
             {
-                currentLine = "<p style=\"font-family:consolas; font-size:" + Properties.Settings.Default.FontSize + "pt\">";
+                currentLine = "<p style=\"font-size:@FONTSIZE@pt;\">";
 
                 if (line.Count == 0)
                 {
                     currentLine += "<br>";
                 }
 
-                bool outputSemicolons = Properties.Settings.Default.OutputSemicolons;
-                foreach (IObjectCodeElement token in line)
+                for (int i = 0; i < line.Count; i++)
                 {
+                    IObjectCodeElement token = line[i];
+
                     if (token is Comment)
                     {
-                        // Add coloring tags to comment
-                        currentLine += ColorComment(token.ObjCodeText);
+                        // Add comment to the current line
+                        currentLine += EncodeText(token.ObjCodeText);
                         continue;
                     }
-                    else if (!outputSemicolons && token is Operator && token.ObjCodeText == ";")
+                    else if (token is Operator && token.ObjCodeText == ";")
                     {
+                        // Add comment to the current line
+                        currentLine += "<span style=\"display: @SEMICOLONDISPLAY@; font-size:@FONTSIZE@pt;\">;</span>";
                         continue;
                     }
 
@@ -103,76 +94,47 @@ namespace VisiBoole.Models
                     bool hasNegation = token.ObjHasNegation;
                     Type varType = token.GetType();
 
-                    string template = "<font color={0} style=\"cursor: {1};{2}\"{3}>{4}</font>";
+                    string color = "";
+                    string cursor = "";
+                    string decoration = "";
+                    string action = "";
+                    bool fontTag = false;
+                    string template = "<font {0} {1} {2} {3}>{4}</font>";
+
                     if (value == null)
                     {
-                        if (variable == "&nbsp;")
+                        if (varType == typeof(Formatter))
                         {
-                            currentLine += variable;
+                            fontTag = true;
+                            Formatter formatter = (Formatter)token;
+                            color = "color=\"black\"";
+                            cursor = formatter.NextValue != null && !isSubdesign ? "style=\"cursor:hand\"" : "style=\"cursor:no-drop\"";
+                            action = $"onclick=\"window.external.Variable_Click('{formatter.Variables}', '{formatter.NextValue}')\"";
                         }
-                        else
+                        else if (varType == typeof(Instantiation))
                         {
-                            bool isInstantiation = varType == typeof(Instantiation);
-                            bool isFormatter = varType == typeof(Formatter);
-                            Formatter formatter = null;
-                            if (isFormatter)
-                            {
-                                formatter = (Formatter)token;
-                            }
-
-                            string color = "'black'";
-
-                            string cursor;
-                            if (isInstantiation)
-                            {
-                                cursor = "hand";
-                            }
-                            else if (isFormatter)
-                            {
-                                cursor = formatter.NextValue != null && !isSubdesign ? "hand" : "no-drop";
-                            }
-                            else
-                            {
-                                cursor = "text";
-                            }
-
-                            string decoration = "";
-
-                            string action;
-                            if (isInstantiation)
-                            {
-                                action = $" onclick=\"window.external.Instantiation_Click('{variable}')\"";
-                            }
-                            else if (formatter != null && !isSubdesign)
-                            {
-                                action = $" onclick=\"window.external.Variable_Click('{formatter.Variables}', '{formatter.NextValue}')\"";
-                            }
-                            else
-                            {
-                                action = "";
-                            }
-
-                            currentLine += string.Format(template, color, cursor, decoration, action, variable);
+                            fontTag = true;
+                            color = "color=\"black\"";
+                            cursor = "style=\"cursor:hand\"";
+                            action = $"onclick=\"window.external.Instantiation_Click('{variable}')\"";
                         }
                     }
                     else
                     {
-                        bool isIndependentVariable = varType == typeof(IndependentVariable);
-                        string color;
-                        if (!hasNegation)
-                        {
-                            color = ((bool)value) ? TrueColor : FalseColor;
-                        }
-                        else
-                        {
-                            color = ((bool)value) ? FalseColor : TrueColor;
-                        }
+                        fontTag = true;
+                        color = ((bool)value) ? $"color=\"@TRUECOLOR@\"" : $"color=\"@FALSECOLOR@\"";
+                        cursor = varType == typeof(IndependentVariable) && !isSubdesign ? "style=\"cursor:hand;" : "style=\"cursor:no-drop;";
+                        decoration = hasNegation ? " text-decoration: overline;\"" : " \"";
+                        action = cursor[14] == 'h' ? $"onclick=\"window.external.Variable_Click('{variable}')\"" : "";
+                    }
 
-                        string cursor = isIndependentVariable && !isSubdesign ? "hand" : "no-drop";
-                        string decoration = hasNegation ? " text-decoration: overline;" : "";
-                        string action = cursor[0] == 'h' ? $" onclick=\"window.external.Variable_Click('{variable}')\"" : "";
-
+                    if (fontTag)
+                    {
                         currentLine += string.Format(template, color, cursor, decoration, action, variable);
+                    }
+                    else
+                    {
+                        currentLine += variable;
                     }
                 }
 
@@ -184,111 +146,6 @@ namespace VisiBoole.Models
         }
 
         /// <summary>
-        /// Adds coloring to comments.
-        /// </summary>
-        /// <param name="comment">Base comment</param>
-        /// <returns>The comment with html coloring added</returns>
-        private string ColorComment(string comment)
-        {
-            MatchCollection matches = Regex.Matches(comment, @"(<#?[a-zA-Z0-9]+>)|(<\/>)");
-            if (matches.Count == 0)
-            {
-                // No special coloring specified
-                return EncodeText(comment);
-            }
-
-            StringBuilder commentHTML = new StringBuilder();
-            string appendText = "";
-            string color = "";
-
-            if (matches[0].Index != 0)
-            {
-                // Start comment
-                appendText = comment.Substring(0, matches[0].Index);
-                commentHTML.Append(EncodeText(appendText));
-            }
-
-            int indexOfMatch = 0;
-            int indexAfterMatch = 0;
-            int indexOfNextMatch = 0;
-            bool coloring = false;
-            bool isValidColor = true;
-            bool isClosingTag = false;
-
-            // Iterate through all matches and construct html
-            for (int i = 0; i < matches.Count; i++)
-            {
-                Match match = matches[i]; // Get match
-                indexOfMatch = match.Index; // Get match index
-                indexAfterMatch = indexOfMatch + match.Length; // Get index after match
-                indexOfNextMatch = (i + 1 < matches.Count) ? matches[i + 1].Index : -1; // Get index of next match
-                isClosingTag = match.Value == "</>";
-
-                if (!isClosingTag)
-                {
-                    color = match.Value.Substring(1, match.Length - 2); // Get color by removing <>
-
-                    // Check for true or false color
-                    if (color.Equals("true", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        color = TrueColor.Replace("'", "");
-                    }
-                    else if (color.Equals("false", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        color = FalseColor.Replace("'", "");
-                    }
-
-                    isValidColor = IsValidHTMLColor(color); // Check whether the provided color is valid
-
-                    if (isValidColor)
-                    {
-                        if (coloring)
-                        {
-                            commentHTML.Append("</font>"); // Append closing color tag
-                        }
-                        commentHTML.Append($"<font color='{color}'>"); // Append color tag
-                        coloring = true;
-                    }
-                    else
-                    {
-                        commentHTML.Append(EncodeText(match.Value)); // Append bad color tag
-                    }
-                }
-                else
-                {
-                    if (coloring)
-                    {
-                        commentHTML.Append("</font>"); // Append closing color tag
-                        coloring = false;
-                    }
-                    else
-                    {
-                        commentHTML.Append(EncodeText(match.Value)); // Append bad closing tag
-                    }
-                }
-
-                if (indexOfNextMatch != -1)
-                {
-                    // There is another match
-                    appendText = comment.Substring(indexAfterMatch, indexOfNextMatch - indexAfterMatch);
-                    commentHTML.Append(EncodeText(appendText));
-                }
-                else
-                {
-                    // There are no other matches
-                    appendText = comment.Substring(indexAfterMatch, comment.Length - indexAfterMatch);
-                    commentHTML.Append(EncodeText(appendText));
-                    if (coloring)
-                    {
-                        commentHTML.Append("</font>");
-                    }
-                }
-            }
-
-            return commentHTML.ToString();
-        }
-
-        /// <summary>
         /// Encodes specific characters with their html encoding values. (This allows certain characters to show up in the simulator)
         /// </summary>
         /// <param name="comment">Comment to encode</param>
@@ -296,25 +153,10 @@ namespace VisiBoole.Models
         private string EncodeText(string comment)
         {
             // Replace specific characters with their encodings so they show in text
-            comment = Regex.Replace(comment, @"(?<=\s)\s", "&nbsp;");
+            comment = comment.Replace(" ", "&nbsp;");
             comment = comment.Replace("<", "&lt;");
             comment = comment.Replace(">", "&gt;");
-            return comment;
-        }
-
-        /// <summary>
-        /// Returns whether the provided color is a recognized color.
-        /// </summary>
-        /// <param name="color">Color to check</param>
-        /// <returns>Whether the color is a valid html color</returns>
-        private bool IsValidHTMLColor(string color)
-        {
-            if (Regex.IsMatch(color, @"^#(?:[0-9a-fA-F]{3}){1,2}$"))
-            {
-                return true;
-            }
-
-            return System.Drawing.Color.FromName(color).IsKnownColor;
+            return string.Concat("<span style=\"display: @COMMENTDISPLAY@; font-size:@FONTSIZE@pt;\">", comment, "</span>");
         }
 	}
 }

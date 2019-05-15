@@ -26,10 +26,44 @@ using VisiBoole.Controllers;
 namespace VisiBoole.Views
 {
     /// <summary>
+    /// Delegate for display tab changing events.
+    /// </summary>
+    /// <param name="name">Name of display tab that was changed</param>
+    public delegate void DisplayTabChangeEventHandler(string name);
+
+    /// <summary>
+    /// Delegate for display tab closing events.
+    /// </summary>
+    /// <param name="name">Name of display tab that is closing</param>
+    public delegate void DisplayTabClosingEventHandler(string name);
+
+    /// <summary>
+    /// Delegate for display tab closed events.
+    /// </summary>
+    /// <param name="name">Name of display tab that was closed</param>
+    /// <param name="count">Number of display tabs currently opened</param>
+    public delegate void DisplayTabClosedEventHandler(string name, int count);
+
+    /// <summary>
     /// Exposes methods for the four displays hosted by the MainWindow
     /// </summary>
     public interface IDisplay
     {
+        /// <summary>
+        /// Event that occurs when the display tab is changed.
+        /// </summary>
+        event DisplayTabChangeEventHandler DisplayTabChanged;
+
+        /// <summary>
+        /// Event that occurs when the display tab is closing.
+        /// </summary>
+        event DisplayTabClosingEventHandler DisplayTabClosing;
+
+        /// <summary>
+        /// Event that occurs when the display tab is closed.
+        /// </summary>
+        event DisplayTabClosedEventHandler DisplayTabClosed;
+
         /// <summary>
         /// Returns the type of this display
         /// </summary>
@@ -52,7 +86,8 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="name">Name of the tab page to add or update</param>
         /// <param name="component">Component to add or update</param>
-        void AddTabComponent(string name, object component);
+        /// <param name="swap">Whether to swap to the new component</param>
+        void AddTabComponent(string name, object component, bool swap = true);
 
         /// <summary>
         /// Selects the tab with the provided name if present.
@@ -65,6 +100,11 @@ namespace VisiBoole.Views
         /// </summary>
         /// <param name="name"></param>
         void CloseTab(string name);
+
+        /// <summary>
+        /// Closes all tabs.
+        /// </summary>
+        void CloseTabs();
 
         /// <summary>
         /// Sets the theme of the control.

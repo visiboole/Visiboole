@@ -18,6 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
+using System.Collections.Generic;
 using VisiBoole.ParsingEngine.ObjectCode;
 
 namespace VisiBoole.ParsingEngine.Statements
@@ -28,20 +29,19 @@ namespace VisiBoole.ParsingEngine.Statements
 	public class EmptyStmt : Statement
 	{
         /// <summary>
-        /// Constructs a EmptyStmt instance.
+        /// Constructs an Empty Statement.
         /// </summary>
-        /// <param name="text">Text of the statement</param>
-        public EmptyStmt(string text) : base(text)
+        public EmptyStmt() : base(string.Empty)
 		{
 		}
 
         /// <summary>
         /// Parses the text of this statement into a list of output elements.
         /// </summary>
-        public override void Parse()
+        public override List<IObjectCodeElement> Parse()
 		{
             // Output newline
-			Output.Add(new LineFeed());
+            return new List<IObjectCodeElement>(new IObjectCodeElement[] { new LineFeed() });
 		}
 	}
 }

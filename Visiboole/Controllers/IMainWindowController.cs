@@ -49,6 +49,13 @@ namespace VisiBoole.Controllers
         void RetrieveFocus();
 
         /// <summary>
+        /// Returns whether the specified design has a parser already opened.
+        /// </summary>
+        /// <param name="name">Name of the design.</param>
+        /// <returns>Whether the specified design has a parser already opened.</returns>
+        bool DesignHasParser(string name);
+
+        /// <summary>
         /// Selects the provided file name.
         /// </summary>
         /// <param name="name">Name of file to select</param>
@@ -63,9 +70,9 @@ namespace VisiBoole.Controllers
 		void ProcessNewFile(string path, bool overwriteExisting = false);
 
         /// <summary>
-        /// Saves the file that is currently active in the selected tabpage
+        /// Saves the provided file or the active file if none provided.
         /// </summary>
-        void SaveFile();
+        void SaveFile(string name = null);
 
         /// <summary>
         /// Saves the file that is currently active in the selected tabpage with the filename chosen by the user
@@ -79,10 +86,12 @@ namespace VisiBoole.Controllers
 		void SaveFiles();
 
         /// <summary>
-        /// Closes the selected open file
+        /// Closes a specific file or the opened design and optionally updates the design tab control.
         /// </summary>
-        /// <returns>The name of the file closed</returns>
-        void CloseActiveFile(bool updateDesignControl = true);
+        /// <param name="name"></param>
+        /// <param name="updateDesignControl"></param>
+        /// <returns></returns>
+        string CloseFile(string name = null, bool updateDesignControl = true);
 
         /// <summary>
         /// Closes all files.
@@ -111,12 +120,6 @@ namespace VisiBoole.Controllers
         /// Update font sizes
         /// </summary>
         void SetFontSize();
-
-        /// <summary>
-        /// Selects the parser with the provided design name.
-        /// </summary>
-        /// <param name="designName"></param>
-        void SelectParser(string designName);
 
         /// <summary>
         /// Handles the event that occurs when the user runs the active design.
@@ -155,14 +158,14 @@ namespace VisiBoole.Controllers
         List<IObjectCodeElement> Variable_Click(string variableName, string value = null);
 
         /// <summary>
-        /// Removes all parsers.
+        /// Removes all parser tabs from the run display and closes all instantiation parsers in the parser dictionary.
         /// </summary>
-        void ClearParsers();
+        void SuspendRunDisplay();
 
         /// <summary>
-        /// Closes the parser with the provided design name.
+        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
         /// </summary>
-        /// <param name="designName"></param>
-        void CloseParser(string designName);
+        /// <param name="name">Name of parser to close.</param>
+        void CloseInstantiationParser(string name);
     }
 }

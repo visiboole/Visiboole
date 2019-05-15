@@ -70,7 +70,7 @@ namespace VisiBoole.Models
         /// <summary>
         /// Module declaration of the design. (if exists)
         /// </summary>
-        public string ModuleDeclaration { get; set; }
+        public string HeaderLine { get; set; }
 
         /// <summary>
         /// Constructs a new Design object
@@ -192,7 +192,7 @@ namespace VisiBoole.Models
                                 {
                                     if (ModuleRegex.IsMatch(currentStatement))
                                     {
-                                        ModuleDeclaration = currentStatement;
+                                        HeaderLine = currentStatement;
                                     }
                                     else
                                     {
@@ -489,7 +489,7 @@ namespace VisiBoole.Models
                         SelectedText = "";
 
                         SelectionStart = start + Lines[i].LastIndexOf("\"");
-                        SelectionLength = 2;
+                        SelectionLength = 1;
                         SelectedText = "";
                     }
                     else
@@ -503,7 +503,7 @@ namespace VisiBoole.Models
                         int end = start + Lines[i].Length;
                         SelectionLength = 0;
                         SelectionStart = end;
-                        SelectedText = "\";";
+                        SelectedText = "\"";
                     }
                 }
             }

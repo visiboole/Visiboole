@@ -51,7 +51,7 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Saves the handle to the controller for the MainWindow
         /// </summary>
-        void AttachMainWindowController(IMainWindowController mwController);
+        void AttachMainWindowController(IMainWindowController mainWindowController);
 
         /// <summary>
         /// Loads into the MainWindow the display of the given type
@@ -59,23 +59,30 @@ namespace VisiBoole.Controllers
         /// <param name="dType">The type of display that should be loaded</param>
         void LoadDisplay(DisplayType dType);
 
-        /// <summary>
-		/// Selects the tab page with the provided name.
-		/// </summary>
-		/// <param name="name">Name of tabpage to select</param>
-		void SelectTabPage(string name);
+        void RetrieveFocus();
 
         /// <summary>
-		/// Creates a new tab on the design tab control.
+		/// Selects the specified design tab in the design tab control.
+		/// </summary>
+		/// <param name="name">Name of tabpage to select</param>
+		void SelectDesignTab(string name);
+
+        /// <summary>
+		/// Creates a new design tab on the design tab control.
 		/// </summary>
 		/// <param name="design">Design that is to be displayed in a tab</param>
 		void CreateDesignTab(Design design);
 
         /// <summary>
-        /// Closes a specific tab in the design tab control.
+        /// Closes the specified design tab in the design tab control.
         /// </summary>
-        /// <param name="designName">Name of the design being closed</param>
+        /// <param name="name">Name of design tab to close</param>
         void CloseDesignTab(string name);
+
+        /// <summary>
+        /// Closes all parser tabs.
+        /// </summary>
+        void CloseParserTabs();
 
         /// <summary>
         /// Sets the theme of edit and run tab control
@@ -86,8 +93,7 @@ namespace VisiBoole.Controllers
         /// Displays the provided output to the browser.
         /// </summary>
         /// <param name="output">Output of the parsed design</param>
-        /// <param name="position">Scroll position of the browser</param>
-        void DisplayOutput(List<IObjectCodeElement> output, int position = 0);
+        void DisplayOutput(List<IObjectCodeElement> output);
 
         /// <summary>
         /// Handles the event that occurs when the browser needs to be refreshed.

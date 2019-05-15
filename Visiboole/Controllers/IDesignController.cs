@@ -18,12 +18,8 @@
  * If not, see <http://www.gnu.org/licenses/>
  */
 
-using CustomTabControl;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VisiBoole.Models;
 using VisiBoole.ParsingEngine.ObjectCode;
 
@@ -34,122 +30,123 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Saves the handle to the controller for the MainWindow
         /// </summary>
-        void AttachMainWindowController(IMainWindowController mwController);
+        void AttachMainWindowController(IMainWindowController mainWindowController);
 
         /// <summary>
-        /// Returns the names of all Designs.
+        /// Gets an array of design names that are currently opened.
         /// </summary>
-        /// <returns>Names of all Designs.</returns>
+        /// <returns>Array of design names that are currently opened.</returns>
         string[] GetDesigns();
 
         /// <summary>
-        /// Returns the active design.
+        /// Gets the active design.
         /// </summary>
-        /// <returns>Active design</returns>
+        /// <returns>Active design.</returns>
         Design GetActiveDesign();
 
         /// <summary>
-        /// Gets a design by name.
+        /// Gets the design with the specified name.
         /// </summary>
-        /// <param name="name">Name of design</param>
-        /// <returns>Design with the provided name</returns>
+        /// <param name="name">Name of design to return.</param>
+        /// <returns>Design with the specified name.</returns>
         Design GetDesign(string name);
 
         /// <summary>
-        /// Selects a design with the provided name
+        /// Returns whether the specified design has a parser already opened.
         /// </summary>
-        /// <param name="design">Design to select</param>
-        void SelectDesign(string design);
+        /// <param name="name">Name of the design.</param>
+        /// <returns>Whether the specified design has a parser already opened.</returns>
+        bool DesignHasParser(string name);
 
         /// <summary>
-        /// Selects a parser for the provided design name
+        /// Selects the design and parser with the specified name.
         /// </summary>
-        /// <param name="design"></param>
-        void SelectParser(string design);
+        /// <param name="name">Name of design to select.</param>
+        void SelectFile(string name);
 
         /// <summary>
-        /// Creates a Design with the given name.
+        /// Creates a design from the specified path.
         /// </summary>
-        /// <param name="path">Name of Design</param>
-        /// <returns>The Design created</returns>
-        Design CreateDesign(string name);
+        /// <param name="path">Path of the design</param>
+        /// <returns>Created design</returns>
+        Design CreateDesign(string path);
 
         /// <summary>
-        /// Saves the active Design.
+        /// Saves the design with the specified name.
         /// </summary>
-        /// <returns>Whether the save was successful</returns>
-        bool SaveActiveDesign();
+        void SaveDesign(string name = null);
 
         /// <summary>
-        /// Saves all Designs
+        /// Saves all designs.
         /// </summary>
-        /// <returns>Whether the save was successful</returns>
-        bool SaveDesigns();
+        void SaveDesigns();
 
         /// <summary>
-        /// Closes a given Design.
+        /// Saves and closes the design with the specified name.
         /// </summary>
-        /// <param name="name">Name of Design</param>
-        /// <param name="save">Indicates whether the user wants the design saved</param>
-        /// <returns>Indicates whether the Design was closed</returns>
-        bool CloseDesign(string name, bool save);
+        /// <param name="name">Name of the design to close.</param>
+        /// <param name="save">Whether the closing design should be saved.</param>
+        void CloseDesign(string name, bool save);
 
         /// <summary>
-        /// Update the font sizes of all Designs.
+        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
+        /// </summary>
+        /// <param name="name">Name of parser to close.</param>
+        void CloseInstantiationParser(string name);
+
+        /// <summary>
+        /// Clears all instantiation parsers from the parser dictionary.
+        /// </summary>
+        void CloseInstantiationParsers();
+
+        /// <summary>
+        /// Updates the font sizes of all designs.
         /// </summary>
         void SetDesignFontSizes();
 
         /// <summary>
-        /// Set the themes of all Designs
+        /// Changes the themes of all designs
         /// </summary>
         void SetThemes();
 
         /// <summary>
+        /// Gets the current state of the active design.
+        /// </summary>
+        /// <returns>Current state of active design.</returns>
+        List<Variable> GetActiveDesignState();
+
+        /// <summary>
         /// Parses the active design.
         /// </summary>
-        /// <returns>Output of the parsed design</returns>
+        /// <returns>Output of the parsed design.</returns>
         List<IObjectCodeElement> Parse();
 
         /// <summary>
         /// Parses a tick for the active design.
         /// </summary>
-        /// <returns>Output of the tick for the parsed design</returns>
+        /// <returns>Output of the parsed tick.</returns>
         List<IObjectCodeElement> ParseTick();
 
         /// <summary>
         /// Parses a variable click for the active design.
         /// </summary>
-        /// <param name="variableName">The name of the variable that was clicked by the user</param>
-        /// <param name="value">Value for formatter click</param>
-        /// <returns>Output of the tick for the parsed design</returns>
-        List<IObjectCodeElement> ParseVariableClick(string variableName, string value = null);
+        /// <param name="variableName">Name of the variable that was clicked by the user.</param>
+        /// <param name="nextValue">Next value if formatter click./param>
+        /// <returns>Output of the parsed variable click.</returns>
+        List<IObjectCodeElement> ParseVariableClick(string variableName, string nextValue = null);
 
         /// <summary>
-        /// Parsers the current design text with input variables.
+        /// Parsers the active design with the specified input variables.
         /// </summary>
-        /// <param name="inputVariables">Input variables</param>
-        /// <returns>Parsed output</returns>
+        /// <param name="inputVariables">Input variables.</param>
+        /// <returns>Output of the parsed design.</returns>
         List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables);
 
         /// <summary>
         /// Parsers a sub design with the provided instantiation.
         /// </summary>
-        /// <param name="instantiation">Instnatiation</param>
+        /// <param name="instantiation">Instantiation</param>
         /// <returns>Output of the parsed design</returns>
         List<IObjectCodeElement> ParseSubdesign(string instantiation);
-
-        /// <summary>
-        /// Gets the active designs current state.
-        /// </summary>
-        /// <returns>Active designs current state</returns>
-        List<Variable> GetActiveDesignState();
-
-        void ClearParsers();
-
-        /// <summary>
-        /// Removes a parser from the open parsers.
-        /// </summary>
-        /// <param name="name">Design name of the parser to close</param>
-        void CloseParser(string name);
     }
 }
