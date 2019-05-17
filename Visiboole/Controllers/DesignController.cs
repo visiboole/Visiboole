@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019 John Devore
  * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
  * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
@@ -167,24 +167,27 @@ namespace VisiBoole.Controllers
         /// Saves the specified design if it is dirty.
         /// </summary>
         /// <param name="design">Design to save.</param>
-        private void SaveDesign(Design design)
+        /// <param name="closing">Whether the saved design is closing.</param>
+        private void SaveDesign(Design design, bool closing)
         {
             // If design is dirty
             if (design.IsDirty)
             {
                 // Save design
-                design.SaveTextToFile();
+                design.SaveTextToFile(closing);
             }
         }
 
         /// <summary>
         /// Saves the design with the specified name.
         /// </summary>
+        /// <param name="name">Name of design to be saved.</param>
+        /// <param name="closing">Whether the saved design is closing.</param>
         public void SaveDesign(string name = null)
         {
             // If no name is specified, save the active design
             // Otherwise, save the design with specified name
-            SaveDesign(name == null ? ActiveDesign : GetDesign(name));
+            SaveDesign(name == null ? ActiveDesign : GetDesign(name), false);
         }
 
         /// <summary>
@@ -196,7 +199,7 @@ namespace VisiBoole.Controllers
             foreach (Design design in Designs.Values)
             {
                 // Save design
-                SaveDesign(design);
+                SaveDesign(design, false);
             }
         }
 
@@ -224,7 +227,7 @@ namespace VisiBoole.Controllers
             if (save)
             {
                 // Save design
-                SaveDesign(name);
+                SaveDesign(GetDesign(name), true);
             }
             // Remove design from designs dictionary
             Designs.Remove(name);

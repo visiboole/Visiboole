@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -171,10 +171,20 @@ namespace VisiBoole.Models
                         operatorStack.Push(" ");
                     }
 
-                    // Check for operators that need evaluation
-                    while (operatorStack.Count > 0 && (operation == "|" && operatorStack.Peek() == " "))
+                    if (!IsMathExpression)
                     {
-                        ExecuteOperation(ref valueStack, ref operatorStack);
+                        while (operatorStack.Count > 0 && (operation == "|" && operatorStack.Peek() == " "))
+                        {
+                            ExecuteOperation(ref valueStack, ref operatorStack);
+                        }
+                    }
+                    else
+                    {
+                        // Perform all operations until (
+                        while (operatorStack.Count > 0 && operatorStack.Peek() != "(")
+                        {
+                            ExecuteOperation(ref valueStack, ref operatorStack);
+                        }
                     }
 
                     // Push operation
@@ -224,7 +234,6 @@ namespace VisiBoole.Models
         private void ExecuteOperation(ref Stack<int> valueStack, ref Stack<string> operatorStack)
         {
             string operation = operatorStack.Pop();
-
             int rightValue = valueStack.Pop();
             int leftValue = valueStack.Pop();
 

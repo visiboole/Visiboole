@@ -35,7 +35,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"({Parser.InstantiationPattern}\()|(~?{Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|[\s:,{{}})]");
+        private Regex OutputRegex = new Regex($@"({Parser.InstantiationPattern}\()|(~?{Parser.ScalarPattern})|[\s01:,{{}})]");
 
         /// <summary>
         /// Subdesign of the instantiation.
@@ -165,7 +165,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// </summary>
         public override List<IObjectCodeElement> Parse()
         {
-            List<IObjectCodeElement> output = new List<IObjectCodeElement>();
+            var output = new List<IObjectCodeElement>();
             int seperatorIndex = Text.IndexOf(':');
             int currentNoContactIndex = 0;
             MatchCollection matches = OutputRegex.Matches(Text);
@@ -197,15 +197,22 @@ namespace VisiBoole.ParsingEngine.Statements
                     }
                     else
                     {
-                        IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
-                        DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
-                        if (indVar != null)
+                        if (char.IsDigit(token[0]))
                         {
-                            output.Add(indVar);
+                            output.Add(new Constant(token));
                         }
-                        else if (depVar != null)
+                        else
                         {
-                            output.Add(depVar);
+                            IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(token) as IndependentVariable;
+                            DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(token) as DependentVariable;
+                            if (indVar != null)
+                            {
+                                output.Add(indVar);
+                            }
+                            else if (depVar != null)
+                            {
+                                output.Add(depVar);
+                            }
                         }
                     }
                 }

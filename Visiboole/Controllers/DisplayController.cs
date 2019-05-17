@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019 John Devore
  * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
  * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
@@ -151,6 +151,11 @@ namespace VisiBoole.Controllers
                     {
                         if (treeNode.Text == tabName)
                         {
+                            var childNodes = Collect(treeNode.Nodes).ToList();
+                            foreach (var childNode in childNodes)
+                            {
+                                CurrentDisplay.CloseTab(childNode.Name);
+                            }
                             treeNode.Parent.Nodes.Remove(treeNode);
                             break;
                         }
@@ -365,6 +370,11 @@ namespace VisiBoole.Controllers
                 string name = instantiation.TrimEnd('(');
                 if (DesignController.ActiveDesign.FileName == InstantiationClicks.Text)
                 {
+                    if (InstantiationClicks.Nodes.Count == 1 && InstantiationClicks.Nodes[0].Name != name)
+                    {
+                        CurrentDisplay.CloseTab(InstantiationClicks.Nodes[0].Name);
+                    }
+
                     if (!InstantiationClicks.Nodes.ContainsKey(name))
                     {
                         var newNode = new TreeNode(name);
@@ -378,6 +388,11 @@ namespace VisiBoole.Controllers
                     {
                         if (node.Text.Split('.')[0] == DesignController.ActiveDesign.FileName)
                         {
+                            if (node.Nodes.Count == 1)
+                            {
+                                CurrentDisplay.CloseTab(node.Nodes[0].Name);
+                            }
+
                             var newNode = new TreeNode(name);
                             newNode.Name = name;
                             node.Nodes.Add(newNode);

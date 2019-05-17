@@ -600,13 +600,17 @@ namespace VisiBoole.Models
         /// <summary>
         /// Saves the contents of this Text property to the FileSource contents.
         /// </summary>
-        public void SaveTextToFile()
+        /// <param name="closing">Whether the design is closing.</param>
+        public void SaveTextToFile(bool closing)
         {
             if (IsDirty)
             {
                 File.WriteAllText(FileSource.FullName, Text);
                 IsDirty = false;
-                ProcessDesignEdit();
+                if (!closing)
+                {
+                    ProcessDesignEdit();
+                }
             }
         }
     }

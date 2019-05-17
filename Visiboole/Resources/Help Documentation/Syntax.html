@@ -3,10 +3,12 @@
     <style>
       .o {
         color: red;
+        font-weight: bold;
       }
       
       .r {
         color: blue;
+        font-weight: bold;
       }
     </style>
   </head>
@@ -33,100 +35,200 @@
       <div style="margin-left: 20px">
       
       <h2>How To Read</h2>
-      <p style="margin-left: 40px">
+      <p style="margin-left: 40px; line-height: 1.6">
         <span class=r>@Name</span> represents a required attribute named 'Name'.<br>
         <span class=o>@Name</span> represents an optional attribute named 'Name'.<br>
-        [ represents a required '['.<br>
-        library represents a required 'library'.<br>
+        <b>[</b> represents a required '['.<br>
+        <b>library</b> represents a required 'library'.<br>
       </p>
 
       <h2 id="Variables">Variables</h2>
-        <p style="margin-left: 40px">
-        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.
-        <br>
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.<br>
         <b>Valid Syntaxes:</b><br>
         &emsp;<span class=r>@Namespace</span><span class=o>@Bit</span><br>
-        &emsp;&emsp;@Namespace represents any combination of alphanumeric characters that doesn't end in a number. This identifies the variable.<br>
-        &emsp;&emsp;@Bit represents the specific index or bit of a namespace. This identifies a single value in that variable's namespace.<br>
-        &emsp;&emsp;<b>Examples:</b> test a0 b31<br><br>
+        &emsp;&emsp;<span class=r>@Namespace</span> represents any combination of alphanumeric characters <b>that doesn't end in a number.</b> This identifies the variable.<br>
+        &emsp;&emsp;<span class=o>@Bit</span> represents the <b>specific index or bit of a namespace.</b> This identifies a single value in that variable's namespace.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;test<br>
+        &emsp;&emsp;&emsp;a0<br>
+        &emsp;&emsp;&emsp;b31<br><br>
         
-        &emsp;<span class=r>@Namespace</span>[<span class=r>@Bit</span>]<br>
-        &emsp;&emsp;@Namespace represents any combination of alphanumeric characters that doesn't end in a number. This identifies the variable.<br>
-        &emsp;&emsp;@Bit represents the specific index or bit of a namespace. This identifies a single value in that variable's namespace.<br>
-        &emsp;&emsp;<b>Examples:</b> a[0] b[31]<br><br>
+        &emsp;<span class=r>@Namespace</span><b>[</b><span class=r>@Bit</span><b>]</b><br>
+        &emsp;&emsp;<span class=r>@Namespace</span> represents any combination of alphanumeric characters <b>that doesn't end in a number.</b> This identifies the variable.<br>
+        &emsp;&emsp;<span class=r>@Bit</span> represents the <b>specific index or bit of a namespace.</b> This identifies a single value in that variable's namespace.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a[0]<br>
+        &emsp;&emsp;&emsp;b[31]<br><br>
         
-        &emsp;<span class=r>@Namespace</span>[<span class=r>@LeftBound</span>.<span class=o>@Step</span>.<span class=r>@RightBound</span>]<br>
-        &emsp;&emsp;@Namespace represents any combination of alphanumeric characters that doesn't end in a number. This identifies the variable.<br>
-        &emsp;&emsp;@LeftBound represents the first index or bit you want to reference in that variable's namespace.<br>
-        &emsp;&emsp;@Step represents the difference between each index or bit. This value must not be negative. If no value is provided, the value will be 1.<br>
-        &emsp;&emsp;@RightBound represents the last index or bit you want to reference in that variable's namespace.<br>
-        &emsp;&emsp;<b>Examples:</b> a[3..0] b[0.1.4] c[2.3.6]<br>
-        &emsp;&emsp;<b>Note:</b> There is an enforced 32 bit limit. Bounds must be between 0 and 31 and the step must be between 1 and 31.
+        &emsp;<span class=r>@Namespace</span><b>[</b><span class=r>@LeftBound</span><b>.</b><span class=o>@Step</span><b>.</b><span class=r>@RightBound</span><b>]</b><br>
+        &emsp;&emsp;<span class=r>@Namespace</span> represents any combination of alphanumeric characters <b>that doesn't end in a number.</b> This identifies the variable.<br>
+        &emsp;&emsp;<span class=r>@LeftBound</span> represents the <b>first index or bit</b> you want to reference <b>in that variable's namespace.</b><br>
+        &emsp;&emsp;<span class=o>@Step</span> represents the <b>difference between each index or bit. This value must not be negative.</b> If no value is provided, the value will be 1.<br>
+        &emsp;&emsp;<span class=r>@RightBound</span> represents the <b>last index or bit</b> you want to reference <b>in that variable's namespace.</b><br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a[3..0]<br>
+        &emsp;&emsp;&emsp;b[0.1.4]<br>
+        &emsp;&emsp;&emsp;c[2.3.6]<br>
+        &emsp;&emsp;<b>Note:</b> There is an enforced 32 bit limit. <b>Bounds must be between 0 and 31 and the step must be between 1 and 31.</b><br><br>
+        
+        &emsp;<span class=r>@Namespace</span><b>[]</b><br>
+        &emsp;&emsp;<span class=r>@Namespace</span> represents any combination of alphanumeric characters <b>that doesn't end in a number.</b> This identifies the variable.<br>
+        &emsp;&emsp;<b>Examples:</b> a[], b[]<br>
+        &emsp;&emsp;<b>Note:</b> In order to use this syntax, <b>you must have specified an explicit dimension of the namespace somewhere.</b>
+        This will reference all bits from the highest bit to the lowest bit ever used.
 
-      <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+      <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Constants">Constants</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Constants are used to represent positive numbers for a variable value.<br>
+        <b>Valid Syntaxes:</b><br>
+        &emsp;<span class=o>@BitCount</span><b>'</b><span class=r>@Format@Value</span><br>
+        &emsp;&emsp;<span class=o>@BitCount</span> represents the <b>number of bits you want the value to be.</b><br>
+        &emsp;&emsp;<span class=r>@Format</span> represents the format of the constant. Valid formats are <b>d</b> for decimal, <b>h</b> for hex and <b>b</b> for binary.<br>
+        &emsp;&emsp;<span class=r>@Value</span> represents the value of the constant. <b>This value must be the same format as the format chosen.</b><br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;'d1<br>
+        &emsp;&emsp;&emsp;4'd1<br>
+        &emsp;&emsp;&emsp;'b1001<br>
+        &emsp;&emsp;&emsp;'hFFFF<br>
+        &emsp;&emsp;<b>Note:</b> There is an enforced 32 bit limit. <b>The bit count can't exceed 31 and the value must be 32 bits or less.</b><br><br>
+        
+        &emsp;<span class=r>@Value</span><br>
+        &emsp;&emsp;<span class=r>@Value</span> represents a <b>decimal value of a constant.</b><br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;3<br>
+        &emsp;&emsp;&emsp;12<br>
+        &emsp;&emsp;&emsp;37<br>
+        &emsp;&emsp;<b>Note:</b> There is an enforced 32 bit limit. <b>This value can't exceed 4294967296.</b><br><br>
+        
+        &emsp;<span class=r>@BitCount</span><b>'</b><span class=r>@Value</span><br>
+        &emsp;&emsp;<span class=r>@BitCount</span> represents the number of bits for the specified decimal value.<br>
+        &emsp;&emsp;<span class=r>@Value</span> represents a <b>decimal value of a constant.</b><br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;4'2<br>
+        &emsp;&emsp;&emsp;1'1<br>
+        &emsp;&emsp;&emsp;8'37<br>
+        &emsp;&emsp;<b>Note:</b> There is an enforced 32 bit limit. <b>Bit count can't exceed 32 and value can't exceed 4294967296.</b>
 
-
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Concatenations">Concatenations</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Concatenations are used to group variables and/or constants into a single set of values.<br>
+        <b>Syntax:</b><br>
+        &emsp;<b>{</b><span class=r>@List</span><b>}</b><br>
+        &emsp;&emsp;<span class=r>@List</span> represents a list of variables or constants <b>seperated by spaces.</b><br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;{a b c}<br>
+        &emsp;&emsp;&emsp;{ a[3..0] a }<br>
+        &emsp;&emsp;&emsp;{ a3 a2 a1 a0 }<br>
+        &emsp;&emsp;&emsp;{3'd4 a}<br>
+        &emsp;&emsp;<b>Note:</b> <b>Constants in</b> these <b>concatenation fields must specify a bit count.</b>
 
-
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Operators">Operators</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
-
-
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Operators are used as gates that combine value(s) into new value(s).<br>
+        <b>Operators:</b><br>
+        &emsp;<b>Not Operator: ~</b><br>
+        &emsp;&emsp;Not operator takes the value of a parentheses set, concatenation field or a variable and negates it.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;~a<br>
+        &emsp;&emsp;&emsp;~a3<br>
+        &emsp;&emsp;&emsp;~(a)<br>
+        &emsp;&emsp;&emsp;~{a}<br>
+        &emsp;&emsp;<b>Note:</b> This operator <b>must be attached to an open parenthesis, beginning of a concatenation field or variable.</b><br><br>
+        
+        &emsp;<b>And Operator: (Space)</b><br>
+        &emsp;&emsp;And operator takes the value on the left and performs a bitwise and with the value on the right.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a b<br>
+        &emsp;&emsp;&emsp;a3 b3<br>
+        &emsp;&emsp;&emsp;(a3) (b3)<br>
+        &emsp;&emsp;&emsp;a 0<br>
+        &emsp;&emsp;&emsp;(a3)(b3)<br>
+        &emsp;&emsp;<b>Note:</b> <b>When there is no operator between two variables or a variable and a parenthesis, this is assumed to be an and operation.</b><br>
+        
+        <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Comments">Comment Statements</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Comment Statements are used document or label the output screen.<br>
+        <b>Syntax:</b><br>
+        &emsp;<b>"</b><span class=r>@Comment</span><b>"</b><br>
+        &emsp;&emsp;<span class=r>@Comment</span> represents the text of your comment.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;"test"<br>
+        &emsp;&emsp;&emsp;"This is another test comment"
 
-
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
       
       <h2 id="VariableDisplays">Variable Display Statements</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Variable Display Statements are used to toggle independent variable values or display variable values in new formats.<br>
+        <b>Syntax:</b><br>
+        &emsp;<span class=r>@List</span><b>;</b><br>
+        &emsp;&emsp;<span class=r>@List</span> represents a list of variables, constants or formatted fields seperated by spaces.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a;<br>
+        &emsp;&emsp;&emsp;a3 a2 a1 a0;<br>
+        &emsp;&emsp;&emsp;a[3..0];<br>
+        &emsp;&emsp;&emsp;%u{a[]} a[3..0];<br>
+        &emsp;&emsp;&emsp;%b{a} b c %b{d};
 
-
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Assignments">Assignment Statements</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.
 
 
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Headers">Header Statements</h2>
-        <p style="margin-left: 40px">
-        Text will go here for this section
+        <p style="margin-left: 40px; line-height: 1.6">
+        <b>Description:</b> Header Statements are used to define a design module that can be used in other designs.<br>
+        <b>Syntax:</b><br>
+        &emsp;<span class=r>@DesignName</span><b>(</b><span class=r>@List</span><b>:</b><span class=r>@List</span><b>);</b><br>
+        &emsp;&emsp;<span class=r>@DesignName</span> represents the name of the current design.<br>
+        &emsp;&emsp;<span class=r>@List</span> represents a list of variables or concatenations of variables seperated by commas.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;design(a,b,c:d);<br>
+        &emsp;&emsp;&emsp;test(a[3..0], b[3..0] : c[3..0], d[3..0]);<br>
+        &emsp;&emsp;&emsp;design2({a3 a2 a1 a0} : b[3..0]);<br>
+        &emsp;&emsp;<b>Note: Variables on the left side of</b> the <b>':' are input variables</b> of the design <b>and must be independent variables.</b>
+        <b>Variables on the right side of</b> the <b>':' are output variables</b> of the design.
 
-
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
 
       <h2 id="Instantiations">Instantiation Statements</h2>
-          <p style="margin-left: 40px">
-          Text will go here for this section
+          <p style="margin-left: 40px; line-height: 1.6">
+          <b>Description:</b> Instantiation Statements are used to create an instance of a design module.<br>
+        <b>Syntax:</b><br>
+        &emsp;<span class=r>@DesignName</span><b>.</b><span class=r>@InstantName</span><b>(</b><span class=r>@List</span><b>:</b><span class=r>@List</span><b>);</b><br>
+        &emsp;&emsp;<span class=r>@DesignName</span> represents the name of the design you are instantiating.<br>
+        &emsp;&emsp;<span class=r>@InstantName</span> represents the name of your instantiation of that design.<br>
+        &emsp;&emsp;<span class=r>@List</span> represents a list of variables or concatenations of variables seperated by commas.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;design.d1(a,b,c:d);<br>
+        &emsp;&emsp;&emsp;test.t1(a[3..0], 4'4 : b[3..0]);<br>
+        &emsp;&emsp;&emsp;design2.d1({a3 a2 a1 a0} : {<b>NC</b> b[2..0]});<br>
+        &emsp;&emsp;<b>Note: Variables/constants on the left side of</b> the <b>':' are input values</b> of the instantiation.
+        <b>Variables on the right side of</b> the <b>':' are output values</b> of the design.
+        <b>NC</b> as an output means "Not Connected". This is to be used when you don't want to save the value but want to see the value.
 
 
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
         
       <h2 id="Libraries">Library Statements</h2>
-          <p style="margin-left: 40px">
-          Text will go here for this section
+          <p style="margin-left: 40px; line-height: 1.6">
+          <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.
 
 
-        <br><br><a href="#top" style="margin-left: 20px">Return to Top</a></p>
+        <br><br><a href="#top">Return to Top</a></p>
 
         </div>
   </body>

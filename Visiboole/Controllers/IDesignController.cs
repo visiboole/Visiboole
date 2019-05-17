@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019 John Devore
  * Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
  * Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Cleary
@@ -74,6 +74,7 @@ namespace VisiBoole.Controllers
         /// <summary>
         /// Saves the design with the specified name.
         /// </summary>
+        /// <param name="name">Name of design to be saved.</param>
         void SaveDesign(string name = null);
 
         /// <summary>

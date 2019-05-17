@@ -1389,7 +1389,7 @@ namespace VisiBoole.ParsingEngine
         private string ExpandHorizontally(string line)
         {
             string expandedLine = line;
-            int maxExpansionCount = -1;
+            int maxExpansionCount = 1;
             Match match;
 
             while ((match = VectorRegex2.Match(expandedLine)).Success)
@@ -1453,10 +1453,11 @@ namespace VisiBoole.ParsingEngine
             }
 
             // If line contains a = (Math expression)
-            if (line.Contains('='))
+            if (line.Contains('=') && maxExpansionCount > 1)
             {
                 int assignmentIndex = expandedLine.IndexOf('=');
-                Regex variableListRegex = new Regex($@"(?<!@){VariableListPattern}(?![^{{}}]*\}})"); // Variable lists not inside {}
+                // ({VariableListPattern2}|[01])
+                Regex variableListRegex = new Regex($@"(?<=^|[\s({{|=^~+-])({VariableListPattern2}|[01])(?![^{{}}]*\}})"); // Variable lists not inside {}
                 while ((match = variableListRegex.Match(expandedLine)).Success)
                 {
                     // Get variable list
