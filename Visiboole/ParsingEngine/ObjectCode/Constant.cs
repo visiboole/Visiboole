@@ -38,7 +38,7 @@ namespace VisiBoole.ParsingEngine.ObjectCode
 		public bool? ObjCodeValue { get; private set; }
 
         /// <summary>
-        /// Indicates whether this output element contains a negation.
+        /// Indicates whether this output element contains a negation. 
         /// </summary>
         public bool ObjHasNegation { get; private set; }
 
@@ -49,8 +49,8 @@ namespace VisiBoole.ParsingEngine.ObjectCode
 		public Constant(string text)
 		{
             ObjHasNegation = text[0] == '~';
-            ObjCodeText = (ObjHasNegation) ? text.Substring(1) : text;
-            ObjCodeValue = Convert.ToInt32(ObjCodeText) == 1;
+            ObjCodeText = ObjHasNegation ? text.Substring(1) : text;
+            ObjCodeValue = ObjHasNegation ? Convert.ToInt32(ObjCodeText) == 0 : Convert.ToInt32(ObjCodeText) == 1;
         }
 	}
 }

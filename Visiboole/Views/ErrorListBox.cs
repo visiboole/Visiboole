@@ -65,7 +65,7 @@ namespace VisiBoole.Views
         public static void Display(List<string> log)
         {
             var errorBoxDialog = new ErrorListBox();
-            errorBoxDialog.uxRichTextBoxLog.Text = String.Join("\n", log);
+            errorBoxDialog.uxRichTextBoxLog.Text = string.Join("\n", log);
             errorBoxDialog.ShowDialog(); // Show form
         }
     }

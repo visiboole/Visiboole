@@ -139,10 +139,12 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         private static Regex ModuleInstantiationRegex = new Regex(ModuleInstantiationPattern);
 
+        private static Regex EqualToRegex = new Regex($@"{AnyTypePattern}\s*==\s*{AnyTypePattern}", RegexOptions.Compiled);
+
         /// <summary>
         /// Regex for determining whether expansion is required.
         /// </summary>
-        private static Regex ExpansionRegex { get; } = new Regex($@"((?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|((?<=^|\W){ConstantPattern})", RegexOptions.Compiled);
+        private static Regex ExpansionRegex { get; } = new Regex($@"(({AnyTypePattern}\s*==\s*{AnyTypePattern})|(?<!{FormatterPattern}){ConcatPattern})|{VectorPattern}|((?<=^|\W){ConstantPattern})", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for identifying comment statements.
@@ -685,6 +687,8 @@ namespace VisiBoole.ParsingEngine
             CurrentLineNumber = 0;
             // Declare statement type
             StatementType? type = StatementType.Empty;
+            // Indicates whether a non header or library statement has been found
+            bool foundDesignStatement = false;
 
             // For each statement in the statement text list
             foreach (string statement in statementText)
@@ -717,26 +721,40 @@ namespace VisiBoole.ParsingEngine
                 // If statement type is library
                 else if (type == StatementType.Library)
                 {
-                    // If library isn't valid and the current execution is valid
-                    if (!VerifyLibraryStatement(statement) && valid)
+                    if (Design.HeaderLine != null)
                     {
+                        // Add invalid module statement error to error list
+                        ErrorLog.Add(CurrentLineNumber, $"Library statements must be before header statements.");
                         // Set valid to false
                         valid = false;
                     }
-                }
-                // If statement type is submodule
-                else if (type == StatementType.Instantiation)
-                {
-                    // If submodule instantiation isn't valid and the current execution is valid
-                    if (!VerifySubmoduleStatement(statement) && valid)
+                    else if (foundDesignStatement)
                     {
+                        // Add invalid module statement error to error list
+                        ErrorLog.Add(CurrentLineNumber, $"Library statements must be before any design statements.");
                         // Set valid to false
                         valid = false;
+                    }
+                    else
+                    {
+                        // If library isn't valid and the current execution is valid
+                        if (!VerifyLibraryStatement(statement) && valid)
+                        {
+                            // Set valid to false
+                            valid = false;
+                        }
                     }
                 }
                 // If statement type is module
                 else if (type == StatementType.Header)
                 {
+                    if (foundDesignStatement)
+                    {
+                        ErrorLog.Add(CurrentLineNumber, $"Header statements must be the first design statement following any library statements.");
+                        // Set valid to false
+                        valid = false;
+                    }
+
                     // If design doesn't have a module declaration
                     if (Design.HeaderLine == null)
                     {
@@ -746,14 +764,26 @@ namespace VisiBoole.ParsingEngine
                     // If design has a module module declaration
                     else
                     {
-                        // Add invalid module statement error to error list
-                        ErrorLog.Add(CurrentLineNumber, $"Designs can only have one module header statement.");
-                        // If current execution is valid
-                        if (valid)
+                        ErrorLog.Add(CurrentLineNumber, $"Designs can only have one header statement.");
+                        // Set valid to false
+                        valid = false;
+                    }
+                }
+                else
+                {
+                    if (type == StatementType.Instantiation)
+                    {
+                        // If submodule instantiation isn't valid and the current execution is valid
+                        if (!VerifySubmoduleStatement(statement) && valid)
                         {
                             // Set valid to false
                             valid = false;
                         }
+                    }
+
+                    if (type != StatementType.Comment && type != StatementType.Empty)
+                    {
+                        foundDesignStatement = true;
                     }
                 }
 
@@ -804,6 +834,7 @@ namespace VisiBoole.ParsingEngine
                         // Set valid to false
                         valid = false;
                     }
+                    CurrentLineNumber += source.Text.Count(c => c == '\n') + 1;
                     // Continue to next source
                     continue;
                 }
@@ -1264,6 +1295,7 @@ namespace VisiBoole.ParsingEngine
                 List<string> components = Design.Database.GetVectorComponents(token.Groups["Name"].Value);
                 if (components == null)
                 {
+                    ErrorLog.Add(CurrentLineNumber, $"'{token.Value}' is missing an explicit dimension.");
                     return null;
                 }
 
@@ -1351,6 +1383,51 @@ namespace VisiBoole.ParsingEngine
             int lineCount = source.Count(c => c == '\n');
             // Get whether the source needs to be expanded
             bool needsExpansion = ExpansionRegex.IsMatch(source) || source.Contains(':');
+
+            if (needsExpansion && source.Contains("="))
+            {
+                if (source.Contains("+") || source.Contains("-"))
+                {
+                    source = ExpandHorizontally(source);
+                }
+                else
+                {
+                    var equalToOperations = EqualToRegex.Matches(source);
+                    if (equalToOperations.Count > 0)
+                    {
+                        for (int i = equalToOperations.Count - 1; i >= 0; i--)
+                        {
+                            var equalToOperation = equalToOperations[i];
+                            source = string.Concat(source.Substring(0, equalToOperation.Index), ExpandHorizontally(equalToOperation.Value), source.Substring(equalToOperation.Index + equalToOperation.Length));
+                        }
+                    }
+
+                    if (ExpansionRegex.IsMatch(source))
+                    {
+                        // Vertical expansion needed
+                        source = ExpandVertically(source);
+                    }
+                }
+            }
+            else if (needsExpansion)
+            {
+                // Horizontal expansion needed
+                if (!source.Contains(':'))
+                {
+                    source = ExpandHorizontally(source);
+                }
+                else
+                {
+                    // Get text that shouldn't be expanded
+                    string frontText = source.Substring(0, source.IndexOf("(") + 1);
+                    // Get text that needs to be expanded
+                    string restOfText = source.Substring(frontText.Length);
+                    // Combine front text with the expanded form of the rest of the text
+                    source = $"{frontText}{ExpandHorizontally(restOfText)}";
+                }
+            }
+
+            /*
             // If source needs to be expanded, is an expression statement and is not a mathematical expression
             if (needsExpansion && source.Contains("=") && !source.Contains("+") && !source.Contains("-") && !source.Contains("=="))
             {
@@ -1375,6 +1452,7 @@ namespace VisiBoole.ParsingEngine
                     source = $"{frontText}{ExpandHorizontally(restOfText)}";
                 }
             }
+            */
 
             // Increment line number by the line count
             CurrentLineNumber += lineCount;
@@ -1456,7 +1534,6 @@ namespace VisiBoole.ParsingEngine
             if (line.Contains('=') && maxExpansionCount > 1)
             {
                 int assignmentIndex = expandedLine.IndexOf('=');
-                // ({VariableListPattern2}|[01])
                 Regex variableListRegex = new Regex($@"(?<=^|[\s({{|=^~+-])({VariableListPattern2}|[01])(?![^{{}}]*\}})"); // Variable lists not inside {}
                 while ((match = variableListRegex.Match(expandedLine)).Success)
                 {
@@ -1537,54 +1614,61 @@ namespace VisiBoole.ParsingEngine
             MatchCollection matches = ExpansionRegex.Matches(expression);
             foreach (Match match in matches)
             {
-                CurrentLineNumber = GetLineNumber(line, match.Index);
-                List<string> expansion;
-                bool canAdjust;
-                if (!match.Value.Contains("{"))
+                if (!match.Value.Contains("=="))
                 {
-                    canAdjust = !match.Value.Contains("[") && string.IsNullOrEmpty(match.Groups["BitCount"].Value);
-                    expansion = ExpandToken(match);
-                }
-                else
-                {
-                    canAdjust = false;
-                    expansion = GetExpansion(match);
-                }
-
-                // If expansion fails
-                if (expansion == null)
-                {
-                    return null;
-                }
-
-                if (expansion.Count != dependentExpansion.Count)
-                {
-                    if (canAdjust)
+                    CurrentLineNumber = GetLineNumber(line, match.Index);
+                    List<string> expansion;
+                    bool canAdjust;
+                    if (!match.Value.Contains("{"))
                     {
-                        int adjustCount = dependentExpansion.Count - expansion.Count;
-                        if (adjustCount > 0)
+                        canAdjust = !match.Value.Contains("[") && string.IsNullOrEmpty(match.Groups["BitCount"].Value);
+                        expansion = ExpandToken(match);
+                    }
+                    else
+                    {
+                        canAdjust = false;
+                        expansion = GetExpansion(match);
+                    }
+
+                    // If expansion fails
+                    if (expansion == null)
+                    {
+                        return null;
+                    }
+
+                    if (expansion.Count != dependentExpansion.Count)
+                    {
+                        if (canAdjust)
                         {
-                            for (int i = 0; i < adjustCount; i++)
+                            int adjustCount = dependentExpansion.Count - expansion.Count;
+                            if (adjustCount > 0)
                             {
-                                expansion.Insert(0, "0");
+                                for (int i = 0; i < adjustCount; i++)
+                                {
+                                    expansion.Insert(0, "0");
+                                }
+                            }
+                            else
+                            {
+                                for (int i = adjustCount; i < 0; i++)
+                                {
+                                    expansion.RemoveAt(0);
+                                }
                             }
                         }
                         else
                         {
-                            for (int i = adjustCount; i < 0; i++)
-                            {
-                                expansion.RemoveAt(0);
-                            }
+                            ErrorLog.Add(GetLineNumber(line, match.Index), $"Expansion size of '{match.Value}' doesn't match the size of '{dependent}'.");
+                            return null;
                         }
                     }
-                    else
-                    {
-                        ErrorLog.Add(GetLineNumber(line, match.Index), $"Expansion size of '{match.Value}' doesn't match the size of '{dependent}'.");
-                        return null;
-                    }
-                }
 
-                expressionExpansions.Add(expansion);
+                    expressionExpansions.Add(expansion);
+                }
+                else
+                {
+                    expressionExpansions.Add(new List<string>(new string[] { match.Value }));
+                }
             }
 
             // Combine expansions
@@ -1592,24 +1676,49 @@ namespace VisiBoole.ParsingEngine
             expansions.Add(dependentExpansion);
             expansions.AddRange(expressionExpansions);
 
-            // Expand line into lines
-            for (int i = 0; i < dependentExpansion.Count; i++)
+
+            if (matches.Count == 1 && (matches[0].Value[0] == '\'' || char.IsDigit(matches[0].Value[0])))
             {
                 string newLine = line;
 
-                for (int j = matches.Count - 1; j >= 0; j--)
+                string beforeMatch = newLine.Substring(0, matches[0].Index + expressionIndex);
+                string afterMatch = newLine.Substring(expressionIndex + matches[0].Index + matches[0].Length);
+                string matchReplacement = string.Join(" ", expressionExpansions[0]);
+                newLine = string.Concat(beforeMatch, $"{{{matchReplacement}}}", afterMatch);
+
+                // Replace dependent with expansion
+                string beforeDependent = newLine.Substring(0, dependentMatch.Index);
+                string afterDependent = newLine.Substring(dependentMatch.Index + dependentMatch.Length);
+                string dependentReplacement = string.Join(" ", dependentExpansion);
+                newLine = string.Concat(beforeDependent, $"{{{dependentReplacement}}}", afterDependent);
+
+                expanded = newLine;
+            }
+            else
+            {
+                // Expand line into lines
+                for (int i = 0; i < dependentExpansion.Count; i++)
                 {
-                    Match match = matches[j];
-                    string beforeMatch = newLine.Substring(0, match.Index + expressionIndex);
-                    string afterMatch = newLine.Substring(match.Index + expressionIndex + match.Length);
-                    newLine = string.Concat(beforeMatch, expansions[j + 1][i], afterMatch);
+                    string newLine = line;
+
+                    for (int j = matches.Count - 1; j >= 0; j--)
+                    {
+                        Match match = matches[j];
+                        if (match.Value.Contains("=="))
+                        {
+                            continue;
+                        }
+                        string beforeMatch = newLine.Substring(0, match.Index + expressionIndex);
+                        string afterMatch = newLine.Substring(match.Index + expressionIndex + match.Length);
+                        newLine = string.Concat(beforeMatch, expansions[j + 1][i], afterMatch);
+                    }
+
+                    string beforeDependent = newLine.Substring(0, start);
+                    string afterDependent = newLine.Substring(start + dependent.Length);
+                    newLine = string.Concat(beforeDependent, expansions[0][i], afterDependent);
+
+                    expanded += newLine;
                 }
-
-                string beforeDependent = newLine.Substring(0, start);
-                string afterDependent = newLine.Substring(start + dependent.Length);
-                newLine = string.Concat(beforeDependent, expansions[0][i], afterDependent);
-
-                expanded += newLine;
             }
 
             return expanded;

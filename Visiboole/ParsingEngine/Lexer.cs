@@ -1257,7 +1257,7 @@ namespace VisiBoole.ParsingEngine
             }
 
             // If new token is a variable
-            if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant)
+            if (newToken.Type == TokenType.Variable)
             {
                 // If statement type is header and the current execution is not inside module parentheses
                 if (statementType == StatementType.Header && !InsideModule)
@@ -1337,6 +1337,24 @@ namespace VisiBoole.ParsingEngine
                     {
                         // Add mixing of boolean and math operators error to error log
                         ErrorLog.Add(CurrentLineNumber, $"An assignment statement can not contain both Boolean and math operators in its expression.");
+                        // Return invalid syntax
+                        return false;
+                    }
+
+                    // If left token isn't an operand
+                    if (!IsTokenLeftOperand(lastToken))
+                    {
+                        // Add missing left operand error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' is missing a left operand.");
+                        // Return invalid syntax
+                        return false;
+                    }
+
+                    // If next token isn't an operand
+                    if (!IsNextCharRightOperand(nextLexeme))
+                    {
+                        // Add missing right operand error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"'{newToken.Text}' is missing a right operand.");
                         // Return invalid syntax
                         return false;
                     }

@@ -3,6 +3,8 @@ VisiBoole v3.0.0
 Copyright (C) 2019 John Devore
 Copyright (C) 2019 Chance Henney, Juwan Moore, William Van Cleve
 Copyright (C) 2017 Matthew Segraves, Zachary Terwort, Zachary Clear
+Copyright (C) 2015 Carlos Tupaz
+Copyright (C) 2010 Clint Caywood
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

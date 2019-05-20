@@ -245,10 +245,13 @@ namespace VisiBoole.Views
         public void AddNavTreeNode(string path)
         {
             string fileName = path.Substring(path.LastIndexOf("\\") + 1);
-            TreeNode fileNode = new TreeNode(fileName);
-            fileNode.Name = fileName;
-            NavTree.Nodes[0].Nodes.Add(fileNode);
-            NavTree.ExpandAll();
+            if (!NavTree.Nodes[0].Nodes.ContainsKey(fileName))
+            {
+                TreeNode fileNode = new TreeNode(fileName);
+                fileNode.Name = fileName;
+                NavTree.Nodes[0].Nodes.Add(fileNode);
+                NavTree.ExpandAll();
+            }
         }
 
         /// <summary>
@@ -630,24 +633,6 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SyntaxDocumentationMenuClick(object sender, EventArgs e)
         {
-
-            //refocuses syntax window if it exists, refocusing or un-minimizing
-            //Creates and displays if doesn't exist
-            /*
-            Form fc = Application.OpenForms["HelpWindow"];
-            if (fc != null)
-            {
-                fc.WindowState = System.Windows.Forms.FormWindowState.Normal;
-                fc.BringToFront();
-            }
-
-            else
-            {
-                HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
-                hw.Show();
-            }
-            */
-
             new SyntaxWindow().Show();
         }
 
@@ -814,44 +799,16 @@ namespace VisiBoole.Views
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            /*
-            TutorialWindow tutorial = new TutorialWindow();
-
-            tutorial.Show();
-            */
-
             new TutorialWindow().Show();
-
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //refocuses syntax window if it exists, refocusing or un-minimizing
-            //Creates and displays if doesn't exist
-            Form fc = Application.OpenForms["HelpWindow"];
-
-            
-            if (fc != null)
-            {
-                fc.WindowState = System.Windows.Forms.FormWindowState.Normal;
-                fc.BringToFront();
-            }
-
-            else
-            {
-                HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
-                about.Show();
-            }
-
-
-
-
-            //
-            //about.Show();
-
-            //HelpWindow hw = new HelpWindow("VisiBoole Syntax", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Syntax.txt")));
-            //hw.Show();
+            HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
+            about.Show();
         }
+
+
 
         private void toggleSimulatorSemicolonsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -860,6 +817,12 @@ namespace VisiBoole.Views
             {
                 MainWindowController.RefreshOutput();
             }
+        }
+
+        private void aboutToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            HelpWindow about = new HelpWindow("Overview", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Overview.txt")));
+            about.Show();
         }
     }
 }

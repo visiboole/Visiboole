@@ -220,6 +220,9 @@
     <Content Include="Resources\Help Documentation\Help.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Help Documentation\Overview.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Help Documentation\Syntax.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -155,8 +155,19 @@ namespace VisiBoole.Controllers
         {
             // Create new design with the specified path
             var newDesign = new Design(path);
-            // Add new design to the designs dictionary
-            Designs.Add(newDesign.FileName, newDesign);
+            if (Designs.ContainsKey(newDesign.FileName))
+            {
+                Designs[newDesign.FileName] = newDesign;
+                if (Parsers.ContainsKey(newDesign.FileName))
+                {
+                    Parsers.Remove(newDesign.FileName);
+                }
+            }
+            else
+            {
+                // Add new design to the designs dictionary
+                Designs.Add(newDesign.FileName, newDesign);
+            }
             // Set new design as the active design
             ActiveDesign = newDesign;
             // Return new design

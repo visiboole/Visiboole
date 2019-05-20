@@ -37,7 +37,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Regex for getting output tokens.
         /// </summary>
-        private Regex OutputRegex = new Regex($@"({Parser.ConstantPattern})|(~?{Parser.ScalarPattern})|(==)|[\s{{}}()=^|+-]");
+        private Regex OutputRegex = new Regex($@"(~?{Parser.ScalarPattern})|~?[01]|(==)|[\s{{}}()=^|+-]");
 
         /// <summary>
         /// Expression of the boolean statement.
@@ -87,9 +87,9 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else
                 {
-                    if (!char.IsDigit(token[0]))
+                    string name = token.TrimStart('~');
+                    if (!char.IsDigit(name[0]))
                     {
-                        string name = token.TrimStart('~');
                         IndependentVariable indVar = DesignController.ActiveDesign.Database.TryGetVariable<IndependentVariable>(name) as IndependentVariable;
                         DependentVariable depVar = DesignController.ActiveDesign.Database.TryGetVariable<DependentVariable>(name) as DependentVariable;
                         if (indVar != null)

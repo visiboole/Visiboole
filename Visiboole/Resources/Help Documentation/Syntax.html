@@ -150,7 +150,52 @@
         &emsp;&emsp;&emsp;(a3) (b3)<br>
         &emsp;&emsp;&emsp;a 0<br>
         &emsp;&emsp;&emsp;(a3)(b3)<br>
-        &emsp;&emsp;<b>Note:</b> <b>When there is no operator between two variables or a variable and a parenthesis, this is assumed to be an and operation.</b><br>
+        &emsp;&emsp;<b>Note:</b> <b>When there is no operator between two variables or a variable and a parenthesis, this is assumed to be an and operation.</b><br><br>
+        
+        &emsp;<b>Or Operator: |</b><br>
+        &emsp;&emsp;Or operator takes the value on the left and performs a bitwise or with the value on the right.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a | b<br>
+        &emsp;&emsp;&emsp;a3 | b3<br>
+        &emsp;&emsp;&emsp;(a3) | (b3)<br>
+        &emsp;&emsp;&emsp;a|0<br>
+        &emsp;&emsp;&emsp;(a3)|(b3)<br><br>
+        
+        &emsp;<b>Xor Operator: ^</b><br>
+        &emsp;&emsp;Xor operator takes the value on the left and performs a bitwise exlcusive or with the value on the right.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;(a ^ b)<br>
+        &emsp;&emsp;&emsp;(a3 ^ b3)<br>
+        &emsp;&emsp;&emsp;((a3) ^ (b3) ^ (c3))<br>
+        &emsp;&emsp;&emsp;(a^0)<br>
+        &emsp;&emsp;&emsp;((a3)^(b3))<br>
+        &emsp;&emsp;<b>Note: Xor operations must be in parentheses and must be the only operators in those parentheses.</b><br><br>
+        
+        &emsp;<b>Equal To Operator: ==</b><br>
+        &emsp;&emsp;Equal to operator takes the value on the left and right an evaluates to true if both values are the same.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;(a == b)<br>
+        &emsp;&emsp;&emsp;(a3 == b3)<br>
+        &emsp;&emsp;&emsp;((a3) == (b3) == (c3))<br>
+        &emsp;&emsp;&emsp;(a==0)<br>
+        &emsp;&emsp;&emsp;((a3)==(b3))<br>
+        &emsp;&emsp;<b>Note: Equal to operations must be in parentheses and must be the only operators in those parentheses.</b><br><br>
+        
+        &emsp;<b>Addition Operator: +</b><br>
+        &emsp;&emsp;Addition operator takes the value on the left and adds it to the value on the right.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a + b<br>
+        &emsp;&emsp;&emsp;a + 1<br>
+        &emsp;&emsp;&emsp;a + 5<br>
+        &emsp;&emsp;<b>Note: Addition operations can not be used with boolean operators. They can only be used with subtraction operators.</b><br><br>
+        
+        &emsp;<b>Subtraction Operator: -</b><br>
+        &emsp;&emsp;Subtraction operator takes the value on the left and subtracts it from the value on the right.<br>
+        &emsp;&emsp;<b>Examples:</b><br>
+        &emsp;&emsp;&emsp;a - b<br>
+        &emsp;&emsp;&emsp;a - 1<br>
+        &emsp;&emsp;&emsp;a - 5<br>
+        &emsp;&emsp;<b>Note: Subtraction operations can not be used with boolean operators. They can only be used with addition operators.</b>
         
         <br><br><a href="#top">Return to Top</a></p>
 
@@ -183,8 +228,18 @@
 
       <h2 id="Assignments">Assignment Statements</h2>
         <p style="margin-left: 40px; line-height: 1.6">
-        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.
-
+        <b>Description:</b> Assignment Statements are used to assign values to your variables.<br>
+        <b>Syntax:</b><br>
+        &emsp;<span class=r>@SingleVarOrConcat</span> <span class=r>@Assignment</span> <span class=r>@Expression</span><b>;</b><br>
+        &emsp;&emsp;<span class=r>@SingleVarOrConcat</span> represents a variable or a concatenation of variables you want to assign a value to.<br>
+        &emsp;&emsp;<span class=r>@Assignment</span> represents the assignment operator. (&lt;= or =)<br>
+        &emsp;&emsp;<span class=r>@Expression</span> represents the expression that will be evaluted and assigned to
+        the variables or concatenation on the left side of the assignment operator.<br>
+        <b>Examples:</b><br>
+        &emsp;a = b;<br>
+        &emsp;a[3..0] = ~(b[3..0] | c[3..0]);<br>
+        &emsp;{a3 a2 a1 a0} = b[3..0] c[3..0] | d[3..0] e[3..0];<br>
+        &emsp;a[] &lt;= a[] + 1;
 
         <br><br><a href="#top">Return to Top</a></p>
 
@@ -220,12 +275,20 @@
         <b>Variables on the right side of</b> the <b>':' are output values</b> of the design.
         <b>NC</b> as an output means "Not Connected". This is to be used when you don't want to save the value but want to see the value.
 
-
         <br><br><a href="#top">Return to Top</a></p>
         
       <h2 id="Libraries">Library Statements</h2>
           <p style="margin-left: 40px; line-height: 1.6">
-          <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.
+          <b>Description:</b> Library Statements are used to include additional folders to scan for module designs.<br>
+          <b>Syntax:</b> <b>#library</b> <span class=r>@LibraryName</span><b>;</b><br>
+          &emsp;<span class=r>@LibraryName</span> represents the name of the folder you want to add for design lookups.<br>
+          <b>Examples:</b><br>
+          &emsp;#library ..;<br>
+          &emsp;#library modules;<br>
+          &emsp;#library ..\others;<br>
+          &emsp;#library \C:\Users\user\Desktop;<br>
+          <b>Note: Library names are assumed to be relative paths.</b> You can use relative path syntax to go up directories.
+          <b>If you want an absolute path, place a '\' before the path.</b>
 
 
         <br><br><a href="#top">Return to Top</a></p>

@@ -47,6 +47,7 @@ namespace VisiBoole.Views
             this.Text = name;
             this.textBox.Text = text;
             this.textBox.Text.PadLeft(textBox.Text.Length + 8);
+            textBox.WordWrap = true;
 
             if (Properties.Settings.Default.Theme.Equals("Light"))
             {
