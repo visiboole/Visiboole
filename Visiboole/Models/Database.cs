@@ -55,6 +55,11 @@ namespace VisiBoole.ParsingEngine
         private List<string> Inputs;
 
         /// <summary>
+        /// All module outputs of the design being parsed by the parsing engine.
+        /// </summary>
+        private List<string> Outputs;
+
+        /// <summary>
         /// Dictionary of variable namespaces.
         /// </summary>
         private Dictionary<string, List<int>> VectorNamespaces;
@@ -82,6 +87,7 @@ namespace VisiBoole.ParsingEngine
             DepVars = new Dictionary<string, DependentVariable>();
             AllVars = new Dictionary<string, Variable>();
             Inputs = new List<string>();
+            Outputs = new List<string>();
             VectorNamespaces = new Dictionary<string, List<int>>();
             Expressions = new Dictionary<string, NamedExpression>();
             DependencyLists = new Dictionary<string, List<string>>();
@@ -172,7 +178,7 @@ namespace VisiBoole.ParsingEngine
         /// <typeparam name="T">The type matching the target collection of variables</typeparam>
         /// <param name="v">The variable to add to the collection of matching type</param>
         /// <returns>Returns true if the variable was successfully added</returns>
-        public bool AddVariable<T>(T v, bool IsInput = false)
+        public bool AddVariable<T>(T v)
         {
             Type varType = typeof(T);
             if (varType == typeof(IndependentVariable))
@@ -185,10 +191,6 @@ namespace VisiBoole.ParsingEngine
                 if (!AllVars.ContainsKey(iv.Name))
                 {
                     AllVars.Add(iv.Name, iv);
-                }
-                if (IsInput && !Inputs.Contains(iv.Name))
-                {
-                    Inputs.Add(iv.Name);
                 }
             }
             else
@@ -205,6 +207,58 @@ namespace VisiBoole.ParsingEngine
                 }
             }
             return true;
+        }
+
+        public void AddInput(string inputVariable)
+        {
+            if (!Inputs.Contains(inputVariable))
+            {
+                Inputs.Add(inputVariable);
+            }
+        }
+
+        public void AddOutput(string outputVariable)
+        {
+            if (!Outputs.Contains(outputVariable))
+            {
+                Outputs.Add(outputVariable);
+            }
+        }
+
+        /// <summary>
+        /// Checks whether all header inputs were used respectively.
+        /// </summary>
+        /// <returns>Variable that wasn't used.</returns>
+        public string VerifyInputs()
+        {
+            foreach (string input in Inputs)
+            {
+                var indVar = TryGetVariable<IndependentVariable>(input) as IndependentVariable;
+                if (indVar == null)
+                {
+                    return input;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Checks whether all header outputs were used respectively.
+        /// </summary>
+        /// <returns>Variable that wasn't used.</returns>
+        public string VerifyOutputs()
+        {
+            foreach (string output in Outputs)
+            {
+                var depVar = TryGetVariable<DependentVariable>(output) as DependentVariable;
+                if (depVar == null)
+                {
+                    return output;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

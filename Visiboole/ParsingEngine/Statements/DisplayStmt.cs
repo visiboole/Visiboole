@@ -30,7 +30,7 @@ namespace VisiBoole.ParsingEngine.Statements
     /// <summary>
     /// A display statement that outputs clickable variables or variable values in binary, decimal, unsigned and hex.
     /// </summary>
-	public class VariableDisplayStmt : Statement
+	public class DisplayStmt : Statement
 	{
         /// <summary>
         /// Regex for getting output tokens.
@@ -41,7 +41,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// Constructs a Variable Display Statement
         /// </summary>
         /// <param name="text">Text of the statement</param>
-        public VariableDisplayStmt(string text) : base(text)
+        public DisplayStmt(string text) : base(text)
 		{
         }
 

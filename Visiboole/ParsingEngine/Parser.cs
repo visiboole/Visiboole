@@ -685,6 +685,8 @@ namespace VisiBoole.ParsingEngine
             Design.HeaderLine = null;
             // Start line number counter
             CurrentLineNumber = 0;
+            // Line number of the header
+            int headerLineNumber = -1;
             // Declare statement type
             StatementType? type = StatementType.Empty;
             // Indicates whether a non header or library statement has been found
@@ -724,14 +726,14 @@ namespace VisiBoole.ParsingEngine
                     if (Design.HeaderLine != null)
                     {
                         // Add invalid module statement error to error list
-                        ErrorLog.Add(CurrentLineNumber, $"Library statements must be before header statements.");
+                        ErrorLog.Add(CurrentLineNumber, $"Library statements must precede header statements.");
                         // Set valid to false
                         valid = false;
                     }
                     else if (foundDesignStatement)
                     {
                         // Add invalid module statement error to error list
-                        ErrorLog.Add(CurrentLineNumber, $"Library statements must be before any design statements.");
+                        ErrorLog.Add(CurrentLineNumber, $"Library statements must precede all design and display statements.");
                         // Set valid to false
                         valid = false;
                     }
@@ -750,16 +752,17 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (foundDesignStatement)
                     {
-                        ErrorLog.Add(CurrentLineNumber, $"Header statements must be the first design statement following any library statements.");
+                        ErrorLog.Add(CurrentLineNumber, $"Header statements must precede all design and display statements.");
                         // Set valid to false
                         valid = false;
                     }
 
                     // If design doesn't have a module declaration
-                    if (Design.HeaderLine == null)
+                    if (headerLineNumber == -1)
                     {
                         // Set the design's module declaration to the source
                         Design.HeaderLine = statement;
+                        headerLineNumber = CurrentLineNumber;
                     }
                     // If design has a module module declaration
                     else
@@ -853,7 +856,7 @@ namespace VisiBoole.ParsingEngine
                         // Get line of the expanded source text
                         string line = expandedSourceText[j];
                         // If source is a header or instantiation
-                        if (source.Type == StatementType.Header || source.Type == StatementType.Instantiation)
+                        if (source.Type == StatementType.Instantiation || source.Type == StatementType.Header)
                         {
                             if (!InitSource(line.Substring(line.IndexOf('(')), source.Type))
                             {
@@ -863,7 +866,7 @@ namespace VisiBoole.ParsingEngine
                                 break;
                             }
                         }
-                        // If source is a variable display or assignment statement
+                        // If source is a display or assignment statement
                         else
                         {
                             if (!InitSource(line, source.Type))
@@ -883,6 +886,27 @@ namespace VisiBoole.ParsingEngine
                 }
 
                 CurrentLineNumber += source.Text.Count(c => c == '\n') + 1;
+            }
+
+            if (Design.HeaderLine != null)
+            {
+                string inputCheck = Design.Database.VerifyInputs();
+                if (inputCheck != null)
+                {
+                    ErrorLog.Add(headerLineNumber, $"Header input {inputCheck} must be used in an assignment expression, as an alternate clock, or an input in an instantiation statement.");
+                    // Set valid to false
+                    valid = false;
+                }
+                else
+                {
+                    string outputCheck = Design.Database.VerifyOutputs();
+                    if (outputCheck != null)
+                    {
+                        ErrorLog.Add(headerLineNumber, $"Header output {outputCheck} must recieve a value from an assignment expression or an instantiation statement.");
+                        // Set valid to false
+                        valid = false;
+                    }
+                }
             }
 
             // If execution is valid: return expanded source code list
@@ -961,11 +985,11 @@ namespace VisiBoole.ParsingEngine
                     // Add clock statement to statement list
                     statements.Add(new ClockAssignmentStmt(source.Text));
                 }
-                // If the source statement type is a variable display statement
-                else if (source.Type == StatementType.VariableDisplay)
+                // If the source statement type is a display statement
+                else if (source.Type == StatementType.Display)
                 {
                     // Add format specifier statement to statement list
-                    statements.Add(new VariableDisplayStmt(source.Text));
+                    statements.Add(new DisplayStmt(source.Text));
                 }
                 // If the source statement type is a header statement
                 else if (source.Type == StatementType.Header)
@@ -1151,8 +1175,8 @@ namespace VisiBoole.ParsingEngine
                 }
                 // Get whether the variable is a dependent
                 string dependent;
-                if (variableMatch.Index < dependentSeperatorIndex
-                    || (type == StatementType.Instantiation && variableMatch.Index > moduleSeperatorIndex))
+                if (variableMatch.Index < dependentSeperatorIndex || ((type == StatementType.Instantiation || type == StatementType.Header)
+                    && variableMatch.Index > moduleSeperatorIndex))
                 {
                     dependent = type == StatementType.ClockAssignment ? $"{variable}.d" : variable;
                 }
@@ -1166,8 +1190,6 @@ namespace VisiBoole.ParsingEngine
                     continue;
                 }
 
-                // If statement type is boolean or submodule
-                // Readd  || type == StatementType.Instantiation
                 if (type == StatementType.Assignment || type == StatementType.ClockAssignment)
                 {
                     if (dependent.Length == 0)
@@ -1212,57 +1234,63 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
                 }
-                
-                // If variable isn't in the database
-                if (Design.Database.TryGetVariable<Variable>(variable) == null)
+
+                if (type != StatementType.Header)
                 {
-                    // If variable isn't dependent
-                    if (dependent.Length == 0)
+                    // If variable isn't in the database
+                    if (Design.Database.TryGetVariable<Variable>(variable) == null)
                     {
-                        if (type == StatementType.Header && variableMatch.Index < moduleSeperatorIndex)
-                        {
-                            // Add variable to the database
-                            Design.Database.AddVariable(new IndependentVariable(variable, value), true);
-                        }
-                        else
+                        // If variable isn't dependent
+                        if (dependent.Length == 0)
                         {
                             // Add variable to the database
                             Design.Database.AddVariable(new IndependentVariable(variable, value));
                         }
+                        // If variable is dependent
+                        else
+                        {
+                            if (type != StatementType.ClockAssignment)
+                            {
+                                // Add variable to the database
+                                Design.Database.AddVariable(new DependentVariable(variable, value));
+                            }
+                            else
+                            {
+                                // Add variable to the database
+                                Design.Database.AddVariable(new IndependentVariable(variable, value));
+                            }
+                        }
                     }
-                    // If variable is dependent
+                    // If variable is in the database
                     else
                     {
-                        if (type != StatementType.ClockAssignment)
+                        // If variable is dependent, in the database not as a dependent
+                        if (type != StatementType.ClockAssignment && dependent.Length != 0 && Design.Database.TryGetVariable<DependentVariable>(variable) == null)
                         {
-                            // Add variable to the database
-                            Design.Database.AddVariable(new DependentVariable(variable, value));
-                        }
-                        else
-                        {
-                            // Add variable to the database
-                            Design.Database.AddVariable(new IndependentVariable(variable, value));
+                            // Make variable in database a dependent
+                            if (!Design.Database.MakeDependent(variable))
+                            {
+                                ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"'{variable}' must be an independent variable to be used as an input in a module header statement.");
+                                return false;
+                            }
                         }
                     }
+
+                    if (dependent.Length != 0 && variable.Length != dependent.Length)
+                    {
+                        Design.Database.AddVariable(new DependentVariable(dependent, value));
+                    }
                 }
-                // If variable is in the database
                 else
                 {
-                    // If variable is dependent, in the database not as a dependent
-                    if (type != StatementType.ClockAssignment && dependent.Length != 0 && Design.Database.TryGetVariable<DependentVariable>(variable) == null)
+                    if (dependent.Length != 0)
                     {
-                        // Make variable in database a dependent
-                        if (!Design.Database.MakeDependent(variable))
-                        {
-                            ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"'{variable}' must be an independent variable to be used as an input in a module header statement.");
-                            return false;
-                        }
+                        Design.Database.AddOutput(variable);
                     }
-                }
-
-                if (dependent.Length != 0 && variable.Length != dependent.Length)
-                {
-                    Design.Database.AddVariable(new DependentVariable(dependent, value));
+                    else
+                    {
+                        Design.Database.AddInput(variable);
+                    }
                 }
             }
 

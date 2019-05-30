@@ -20,7 +20,7 @@ namespace VisiBoole.ParsingEngine
         {
             Empty,
             Comment,
-            VariableDisplay,
+            Display,
             Assignment,
             ClockAssignment,
             Header,
@@ -776,7 +776,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="statementType">Statement type</param>
         /// <param name="line">Line</param>
         /// <returns>Whether the provided token is valid from the provided statement type</returns>
-        private bool IsTokenValid(Token token, StatementType? statementType, string line)
+        private bool IsTokenValid(List<Token> previousTokens, Token token, StatementType? statementType, string line)
         {
             // If token type is space, newline or semicolon
             if (token.Type == TokenType.Space || token.Type == TokenType.NewLine || token.Type == TokenType.Semicolon)
@@ -801,11 +801,19 @@ namespace VisiBoole.ParsingEngine
             // If token type is open or close parenthesis
             else if (token.Type == TokenType.OpenParenthesis || token.Type == TokenType.CloseParenthesis)
             {
-                // If statement type is variable display
-                if (statementType == StatementType.VariableDisplay)
+                // If statement type is display
+                if (statementType == StatementType.Display)
                 {
-                    // Add invalid parenthesis error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"Parentheses can't be used in variable display statements.");
+                    if (previousTokens.Count > 0 && previousTokens.Last().Type == TokenType.Variable)
+                    {
+                        // Add invalid parenthesis error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"Header name '{previousTokens.Last().Text}' doesn't match the current design's name.");
+                    }
+                    else
+                    {
+                        // Add invalid parenthesis error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"Parentheses can't be used in display statements.");
+                    }
                     // Return invalid
                     return false;
                 }
@@ -829,8 +837,8 @@ namespace VisiBoole.ParsingEngine
                     // Return invalid
                     return false;
                 }
-                // If statement type is not variable display
-                else if (statementType != StatementType.VariableDisplay)
+                // If statement type is not display
+                else if (statementType != StatementType.Display)
                 {
                     // Add invalid assignment operator error to error log
                     ErrorLog.Add(CurrentLineNumber, $"Assignment operator '{token.Text}' can only be used in assignment statements.");
@@ -841,11 +849,11 @@ namespace VisiBoole.ParsingEngine
             // If token type is formatter
             else if (token.Type == TokenType.Formatter)
             {
-                // If statement is not empty and not variable display
-                if (statementType != StatementType.Empty && statementType != StatementType.VariableDisplay)
+                // If statement is not empty and not display
+                if (statementType != StatementType.Empty && statementType != StatementType.Display)
                 {
                     // Add invalid formatter error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"'{token.Text}' can only be used in a variable display statement.");
+                    ErrorLog.Add(CurrentLineNumber, $"'{token.Text}' can only be used in a display statement.");
                     // Return invalid
                     return false;
                 }
@@ -853,11 +861,11 @@ namespace VisiBoole.ParsingEngine
             // If token type is asterick
             else if (token.Type == TokenType.Asterick)
             {
-                // If statement type is not empty and not variable display
-                if (statementType != StatementType.Empty && statementType != StatementType.VariableDisplay)
+                // If statement type is not empty and not display
+                if (statementType != StatementType.Empty && statementType != StatementType.Display)
                 {
                     // Add invalid asterick error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in a variable display statement.");
+                    ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in a display statement.");
                     // Return invalid
                     return false;
                 }
@@ -889,8 +897,8 @@ namespace VisiBoole.ParsingEngine
             // If token type is instantiation
             else if (token.Type == TokenType.Instantiation)
             {
-                // If statement type is variable display
-                if (statementType == StatementType.VariableDisplay)
+                // If statement type is display
+                if (statementType == StatementType.Display)
                 {
                     // Add misplaced variable error to error log
                     ErrorLog.Add(CurrentLineNumber, $"All variables in instantiation statements must be inside instantiation parentheses.");
@@ -912,8 +920,8 @@ namespace VisiBoole.ParsingEngine
             // If token type is declaration
             else if (token.Type == TokenType.Declaration)
             {
-                // If statement type is variable display
-                if (statementType == StatementType.VariableDisplay)
+                // If statement type is display
+                if (statementType == StatementType.Display)
                 {
                     // Add invalid misplaced variable error to error log
                     ErrorLog.Add(CurrentLineNumber, $"All variables in header statements must be inside header parentheses.");
@@ -1043,8 +1051,8 @@ namespace VisiBoole.ParsingEngine
                 if (newToken.Type == TokenType.Variable || newToken.Type == TokenType.Constant || newToken.Type == TokenType.Asterick
                     || newToken.Type == TokenType.Formatter || newToken.Type == TokenType.OpenConcatenation || newToken.Type == TokenType.CloseConcatenation)
                 {
-                    // Return variable display statement type
-                    return StatementType.VariableDisplay;
+                    // Return display statement type
+                    return StatementType.Display;
                 }
                 // If new token has a token type of instantiation
                 else if (newToken.Type == TokenType.Instantiation)
@@ -1069,8 +1077,8 @@ namespace VisiBoole.ParsingEngine
                     return null;
                 }
             }
-            // If statement type is variable display
-            else if (statementType == StatementType.VariableDisplay)
+            // If statement type is display
+            else if (statementType == StatementType.Display)
             {
                 // If new token has a token type of assignment or clock
                 if (newToken.Type == TokenType.Assignment || newToken.Type == TokenType.Clock)
@@ -1147,7 +1155,7 @@ namespace VisiBoole.ParsingEngine
                         else if (previousToken.Type == TokenType.Asterick)
                         {
                             // Add invalid asterick error to error log
-                            ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in variable display statements.");
+                            ErrorLog.Add(CurrentLineNumber, $"'*' can only be used in display statements.");
                             // Return error statement type
                             return null;
                         }
@@ -1171,7 +1179,7 @@ namespace VisiBoole.ParsingEngine
                 else if (newToken.Type == TokenType.OpenParenthesis || newToken.Type == TokenType.CloseParenthesis)
                 {
                     // Add invalid parenthesis error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"Parentheses can't be used in variable display statements.");
+                    ErrorLog.Add(CurrentLineNumber, $"Parentheses can't be used in display statements.");
                     // Return error statement type
                     return null;
                 }
@@ -1932,7 +1940,7 @@ namespace VisiBoole.ParsingEngine
                 // Create new token from current lexeme and its type
                 Token newToken = new Token(currentLexeme, (TokenType)tokenType);
                 // If new token isn't valid
-                if (!IsTokenValid(newToken, statementType, line))
+                if (!IsTokenValid(tokens, newToken, statementType, line))
                 {
                     // Return null for statement type
                     return null;

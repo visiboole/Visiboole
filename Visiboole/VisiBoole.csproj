@@ -94,7 +94,7 @@
     <Compile Include="ParsingEngine\ObjectCode\DependentVariable.cs" />
     <Compile Include="ParsingEngine\Statements\ClockAssignmentStmt.cs" />
     <Compile Include="ParsingEngine\Statements\EmptyStmt.cs" />
-    <Compile Include="ParsingEngine\Statements\VariableDisplayStmt.cs" />
+    <Compile Include="ParsingEngine\Statements\DisplayStmt.cs" />
     <Compile Include="Models\HtmlBuilder.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IObjectCodeElement.cs" />
     <Compile Include="ParsingEngine\ObjectCode\IndependentVariable.cs" />

@@ -35,8 +35,9 @@ namespace VisibooleTests
                     return null;
                 }
 
-                HtmlBuilder html = new HtmlBuilder(output);
-                if (html.HtmlText == null)
+                var htmlBuilder = new HtmlBuilder();
+                string html = htmlBuilder.GetHTML(output);
+                if (html == null)
                 {
                     return null;
                 }
