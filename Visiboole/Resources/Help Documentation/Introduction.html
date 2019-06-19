@@ -1,0 +1,323 @@
+<html>
+<head><meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+<style type="text/css">
+<!--
+span.cls_002{font-family:Times,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:bold;font-style:normal;text-decoration: none}
+div.cls_002{font-family:Times,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:bold;font-style:normal;text-decoration: none}
+span.cls_003{font-family:Times,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:normal;font-style:normal;text-decoration: none}
+div.cls_003{font-family:Times,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:normal;font-style:normal;text-decoration: none}
+span.cls_004{font-family:Times,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:bold;font-style:italic;text-decoration: none}
+div.cls_004{font-family:Times,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:bold;font-style:italic;text-decoration: none}
+span.cls_005{font-family:Courier New,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:normal;font-style:normal;text-decoration: none}
+div.cls_005{font-family:Courier New,serif;font-size:12.1px;color:rgb(0,0,0);font-weight:normal;font-style:normal;text-decoration: none}
+-->
+</style>
+<script type="text/javascript" src="IntroductionFiles/wz_jsgraphics.js"></script>
+</head>
+<body>
+<div style="position:absolute;left:50%;margin-left:-306px;top:0px;width:612px;height:792px;border-style:outset;overflow:hidden">
+<div style="position:absolute;left:0px;top:0px">
+<img src="IntroductionFiles/background1.jpg" width=612 height=792></div>
+<div style="position:absolute;left:281.76px;top:57.96px" class="cls_002"><span class="cls_002">VisiBoole</span></div>
+<div style="position:absolute;left:72.00px;top:86.40px" class="cls_002"><span class="cls_002">Overview:</span></div>
+<div style="position:absolute;left:72.00px;top:100.38px" class="cls_003"><span class="cls_003">VisiBoole was created to be a digital logic teaching tool.  It consists of both a hardware</span></div>
+<div style="position:absolute;left:72.00px;top:114.60px" class="cls_003"><span class="cls_003">description language (HDL) for expressing digital logic functions (components of digital</span></div>
+<div style="position:absolute;left:72.00px;top:128.76px" class="cls_003"><span class="cls_003">systems) and a visual simulator for that language.  The interactive visual simulation can be used</span></div>
+<div style="position:absolute;left:72.00px;top:142.98px" class="cls_003"><span class="cls_003">to acquire an in-depth understanding of basic Boolean gates and networks.  The color-coded</span></div>
+<div style="position:absolute;left:72.00px;top:157.20px" class="cls_003"><span class="cls_003">simulation of Boolean expressions provides a more compact display and thus better tractability</span></div>
+<div style="position:absolute;left:72.00px;top:171.36px" class="cls_003"><span class="cls_003">of Boolean logic (especially of larger designs) than having a schematic of a gate network</span></div>
+<div style="position:absolute;left:72.00px;top:185.58px" class="cls_003"><span class="cls_003">displayed.  The use of the same signal name in multiple design statements implies a wire or</span></div>
+<div style="position:absolute;left:72.00px;top:199.80px" class="cls_003"><span class="cls_003">wires connecting those points.  During simulation viewing multiple occurrences of a name</span></div>
+<div style="position:absolute;left:72.00px;top:214.20px" class="cls_003"><span class="cls_003">provides better tractability than viewing a web of lines showing the interconnection of sections</span></div>
+<div style="position:absolute;left:72.00px;top:228.36px" class="cls_003"><span class="cls_003">of a circuit diagram.  During simulation the color of each named signal provides a virtual logic</span></div>
+<div style="position:absolute;left:72.00px;top:242.58px" class="cls_003"><span class="cls_003">probe attached to its value.  Clicking on a name toggles its value while clicking on a formatted</span></div>
+<div style="position:absolute;left:72.00px;top:256.80px" class="cls_003"><span class="cls_003">field cycles through all combinations of values in the field making the testing and understanding</span></div>
+<div style="position:absolute;left:72.00px;top:270.96px" class="cls_003"><span class="cls_003">of designs natural and easy.   Despite its inception as a teaching tool, VisiBoole has proven to be</span></div>
+<div style="position:absolute;left:72.00px;top:285.18px" class="cls_003"><span class="cls_003">a surprisingly powerful digital design tool.  Its ability to support an incremental design approach</span></div>
+<div style="position:absolute;left:72.00px;top:299.40px" class="cls_003"><span class="cls_003">where the designer switches back and forth between design and test mode after each small</span></div>
+<div style="position:absolute;left:72.00px;top:313.56px" class="cls_003"><span class="cls_003">addition to the design has made the creation of complex designs remarkably easy.  Further, they</span></div>
+<div style="position:absolute;left:72.00px;top:327.78px" class="cls_003"><span class="cls_003">are virtually bug free as soon as they are completed.  The sections below introduce the HDL</span></div>
+<div style="position:absolute;left:72.00px;top:342.00px" class="cls_003"><span class="cls_003">features from most basic to complex.  Note that all designing and testing can be accomplished</span></div>
+<div style="position:absolute;left:72.00px;top:356.40px" class="cls_003"><span class="cls_003">using only the assignment statement so exploring designs in simulation mode can begin after</span></div>
+<div style="position:absolute;left:72.00px;top:370.56px" class="cls_003"><span class="cls_003">writing a single statement.  However, testing is made easier by including display statements in</span></div>
+<div style="position:absolute;left:72.00px;top:384.78px" class="cls_003"><span class="cls_003">the design source file.</span></div>
+<div style="position:absolute;left:72.00px;top:413.40px" class="cls_002"><span class="cls_002">Assignment statements:</span></div>
+<div style="position:absolute;left:72.00px;top:427.38px" class="cls_003"><span class="cls_003">As mentioned above it is a good idea to produce designs incrementally when using VisiBoole.</span></div>
+<div style="position:absolute;left:72.00px;top:441.60px" class="cls_003"><span class="cls_003">That is a good approach to learning VisiBoole as well.  The VisiBoole language and simulator</span></div>
+<div style="position:absolute;left:72.00px;top:455.76px" class="cls_003"><span class="cls_003">have been designed to make it possible to design and test even large complex designs after</span></div>
+<div style="position:absolute;left:72.00px;top:469.98px" class="cls_003"><span class="cls_003">learning a single statement type - the Boolean assignment statement.  It is a good idea to use it</span></div>
+<div style="position:absolute;left:72.00px;top:484.20px" class="cls_003"><span class="cls_003">extensively in design creation before learning more advanced features.  This statement expresses</span></div>
+<div style="position:absolute;left:72.00px;top:498.36px" class="cls_003"><span class="cls_003">the value of a Boolean variable (a named signal) via a Boolean expression involving other</span></div>
+<div style="position:absolute;left:72.00px;top:512.58px" class="cls_003"><span class="cls_003">variables.  The easiest to use and understand Boolean expression is a </span><span class="cls_004">sum-of-products</span></div>
+<div style="position:absolute;left:72.00px;top:526.80px" class="cls_003"><span class="cls_003">expression.  It uses </span><span class="cls_004">and</span><span class="cls_003">, </span><span class="cls_004">or</span><span class="cls_003">, and </span><span class="cls_004">not</span><span class="cls_003"> (</span><span class="cls_004">complement</span><span class="cls_003">) operations to express an </span><span class="cls_004">and-to-or</span><span class="cls_003"> circuit.</span></div>
+<div style="position:absolute;left:72.00px;top:541.20px" class="cls_003"><span class="cls_003">SOP expressions are the shortest to write and easiest to visualize during simulation.  Early</span></div>
+<div style="position:absolute;left:72.00px;top:555.36px" class="cls_003"><span class="cls_003">versions of VisiBoole supported only SOP expressions.  When a circuit involves very many</span></div>
+<div style="position:absolute;left:72.00px;top:569.58px" class="cls_003"><span class="cls_003">inputs a single SOP implementation usually involves too many gates or gates with too many</span></div>
+<div style="position:absolute;left:72.00px;top:583.80px" class="cls_003"><span class="cls_003">inputs to be practical.  Using interconnected smaller circuits provides practical solutions.  This is</span></div>
+<div style="position:absolute;left:72.00px;top:597.96px" class="cls_003"><span class="cls_003">accomplished in VisiBoole (and all HDLs) with multiple assignment statements.  Each</span></div>
+<div style="position:absolute;left:72.00px;top:612.18px" class="cls_003"><span class="cls_003">assignment specifies a small section of the complete circuit and the signal names indicate how</span></div>
+<div style="position:absolute;left:72.00px;top:626.40px" class="cls_003"><span class="cls_003">these sections are interconnected.  This leads into an extremely important point about HDLs in</span></div>
+<div style="position:absolute;left:72.00px;top:640.56px" class="cls_003"><span class="cls_003">general and VisiBoole in particular.  Unlike a procedural programming language where the</span></div>
+<div style="position:absolute;left:72.00px;top:654.78px" class="cls_003"><span class="cls_003">statement order is usually critical, HDL statements are describing hardware and the order in</span></div>
+<div style="position:absolute;left:72.00px;top:669.00px" class="cls_003"><span class="cls_003">which you present segments of a design is generally unimportant.  This is a key concept to</span></div>
+<div style="position:absolute;left:72.00px;top:683.40px" class="cls_003"><span class="cls_003">become comfortable with when learning to design with HDLs.  All other HDLs have deviated</span></div>
+<div style="position:absolute;left:72.00px;top:697.56px" class="cls_003"><span class="cls_003">from this principle by providing order-dependent language constructs (groups of lines that</span></div>
+<div style="position:absolute;left:72.00px;top:711.78px" class="cls_003"><span class="cls_003">require order among themselves). VisiBoole’s HDL has been carefully created so no such</span></div>
+<div style="position:absolute;left:303.00px;top:741.00px" class="cls_003"><span class="cls_003">1</span></div>
+</div>
+<div style="position:absolute;left:50%;margin-left:-306px;top:802px;width:612px;height:792px;border-style:outset;overflow:hidden">
+<div style="position:absolute;left:0px;top:0px">
+<img src="IntroductionFiles/background2.jpg" width=612 height=792></div>
+<div style="position:absolute;left:72.00px;top:57.78px" class="cls_003"><span class="cls_003">constructs exist.  All of the statements that specify the design of any circuit, no matter complex</span></div>
+<div style="position:absolute;left:72.00px;top:72.00px" class="cls_003"><span class="cls_003">the design or how many inputs and outputs are involved, can be arbitrarily reordered without</span></div>
+<div style="position:absolute;left:72.00px;top:86.16px" class="cls_003"><span class="cls_003">affecting the functioning of the design.  This is analogous to moving sections of a schematic</span></div>
+<div style="position:absolute;left:72.00px;top:100.38px" class="cls_003"><span class="cls_003">around the page.  As long as the interconnection between the sections is maintained, the circuit</span></div>
+<div style="position:absolute;left:72.00px;top:114.60px" class="cls_003"><span class="cls_003">is unchanged.  In VisiBoole, the interconnection between statements is implied by the names of</span></div>
+<div style="position:absolute;left:72.00px;top:129.00px" class="cls_003"><span class="cls_003">the signals which does not change when the statements are reordered.</span></div>
+<div style="position:absolute;left:72.00px;top:157.56px" class="cls_003"><span class="cls_003">As an example of a simple circuit, consider a Boolean function of three input signals named </span><span class="cls_002">a</span><span class="cls_003">, </span><span class="cls_002">b</span><span class="cls_003">,</span></div>
+<div style="position:absolute;left:72.00px;top:171.96px" class="cls_003"><span class="cls_003">and </span><span class="cls_002">c</span><span class="cls_003">, with the function being true when exactly two of these independent variables are true.  A</span></div>
+<div style="position:absolute;left:72.00px;top:186.18px" class="cls_003"><span class="cls_003">VisiBoole assignment statement defining the gate network that will produce this function is:</span></div>
+<div style="position:absolute;left:72.00px;top:200.40px" class="cls_003"><span class="cls_003">f = a b ~c | a ~b c | ~a b c;</span></div>
+<div style="position:absolute;left:72.00px;top:214.56px" class="cls_003"><span class="cls_003">The </span><span class="cls_004">and </span><span class="cls_003">operator is implied whenever no other operator is connecting Boolean values.  The </span><span class="cls_004">or</span></div>
+<div style="position:absolute;left:72.00px;top:228.78px" class="cls_003"><span class="cls_003">operator is the vertical bar (|), with the </span><span class="cls_004">not</span><span class="cls_003"> operator is the tilde (~).  As </span><span class="cls_004">not</span><span class="cls_003"> is a unary operator it</span></div>
+<div style="position:absolute;left:72.00px;top:243.18px" class="cls_003"><span class="cls_003">has the highest precedence, followed by the </span><span class="cls_004">and</span><span class="cls_003"> operation then the </span><span class="cls_004">or</span><span class="cls_003">.  If the function </span><span class="cls_002">f</span><span class="cls_003"> is the</span></div>
+<div style="position:absolute;left:72.00px;top:257.40px" class="cls_003"><span class="cls_003">only output for the circuit to be described, the above line is the complete design!  It is ready for</span></div>
+<div style="position:absolute;left:72.00px;top:271.56px" class="cls_003"><span class="cls_003">testing.  No lines of code specifying the name of the circuit and the ports (inputs and outputs) of</span></div>
+<div style="position:absolute;left:72.00px;top:285.78px" class="cls_003"><span class="cls_003">the circuit are needed.  Virtually all other HDLs require such a statement and also statements</span></div>
+<div style="position:absolute;left:72.00px;top:300.00px" class="cls_003"><span class="cls_003">specifying which port names are inputs and which are outputs.  Further, if any intermediate</span></div>
+<div style="position:absolute;left:72.00px;top:314.40px" class="cls_003"><span class="cls_003">signals are involved, statements declaring them are required.  In VisiBoole the role of all</span></div>
+<div style="position:absolute;left:72.00px;top:328.56px" class="cls_003"><span class="cls_003">variables are deduced by their usage.  This helps immensely during an iterative design session</span></div>
+<div style="position:absolute;left:72.00px;top:342.78px" class="cls_003"><span class="cls_003">where intermediate variables can be used as inputs for early testing then change roles without</span></div>
+<div style="position:absolute;left:72.00px;top:357.00px" class="cls_003"><span class="cls_003">changing several declarations as the design progresses.  As soon as the above statement is typed</span></div>
+<div style="position:absolute;left:72.00px;top:371.16px" class="cls_003"><span class="cls_003">into the VisiBoole IDE’s editor one can click on the RUN button and change to simulation mode</span></div>
+<div style="position:absolute;left:72.00px;top:385.38px" class="cls_003"><span class="cls_003">to begin interactive testing of the design.  In RUN mode all variables are color coded red when</span></div>
+<div style="position:absolute;left:72.00px;top:399.60px" class="cls_003"><span class="cls_003">true and green when false.  All independent variables start with a value of 0 (false).  Binary</span></div>
+<div style="position:absolute;left:72.00px;top:413.76px" class="cls_003"><span class="cls_003">operators show in black.  The tilde (inverter) is displayed as an overbar (a line above the variable</span></div>
+<div style="position:absolute;left:72.00px;top:428.16px" class="cls_003"><span class="cls_003">or parentheses enclosing the expression being inverted).  Since </span><span class="cls_002">c</span><span class="cls_003"> in the above equation starts out</span></div>
+<div style="position:absolute;left:72.00px;top:442.56px" class="cls_003"><span class="cls_003">false, </span><span class="cls_002">~c </span><span class="cls_003">will be initially true and thus </span><span class="cls_002">c</span><span class="cls_003"> and its overbar will be colored red.</span></div>
+<div style="position:absolute;left:72.00px;top:471.00px" class="cls_003"><span class="cls_003">There are two varieties of the Boolean assignment statement.  The equal assignment in the</span></div>
+<div style="position:absolute;left:72.00px;top:485.40px" class="cls_003"><span class="cls_003">example above is use for combinational logic.  Sequential logic require one-bit memory</span></div>
+<div style="position:absolute;left:72.00px;top:499.56px" class="cls_003"><span class="cls_003">elements known as flip-flops.  Their output are known as state variables and the assignment of</span></div>
+<div style="position:absolute;left:72.00px;top:513.78px" class="cls_003"><span class="cls_003">them is denoted by use of the left-arrow (&lt;=) assignment operator.  During simulation their</span></div>
+<div style="position:absolute;left:72.00px;top:528.00px" class="cls_003"><span class="cls_003">value does not change until an edge occurs on a master clock - there is a TICK button on the</span></div>
+<div style="position:absolute;left:72.00px;top:542.16px" class="cls_003"><span class="cls_003">simulation screen to accomplish this.  The value they are about to become, as defined by the</span></div>
+<div style="position:absolute;left:72.00px;top:556.38px" class="cls_003"><span class="cls_003">Boolean expression in the statement, is shown as the color of the left-arrow.  Feedback of values</span></div>
+<div style="position:absolute;left:72.00px;top:570.60px" class="cls_003"><span class="cls_003">being assigned into the Boolean expression giving their next state is now allowed (and</span></div>
+<div style="position:absolute;left:72.00px;top:585.00px" class="cls_003"><span class="cls_003">frequently used).  A two-bit counter design with outputs named </span><span class="cls_002">hi</span><span class="cls_003"> and </span><span class="cls_002">lo</span><span class="cls_003"> for its two bits is:</span></div>
+<div style="position:absolute;left:72.00px;top:599.16px" class="cls_003"><span class="cls_003">lo &lt;= ~lo;</span></div>
+<div style="position:absolute;left:72.00px;top:613.38px" class="cls_003"><span class="cls_003">hi &lt;= ~hi lo | hi ~lo;</span></div>
+<div style="position:absolute;left:72.00px;top:627.60px" class="cls_003"><span class="cls_003">There is an option on the sequential assignment operator to specify a clock signal other than the</span></div>
+<div style="position:absolute;left:72.00px;top:642.00px" class="cls_003"><span class="cls_003">master clock.  It can be any signal in your design.  To use an alternate clock you append</span></div>
+<div style="position:absolute;left:72.00px;top:656.16px" class="cls_003"><span class="cls_003">@clkname to the &lt;= operator.  The following code converts the above example into a counter</span></div>
+<div style="position:absolute;left:72.00px;top:670.56px" class="cls_003"><span class="cls_003">that counts the number of rising edges of the signal named </span><span class="cls_002">clk</span><span class="cls_003">:</span></div>
+<div style="position:absolute;left:72.00px;top:684.78px" class="cls_003"><span class="cls_003">lo &lt;=@clk ~lo;</span></div>
+<div style="position:absolute;left:72.00px;top:699.00px" class="cls_003"><span class="cls_003">hi &lt;=@clk ~hi lo | hi ~lo;</span></div>
+<div style="position:absolute;left:303.00px;top:741.00px" class="cls_003"><span class="cls_003">2</span></div>
+</div>
+<div style="position:absolute;left:50%;margin-left:-306px;top:1604px;width:612px;height:792px;border-style:outset;overflow:hidden">
+<div style="position:absolute;left:0px;top:0px">
+<img src="IntroductionFiles/background3.jpg" width=612 height=792></div>
+<div style="position:absolute;left:72.00px;top:57.96px" class="cls_002"><span class="cls_002">Display statements:</span></div>
+<div style="position:absolute;left:72.00px;top:72.00px" class="cls_003"><span class="cls_003">The display statement is just a list of signal (variable) names and/or formatted fields containing</span></div>
+<div style="position:absolute;left:72.00px;top:86.16px" class="cls_003"><span class="cls_003">sets of signal names ending in a semicolon.  They do not contribute to the design itself and</span></div>
+<div style="position:absolute;left:72.00px;top:100.38px" class="cls_003"><span class="cls_003">although not required for simulation, they can play a very useful role there.  They allow you to</span></div>
+<div style="position:absolute;left:72.00px;top:114.60px" class="cls_003"><span class="cls_003">locate input names to be toggled for testing and output names to be inspected at any and all</span></div>
+<div style="position:absolute;left:72.00px;top:128.76px" class="cls_003"><span class="cls_003">convenient locations throughout the design.  There is no limit to the number of times a variable</span></div>
+<div style="position:absolute;left:72.00px;top:142.98px" class="cls_003"><span class="cls_003">can appear in a display statement or the number of display statements in which it appears.  The</span></div>
+<div style="position:absolute;left:72.00px;top:157.20px" class="cls_003"><span class="cls_003">formatted fields allow viewing a set of values as a number in a variety of interpretations - very</span></div>
+<div style="position:absolute;left:72.00px;top:171.60px" class="cls_003"><span class="cls_003">helpful when testing numerical circuits.  Furthermore, as you click on any formatted field</span></div>
+<div style="position:absolute;left:72.00px;top:185.76px" class="cls_003"><span class="cls_003">containing only independent variables and/or state variables, it will cycle through all possible</span></div>
+<div style="position:absolute;left:72.00px;top:199.98px" class="cls_003"><span class="cls_003">combinations of those variables making it easy to cover all possible input combinations during a</span></div>
+<div style="position:absolute;left:72.00px;top:214.38px" class="cls_003"><span class="cls_003">test.  A formatted field has the format of %f{variable list}, where </span><span class="cls_002">f</span><span class="cls_003"> specifies the format used to</span></div>
+<div style="position:absolute;left:72.00px;top:228.60px" class="cls_003"><span class="cls_003">display the list.  The variable list is treated as a multibit value.  The allowable formats are b</span></div>
+<div style="position:absolute;left:72.00px;top:242.76px" class="cls_003"><span class="cls_003">(binary), h (hexadecimal), d (2's complement converted to decimal), and u (unsigned decimal).</span></div>
+<div style="position:absolute;left:72.00px;top:256.98px" class="cls_003"><span class="cls_003">%u{a b c d} and %h{v[7..0]} are two examples.  A cleaver unintended use of display statements</span></div>
+<div style="position:absolute;left:72.00px;top:271.20px" class="cls_003"><span class="cls_003">has been discovered by users.  Using very short signal names one can produce rudimentary</span></div>
+<div style="position:absolute;left:72.00px;top:285.36px" class="cls_003"><span class="cls_003">graphical output during simulation.  I believe the first such use was to show the output of a 7-</span></div>
+<div style="position:absolute;left:72.00px;top:299.58px" class="cls_003"><span class="cls_003">segment display by coding the following set of display statements.  Note both the VisiBoole</span></div>
+<div style="position:absolute;left:72.00px;top:313.80px" class="cls_003"><span class="cls_003">editor and simulator use fixed-width fonts so alignment of such graphics is easy.</span></div>
+<div style="position:absolute;left:79.20px;top:326.40px" class="cls_005"><span class="cls_005">a a a;</span></div>
+<div style="position:absolute;left:72.00px;top:339.36px" class="cls_005"><span class="cls_005">f</span></div>
+<div style="position:absolute;left:115.20px;top:339.36px" class="cls_005"><span class="cls_005">b;</span></div>
+<div style="position:absolute;left:72.00px;top:352.38px" class="cls_005"><span class="cls_005">f</span></div>
+<div style="position:absolute;left:115.20px;top:352.38px" class="cls_005"><span class="cls_005">b;</span></div>
+<div style="position:absolute;left:79.20px;top:365.40px" class="cls_005"><span class="cls_005">g g g;</span></div>
+<div style="position:absolute;left:72.00px;top:378.36px" class="cls_005"><span class="cls_005">e</span></div>
+<div style="position:absolute;left:115.20px;top:378.36px" class="cls_005"><span class="cls_005">c;</span></div>
+<div style="position:absolute;left:72.00px;top:391.20px" class="cls_005"><span class="cls_005">e</span></div>
+<div style="position:absolute;left:115.20px;top:391.20px" class="cls_005"><span class="cls_005">c;</span></div>
+<div style="position:absolute;left:79.20px;top:404.16px" class="cls_005"><span class="cls_005">d d d;</span></div>
+<div style="position:absolute;left:72.00px;top:418.80px" class="cls_003"><span class="cls_003">Each set of the same signal name appears as a colored segment in simulation mode.</span></div>
+<div style="position:absolute;left:72.00px;top:447.36px" class="cls_002"><span class="cls_002">Exclusive-or and parentheses:</span></div>
+<div style="position:absolute;left:72.00px;top:461.40px" class="cls_003"><span class="cls_003">Parenthesized expressions are supported in Boolean expressions to explicitly controll the order</span></div>
+<div style="position:absolute;left:72.00px;top:475.56px" class="cls_003"><span class="cls_003">of operation.  Thus, a </span><span class="cls_004">product-of-sums</span><span class="cls_003"> (POS) expression indicating an </span><span class="cls_004">or-to-and</span><span class="cls_003"> circuit could</span></div>
+<div style="position:absolute;left:72.00px;top:489.96px" class="cls_003"><span class="cls_003">be expressed for the function </span><span class="cls_002">f</span><span class="cls_003"> (given earlier) as follows:</span></div>
+<div style="position:absolute;left:72.00px;top:504.18px" class="cls_003"><span class="cls_003">f = (a|b|c)(a|b|~c)(a|~b|c)(~a|b|c)(~a|~b|~c);</span></div>
+<div style="position:absolute;left:72.00px;top:518.40px" class="cls_003"><span class="cls_003">This harder to understand (for most designers) form can be interpreted as saying f will be false</span></div>
+<div style="position:absolute;left:72.00px;top:532.80px" class="cls_003"><span class="cls_003">when all inputs are false (first parenthesized set), none are false (last sum term), or if exactly two</span></div>
+<div style="position:absolute;left:72.00px;top:546.96px" class="cls_003"><span class="cls_003">are false (the middle three sum terms).  This form is usually more difficult to understand.  Using</span></div>
+<div style="position:absolute;left:72.00px;top:561.36px" class="cls_003"><span class="cls_003">the simulator to watch it work can help immensely.   Renaming the function to be </span><span class="cls_002">fsop</span><span class="cls_003"> and </span><span class="cls_002">fpos</span></div>
+<div style="position:absolute;left:72.00px;top:575.58px" class="cls_003"><span class="cls_003">for the two possible forms on consecutive lines in VisiBoole and watching their operation as the</span></div>
+<div style="position:absolute;left:72.00px;top:589.80px" class="cls_003"><span class="cls_003">inputs are cycled through the 8 possible combinations is also enlightening.  An exclusive-or</span></div>
+<div style="position:absolute;left:72.00px;top:603.96px" class="cls_003"><span class="cls_003">operation (^) is supported, but must be inclosed in parentheses - principally to aid in displaying</span></div>
+<div style="position:absolute;left:72.00px;top:618.18px" class="cls_003"><span class="cls_003">the result of the operation in simulation mode, but as a side effect it keeps the precedence rules</span></div>
+<div style="position:absolute;left:72.00px;top:632.40px" class="cls_003"><span class="cls_003">simple.  Any number of values can be exclusive-ored together within one pair of parentheses.</span></div>
+<div style="position:absolute;left:72.00px;top:646.56px" class="cls_003"><span class="cls_003">The correct evaluation of a set of Boolean values exclusive-ored together is that the result is true</span></div>
+<div style="position:absolute;left:72.00px;top:660.78px" class="cls_003"><span class="cls_003">if an odd number of the set are true.  In simulation mode parentheses are always colored to show</span></div>
+<div style="position:absolute;left:72.00px;top:675.00px" class="cls_003"><span class="cls_003">the Boolean value of the expression they enclose.</span></div>
+<div style="position:absolute;left:303.00px;top:741.00px" class="cls_003"><span class="cls_003">3</span></div>
+</div>
+<div style="position:absolute;left:50%;margin-left:-306px;top:2406px;width:612px;height:792px;border-style:outset;overflow:hidden">
+<div style="position:absolute;left:0px;top:0px">
+<img src="IntroductionFiles/background4.jpg" width=612 height=792></div>
+<div style="position:absolute;left:72.00px;top:57.96px" class="cls_002"><span class="cls_002">Vectors:</span></div>
+<div style="position:absolute;left:72.00px;top:72.00px" class="cls_003"><span class="cls_003">Signal names can contain letter and numbers and are case sensitive.  They can be virtually any</span></div>
+<div style="position:absolute;left:72.00px;top:86.16px" class="cls_003"><span class="cls_003">length, but shorter is almost always better to keep the simulation screen concise.  Any name that</span></div>
+<div style="position:absolute;left:72.00px;top:100.38px" class="cls_003"><span class="cls_003">ends in a number is referred to as an indexed variable, and can be referenced using a subscript</span></div>
+<div style="position:absolute;left:72.00px;top:114.60px" class="cls_003"><span class="cls_003">notation.  The indices are restricted to the numbers 0 to 31 .  When using subscript notation a set</span></div>
+<div style="position:absolute;left:72.00px;top:128.76px" class="cls_003"><span class="cls_003">of such variables can be referenced.  The index has the form [beginning.step.ending].  Two</span></div>
+<div style="position:absolute;left:72.00px;top:142.98px" class="cls_003"><span class="cls_003">examples are v[0.2.15] and y[7..0].  When step is omitted a step of 1 is used.  This allows very</span></div>
+<div style="position:absolute;left:72.00px;top:157.20px" class="cls_003"><span class="cls_003">compact expression for a set of values when the set involves very similar circuitry (this happens</span></div>
+<div style="position:absolute;left:72.00px;top:171.60px" class="cls_003"><span class="cls_003">frequently in digital systems).  One example is a bus containing 8-bits that has three 8-bit</span></div>
+<div style="position:absolute;left:72.00px;top:186.00px" class="cls_003"><span class="cls_003">sources, </span><span class="cls_002">x</span><span class="cls_003">, </span><span class="cls_002">y</span><span class="cls_003">, and </span><span class="cls_002">z</span><span class="cls_003">.  For this example the bus is named </span><span class="cls_002">b7</span><span class="cls_003"> to </span><span class="cls_002">b0</span><span class="cls_003"> and the three input sources are</span></div>
+<div style="position:absolute;left:72.00px;top:200.16px" class="cls_003"><span class="cls_003">named in a similar fashion.  For this bus to take on the correct values there needs to be three</span></div>
+<div style="position:absolute;left:72.00px;top:214.38px" class="cls_003"><span class="cls_003">mutually-exclusive control signals indicating which value is to be selected at any given time.  I</span></div>
+<div style="position:absolute;left:72.00px;top:228.78px" class="cls_003"><span class="cls_003">will call these </span><span class="cls_002">sx</span><span class="cls_003">, </span><span class="cls_002">sy</span><span class="cls_003">, and </span><span class="cls_002">sz</span><span class="cls_003"> for select </span><span class="cls_002">x</span><span class="cls_003">, select </span><span class="cls_002">y</span><span class="cls_003">, and select </span><span class="cls_002">z</span><span class="cls_003">, respectively.  The bus design then</span></div>
+<div style="position:absolute;left:72.00px;top:243.00px" class="cls_003"><span class="cls_003">becomes:</span></div>
+<div style="position:absolute;left:72.00px;top:257.16px" class="cls_003"><span class="cls_003">b[7..0] = sx x[7..0] | sy y[7..0] | sz z[7..0];</span></div>
+<div style="position:absolute;left:72.00px;top:271.38px" class="cls_003"><span class="cls_003">The general requirement for a vector assignment is that all vectors are the same size.  Scalars are</span></div>
+<div style="position:absolute;left:72.00px;top:285.60px" class="cls_003"><span class="cls_003">allowed in the expression and are replicated to be the size of the vectors they are combined with.</span></div>
+<div style="position:absolute;left:72.00px;top:299.76px" class="cls_003"><span class="cls_003">In simulation mode the statement is expanded vertically to become eight assignment statements.</span></div>
+<div style="position:absolute;left:72.00px;top:313.98px" class="cls_003"><span class="cls_003">b7 = sx x7 | sy y7 | sz z7</span></div>
+<div style="position:absolute;left:72.00px;top:328.20px" class="cls_003"><span class="cls_003">b6 = sx x6 | sy y6 | sz z6</span></div>
+<div style="position:absolute;left:72.00px;top:342.60px" class="cls_003"><span class="cls_003">Continuing on to </span><span class="cls_002">b0</span><span class="cls_003">'s assignment.  This allows for very compact notation for repetitive designs.</span></div>
+<div style="position:absolute;left:72.00px;top:357.00px" class="cls_003"><span class="cls_003">Such notation is not only more compact, but less error prone than typing a number of similar</span></div>
+<div style="position:absolute;left:72.00px;top:371.16px" class="cls_003"><span class="cls_003">statements (or cutting, pasting, and modifying a statement).  Using a range of indices is the most</span></div>
+<div style="position:absolute;left:72.00px;top:385.38px" class="cls_003"><span class="cls_003">common way to create a vector, but a vector can also be created using a concatenation operation.</span></div>
+<div style="position:absolute;left:72.00px;top:399.60px" class="cls_003"><span class="cls_003">This is done by enclosing a list of variables inside braces such as is done in formatted fields.  A</span></div>
+<div style="position:absolute;left:72.00px;top:413.76px" class="cls_003"><span class="cls_003">simple example using both types of vectors is:</span></div>
+<div style="position:absolute;left:72.00px;top:427.98px" class="cls_003"><span class="cls_003">x[4..0] = ry y[0..4] | sc {a b z[2..0]};</span></div>
+<div style="position:absolute;left:72.00px;top:442.20px" class="cls_003"><span class="cls_003">which during simulation expands into:</span></div>
+<div style="position:absolute;left:72.00px;top:456.36px" class="cls_003"><span class="cls_003">x4 = ry y0 | sc a</span></div>
+<div style="position:absolute;left:72.00px;top:470.58px" class="cls_003"><span class="cls_003">x3 = ry y1 | sc b</span></div>
+<div style="position:absolute;left:72.00px;top:499.20px" class="cls_003"><span class="cls_003">x0 = ry y4 | sc z0</span></div>
+<div style="position:absolute;left:72.00px;top:527.58px" class="cls_002"><span class="cls_002">Submodules:</span></div>
+<div style="position:absolute;left:72.00px;top:541.56px" class="cls_003"><span class="cls_003">Submodules refer to digital designs that are used inside of a larger design.  They are specified</span></div>
+<div style="position:absolute;left:72.00px;top:555.78px" class="cls_003"><span class="cls_003">via an </span><span class="cls_004">instantiation</span><span class="cls_003"> statement.  Such a statement is somewhat analogous to a function call in a</span></div>
+<div style="position:absolute;left:72.00px;top:570.00px" class="cls_003"><span class="cls_003">programming language.  It can replace many assignment statements and be used multiple times</span></div>
+<div style="position:absolute;left:72.00px;top:584.40px" class="cls_003"><span class="cls_003">in a design.  The difference between software functions and hardware submodules is that each</span></div>
+<div style="position:absolute;left:72.00px;top:598.56px" class="cls_003"><span class="cls_003">instantiation of a submodule places a complete copy of its hardware in the circuit, but</span></div>
+<div style="position:absolute;left:72.00px;top:612.78px" class="cls_003"><span class="cls_003">interconnected to a different set of signals.  All such copies are functioning all the time, not</span></div>
+<div style="position:absolute;left:72.00px;top:627.00px" class="cls_003"><span class="cls_003">periodically as in software programs.  Each submodule can have many inputs and outputs.  For</span></div>
+<div style="position:absolute;left:72.00px;top:641.16px" class="cls_003"><span class="cls_003">example, a 4-bit adder would have nine inputs (two 4-bit numbers to add and a carry in) and five</span></div>
+<div style="position:absolute;left:72.00px;top:655.38px" class="cls_003"><span class="cls_003">outputs (a 4-bit sum and a carry out).  Four instances of it can be connected in a way to construct</span></div>
+<div style="position:absolute;left:72.00px;top:669.60px" class="cls_003"><span class="cls_003">a 16-bit adder.  Naming a module and explicitly listing its input and output ports is optional for</span></div>
+<div style="position:absolute;left:72.00px;top:683.76px" class="cls_003"><span class="cls_003">top level designs (designs that are not instantiated into any other designs).  Submodules,</span></div>
+<div style="position:absolute;left:72.00px;top:697.98px" class="cls_003"><span class="cls_003">however, must have that information explicitly stated in a </span><span class="cls_004">module header </span><span class="cls_003">statement.  The form</span></div>
+<div style="position:absolute;left:72.00px;top:712.20px" class="cls_003"><span class="cls_003">of the module header is:</span></div>
+<div style="position:absolute;left:303.00px;top:741.00px" class="cls_003"><span class="cls_003">4</span></div>
+</div>
+<div style="position:absolute;left:50%;margin-left:-306px;top:3208px;width:612px;height:792px;border-style:outset;overflow:hidden">
+<div style="position:absolute;left:0px;top:0px">
+<img src="IntroductionFiles/background5.jpg" width=612 height=792></div>
+<div style="position:absolute;left:72.00px;top:57.78px" class="cls_003"><span class="cls_003">modulename (input ports list : output ports list);</span></div>
+<div style="position:absolute;left:72.00px;top:72.00px" class="cls_003"><span class="cls_003">The module name must match the name of the file containing the design.  The lists are comma-</span></div>
+<div style="position:absolute;left:72.00px;top:86.16px" class="cls_003"><span class="cls_003">separated variable lists.  The variables can be scalars, named vectors, or variables in</span></div>
+<div style="position:absolute;left:72.00px;top:100.38px" class="cls_003"><span class="cls_003">concatenation fields.  Instantiation statements in higher-level designs provide connections to the</span></div>
+<div style="position:absolute;left:72.00px;top:114.60px" class="cls_003"><span class="cls_003">module through variables that match the input and output lists.  The designer of the submodule</span></div>
+<div style="position:absolute;left:72.00px;top:129.00px" class="cls_003"><span class="cls_003">controls the number and size of the ports and these are often arbitrary decisions.  For example, a</span></div>
+<div style="position:absolute;left:72.00px;top:143.16px" class="cls_003"><span class="cls_003">full-adder has two output signals.  The designer can treat these as two scalar values or a single 2-</span></div>
+<div style="position:absolute;left:72.00px;top:157.38px" class="cls_003"><span class="cls_003">bit vector.  The three module headers below shows acceptable options.  The first treats the</span></div>
+<div style="position:absolute;left:72.00px;top:171.60px" class="cls_003"><span class="cls_003">outputs as scalar values, the second two as a single 2-bit vector:</span></div>
+<div style="position:absolute;left:72.00px;top:185.76px" class="cls_003"><span class="cls_003">FullAdder(a, b, ci : co, s);</span></div>
+<div style="position:absolute;left:72.00px;top:199.98px" class="cls_003"><span class="cls_003">FullAdder(a, b, ci : s[1..0]);</span></div>
+<div style="position:absolute;left:72.00px;top:214.20px" class="cls_003"><span class="cls_003">FullAdder(a, b, ci : {co s});</span></div>
+<div style="position:absolute;left:72.00px;top:242.58px" class="cls_003"><span class="cls_003">Subdesigns can be placed in folders that serve as libraries of standard designs.  A </span><span class="cls_004">library</span></div>
+<div style="position:absolute;left:72.00px;top:256.80px" class="cls_003"><span class="cls_003">statement exists that can be placed in a subdesigns that use other subdesigns to direct the</span></div>
+<div style="position:absolute;left:72.00px;top:271.20px" class="cls_003"><span class="cls_003">simulator to those files.  The simulator always looks in the folder containing the top-level design</span></div>
+<div style="position:absolute;left:72.00px;top:285.36px" class="cls_003"><span class="cls_003">first then in folders specified in library statements in the order that they occur.  Library</span></div>
+<div style="position:absolute;left:72.00px;top:299.58px" class="cls_003"><span class="cls_003">statements have the following syntax:</span></div>
+<div style="position:absolute;left:72.00px;top:313.80px" class="cls_003"><span class="cls_003">#library folder_name;</span></div>
+<div style="position:absolute;left:72.00px;top:327.96px" class="cls_003"><span class="cls_003">The folder name can be relative to the current directory or a fully-qualified name.</span></div>
+<div style="position:absolute;left:72.00px;top:356.58px" class="cls_002"><span class="cls_002">Addition and Subtraction operators:</span></div>
+<div style="position:absolute;left:72.00px;top:370.56px" class="cls_003"><span class="cls_003">Because advanced digital systems often make use of counters or other circuits involving addition</span></div>
+<div style="position:absolute;left:72.00px;top:384.78px" class="cls_003"><span class="cls_003">or subtraction, those operators have been provided in VisiBoole.  The beginning student should</span></div>
+<div style="position:absolute;left:72.00px;top:399.00px" class="cls_003"><span class="cls_003">design their own addition and subtraction circuits, then as they advance move on to using these</span></div>
+<div style="position:absolute;left:72.00px;top:413.16px" class="cls_003"><span class="cls_003">operators.  Professional HDL provide these operators which when compiled for a reconfigurable</span></div>
+<div style="position:absolute;left:72.00px;top:427.38px" class="cls_003"><span class="cls_003">logic chip (FPGA) use its built-in adders.  When compiled for an ASIC it will use optimized</span></div>
+<div style="position:absolute;left:72.00px;top:441.60px" class="cls_003"><span class="cls_003">adder/subtractor designs from a built-in library.  VisiBoole restricts the use of addition (+) and</span></div>
+<div style="position:absolute;left:72.00px;top:456.00px" class="cls_003"><span class="cls_003">subtraction (-) operations to assignment statements involving only those two operations.  In other</span></div>
+<div style="position:absolute;left:72.00px;top:470.16px" class="cls_003"><span class="cls_003">words, you cannot place them inside of parentheses and combine their results with Boolean</span></div>
+<div style="position:absolute;left:72.00px;top:484.38px" class="cls_003"><span class="cls_003">operators.  You can, however, accomplish the same results by assigning them into intermediate</span></div>
+<div style="position:absolute;left:72.00px;top:498.60px" class="cls_003"><span class="cls_003">variables (signals) and using those names in Boolean expressions.</span></div>
+<div style="position:absolute;left:72.00px;top:527.16px" class="cls_002"><span class="cls_002">Constants:</span></div>
+<div style="position:absolute;left:72.00px;top:541.20px" class="cls_003"><span class="cls_003">VisiBoole also provides for constants (often called literals in HDLs).  They have the same</span></div>
+<div style="position:absolute;left:72.00px;top:555.36px" class="cls_003"><span class="cls_003">format as Verilog literals except that negative values are not supported.  Negative values can be</span></div>
+<div style="position:absolute;left:72.00px;top:569.58px" class="cls_003"><span class="cls_003">created via a subtraction operation.  The radixes supported are decimal, binary, and</span></div>
+<div style="position:absolute;left:72.00px;top:583.80px" class="cls_003"><span class="cls_003">hexadecimal, with decimal the default.  Constants can appear any place a scalar or vector value</span></div>
+<div style="position:absolute;left:72.00px;top:597.96px" class="cls_003"><span class="cls_003">can appear in either Boolean or arithmetic expressions.  A size specification is optional unless</span></div>
+<div style="position:absolute;left:72.00px;top:612.18px" class="cls_003"><span class="cls_003">inside a concatenation field.  Where a size is not specified the VisiBoole simulator will match</span></div>
+<div style="position:absolute;left:72.00px;top:626.40px" class="cls_003"><span class="cls_003">other variables in the expression.  A simple example involving both subtraction and constants is</span></div>
+<div style="position:absolute;left:72.00px;top:640.56px" class="cls_003"><span class="cls_003">the following statement that creates a four-bit counter that counts down by 3 -- producing the</span></div>
+<div style="position:absolute;left:72.00px;top:654.78px" class="cls_003"><span class="cls_003">sequence: 0, 13, 10, 7, 4, 1, 14, 11, 8, 5, 2, 15, 12, 9, 6, 3, 0...</span></div>
+<div style="position:absolute;left:72.00px;top:669.00px" class="cls_003"><span class="cls_003">c[3..0] &lt;= c[] - 3;</span></div>
+<div style="position:absolute;left:72.00px;top:683.40px" class="cls_003"><span class="cls_003">Note; the c[] is legal syntax as long as an index or indices for the variable has appeared</span></div>
+<div style="position:absolute;left:72.00px;top:697.56px" class="cls_003"><span class="cls_003">somewhere in the design.  For empty brackets, the range used is from the largest to smallest</span></div>
+<div style="position:absolute;left:72.00px;top:711.78px" class="cls_003"><span class="cls_003">value that appears elsewhere.</span></div>
+<div style="position:absolute;left:303.00px;top:741.00px" class="cls_003"><span class="cls_003">5</span></div>
+</div>
+<div style="position:absolute;left:50%;margin-left:-306px;top:4010px;width:612px;height:792px;border-style:outset;overflow:hidden">
+<div style="position:absolute;left:0px;top:0px">
+<img src="IntroductionFiles/background6.jpg" width=612 height=792></div>
+<div style="position:absolute;left:72.00px;top:57.96px" class="cls_002"><span class="cls_002">Comparison operator:</span></div>
+<div style="position:absolute;left:72.00px;top:72.18px" class="cls_003"><span class="cls_003">A single comparison operator, the </span><span class="cls_002">equal-to </span><span class="cls_003">(==) is provided to allow a more compact expression</span></div>
+<div style="position:absolute;left:72.00px;top:86.40px" class="cls_003"><span class="cls_003">than writing its equivalent expression using logical operations.  The two items being compared</span></div>
+<div style="position:absolute;left:72.00px;top:100.56px" class="cls_003"><span class="cls_003">are normally vectors and the comparison must be enclosed in parentheses.  This provides an easy</span></div>
+<div style="position:absolute;left:72.00px;top:114.78px" class="cls_003"><span class="cls_003">way for the simulator to display the result of the comparison by coloring the enclosing</span></div>
+<div style="position:absolute;left:72.00px;top:129.18px" class="cls_003"><span class="cls_003">parentheses.  A </span><span class="cls_002">not-equal-to </span><span class="cls_003">operation can be generated by placing a tilde (~) in front of the</span></div>
+<div style="position:absolute;left:72.00px;top:143.40px" class="cls_003"><span class="cls_003">parentheses enclosing the equal to expression.  The four operations testing whether one operand</span></div>
+<div style="position:absolute;left:72.00px;top:157.56px" class="cls_003"><span class="cls_003">has a larger value than the other are not supported, but can be generated using the subtraction</span></div>
+<div style="position:absolute;left:72.00px;top:171.78px" class="cls_003"><span class="cls_003">operation.  As the equal-to operator produces a binary result (true or false) it can be used with</span></div>
+<div style="position:absolute;left:72.00px;top:186.00px" class="cls_003"><span class="cls_003">the other logic operators in any Boolean expression in assignment statements.  A complicated</span></div>
+<div style="position:absolute;left:72.00px;top:200.40px" class="cls_003"><span class="cls_003">example, which is not intended to have a useful purpose, but simply to demonstrate the Boolean</span></div>
+<div style="position:absolute;left:72.00px;top:214.56px" class="cls_003"><span class="cls_003">nature of the results of comparisons is:</span></div>
+<div style="position:absolute;left:72.00px;top:228.78px" class="cls_003"><span class="cls_003">b[7..0] = ~s d[7..0] | s (a[3..0] == 5) e[7..0] | s ~(f[2..0] == g[2..0]) h[7..0];</span></div>
+<div style="position:absolute;left:72.00px;top:257.40px" class="cls_002"><span class="cls_002">VisiBoole statements:</span></div>
+<div style="position:absolute;left:72.00px;top:271.38px" class="cls_003"><span class="cls_003">The VisiBoole HDL consists of six statement types:</span></div>
+<div style="position:absolute;left:90.00px;top:285.60px" class="cls_003"><span class="cls_003">1.</span></div>
+<div style="position:absolute;left:108.00px;top:285.60px" class="cls_003"><span class="cls_003">Boolean assignment statement that has one of three forms:</span></div>
+<div style="position:absolute;left:108.00px;top:299.76px" class="cls_003"><span class="cls_003">a.  var = Boolean expression</span></div>
+<div style="position:absolute;left:314.94px;top:299.76px" class="cls_003"><span class="cls_003">(combinational assignment)</span></div>
+<div style="position:absolute;left:108.00px;top:313.98px" class="cls_003"><span class="cls_003">b.  var &lt;= Boolean expression</span></div>
+<div style="position:absolute;left:314.94px;top:313.98px" class="cls_003"><span class="cls_003">(sequential assignment using a master clock)</span></div>
+<div style="position:absolute;left:108.00px;top:328.20px" class="cls_003"><span class="cls_003">c.  var &lt;=@clk Boolean expression</span></div>
+<div style="position:absolute;left:288.00px;top:328.20px" class="cls_003"><span class="cls_003">(sequential assignment using an alternate clk)</span></div>
+<div style="position:absolute;left:108.00px;top:342.36px" class="cls_003"><span class="cls_003">Where var stands for any Boolean variable name and Boolean expression is any Boolean</span></div>
+<div style="position:absolute;left:108.00px;top:356.58px" class="cls_003"><span class="cls_003">equation involving Boolean variables and the operators and (implied), or (|), complement</span></div>
+<div style="position:absolute;left:108.00px;top:370.80px" class="cls_003"><span class="cls_003">(~), parentheses, exclusive-or (^ which must be enclosed in parentheses), and equal-to</span></div>
+<div style="position:absolute;left:108.00px;top:385.20px" class="cls_003"><span class="cls_003">(== which also must be enclosed in parentheses).  The order of precedence in these</span></div>
+<div style="position:absolute;left:108.00px;top:399.36px" class="cls_003"><span class="cls_003">expressions is parentheses, complement, and, then or.  The var in (a) is referred to as a</span></div>
+<div style="position:absolute;left:108.00px;top:413.58px" class="cls_003"><span class="cls_003">dependent variable. The vars in (b) and (c) are referred to as state variables.  The clk in</span></div>
+<div style="position:absolute;left:108.00px;top:427.80px" class="cls_003"><span class="cls_003">(c) is the name of a variable to serve as the positive edge triggered clock for the state</span></div>
+<div style="position:absolute;left:108.00px;top:441.96px" class="cls_003"><span class="cls_003">variable in that piece of the design.</span></div>
+<div style="position:absolute;left:90.00px;top:456.18px" class="cls_003"><span class="cls_003">2.</span></div>
+<div style="position:absolute;left:108.00px;top:456.18px" class="cls_003"><span class="cls_003">Display statement - a list of variables and formatted fields.</span></div>
+<div style="position:absolute;left:90.00px;top:470.40px" class="cls_003"><span class="cls_003">3.</span></div>
+<div style="position:absolute;left:108.00px;top:470.40px" class="cls_003"><span class="cls_003">Instantiation statement.</span></div>
+<div style="position:absolute;left:90.00px;top:484.56px" class="cls_003"><span class="cls_003">4.</span></div>
+<div style="position:absolute;left:108.00px;top:484.56px" class="cls_003"><span class="cls_003">Arithmetic assignment statement.  Same options as in the Boolean assignment statement</span></div>
+<div style="position:absolute;left:108.00px;top:498.78px" class="cls_003"><span class="cls_003">except that the right hand side of the assignment consists only of addition and subtraction</span></div>
+<div style="position:absolute;left:108.00px;top:513.00px" class="cls_003"><span class="cls_003">operations operating on vectors.  It allows designs to access adder and subtraction</span></div>
+<div style="position:absolute;left:108.00px;top:527.40px" class="cls_003"><span class="cls_003">circuits without providing detailed designs.  It is for advanced designs and allows a</span></div>
+<div style="position:absolute;left:108.00px;top:541.56px" class="cls_003"><span class="cls_003">concise notation for these operations which are provided in all mainstream HDLs.</span></div>
+<div style="position:absolute;left:90.00px;top:555.78px" class="cls_003"><span class="cls_003">5.</span></div>
+<div style="position:absolute;left:108.00px;top:555.78px" class="cls_003"><span class="cls_003">A module header that gives the module name and the input and output port names for the</span></div>
+<div style="position:absolute;left:108.00px;top:570.00px" class="cls_003"><span class="cls_003">design that follows.  This allows its use as a submodule in a larger design via an</span></div>
+<div style="position:absolute;left:108.00px;top:584.16px" class="cls_003"><span class="cls_003">instantiation statement.</span></div>
+<div style="position:absolute;left:90.00px;top:598.38px" class="cls_003"><span class="cls_003">6.</span></div>
+<div style="position:absolute;left:108.00px;top:598.38px" class="cls_003"><span class="cls_003">A library statement to specify a directory to look for modules instantiated in the design.</span></div>
+<div style="position:absolute;left:303.00px;top:741.00px" class="cls_003"><span class="cls_003">6</span></div>
+</div>
+
+</body>
+</html>

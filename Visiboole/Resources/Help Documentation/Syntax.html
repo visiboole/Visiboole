@@ -23,7 +23,7 @@
           <li><a href="#Concatenations">Concatenations</a></li>
           <li><a href="#Operators">Operators</a></li>
           <li><a href="#Comments">Comment Statements</a></li>
-          <li><a href="#VariableDisplays">Variable Display Statements</a></li>
+          <li><a href="#Displays">Display Statements</a></li>
           <li><a href="#Assignments">Assignment Statements</a></li>
           <li><a href="#Headers">Header Statements</a></li>
           <li><a href="#Instantiations">Instantiation Statements</a></li>
@@ -44,7 +44,8 @@
 
       <h2 id="Variables">Variables</h2>
         <p style="margin-left: 40px; line-height: 1.6">
-        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates.<br>
+        <b>Description:</b> Variables are used to name the existance of a network of virtual wires and gates. Variables can either be independent or dependent.
+        Independent variables are variables that don't depend on any variable for its value. Dependent variables are variables that depend on another variable for its value.<br>
         <b>Valid Syntaxes:</b><br>
         &emsp;<span class=r>@Namespace</span><span class=o>@Bit</span><br>
         &emsp;&emsp;<span class=r>@Namespace</span> represents any combination of alphanumeric characters <b>that doesn't end in a number.</b> This identifies the variable.<br>
@@ -211,9 +212,9 @@
 
         <br><br><a href="#top">Return to Top</a></p>
       
-      <h2 id="VariableDisplays">Variable Display Statements</h2>
+      <h2 id="Displays">Display Statements</h2>
         <p style="margin-left: 40px; line-height: 1.6">
-        <b>Description:</b> Variable Display Statements are used to toggle independent variable values or display variable values in new formats.<br>
+        <b>Description:</b> Display Statements are used to toggle independent variable values or display variable values in new formats.<br>
         <b>Syntax:</b><br>
         &emsp;<span class=r>@List</span><b>;</b><br>
         &emsp;&emsp;<span class=r>@List</span> represents a list of variables, constants or formatted fields seperated by spaces.<br>
@@ -239,7 +240,8 @@
         &emsp;a = b;<br>
         &emsp;a[3..0] = ~(b[3..0] | c[3..0]);<br>
         &emsp;{a3 a2 a1 a0} = b[3..0] c[3..0] | d[3..0] e[3..0];<br>
-        &emsp;a[] &lt;= a[] + 1;
+        &emsp;a[] &lt;= a[] + 1;<br>
+        <b>Note: &lt;= represents a sequential assignment that will assign the value of the right side to the left side on a clock tick.</b>
 
         <br><br><a href="#top">Return to Top</a></p>
 
@@ -255,7 +257,7 @@
         &emsp;&emsp;&emsp;test(a[3..0], b[3..0] : c[3..0], d[3..0]);<br>
         &emsp;&emsp;&emsp;design2({a3 a2 a1 a0} : b[3..0]);<br>
         &emsp;&emsp;<b>Note: Variables on the left side of</b> the <b>':' are input variables</b> of the design <b>and must be independent variables.</b>
-        <b>Variables on the right side of</b> the <b>':' are output variables</b> of the design.
+        <b>Variables on the right side of</b> the <b>':' are output variables</b> of the design. <b>All vectors in the header, must have explicit dimensions.</b>
 
         <br><br><a href="#top">Return to Top</a></p>
 

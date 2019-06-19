@@ -147,17 +147,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Views\SyntaxWindow.cs">
+    <Compile Include="Views\DocumentWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Views\SyntaxWindow.Designer.cs">
-      <DependentUpon>SyntaxWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Views\TutorialWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Views\TutorialWindow.Designer.cs">
-      <DependentUpon>TutorialWindow.cs</DependentUpon>
+    <Compile Include="Views\DocumentWindow.Designer.cs">
+      <DependentUpon>DocumentWindow.cs</DependentUpon>
     </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -185,11 +179,8 @@
     <EmbeddedResource Include="Views\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Views\SyntaxWindow.resx">
-      <DependentUpon>SyntaxWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Views\TutorialWindow.resx">
-      <DependentUpon>TutorialWindow.cs</DependentUpon>
+    <EmbeddedResource Include="Views\DocumentWindow.resx">
+      <DependentUpon>DocumentWindow.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -220,7 +211,58 @@
     <Content Include="Resources\Help Documentation\Help.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Resources\Help Documentation\Overview.txt">
+    <Content Include="Resources\Help Documentation\HelpFiles\image1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image10.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image11.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image5.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image6.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image7.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image8.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\HelpFiles\image9.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\Introduction.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\IntroductionFiles\background1.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\IntroductionFiles\background2.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\IntroductionFiles\background3.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\IntroductionFiles\background4.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\IntroductionFiles\background5.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Help Documentation\IntroductionFiles\background6.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Help Documentation\Syntax.html">

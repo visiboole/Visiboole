@@ -633,7 +633,8 @@ namespace VisiBoole.Views
         /// <param name="e"></param>
         private void SyntaxDocumentationMenuClick(object sender, EventArgs e)
         {
-            new SyntaxWindow().Show();
+            new DocumentWindow("Syntax").Show();
+            //new SyntaxWindow().Show();
         }
 
         /// <summary>
@@ -799,7 +800,8 @@ namespace VisiBoole.Views
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new TutorialWindow().Show();
+            new DocumentWindow("User").Show();
+            //new TutorialWindow().Show();
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -807,8 +809,6 @@ namespace VisiBoole.Views
             HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
             about.Show();
         }
-
-
 
         private void toggleSimulatorSemicolonsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -818,11 +818,13 @@ namespace VisiBoole.Views
                 MainWindowController.RefreshOutput();
             }
         }
-
-        private void aboutToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void overviewToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            new DocumentWindow("Introduction").Show();
+            /*
             HelpWindow about = new HelpWindow("Overview", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "Overview.txt")));
             about.Show();
+            */
         }
     }
 }

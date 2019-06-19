@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace VisiBoole.Views
 {
-    partial class SyntaxWindow
+    partial class DocumentWindow
     {
         /// <summary>
         /// Required designer variable.
@@ -32,36 +32,38 @@ namespace VisiBoole.Views
         /// </summary>
         private void InitializeComponent()
         {
-            this.syntaxBrowser = new System.Windows.Forms.WebBrowser();
+            this.Browser = new System.Windows.Forms.WebBrowser();
             this.SuspendLayout();
             // 
-            // syntaxBrowser
+            // Browser
             // 
-            this.syntaxBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.syntaxBrowser.Location = new System.Drawing.Point(0, 0);
-            this.syntaxBrowser.Margin = new System.Windows.Forms.Padding(10);
-            this.syntaxBrowser.MinimumSize = new System.Drawing.Size(20, 20);
-            this.syntaxBrowser.Name = "syntaxBrowser";
-            this.syntaxBrowser.Size = new System.Drawing.Size(588, 373);
-            this.syntaxBrowser.TabIndex = 0;
-            this.syntaxBrowser.Url = new System.Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Help Documentation", "Syntax.html"), System.UriKind.Absolute);
+            this.Browser.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Browser.Location = new System.Drawing.Point(0, 0);
+            this.Browser.Margin = new System.Windows.Forms.Padding(13, 12, 13, 12);
+            this.Browser.MinimumSize = new System.Drawing.Size(27, 25);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(784, 459);
+            this.Browser.TabIndex = 0;
+            this.Browser.Url = new System.Uri("C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Common7\\IDE\\Resourc" +
+        "es\\Help Documentation\\Syntax.html", System.UriKind.Absolute);
             // 
-            // SyntaxWindow
+            // DocumentWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(66)))), ((int)(((byte)(66)))), ((int)(((byte)(66)))));
-            this.ClientSize = new System.Drawing.Size(588, 373);
-            this.Controls.Add(this.syntaxBrowser);
-            this.Name = "SyntaxWindow";
+            this.ClientSize = new System.Drawing.Size(784, 459);
+            this.Controls.Add(this.Browser);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Name = "DocumentWindow";
             this.ShowIcon = false;
-            this.Text = "Syntax";
+            this.Text = "Document";
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.WebBrowser syntaxBrowser;
+        private System.Windows.Forms.WebBrowser Browser;
     }
 }

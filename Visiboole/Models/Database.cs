@@ -251,10 +251,12 @@ namespace VisiBoole.ParsingEngine
         {
             foreach (string output in Outputs)
             {
-                var depVar = TryGetVariable<DependentVariable>(output) as DependentVariable;
-                if (depVar == null)
+                if (TryGetVariable<DependentVariable>(output) as DependentVariable == null)
                 {
-                    return output;
+                    if (TryGetVariable<DependentVariable>($"{output}.d") as DependentVariable == null)
+                    {
+                        return output;
+                    }
                 }
             }
 

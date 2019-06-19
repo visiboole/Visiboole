@@ -500,6 +500,14 @@ namespace VisiBoole.ParsingEngine
 
             Match moduleMatch = Regex.Match(Design.HeaderLine, ModulePattern);
 
+            // Parse statements
+            Statements = ParseStatements();
+            if (Statements == null)
+            {
+                ErrorListBox.Display(new List<string>(new string[] { $"Error parsing design '{Design.FileName}'. Please check/run that design file independently for errors." }));
+                return null;
+            }
+
             // Set input values
             int inputValuesIndex = 0;
             foreach (string inputList in CommaSeperatingRegex.Split(moduleMatch.Groups["Inputs"].Value))
@@ -508,17 +516,10 @@ namespace VisiBoole.ParsingEngine
                 {
                     foreach (string inputVar in GetExpansion(AnyTypeRegex.Match(input)))
                     {
-                        Design.Database.AddVariable(new IndependentVariable(inputVar, inputValues[inputValuesIndex++]));
+                        Design.Database.SetValue(inputVar, inputValues[inputValuesIndex++]);
+                        //Design.Database.AddVariable(new IndependentVariable(inputVar, ));
                     }
                 }
-            }
-
-            // Parse statements
-            Statements = ParseStatements();
-            if (Statements == null)
-            {
-                ErrorListBox.Display(new List<string>(new string[] { $"Error parsing design '{Design.FileName}'. Please check/run that design file independently for errors." }));
-                return null;
             }
 
             Design.Database.EvaluateExpressions();
@@ -820,7 +821,7 @@ namespace VisiBoole.ParsingEngine
                 if (canExpand)
                 {
                     // Get expanded text of source
-                    expandedText = ExpandSource(source.Text);
+                    expandedText = ExpandSource(source);
                 }
                 // If source can't expand
                 else
@@ -1101,6 +1102,12 @@ namespace VisiBoole.ParsingEngine
 
             foreach (string inputVar in declarationInputVars)
             {
+                if (inputVar.Contains("[]"))
+                {
+                    ErrorLog.Add(CurrentLineNumber, $"Error parsing design '{designName}'. Please check/run that design file independently for errors.");
+                    return false;
+                }
+
                 if (instantiationVars[i++].Count != GetExpansion(AnyTypeRegex.Match(inputVar)).Count)
                 {
                     ErrorLog.Add(CurrentLineNumber, $"Instantiation doesn't have the same number of input variables as the matching module declaration.");
@@ -1403,10 +1410,12 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Expands the provided source.
         /// </summary>
-        /// <param name="source">Source to expand</param>
+        /// <param name="sourceCode">Source to expand</param>
         /// <returns>Expanded source</returns>
-        private string ExpandSource(string source)
+        private string ExpandSource(SourceCode sourceCode)
         {
+            // Get source text
+            string source = sourceCode.Text;
             // Get line count inside source
             int lineCount = source.Count(c => c == '\n');
             // Get whether the source needs to be expanded
@@ -1416,7 +1425,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (source.Contains("+") || source.Contains("-"))
                 {
-                    source = ExpandHorizontally(source);
+                    source = ExpandHorizontally(source, sourceCode.Type);
                 }
                 else
                 {
@@ -1426,7 +1435,7 @@ namespace VisiBoole.ParsingEngine
                         for (int i = equalToOperations.Count - 1; i >= 0; i--)
                         {
                             var equalToOperation = equalToOperations[i];
-                            source = string.Concat(source.Substring(0, equalToOperation.Index), ExpandHorizontally(equalToOperation.Value), source.Substring(equalToOperation.Index + equalToOperation.Length));
+                            source = string.Concat(source.Substring(0, equalToOperation.Index), ExpandHorizontally(equalToOperation.Value, sourceCode.Type), source.Substring(equalToOperation.Index + equalToOperation.Length));
                         }
                     }
 
@@ -1442,7 +1451,7 @@ namespace VisiBoole.ParsingEngine
                 // Horizontal expansion needed
                 if (!source.Contains(':'))
                 {
-                    source = ExpandHorizontally(source);
+                    source = ExpandHorizontally(source, sourceCode.Type);
                 }
                 else
                 {
@@ -1450,37 +1459,16 @@ namespace VisiBoole.ParsingEngine
                     string frontText = source.Substring(0, source.IndexOf("(") + 1);
                     // Get text that needs to be expanded
                     string restOfText = source.Substring(frontText.Length);
-                    // Combine front text with the expanded form of the rest of the text
-                    source = $"{frontText}{ExpandHorizontally(restOfText)}";
-                }
-            }
 
-            /*
-            // If source needs to be expanded, is an expression statement and is not a mathematical expression
-            if (needsExpansion && source.Contains("=") && !source.Contains("+") && !source.Contains("-") && !source.Contains("=="))
-            {
-                // Vertical expansion needed
-                source = ExpandVertically(source);
-            }
-            // If source needs to be expanded
-            else if (needsExpansion)
-            {
-                // Horizontal expansion needed
-                if (!source.Contains(':'))
-                {
-                    source = ExpandHorizontally(source);
-                }
-                else
-                {
-                    // Get text that shouldn't be expanded
-                    string frontText = source.Substring(0, source.IndexOf("(") + 1);
-                    // Get text that needs to be expanded
-                    string restOfText = source.Substring(frontText.Length);
+                    string backText = ExpandHorizontally(restOfText, sourceCode.Type);
+                    if (backText == null)
+                    {
+                        return backText;
+                    }
                     // Combine front text with the expanded form of the rest of the text
-                    source = $"{frontText}{ExpandHorizontally(restOfText)}";
+                    source = $"{frontText}{backText}";
                 }
             }
-            */
 
             // Increment line number by the line count
             CurrentLineNumber += lineCount;
@@ -1492,7 +1480,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="line">Line to expand</param>
         /// <returns>Expanded line</returns>
-        private string ExpandHorizontally(string line)
+        private string ExpandHorizontally(string line, StatementType type)
         {
             string expandedLine = line;
             int maxExpansionCount = 1;
@@ -1500,6 +1488,12 @@ namespace VisiBoole.ParsingEngine
 
             while ((match = VectorRegex2.Match(expandedLine)).Success)
             {
+                if (match.Value.Contains("[]") && type == StatementType.Header)
+                {
+                    ErrorLog.Add(GetLineNumber(expandedLine, match.Index), $"Vector '{match.Value}' must have explicit dimensions in header statements.");
+                    return null;
+                }
+
                 List<string> expansion = GetExpansion(match);
                 if (expansion == null)
                 {
@@ -1628,7 +1622,6 @@ namespace VisiBoole.ParsingEngine
                 // If expansion fails
                 if (dependentExpansion == null)
                 {
-                    ErrorLog.Add(GetLineNumber(line, dependentMatch.Index), $"'{dependentMatch.Groups["Name"].Value}[]' notation can't be used without an explicit dimension somewhere.");
                     return null;
                 }
             }

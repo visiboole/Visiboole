@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,34 +31,26 @@ using System.Windows.Forms;
 
 namespace VisiBoole.Views
 {
-    /// <summary>
-    /// Help window for the program
-    /// </summary>
-    public partial class HelpWindow : Form
+    public partial class DocumentWindow : Form
     {
-        /// <summary>
-        /// Constructs a help window with the given name and text
-        /// </summary>
-        /// <param name="name">Name of help window</param>
-        /// <param name="text">Text of help window</param>
-        public HelpWindow(string name, string text)
+        public DocumentWindow(string name)
         {
             InitializeComponent();
 
-            Text = name;
-            textBox.Text = text;
-            textBox.Text.PadLeft(textBox.Text.Length + 8);
-            textBox.WordWrap = true;
-            textBox.TextAlign = HorizontalAlignment.Center;
-
-            if (Properties.Settings.Default.Theme.Equals("Light"))
+            if (name == "Syntax")
             {
-                textBox.BackColor = System.Drawing.Color.White;
-                this.BackColor = System.Drawing.Color.LightGray;
+                Browser.Url = new System.Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Help Documentation", "Syntax.html"), System.UriKind.Absolute);
+                Text = "Syntax Guide";
             }
-            else
+            else if (name == "User")
             {
-                this.textBox.ForeColor = System.Drawing.Color.White;
+                Browser.Url = new System.Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Help Documentation", "Help.html"), System.UriKind.Absolute);
+                Text = "User Guide";
+            }
+            else if (name == "Introduction")
+            {
+                Browser.Url = new System.Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Help Documentation", "Introduction.html"), System.UriKind.Absolute);
+                Text = "VisiBoole Introduction";
             }
         }
     }
