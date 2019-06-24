@@ -148,7 +148,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="name">Namespace of the variable</param>
         /// <returns>List of components that belong to the namespace</returns>
-        public List<string> GetVectorComponents(string name)
+        public IEnumerable<string> GetVectorComponents(string name)
         {
             // If the vector namespace exists
             if (VectorNamespaces.ContainsKey(name))
@@ -321,7 +321,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="token">String of variables</param>
         /// <returns>An array of variables</returns>
-        public string[] GetVariables(string token)
+        public IEnumerable<string> GetVariables(string token)
         {
             if (!token.Contains("{"))
             {
@@ -442,13 +442,14 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="variables">Variables to set</param>
         /// <param name="binary">Values to set</param>
-        public void SetValues(IList<string> variables, string binary)
+        public void SetValues(IEnumerable<string> variables, string binary)
         {
-            for (int i = 0; i < binary.Length; i++)
+            int i = -1;
+            foreach (var variable in variables)
             {
-                if (GetValue(variables[i]) != char.GetNumericValue(binary[i]))
+                if (GetValue(variable) != char.GetNumericValue(binary[++i]))
                 {
-                    SetValue(variables[i], binary[i] == '1');
+                    SetValue(variable, binary[i] == '1');
                 }
             }
         }

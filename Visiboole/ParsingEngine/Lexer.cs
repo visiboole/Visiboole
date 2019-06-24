@@ -1984,7 +1984,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="vector">Vector to expand</param>
         /// <returns>List of vector components</returns>
-        protected List<string> ExpandVector(Match vector)
+        protected IEnumerable<string> ExpandVector(Match vector)
         {
             // Create expansion return list
             List<string> expansion = new List<string>();
@@ -2043,7 +2043,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="constant">Constant to expand</param>
         /// <returns>List of constant bits</returns>
-        protected List<string> ExpandConstant(Match constant)
+        protected IEnumerable<string> ExpandConstant(Match constant)
         {
             // Create expansion return list
             List<string> expansion = new List<string>();

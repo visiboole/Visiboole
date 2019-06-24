@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -77,16 +78,16 @@ namespace VisiBoole.Models
                 Delay = null;
                 Delays = null;
                 Dependent = Expression.Substring(0, seperatorIndex).Trim();
-                Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent);
+                Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent).ToArray();
                 Expression = Expression.Substring(seperatorIndex + 1).Trim();
             }
             else
             {
                 int seperatorIndex = Expression.IndexOf('<');
                 Delay = Expression.Substring(0, seperatorIndex).Trim();
-                Delays = DesignController.ActiveDesign.Database.GetVariables(Delay);
+                Delays = DesignController.ActiveDesign.Database.GetVariables(Delay).ToArray();
                 Dependent = Delay + ".d";
-                Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent);
+                Dependents = DesignController.ActiveDesign.Database.GetVariables(Dependent).ToArray();
 
                 bool hasAltClock = false;
                 for (int i = seperatorIndex + 2; i < Expression.Length; i++)

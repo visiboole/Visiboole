@@ -1073,14 +1073,14 @@ namespace VisiBoole.ParsingEngine
             }
             string[] instantiationInputVars = CommaSeperatingRegex.Split(instantiationMatch.Groups["Inputs"].Value);
             string[] instantiationOutputVars = CommaSeperatingRegex.Split(instantiationMatch.Groups["Outputs"].Value);
-            List<List<string>> instantiationVars = new List<List<string>>();
+            List<string[]> instantiationVars = new List<string[]>();
             foreach (string var in instantiationInputVars)
             {
-                instantiationVars.Add(GetExpansion(AnyTypeRegex.Match(var)));
+                instantiationVars.Add(GetExpansion(AnyTypeRegex.Match(var)).ToArray());
             }
             foreach (string var in instantiationOutputVars)
             {
-                instantiationVars.Add(GetExpansion(AnyTypeRegex.Match(var)));
+                instantiationVars.Add(GetExpansion(AnyTypeRegex.Match(var)).ToArray());
             }
 
             string designName = instantiationMatch.Groups["Design"].Value;
@@ -1108,7 +1108,7 @@ namespace VisiBoole.ParsingEngine
                     return false;
                 }
 
-                if (instantiationVars[i++].Count != GetExpansion(AnyTypeRegex.Match(inputVar)).Count)
+                if (instantiationVars[i++].Length != GetExpansion(AnyTypeRegex.Match(inputVar)).Count())
                 {
                     ErrorLog.Add(CurrentLineNumber, $"Instantiation doesn't have the same number of input variables as the matching module declaration.");
                     return false;
@@ -1117,7 +1117,7 @@ namespace VisiBoole.ParsingEngine
 
             foreach (string outputVar in declarationOutputVars)
             {
-                if (instantiationVars[i++].Count != GetExpansion(AnyTypeRegex.Match(outputVar)).Count)
+                if (instantiationVars[i++].Length != GetExpansion(AnyTypeRegex.Match(outputVar)).Count())
                 {
                     ErrorLog.Add(CurrentLineNumber, $"Instantiation doesn't have the same number of output variables as the matching module declaration.");
                     return false;
@@ -1323,20 +1323,20 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="token">Token to expand</param>
         /// <returns>List of expansion components</returns>
-        protected List<string> ExpandToken(Match token)
+        protected IEnumerable<string> ExpandToken(Match token)
         {
             if (token.Value.Contains("[") && string.IsNullOrEmpty(token.Groups["LeftBound"].Value))
             {
-                List<string> components = Design.Database.GetVectorComponents(token.Groups["Name"].Value);
+                var components = Design.Database.GetVectorComponents(token.Groups["Name"].Value).ToArray();
                 if (components == null)
                 {
                     ErrorLog.Add(CurrentLineNumber, $"'{token.Value}' is missing an explicit dimension.");
                     return null;
                 }
 
-                if (token.Value.Contains("~") && !components[0].Contains("~"))
+                if (token.Value.Contains("~"))
                 {
-                    for (int i = 0; i < components.Count; i++)
+                    for (int i = 0; i < components.Length; i++)
                     {
                         components[i] = string.Concat("~", components[i]);
                     }
@@ -1347,7 +1347,7 @@ namespace VisiBoole.ParsingEngine
             {
                 if (ExpansionMemo.ContainsKey(token.Value))
                 {
-                    return ExpansionMemo[token.Value].ToList();
+                    return ExpansionMemo[token.Value];
                 }
                 else
                 {
@@ -1368,7 +1368,7 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="token">Token to expand</param>
         /// <returns>List of expansion components</returns>
-        protected List<string> GetExpansion(Match token)
+        protected IEnumerable<string> GetExpansion(Match token)
         {
             List<string> expansion = new List<string>();
 
@@ -1390,7 +1390,7 @@ namespace VisiBoole.ParsingEngine
 
                 if (match.Value.Contains("[") || match.Value.Contains("'") || match.Value.All(char.IsDigit))
                 {
-                    List<string> tokenExpansion = ExpandToken(match);
+                    var tokenExpansion = ExpandToken(match);
                     if (tokenExpansion == null)
                     {
                         return null;
@@ -1494,15 +1494,15 @@ namespace VisiBoole.ParsingEngine
                     return null;
                 }
 
-                List<string> expansion = GetExpansion(match);
+                var expansion = GetExpansion(match).ToArray();
                 if (expansion == null)
                 {
                     ErrorLog.Add(GetLineNumber(expandedLine, match.Index), $"'{match.Value}' is missing an explicit dimension somewhere.");
                     return null;
                 }
-                if (expansion.Count > maxExpansionCount)
+                if (expansion.Length > maxExpansionCount)
                 {
-                    maxExpansionCount = expansion.Count;
+                    maxExpansionCount = expansion.Length;
                 }
                 
                 // Replace matched vector with its components
@@ -1518,15 +1518,14 @@ namespace VisiBoole.ParsingEngine
                     {
                         match = constant;
 
-                        List<string> expansion = GetExpansion(match);
-                        if (expansion.Count > maxExpansionCount)
+                        var expansion = GetExpansion(match).ToArray();
+                        if (expansion.Length > maxExpansionCount)
                         {
-                            maxExpansionCount = expansion.Count;
+                            maxExpansionCount = expansion.Length;
                         }
 
                         // Replace matched constants with its components
                         expandedLine = expandedLine.Substring(0, match.Index) + string.Join(" ", expansion) + expandedLine.Substring(match.Index + match.Length);
-
                         break;
                     }
                 }
@@ -1536,15 +1535,15 @@ namespace VisiBoole.ParsingEngine
             {
                 while ((match = ConcatRegex.Match(expandedLine)).Success)
                 {
-                    List<string> expansion = GetExpansion(match);
+                    var expansion = GetExpansion(match).ToArray();
                     if (expansion == null)
                     {
                         ErrorLog.Add(GetLineNumber(expandedLine, match.Index), $"'{match.Value}' is missing an explicit dimension somewhere.");
                         return null;
                     }
-                    if (expansion.Count > maxExpansionCount)
+                    if (expansion.Length > maxExpansionCount)
                     {
-                        maxExpansionCount = expansion.Count;
+                        maxExpansionCount = expansion.Length;
                     }
 
                     // Replace matched concat with its components
@@ -1604,11 +1603,11 @@ namespace VisiBoole.ParsingEngine
             int expressionIndex = line.LastIndexOf(expression);
 
             // Expand dependent
-            List<string> dependentExpansion = new List<string>();
+            List<string> dependentExpansion;
             Match dependentMatch = AnyTypeRegex.Match(dependent);
             if (dependentMatch.Value.Contains("{"))
             {
-                dependentExpansion = GetExpansion(dependentMatch);
+                dependentExpansion = GetExpansion(dependentMatch).ToList();
                 // If expansion fails
                 if (dependentExpansion == null)
                 {
@@ -1618,7 +1617,7 @@ namespace VisiBoole.ParsingEngine
             }
             else if (dependentMatch.Value.Contains("["))
             {
-                dependentExpansion = ExpandToken(dependentMatch);
+                dependentExpansion = ExpandToken(dependentMatch).ToList();
                 // If expansion fails
                 if (dependentExpansion == null)
                 {
@@ -1627,7 +1626,7 @@ namespace VisiBoole.ParsingEngine
             }
             else
             {
-                dependentExpansion.Add(dependent);
+                dependentExpansion = new List<string>(new string[] { dependent });
             }
 
             // Expand expression
@@ -1643,12 +1642,12 @@ namespace VisiBoole.ParsingEngine
                     if (!match.Value.Contains("{"))
                     {
                         canAdjust = !match.Value.Contains("[") && string.IsNullOrEmpty(match.Groups["BitCount"].Value);
-                        expansion = ExpandToken(match);
+                        expansion = ExpandToken(match).ToList();
                     }
                     else
                     {
                         canAdjust = false;
-                        expansion = GetExpansion(match);
+                        expansion = GetExpansion(match).ToList();
                     }
 
                     // If expansion fails
@@ -1697,7 +1696,6 @@ namespace VisiBoole.ParsingEngine
             expansions.Add(dependentExpansion);
             expansions.AddRange(expressionExpansions);
 
-
             if (matches.Count == 1 && (matches[0].Value[0] == '\'' || char.IsDigit(matches[0].Value[0])))
             {
                 string newLine = line;
@@ -1705,14 +1703,28 @@ namespace VisiBoole.ParsingEngine
                 string beforeMatch = newLine.Substring(0, matches[0].Index + expressionIndex);
                 string afterMatch = newLine.Substring(expressionIndex + matches[0].Index + matches[0].Length);
                 string matchReplacement = string.Join(" ", expressionExpansions[0]);
-                newLine = string.Concat(beforeMatch, $"{{{matchReplacement}}}", afterMatch);
-
+                if (expressionExpansions[0].Count == 1)
+                {
+                    newLine = string.Concat(beforeMatch, matchReplacement, afterMatch);
+                }
+                else
+                {
+                    newLine = string.Concat(beforeMatch, $"{{{matchReplacement}}}", afterMatch);
+                }
+                
                 // Replace dependent with expansion
                 string beforeDependent = newLine.Substring(0, dependentMatch.Index);
                 string afterDependent = newLine.Substring(dependentMatch.Index + dependentMatch.Length);
                 string dependentReplacement = string.Join(" ", dependentExpansion);
-                newLine = string.Concat(beforeDependent, $"{{{dependentReplacement}}}", afterDependent);
-
+                if (dependentExpansion.Count == 1)
+                {
+                    newLine = string.Concat(beforeDependent, dependentReplacement, afterDependent);
+                }
+                else
+                {
+                    newLine = string.Concat(beforeDependent, $"{{{dependentReplacement}}}", afterDependent);
+                }
+                
                 expanded = newLine;
             }
             else
