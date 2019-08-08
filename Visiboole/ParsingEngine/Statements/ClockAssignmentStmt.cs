@@ -72,7 +72,7 @@ namespace VisiBoole.ParsingEngine.Statements
         /// <summary>
         /// Updates the next value for the clock statement.
         /// </summary>
-        public void Update()
+        public void Compute()
         {
             NextValue = Expression.DependentBinary;
         }
@@ -111,14 +111,13 @@ namespace VisiBoole.ParsingEngine.Statements
                 }
                 else if (token[0] == '<')
                 {
-                    // Output <= with dependent value
-                    if (!Expression.IsMathExpression)
+                    if (Expression.IsMathExpression)
                     {
-                        output.Add(new DependentVariable("<=", NextValue.Contains('1')));
+                        output.Add(new Operator(token));
                     }
                     else
                     {
-                        output.Add(new Operator(token));
+                        output.Add(new DependentVariable("<=", NextValue.Contains('1')));
                     }
                 }
                 else if (Parser.OperatorsList.Contains(token) || token == "{" || token == "}" || token == "@")

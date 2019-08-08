@@ -98,7 +98,7 @@ namespace VisiBoole.Controllers
             var designTabControl = new NewTabControl();
             designTabControl.Font = new Font("Segoe UI", 10.75F);
             designTabControl.SelectedTabColor = Color.DodgerBlue;
-            designTabControl.TabBoundaryColor = Color.Black;
+            designTabControl.TabBoundaryColor = SystemColors.ControlDarkDark;
             designTabControl.SelectedTabTextColor = Color.White;
             designTabControl.TabSwapped += (sender, e) => {
                 MainWindowController.SwapDesignNodes(e.SourceTabPageIndex, e.DestinationTabPageIndex);
@@ -107,7 +107,7 @@ namespace VisiBoole.Controllers
             var browserTabControl = new NewTabControl();
             browserTabControl.Font = new Font("Segoe UI", 10.75F);
             browserTabControl.SelectedTabColor = Color.DodgerBlue;
-            browserTabControl.TabBoundaryColor = Color.Black;
+            browserTabControl.TabBoundaryColor = SystemColors.ControlDarkDark;
             browserTabControl.SelectedTabTextColor = Color.White;
 
             // Create html builder
@@ -135,18 +135,33 @@ namespace VisiBoole.Controllers
             RunDisplay.DisplayTabChanged += (tabName) => {
                 if (tabName != null)
                 {
+                    if (DesignController.ActiveDesign.FileName != InstantiationClicks.Text)
+                    {
+                        // Select top level
+                        MainWindowController.SelectFile(InstantiationClicks.Text);
+                    }
+
                     // Select the tab associated with the tab
                     MainWindowController.SelectFile(tabName);
                 }
+            };
+            RunDisplay.DisplayTabClosing += (tabName) => {
+                CurrentDisplay.CloseTab(tabName);
             };
             RunDisplay.DisplayTabClosed += (tabName, tabCount) => {
                 // If the tab is an instantiation parser
                 if (tabName.Contains("."))
                 {
+                    if (DesignController.ActiveDesign.FileName != InstantiationClicks.Text)
+                    {
+                        // Select top level
+                        MainWindowController.SelectFile(InstantiationClicks.Text);
+                    }
+
                     // Close parser associated with the tab
-                    MainWindowController.CloseInstantiationParser(tabName);
+                    MainWindowController.CloseInstantiation(tabName);
+
                     var treeNodes = Collect(InstantiationClicks.Nodes).ToList();
-                    // For each 
                     foreach (TreeNode treeNode in treeNodes)
                     {
                         if (treeNode.Text == tabName)
@@ -163,17 +178,10 @@ namespace VisiBoole.Controllers
                 }
                 else
                 {
-                    if (tabCount > 0)
-                    {
-                        MainWindowController.SuspendRunDisplay();
-                    }
-
                     // Select the tab associated with the tab
                     MainWindowController.SelectFile(tabName);
-                }
+                    MainWindowController.SuspendRunDisplay();
 
-                if (tabCount == 0)
-                {
                     if (CurrentDisplay is DisplayRun)
                     {
                         MainWindowController.LoadDisplay(DisplayType.EDIT);
@@ -271,7 +279,7 @@ namespace VisiBoole.Controllers
         /// Displays the provided html in the current display.
         /// </summary>
         /// <param name="html">HTML to display</param>
-        private void DisplayHTML(string html)
+        private void DisplayHTML(string html, bool swap = true)
         {
             if (CurrentDisplay is DisplayEdit)
             {
@@ -281,7 +289,7 @@ namespace VisiBoole.Controllers
             }
 
             // Add html to the current display
-            CurrentDisplay.AddTabComponent(DesignController.ActiveDesign.FileName, html);
+            CurrentDisplay.AddTabComponent(DesignController.ActiveDesign.FileName, html, swap);
             // Save html for last output
             LastOutput = html;
         }
@@ -290,11 +298,10 @@ namespace VisiBoole.Controllers
         /// Displays the provided output to the Browser.
         /// </summary>
         /// <param name="output">Output of the parsed design</param>
-        /// <param name="position">Scroll position of the Browser</param>
-		public void DisplayOutput(List<IObjectCodeElement> output)
+		public void DisplayOutput(List<IObjectCodeElement> output, bool swap = true)
         {
             // Display the built html
-            DisplayHTML(HtmlBuilder.GetHTML(output));
+            DisplayHTML(HtmlBuilder.GetHTML(output), swap);
         }
 
         /// <summary>
@@ -313,10 +320,30 @@ namespace VisiBoole.Controllers
         {
             for (int i = 0; i < count; i++)
             {
-                DisplayOutput(MainWindowController.Tick());
+                DisplayOutput(MainWindowController.Tick(), false);
+
+                // If an instantiation is opened
+                if (InstantiationClicks.Nodes.Count > 0)
+                {
+                    // For each instantiation open
+                    foreach (TreeNode node in Collect(InstantiationClicks.Nodes))
+                    {
+                        MainWindowController.SelectFile(node.Parent.Name);
+                        // Run instantiation for new values
+                        Instantiation_Click(node.Text, false);
+                    }
+
+                    // Select top level
+                    MainWindowController.SelectFile(InstantiationClicks.Text);
+                }
             }
         }
 
+        /// <summary>
+        /// Returns all child nodes of the provided tree node.
+        /// </summary>
+        /// <param name="nodes">Node to collect the children from.</param>
+        /// <returns>All child nodes of the provided tree node.</returns>
         private IEnumerable<TreeNode> Collect(TreeNodeCollection nodes)
         {
             foreach (TreeNode node in nodes)
@@ -338,7 +365,6 @@ namespace VisiBoole.Controllers
             var currentCursor = Cursor.Current;
             Cursor.Current = Cursors.WaitCursor;
 
-            //var currentDesignName = DesignController.ActiveDesign.FileName;
             DisplayOutput(MainWindowController.Variable_Click(variableName, value));
             // If an instantiation is opened
             if (InstantiationClicks.Nodes.Count > 0)
@@ -350,6 +376,8 @@ namespace VisiBoole.Controllers
                     // Run instantiation for new values
                     Instantiation_Click(node.Text, false);
                 }
+
+                MainWindowController.SelectFile(InstantiationClicks.Text);
             }
 
             MainWindowController.RetrieveFocus();
@@ -365,11 +393,14 @@ namespace VisiBoole.Controllers
             var currentCursor = Cursor.Current;
             Cursor.Current = Cursors.WaitCursor;
 
+            string instantName = instantiation.Split('.').Last().TrimEnd('(');
+            string name = string.Concat(DesignController.ActiveDesign.FileName, '.', instantName);
             if (addNode)
             {
-                string name = instantiation.TrimEnd('(');
+                // If an instantiation is clicked in the top level design
                 if (DesignController.ActiveDesign.FileName == InstantiationClicks.Text)
                 {
+                    // If an instantiation is already opened and not the clicked instantiation
                     if (InstantiationClicks.Nodes.Count == 1 && InstantiationClicks.Nodes[0].Name != name)
                     {
                         CurrentDisplay.CloseTab(InstantiationClicks.Nodes[0].Name);
@@ -386,7 +417,7 @@ namespace VisiBoole.Controllers
                 {
                     foreach (TreeNode node in Collect(InstantiationClicks.Nodes))
                     {
-                        if (node.Text.Split('.')[0] == DesignController.ActiveDesign.FileName)
+                        if (node.Text == CurrentDisplay.GetSelectedTab())
                         {
                             if (node.Nodes.Count == 1)
                             {
@@ -402,15 +433,14 @@ namespace VisiBoole.Controllers
                 }
             }
 
-            string instantName = instantiation.Split('.').Last().TrimEnd('(');
-            var output = MainWindowController.RunSubdesign(instantName);
+            var output = MainWindowController.OpenInstantiation(name);
             if (output == null)
             {
                 return;
             }
 
             string html = HtmlBuilder.GetHTML(output, true);
-            CurrentDisplay.AddTabComponent(string.Concat(string.Concat(DesignController.ActiveDesign.FileName, '.', instantName)), html, addNode);
+            CurrentDisplay.AddTabComponent(name, html, addNode);
             if (addNode)
             {
                 LastOutput = html;

@@ -93,7 +93,7 @@ namespace VisiBoole.Controllers
         /// Displays the provided output to the browser.
         /// </summary>
         /// <param name="output">Output of the parsed design</param>
-        void DisplayOutput(List<IObjectCodeElement> output);
+        void DisplayOutput(List<IObjectCodeElement> output, bool swap = true);
 
         /// <summary>
         /// Handles the event that occurs when the browser needs to be refreshed.

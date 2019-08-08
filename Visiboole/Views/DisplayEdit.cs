@@ -111,6 +111,15 @@ namespace VisiBoole.Views
         }
 
         /// <summary>
+        /// Returns the name of the selected tab.
+        /// </summary>
+        /// <returns>Name of the selected tab.</returns>
+        public string GetSelectedTab()
+        {
+            return TabControl.SelectedTab.Text;
+        }
+
+        /// <summary>
         /// Selects the tab with the provided name if present.
         /// </summary>
         /// <param name="name">Name of tab to select</param>

@@ -50,6 +50,14 @@ namespace VisiBoole.Controllers
         private IDesignController DesignController;
 
         /// <summary>
+        /// Error message for unfound errors while parsing.
+        /// </summary>
+        private string UnfoundErrorMessage =
+            "An unforeseen error has occured while parsing this vbi file."
+            + " It is most likely a strange syntax error or stray special character in the file."
+            + " Please email a copy to jdevore@ksu.edu before trying to isolate the offending line.";
+
+        /// <summary>
         /// Constructs an instance of MainWindowController with handles to its view and the controllers
         /// </summary>
         /// <param name="mainWindow">Handle to the MainWindow which is the view for this controller</param>
@@ -93,13 +101,12 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Returns whether the specified design has a parser already opened.
+        /// Returns whether the active design has a state.
         /// </summary>
-        /// <param name="name">Name of the design.</param>
-        /// <returns>Whether the specified design has a parser already opened.</returns>
-        public bool DesignHasParser(string name)
+        /// <returns>Whether the active design has a state.</returns>
+        public bool ActiveDesignHasState()
         {
-            return DesignController.DesignHasParser(name);
+            return DesignController.ActiveDesignHasState();
         }
 
         /// <summary>
@@ -299,17 +306,16 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                List<IObjectCodeElement> output = DesignController.Parse();
+                var output = DesignController.Parse();
                 if (output == null)
                 {
                     return;
                 }
                 DisplayController.DisplayOutput(output);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                DialogBox.New("Error", exception.ToString(), DialogType.Ok);
-                // Leave this error message for debugging purposes
+                DialogBox.New("Error", UnfoundErrorMessage, DialogType.Ok);
             }
         }
 
@@ -320,28 +326,27 @@ namespace VisiBoole.Controllers
         {
             try
             {
-                List<IObjectCodeElement> output = DesignController.ParseWithInput(DesignController.GetActiveDesignState());
+                var output = DesignController.Parse(DesignController.GetActiveDesignState());
                 if (output == null)
                 {
                     return;
                 }
                 DisplayController.DisplayOutput(output);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                DialogBox.New("Error", exception.ToString(), DialogType.Ok);
-                // Leave this error message for debugging purposes
+                DialogBox.New("Error", UnfoundErrorMessage, DialogType.Ok);
             }
         }
 
         /// <summary>
-        /// Runs a subdesign from the provided instantiation.
+        /// Opens the provided instantiation.
         /// </summary>
-        /// <param name="instantiation">Instantiation to run</param>
+        /// <param name="instantiation">Instantiation to open</param>
         /// <returns>Output of the parsed instantiation</returns>
-        public List<IObjectCodeElement> RunSubdesign(string instantiation)
+        public List<IObjectCodeElement> OpenInstantiation(string instantiation)
         {
-            return DesignController.ParseSubdesign(instantiation);
+            return DesignController.OpenInstantiation(instantiation);
         }
 
         /// <summary>
@@ -373,7 +378,7 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Removes all parser tabs from the run display and closes all instantiation parsers in the parser dictionary.
+        /// Closes all parser tabs and instantiations.
         /// </summary>
         public void SuspendRunDisplay()
         {
@@ -381,12 +386,12 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
+        /// Closes a specific instantiation from the active design.
         /// </summary>
-        /// <param name="name">Name of parser to close.</param>
-        public void CloseInstantiationParser(string name)
+        /// <param name="name">Name of instantiation to close.</param>
+        public void CloseInstantiation(string name)
         {
-            DesignController.CloseInstantiationParser(name);
+            DesignController.CloseInstantiation(name);
         }
     }
 }

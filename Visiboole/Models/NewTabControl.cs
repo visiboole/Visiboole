@@ -96,7 +96,7 @@ namespace CustomTabControl
             AllowDrop = true;
             ShowToolTips = true;
             SizeMode = TabSizeMode.Fixed;
-            ItemSize = new Size(125, 25);
+            ItemSize = new Size(150, 25);
             DrawMode = TabDrawMode.OwnerDrawFixed;
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.DoubleBuffer, true);
 
@@ -116,6 +116,7 @@ namespace CustomTabControl
                 // Get tab info
                 int index = TabPages.IndexOf(tab);
                 Rectangle TabBoundary = GetTabRect(index);
+                TabBoundary.Inflate(1, 1);
 
                 // Draw tab
                 Color tabColor = index == SelectedIndex ? SelectedTabColor : TabColor;
@@ -124,15 +125,13 @@ namespace CustomTabControl
                 tabBrush.Dispose();
 
                 // Draw tab boundary
-                Pen boundaryPen = new Pen(TabBoundaryColor);
-                pevent.Graphics.DrawRectangle(boundaryPen, TabBoundary);
-                boundaryPen.Dispose();
-
+                ControlPaint.DrawBorder(pevent.Graphics, TabBoundary, TabBoundaryColor, ButtonBorderStyle.Outset);
+  
                 // Draw closing X
-                pevent.Graphics.DrawImage(VisiBoole.Properties.Resources.Close, TabBoundary.Right - 19, TabBoundary.Height - 18);
+                pevent.Graphics.DrawImage(VisiBoole.Properties.Resources.Close, TabBoundary.Right - 23, TabBoundary.Height - 23);
 
                 // Draw text
-                Rectangle TabTextBoundary = new Rectangle(TabBoundary.X + 2, TabBoundary.Y + 2, TabBoundary.Width - 17, TabBoundary.Height - 2);
+                Rectangle TabTextBoundary = new Rectangle(TabBoundary.X, TabBoundary.Y, TabBoundary.Width - 18, TabBoundary.Height - 2);
                 Color fontColor = index == SelectedIndex ? SelectedTabTextColor : TabTextColor;
                 TextRenderer.DrawText(pevent.Graphics, tab.Text, Font, TabTextBoundary, fontColor, TextFormatFlags.WordEllipsis);
             }
@@ -153,7 +152,7 @@ namespace CustomTabControl
             {
                 Tag = TabPages[clickedIndex];
                 Rectangle current = GetTabRect(clickedIndex);
-                Rectangle close = new Rectangle(current.Right - 18, current.Height - 16, 16, 16);
+                Rectangle close = new Rectangle(current.Right - 21, current.Height - 19, 16, 16);
                 if (close.Contains(e.Location))
                 {
                     TabXClicked?.Invoke(Tag, new EventArgs());

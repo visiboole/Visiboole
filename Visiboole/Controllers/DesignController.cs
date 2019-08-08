@@ -35,24 +35,19 @@ namespace VisiBoole.Controllers
         private IMainWindowController MainWindowController;
 
         /// <summary>
+        /// Design parser.
+        /// </summary>
+        private Parser Parser;
+
+        /// <summary>
 		/// All opened designs currently loaded by this application.
 		/// </summary>
         private Dictionary<string, Design> Designs;
 
         /// <summary>
-        /// All opened parsers currently loaded by this application.
-        /// </summary>
-        private Dictionary<string, Parser> Parsers;
-
-        /// <summary>
         /// The active design.
         /// </summary>
         public static Design ActiveDesign { get; set; }
-
-        /// <summary>
-        /// Active parsing instance.
-        /// </summary>
-        private Parser ActiveParser;
 
         /// <summary>
         /// Constructs design controller
@@ -61,8 +56,6 @@ namespace VisiBoole.Controllers
         {
             Designs = new Dictionary<string, Design>();
             ActiveDesign = null;
-            Parsers = new Dictionary<string, Parser>();
-            ActiveParser = null;
         }
 
         /// <summary>
@@ -100,26 +93,16 @@ namespace VisiBoole.Controllers
         /// <returns>Design with the specified name.</returns>
         public Design GetDesign(string name)
         {
-            // If design dictionary has a design for the specified name, return that design
-            // Otherwise, return null
-            return Designs.ContainsKey(name) ? Designs[name] : null;
-        }
-
-        private Parser GetParser(string name)
-        {
-            // If parser dictionary has a parser for the specified name, return that parser
-            // Otherwise, return null
-            return Parsers.ContainsKey(name) ? Parsers[name] : null;
-        }
-
-        /// <summary>
-        /// Returns whether the specified design has a parser already opened.
-        /// </summary>
-        /// <param name="name">Name of the design.</param>
-        /// <returns>Whether the specified design has a parser already opened.</returns>
-        public bool DesignHasParser(string name)
-        {
-            return Parsers.ContainsKey(name);
+            if (name.Contains("."))
+            {
+                return ActiveDesign.GetInstantiationDesign(name);
+            }
+            else
+            {
+                // If design dictionary has a design for the specified name, return that design
+                // Otherwise, return null
+                return Designs.ContainsKey(name) ? Designs[name] : null;
+            }
         }
 
         /// <summary>
@@ -133,16 +116,12 @@ namespace VisiBoole.Controllers
             {
                 // Set active design to null
                 ActiveDesign = null;
-                // Set active parser to null
-                ActiveParser = null;
             }
             // If specified name is not null
             else
             {
                 // Set active design to the specified design
                 ActiveDesign = GetDesign(name);
-                // Set active parser to the specified parser
-                ActiveParser = GetParser(name);
             }
         }
 
@@ -158,10 +137,6 @@ namespace VisiBoole.Controllers
             if (Designs.ContainsKey(newDesign.FileName))
             {
                 Designs[newDesign.FileName] = newDesign;
-                if (Parsers.ContainsKey(newDesign.FileName))
-                {
-                    Parsers.Remove(newDesign.FileName);
-                }
             }
             else
             {
@@ -221,19 +196,6 @@ namespace VisiBoole.Controllers
         /// <param name="save">Whether the closing design should be saved.</param>
         public void CloseDesign(string name, bool save)
         {
-            // If design has a parser to close
-            if (Parsers.ContainsKey(name))
-            {
-                // Remove parser from parsers
-                Parsers.Remove(name);
-                // If there are no parsers opened
-                if (Parsers.Count == 0)
-                {
-                    // Set active parser to none
-                    ActiveParser = null;
-                }
-            }
-
             // If the closing design should be saved
             if (save)
             {
@@ -253,48 +215,20 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
-        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
+        /// Closes a specific instantiation from the active design.
         /// </summary>
-        /// <param name="name">Name of parser to close.</param>
-        public void CloseInstantiationParser(string name)
+        /// <param name="name">Name of instantiation to close.</param>
+        public void CloseInstantiation(string name)
         {
-            // If designs contains the parser to close
-            if (Designs.ContainsKey(name))
-            {
-                Designs.Remove(name);
-            }
-
-            // If parsers contains the parser to close
-            if (Parsers.ContainsKey(name))
-            {
-                // Remove parser from parsers
-                Parsers.Remove(name);
-                // If there are no parsers opened
-                if (Parsers.Count == 0)
-                {
-                    // Set active parser to none
-                    ActiveParser = null;
-                    // Reload the display
-                    MainWindowController.LoadDisplay(DisplayType.EDIT);
-                }
-            }
+            ActiveDesign.CloseInstantiation(name);
         }
 
         /// <summary>
-        /// Clears all instantiation parsers from the parser dictionary.
+        /// Closes all instantiations from the active design.
         /// </summary>
-        public void CloseInstantiationParsers()
+        public void CloseInstantiations()
         {
-            // For each parser in the parser dictionary
-            foreach (string parserName in Parsers.Keys.ToList())
-            {
-                // If parser is an instantiation
-                if (parserName.Contains("."))
-                {
-                    // Remove parser from parser dictionary
-                    Parsers.Remove(parserName);
-                }
-            }
+            ActiveDesign.CloseActiveInstantiation();
         }
 
         /// <summary>
@@ -324,45 +258,40 @@ namespace VisiBoole.Controllers
         }
 
         /// <summary>
+        /// Returns whether the active design has a state.
+        /// </summary>
+        /// <returns>Whether the active design has a state.</returns>
+        public bool ActiveDesignHasState()
+        {
+            return ActiveDesign.Database != null && ActiveDesign.Database.IndVars.Count != 0;
+        }
+
+        /// <summary>
         /// Gets the current state of the active design.
         /// </summary>
         /// <returns>Current state of active design.</returns>
         public List<Variable> GetActiveDesignState()
         {
             // Return current state of the active design
-            return ActiveParser.ExportState();
+            return ActiveDesign.ExportState();
         }
 
         /// <summary>
-        /// Parses the active design.
+        /// Parses the active design with the provided input variables.
         /// </summary>
         /// <returns>Output of the parsed design.</returns>
-        public List<IObjectCodeElement> Parse()
+        /// <param name="inputVariables">List of inputs variables</param>
+        public List<IObjectCodeElement> Parse(List<Variable> inputVariables = null)
         {
-            // Create a parser for the active design
-            var parser = new Parser(ActiveDesign);
-            // Get output of the parsed active design
-            var output = parser.Parse();
-            // If output is not null
-            if (output != null)
+            // If the parser hasn't been used
+            if (Parser == null)
             {
-                // If the parsers dictionary has a previous parser for the design
-                if (Parsers.ContainsKey(ActiveDesign.FileName))
-                {
-                    // Override the previous parser with the new parser
-                    Parsers[ActiveDesign.FileName] = parser;
-                }
-                // If the parsers dictionary doesn't have a previous parser for the design
-                else
-                {
-                    // Save parser for the design
-                    Parsers.Add(ActiveDesign.FileName, parser);
-                }
-                // Set parser to be the active parser
-                ActiveParser = parser;
+                // Create the design parser
+                Parser = new Parser();
             }
-            // Return output from the parsed active design
-            return output;
+
+            // Return the output of the parsed design
+            return Parser.Parse(ActiveDesign, inputVariables);
         }
 
         /// <summary>
@@ -371,8 +300,8 @@ namespace VisiBoole.Controllers
         /// <returns>Output of the parsed tick.</returns>
         public List<IObjectCodeElement> ParseTick()
         {
-            // Return output from the parsed design tick
-            return ActiveParser.ParseTick();
+            ActiveDesign.TickClocks();
+            return ActiveDesign.GetOutput();
         }
 
         /// <summary>
@@ -383,95 +312,18 @@ namespace VisiBoole.Controllers
         /// <returns>Output of the parsed variable click.</returns>
         public List<IObjectCodeElement> ParseVariableClick(string variableName, string nextValue = null)
         {
-            // Return ouput from the parsed design variable click
-            return ActiveParser.ParseClick(variableName, nextValue);
+            ActiveDesign.ClickVariables(variableName, nextValue);
+            return ActiveDesign.GetOutput();
         }
 
         /// <summary>
-        /// Parsers the active design with the specified input variables.
+        /// Opens the provided instantiation from the active design.
         /// </summary>
-        /// <param name="inputVariables">Input variables.</param>
-        /// <returns>Output of the parsed design.</returns>
-        public List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables)
-        {
-            // Create a parser for the active design
-            var parser = new Parser(ActiveDesign);
-            // Get output of the parsed active design
-            var output = parser.ParseWithInput(inputVariables);
-            // If output is not null
-            if (output != null)
-            {
-                // If the parsers dictionary has a previous parser for the design
-                if (Parsers.ContainsKey(ActiveDesign.FileName))
-                {
-                    // Override the previous parser with the new parser
-                    Parsers[ActiveDesign.FileName] = parser;
-                }
-                // If the parsers dictionary doesn't have a previous parser for the design
-                else
-                {
-                    // Save parser for the design
-                    Parsers.Add(ActiveDesign.FileName, parser);
-                }
-                // Set parser to be the active parser
-                ActiveParser = parser;
-            }
-            // Return output from the parsed design
-            return output;
-        }
-
-        /// <summary>
-        /// Parsers a sub design with the provided instantiation.
-        /// </summary>
-        /// <param name="instantiation">Instantiation</param>
+        /// <param name="instantiation">Instantiation to open</param>
         /// <returns>Output of the parsed design</returns>
-        public List<IObjectCodeElement> ParseSubdesign(string instantiation)
+        public List<IObjectCodeElement> OpenInstantiation(string instantiation)
         {
-            // Save the active design
-            var currentDesign = ActiveDesign;
-            // Get the design name from the instantiations dictionary inside the active parser
-            string designName = ActiveParser.Instantiations[instantiation].Split('.').First().TrimStart();
-            // Get full instantiation name
-            string fullInstantName = string.Concat(designName, '.', instantiation);
-            
-            // Get the sub design from the design name
-            var subDesign = ActiveParser.Subdesigns[designName];
-            // If the sub design isn't in the design dictionary
-            if (!Designs.ContainsKey(fullInstantName))
-            {
-                // Add sub design to the design dictionary
-                Designs.Add(fullInstantName, subDesign);
-            }
-            // Get the input variables from the active parser
-            var inputVariables = ActiveParser.GetModuleInputs(instantiation, subDesign.HeaderLine);
-
-            // Set the sub design to be the active design
-            ActiveDesign = subDesign;
-            // Create a parser for the sub design
-            var subParser = new Parser(subDesign);
-            // Get the output of the parsed sub design
-            var output = subParser.ParseWithInput(inputVariables);
-            // If output is not null
-            if (output != null)
-            {
-                // If the parsers dictionary has a previous parser for the current instantiation
-                if (Parsers.ContainsKey(fullInstantName))
-                {
-                    // Override the previous parser with the new parser
-                    Parsers[fullInstantName] = subParser;
-                }
-                // If the parsers dictionary doesn't have a previous parser for the current instantiation
-                else
-                {
-                    // Save parser for the current instantiation
-                    Parsers.Add(fullInstantName, subParser);
-                }
-                // Set active parser to the parser of the current instantiation
-                ActiveParser = subParser;
-            }
-
-            // Return output of the instantiation
-            return output;
+            return ActiveDesign.OpenInstantiation(instantiation);
         }
     }
 }

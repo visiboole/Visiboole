@@ -52,13 +52,6 @@ namespace VisiBoole.Controllers
         Design GetDesign(string name);
 
         /// <summary>
-        /// Returns whether the specified design has a parser already opened.
-        /// </summary>
-        /// <param name="name">Name of the design.</param>
-        /// <returns>Whether the specified design has a parser already opened.</returns>
-        bool DesignHasParser(string name);
-
-        /// <summary>
         /// Selects the design and parser with the specified name.
         /// </summary>
         /// <param name="name">Name of design to select.</param>
@@ -90,15 +83,15 @@ namespace VisiBoole.Controllers
         void CloseDesign(string name, bool save);
 
         /// <summary>
-        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
+        /// Closes a specific instantiation from the active design.
         /// </summary>
-        /// <param name="name">Name of parser to close.</param>
-        void CloseInstantiationParser(string name);
+        /// <param name="name">Name of instantiation to close.</param>
+        void CloseInstantiation(string name);
 
         /// <summary>
-        /// Clears all instantiation parsers from the parser dictionary.
+        /// Closes all instantiations from the active design.
         /// </summary>
-        void CloseInstantiationParsers();
+        void CloseInstantiations();
 
         /// <summary>
         /// Updates the font sizes of all designs.
@@ -111,16 +104,23 @@ namespace VisiBoole.Controllers
         void SetThemes();
 
         /// <summary>
+        /// Returns whether the active design has a state.
+        /// </summary>
+        /// <returns>Whether the active design has a state.</returns>
+        bool ActiveDesignHasState();
+
+        /// <summary>
         /// Gets the current state of the active design.
         /// </summary>
         /// <returns>Current state of active design.</returns>
         List<Variable> GetActiveDesignState();
 
         /// <summary>
-        /// Parses the active design.
+        /// Parses the active design with the provided input variables.
         /// </summary>
         /// <returns>Output of the parsed design.</returns>
-        List<IObjectCodeElement> Parse();
+        /// <param name="inputVariables">List of inputs variables</param>
+        List<IObjectCodeElement> Parse(List<Variable> inputVariables = null);
 
         /// <summary>
         /// Parses a tick for the active design.
@@ -137,17 +137,10 @@ namespace VisiBoole.Controllers
         List<IObjectCodeElement> ParseVariableClick(string variableName, string nextValue = null);
 
         /// <summary>
-        /// Parsers the active design with the specified input variables.
+        /// Opens the provided instantiation from the active design.
         /// </summary>
-        /// <param name="inputVariables">Input variables.</param>
-        /// <returns>Output of the parsed design.</returns>
-        List<IObjectCodeElement> ParseWithInput(List<Variable> inputVariables);
-
-        /// <summary>
-        /// Parsers a sub design with the provided instantiation.
-        /// </summary>
-        /// <param name="instantiation">Instantiation</param>
+        /// <param name="instantiation">Instantiation to open</param>
         /// <returns>Output of the parsed design</returns>
-        List<IObjectCodeElement> ParseSubdesign(string instantiation);
+        List<IObjectCodeElement> OpenInstantiation(string instantiation);
     }
 }

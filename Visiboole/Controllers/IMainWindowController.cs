@@ -49,11 +49,10 @@ namespace VisiBoole.Controllers
         void RetrieveFocus();
 
         /// <summary>
-        /// Returns whether the specified design has a parser already opened.
+        /// Returns whether the active design has a state.
         /// </summary>
-        /// <param name="name">Name of the design.</param>
-        /// <returns>Whether the specified design has a parser already opened.</returns>
-        bool DesignHasParser(string name);
+        /// <returns>Whether the active design has a state.</returns>
+        bool ActiveDesignHasState();
 
         /// <summary>
         /// Selects the provided file name.
@@ -132,11 +131,11 @@ namespace VisiBoole.Controllers
         void RunPreviousState();
 
         /// <summary>
-        /// Runs a subdesign from the provided instantiation.
+        /// Opens the provided instantiation.
         /// </summary>
-        /// <param name="instantiation">Instantiation to run</param>
+        /// <param name="instantiation">Instantiation to open</param>
         /// <returns>Output of the parsed instantiation</returns>
-        List<IObjectCodeElement> RunSubdesign(string instantiation);
+        List<IObjectCodeElement> OpenInstantiation(string instantiation);
 
         /// <summary>
         /// Handles the event that occurs when the browser needs to be refreshed.
@@ -158,14 +157,14 @@ namespace VisiBoole.Controllers
         List<IObjectCodeElement> Variable_Click(string variableName, string value = null);
 
         /// <summary>
-        /// Removes all parser tabs from the run display and closes all instantiation parsers in the parser dictionary.
+        /// Closes all parser tabs and instantiations.
         /// </summary>
         void SuspendRunDisplay();
 
         /// <summary>
-        /// Removes the parser of the specified instantiation from the dictionary of opened parsers.
+        /// Closes a specific instantiation from the active design.
         /// </summary>
-        /// <param name="name">Name of parser to close.</param>
-        void CloseInstantiationParser(string name);
+        /// <param name="name">Name of instantiation to close.</param>
+        void CloseInstantiation(string name);
     }
 }

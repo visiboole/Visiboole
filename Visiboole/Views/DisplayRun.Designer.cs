@@ -53,10 +53,10 @@ namespace VisiBoole.Views
             this.pnlMain.Margin = new System.Windows.Forms.Padding(0);
             this.pnlMain.Name = "pnlMain";
             this.pnlMain.RowCount = 3;
-            this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 27F));
+            this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
             this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.pnlMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 0F));
-            this.pnlMain.Size = new System.Drawing.Size(800, 600);
+            this.pnlMain.Size = new System.Drawing.Size(1067, 738);
             this.pnlMain.TabIndex = 1;
             // 
             // pnlOutputControls
@@ -69,29 +69,30 @@ namespace VisiBoole.Views
             this.pnlOutputControls.Location = new System.Drawing.Point(0, 0);
             this.pnlOutputControls.Margin = new System.Windows.Forms.Padding(0);
             this.pnlOutputControls.Name = "pnlOutputControls";
-            this.pnlOutputControls.Size = new System.Drawing.Size(800, 27);
+            this.pnlOutputControls.Size = new System.Drawing.Size(1067, 33);
             this.pnlOutputControls.TabIndex = 0;
             // 
             // numericUpDown1
             // 
             this.numericUpDown1.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.numericUpDown1.BackColor = System.Drawing.Color.FloralWhite;
             this.numericUpDown1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.numericUpDown1.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numericUpDown1.Location = new System.Drawing.Point(129, 3);
-            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.numericUpDown1.Location = new System.Drawing.Point(172, 4);
+            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.numericUpDown1.Maximum = new decimal(new int[] {
             50,
             0,
             0,
             0});
-            this.numericUpDown1.MaximumSize = new System.Drawing.Size(60, 0);
+            this.numericUpDown1.MaximumSize = new System.Drawing.Size(80, 0);
             this.numericUpDown1.Minimum = new decimal(new int[] {
-            1,
+            2,
             0,
             0,
             0});
             this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(60, 31);
+            this.numericUpDown1.Size = new System.Drawing.Size(80, 37);
             this.numericUpDown1.TabIndex = 2;
             this.numericUpDown1.Value = new decimal(new int[] {
             7,
@@ -104,11 +105,11 @@ namespace VisiBoole.Views
             this.btnMultiTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnMultiTick.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnMultiTick.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.btnMultiTick.Location = new System.Drawing.Point(65, 2);
-            this.btnMultiTick.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.btnMultiTick.MaximumSize = new System.Drawing.Size(60, 22);
+            this.btnMultiTick.Location = new System.Drawing.Point(87, 2);
+            this.btnMultiTick.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.btnMultiTick.MaximumSize = new System.Drawing.Size(80, 27);
             this.btnMultiTick.Name = "btnMultiTick";
-            this.btnMultiTick.Size = new System.Drawing.Size(60, 22);
+            this.btnMultiTick.Size = new System.Drawing.Size(80, 27);
             this.btnMultiTick.TabIndex = 1;
             this.btnMultiTick.Text = "X Ticks";
             this.btnMultiTick.UseVisualStyleBackColor = true;
@@ -119,11 +120,11 @@ namespace VisiBoole.Views
             this.btnTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnTick.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnTick.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.btnTick.Location = new System.Drawing.Point(2, 2);
+            this.btnTick.Location = new System.Drawing.Point(3, 2);
             this.btnTick.Margin = new System.Windows.Forms.Padding(0);
-            this.btnTick.MaximumSize = new System.Drawing.Size(60, 22);
+            this.btnTick.MaximumSize = new System.Drawing.Size(80, 27);
             this.btnTick.Name = "btnTick";
-            this.btnTick.Size = new System.Drawing.Size(60, 22);
+            this.btnTick.Size = new System.Drawing.Size(80, 27);
             this.btnTick.TabIndex = 0;
             this.btnTick.Text = "Tick";
             this.btnTick.UseVisualStyleBackColor = true;
@@ -141,11 +142,12 @@ namespace VisiBoole.Views
             // 
             // DisplayRun
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.pnlMain);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "DisplayRun";
-            this.Size = new System.Drawing.Size(800, 600);
+            this.Size = new System.Drawing.Size(1067, 738);
             this.pnlMain.ResumeLayout(false);
             this.pnlOutputControls.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();

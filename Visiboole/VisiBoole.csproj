@@ -80,6 +80,8 @@
     <Compile Include="Controllers\MainWindowController.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Models\DatabaseObjects\NamedExpression.cs" />
+    <Compile Include="Models\DesignHeader.cs" />
+    <Compile Include="Models\DesignInstantiation.cs" />
     <Compile Include="Models\NewTabControl.cs" />
     <Compile Include="ParsingEngine\Lexer.cs" />
     <Compile Include="ParsingEngine\ObjectCode\Constant.cs" />

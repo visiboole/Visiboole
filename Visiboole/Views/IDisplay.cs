@@ -90,6 +90,12 @@ namespace VisiBoole.Views
         void AddTabComponent(string name, object component, bool swap = true);
 
         /// <summary>
+        /// Returns the name of the selected tab.
+        /// </summary>
+        /// <returns>Name of the selected tab.</returns>
+        string GetSelectedTab();
+
+        /// <summary>
         /// Selects the tab with the provided name if present.
         /// </summary>
         /// <param name="name">Name of tab to select</param>

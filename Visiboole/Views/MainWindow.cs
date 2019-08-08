@@ -180,7 +180,7 @@ namespace VisiBoole.Views
                     MainWindowController.SetFontSize();
                 }
 
-                previousStateToolStripMenuItem.Enabled = MainWindowController.DesignHasParser(DesignController.ActiveDesign.FileName);
+                previousStateToolStripMenuItem.Enabled = MainWindowController.ActiveDesignHasState();
                 undoToolStripMenuItem.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
                 undoToolStripMenuItem1.Enabled = DesignController.ActiveDesign.EditHistory.Count > 0;
                 redoToolStripMenuItem.Enabled = DesignController.ActiveDesign.UndoHistory.Count > 0;
@@ -523,6 +523,7 @@ namespace VisiBoole.Views
         {
             if (editModeToggle.Enabled)
             {
+                MainWindowController.SelectFile(e.Node.Name, true);
                 MainWindowController.SuspendRunDisplay();
                 MainWindowController.LoadDisplay(DisplayType.EDIT);
             }
