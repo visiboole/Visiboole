@@ -807,7 +807,7 @@ namespace VisiBoole.Views
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Help Documentation", "About.txt")));
+            HelpWindow about = new HelpWindow("About VisiBoole", File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Help Documentation", "About.txt")));
             about.Show();
         }
 
