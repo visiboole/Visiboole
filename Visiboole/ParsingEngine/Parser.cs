@@ -216,13 +216,21 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (input.Contains("[]"))
                     {
+                        // Set header to invalid
                         designHeader.Valid = false;
+                        // Set invalid message
+                        designHeader.InvalidMessage = $"'{input}' must have explicit dimensions.";
+                        // Return invalid header
                         return designHeader;
                     }
 
                     foreach (string inputVar in GetExpansion(AnyTypeRegex.Match(input)))
                     {
-                        designHeader.AddInput(slotNumber, inputVar);
+                        if (!designHeader.AddInput(slotNumber, inputVar))
+                        {
+                            // Return invalid header
+                            return designHeader;
+                        }
                     }
                     slotNumber++;
                 }
@@ -236,13 +244,21 @@ namespace VisiBoole.ParsingEngine
                 {
                     if (output.Contains("[]"))
                     {
+                        // Set header to invalid
                         designHeader.Valid = false;
+                        // Set invalid message
+                        designHeader.InvalidMessage = $"'{output}' must have explicit dimensions.";
+                        // Return invalid header
                         return designHeader;
                     }
 
                     foreach (string outputVar in GetExpansion(AnyTypeRegex.Match(output)))
                     {
-                        designHeader.AddOutput(slotNumber, outputVar);
+                        if (!designHeader.AddOutput(slotNumber, outputVar))
+                        {
+                            // Return invalid header
+                            return designHeader;
+                        }
                     }
                     slotNumber++;
                 }
@@ -675,7 +691,7 @@ namespace VisiBoole.ParsingEngine
                             ? expandedSourceText[j].Substring(expandedSourceText[j].IndexOf('('))
                             : expandedSourceText[j];
 
-                        if (!InitSource(line, source.Type))
+                        if (source.Type != StatementType.Header && !InitSource(line, source.Type))
                         {
                             // Set valid to false
                             valid = false;
@@ -695,7 +711,7 @@ namespace VisiBoole.ParsingEngine
 
             if (Design.Database.Header != null && !Design.Database.Header.Valid)
             {
-                ErrorLog.Add(headerLineNumber, $"All vectors in Headers must have explicit dimensions.");
+                ErrorLog.Add(headerLineNumber, Design.Database.Header.InvalidMessage);
                 // Set valid to false
                 valid = false;
             }
@@ -1032,11 +1048,6 @@ namespace VisiBoole.ParsingEngine
                     dependent = string.Empty;
                 }
 
-                if (type == StatementType.Instantiation && dependent.Length != 0 && variableMatch.Value == "NC")
-                {
-                    continue;
-                }
-
                 if (type == StatementType.Assignment || type == StatementType.ClockAssignment)
                 {
                     if (dependent.Length == 0)
@@ -1061,7 +1072,7 @@ namespace VisiBoole.ParsingEngine
                         if (Design.Database.HasDependencyList(variable) || Design.Database.GetValue($"{variable}.d") != -1)
                         {
                             // Already dependent error
-                            ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"{variable} was previously assigned a value.");
+                            ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"'{variable}' was previously assigned a value.");
                             return false;
                         }
 
@@ -1072,54 +1083,70 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
                 }
-
-                if (type != StatementType.Header)
+                else if (type == StatementType.Instantiation)
                 {
-                    // If variable isn't in the database
-                    if (Design.Database.TryGetVariable<Variable>(variable) == null)
+                    if (dependent.Length != 0)
                     {
-                        // If variable isn't dependent
-                        if (dependent.Length == 0)
+                        if (variableMatch.Value != "NC")
+                        {
+                            if (Design.Database.TryGetVariable<DependentVariable>(dependent) != null)
+                            {
+                                // Already dependent error
+                                ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"'{dependent}' was previously assigned a value.");
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                // If variable isn't in the database
+                if (Design.Database.TryGetVariable<Variable>(variable) == null)
+                {
+                    // If variable isn't dependent
+                    if (dependent.Length == 0)
+                    {
+                        // Add variable to the database
+                        Design.Database.AddVariable(new IndependentVariable(variable, value));
+                    }
+                    // If variable is dependent
+                    else
+                    {
+                        if (type != StatementType.ClockAssignment)
+                        {
+                            // Add variable to the database
+                            Design.Database.AddVariable(new DependentVariable(variable, value));
+                        }
+                        else
                         {
                             // Add variable to the database
                             Design.Database.AddVariable(new IndependentVariable(variable, value));
                         }
-                        // If variable is dependent
-                        else
-                        {
-                            if (type != StatementType.ClockAssignment)
-                            {
-                                // Add variable to the database
-                                Design.Database.AddVariable(new DependentVariable(variable, value));
-                            }
-                            else
-                            {
-                                // Add variable to the database
-                                Design.Database.AddVariable(new IndependentVariable(variable, value));
-                            }
-                        }
                     }
-                    // If variable is in the database
-                    else
+                }
+                // If variable is in the database
+                else
+                {
+                    // If variable is dependent, in the database not as a dependent
+                    if (type != StatementType.ClockAssignment && dependent.Length != 0 && Design.Database.TryGetVariable<DependentVariable>(variable) == null)
                     {
-                        // If variable is dependent, in the database not as a dependent
-                        if (type != StatementType.ClockAssignment && dependent.Length != 0 && Design.Database.TryGetVariable<DependentVariable>(variable) == null)
+                        // Make variable in database a dependent
+                        if (Design.Database.Header != null && Design.Database.Header.HasInputVariable(variable))
                         {
-                            // Make variable in database a dependent
-                            if (Design.Database.Header != null && Design.Database.Header.HasInputVariable(variable))
-                            {
-                                ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"'{variable}' must be an independent variable to be used as an input in a module header statement.");
-                                return false;
-                            }
-
-                            Design.Database.MakeDependent(variable);
+                            ErrorLog.Add(GetLineNumber(source, variableMatch.Index), $"'{variable}' must be an independent variable to be used as an input in a module header statement.");
+                            return false;
                         }
-                    }
 
-                    if (dependent.Length != 0 && variable.Length != dependent.Length)
-                    {
-                        Design.Database.AddVariable(new DependentVariable(dependent, value));
+                        Design.Database.MakeDependent(variable);
                     }
+                }
+
+                if (dependent.Length != 0 && variable.Length != dependent.Length)
+                {
+                    Design.Database.AddVariable(new DependentVariable(dependent, value));
                 }
             }
 
@@ -1210,19 +1237,22 @@ namespace VisiBoole.ParsingEngine
             {
                 Match match = VariableRegex.Match(var);
 
-                if (match.Value.Contains("[") || match.Value.Contains("'") || match.Value.All(char.IsDigit))
+                if (match.Success)
                 {
-                    var tokenExpansion = ExpandToken(match);
-                    if (tokenExpansion == null)
+                    if (match.Value.Contains("[") || match.Value.Contains("'") || match.Value.All(char.IsDigit))
                     {
-                        return null;
-                    }
+                        var tokenExpansion = ExpandToken(match);
+                        if (tokenExpansion == null)
+                        {
+                            return null;
+                        }
 
-                    expansion.AddRange(tokenExpansion);
-                }
-                else
-                {
-                    expansion.Add(match.Value);
+                        expansion.AddRange(tokenExpansion);
+                    }
+                    else
+                    {
+                        expansion.Add(match.Value);
+                    }
                 }
             }
 

@@ -222,7 +222,7 @@ namespace VisiBoole.ParsingEngine
         /// <summary>
         /// Pattern for identifying concatenations.
         /// </summary>
-        public static readonly string ConcatPattern = $@"(\{{{VariableListPattern}\}})";
+        public static readonly string ConcatPattern = $@"(\{{\s*{VariableListPattern}\s*\}})";
 
         /// <summary>
         /// Pattern for identifying concatenations of any type or any type.
@@ -1738,7 +1738,7 @@ namespace VisiBoole.ParsingEngine
                             // Clear current lexeme
                             currentLexeme.Clear();
                         }
-                        // If current character is ~
+                        // If current lexeme is ~
                         else if (currentLexemeValue == "~")
                         {
                             // If current character is not ~
@@ -1751,13 +1751,13 @@ namespace VisiBoole.ParsingEngine
                             }
                             else
                             {
-                                // Clear current lexeme
-                                currentLexeme.Clear();
-                                // Continue and don't append
-                                continue;
+                                // Add unsupported error
+                                ErrorLog.Add(CurrentLineNumber, $"'~~' is not supported.");
+                                // Return null for error
+                                return null;
                             }
                         }
-                        // If current character is *
+                        // If current lexeme is *
                         else if (currentLexemeValue == "*")
                         {
                             // If current character is not *
@@ -1770,10 +1770,10 @@ namespace VisiBoole.ParsingEngine
                             }
                             else
                             {
-                                // Clear current lexeme
-                                currentLexeme.Clear();
-                                // Continue and don't append
-                                continue;
+                                // Add unsupported error
+                                ErrorLog.Add(CurrentLineNumber, $"'**' is not supported.");
+                                // Return null for error
+                                return null;
                             }
                         }
                         else if (currentLexemeValue == "==")
@@ -1832,17 +1832,24 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexemes">Lexeme list</param>
         /// <param name="index">Index of current lexeme</param>
+        /// <param name="skipEmpty">Indicates whether an empty lexeme should be skipped</param>
         /// <returns>Next non-empty lexeme</returns>
-        private string GetNextLexeme(List<string> lexemes, int index)
+        private string GetNextLexeme(List<string> lexemes, int index, bool skipEmpty)
         {
             for (int i = index + 1; i < lexemes.Count; i++)
             {
                 string lexeme = lexemes[i];
-                if (lexeme[0] != '\n' && lexeme[0] != ' ')
+
+                if (!skipEmpty)
+                {
+                    return lexeme;
+                }
+                else if (lexeme[0] != '\n' && lexeme[0] != ' ')
                 {
                     return lexeme;
                 }
             }
+
             return '\0'.ToString();
         }
         
@@ -1895,8 +1902,8 @@ namespace VisiBoole.ParsingEngine
             {
                 // Get the current lexeme
                 string currentLexeme = lexemes[i];
-                // Get the next non-empty lexeme
-                string nextLexeme = GetNextLexeme(lexemes, i);
+                // Get next lexeme
+                string nextLexeme = GetNextLexeme(lexemes, i, currentLexeme != "~" && currentLexeme != "*");
 
                 // Get token type of current lexeme
                 TokenType? tokenType = GetTokenType(currentLexeme, nextLexeme);

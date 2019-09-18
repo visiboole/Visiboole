@@ -18,6 +18,11 @@ namespace VisiBoole.Models
         public bool Valid { get; set; }
 
         /// <summary>
+        /// Message describing the invalid header.
+        /// </summary>
+        public string InvalidMessage { get; set; }
+
+        /// <summary>
         /// Inputs of the design header.
         /// </summary>
         private List<string> Inputs;
@@ -47,9 +52,16 @@ namespace VisiBoole.Models
             Outputs = new List<string>();
             OutputSlots = new Dictionary<int, int>();
             Valid = true;
+            InvalidMessage = null;
         }
 
-        public void AddInput(int slot, string inputVariable)
+        /// <summary>
+        /// Attempts to add the provided input variable to the provided slot.
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="inputVariable"></param>
+        /// <returns>Whether the variable was added or not.</returns>
+        public bool AddInput(int slot, string inputVariable)
         {
             if (!Inputs.Contains(inputVariable))
             {
@@ -64,9 +76,17 @@ namespace VisiBoole.Models
                     InputSlots[slot]++;
                 }
             }
+
+            return true;
         }
 
-        public void AddOutput(int slot, string outputVariable)
+        /// <summary>
+        /// Attempts to add the provided output variable to the provided slot.
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="outputVariable"></param>
+        /// <returns>Whether the variable was added or not.</returns>
+        public bool AddOutput(int slot, string outputVariable)
         {
             if (!Outputs.Contains(outputVariable))
             {
@@ -80,6 +100,17 @@ namespace VisiBoole.Models
                 {
                     OutputSlots[slot]++;
                 }
+
+                return true;
+            }
+            else
+            {
+                // Set header to invalid
+                Valid = false;
+                // Set invalid message
+                InvalidMessage = $"'{outputVariable}' can not be used as an output twice.";
+                // Return false for error
+                return false;
             }
         }
 

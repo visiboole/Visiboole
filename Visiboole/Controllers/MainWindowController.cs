@@ -313,9 +313,10 @@ namespace VisiBoole.Controllers
                 }
                 DisplayController.DisplayOutput(output);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                DialogBox.New("Error", UnfoundErrorMessage, DialogType.Ok);
+                //DialogBox.New("Error", UnfoundErrorMessage, DialogType.Ok);
+                DialogBox.New("Error", ex.ToString(), DialogType.Ok);
             }
         }
 
