@@ -1923,11 +1923,11 @@ namespace VisiBoole.ParsingEngine
             {
                 // Get the current lexeme
                 string currentLexeme = lexemes[i];
-                // Get whether to ignore whitespace
-                bool readWhitespace = statementType == StatementType.Header || statementType == StatementType.Instantiation
-                    || currentLexeme == "~" || currentLexeme == "*";
+                // Get whether to read whitespace
+                bool readWhitespace = currentLexeme == "~" || currentLexeme == "*" || currentLexeme == ":"
+                    || statementType == StatementType.Header || statementType == StatementType.Instantiation;
                 // Get next lexeme
-                string nextLexeme = GetNextLexeme(lexemes, i, !readWhitespace);
+                string nextLexeme = GetNextLexeme(lexemes, i, readWhitespace);
 
                 // Get token type of current lexeme
                 TokenType? tokenType = GetTokenType(currentLexeme, nextLexeme);
