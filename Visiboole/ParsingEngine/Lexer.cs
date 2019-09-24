@@ -292,7 +292,7 @@ namespace VisiBoole.ParsingEngine
         /// List of separators.
         /// </summary>
         private static readonly IList<char> SeperatorsList = new ReadOnlyCollection<char>(
-            new List<char> { ' ', '\n', ';', '(', ')', '{', '}', ',', ':', '^', '|', '+', '-' });
+            new List<char> { ' ', '\n', ';', '(', ')', '{', '}', ',', ':', '^', '|', '+', '-', ']' });
 
         /// <summary>
         /// List of operators.
@@ -692,15 +692,6 @@ namespace VisiBoole.ParsingEngine
             // If current lexeme is a constant
             else if (IsLexemeConstant(currentLexeme))
             {
-                /*
-                if (nextLexeme != " " && nextLexeme != "\n" && nextLexeme != ";" && nextLexeme != ")" && nextLexeme != "}" && nextLexeme != ",")
-                {
-                    ErrorLog.Add(CurrentLineNumber, $"Unrecognized "{currentLexeme}{nextLexeme}". Are you missing a space?");
-                    // Return null for error token
-                    return null;
-                }
-                */
-
                 // Return token type constant
                 return TokenType.Constant;
             }
@@ -752,8 +743,13 @@ namespace VisiBoole.ParsingEngine
         /// <returns>Whether the provided token is valid from the provided statement type</returns>
         private bool IsTokenValid(List<Token> previousTokens, Token token, StatementType? statementType, string line)
         {
-            // If token type is space, newline or semicolon
-            if (token.Type == TokenType.Space || token.Type == TokenType.NewLine || token.Type == TokenType.Semicolon)
+            // If token type is space or newline 
+            if (token.Type == TokenType.Space || token.Type == TokenType.NewLine)
+            {
+                return true;
+            }
+            // If token type is a semicolon
+            else if (token.Type == TokenType.Semicolon)
             {
                 // Return valid
                 return true;
@@ -953,7 +949,7 @@ namespace VisiBoole.ParsingEngine
         /// <param name="previousToken">Previous token</param>
         /// <param name="nextChar">Next lexeme</param>
         /// <returns>Whether the new token is an operator</returns>
-        private bool IsNewTokenOperator(Token newToken, Token previousToken, string nextLexeme, StatementType? type)
+        private bool IsNewTokenOperator(Token newToken, Token previousToken, string nextLexeme)
         {
             // If new token is a boolean or math operator
             if (newToken.Type == TokenType.OrOperator || newToken.Type == TokenType.NegationOperator
@@ -966,7 +962,6 @@ namespace VisiBoole.ParsingEngine
 
             // If new token is space or newline and seperates two operands
             if ((newToken.Type == TokenType.Space || newToken.Type == TokenType.NewLine)
-                && (type == StatementType.Assignment || type == StatementType.ClockAssignment)
                 && IsTokenLeftOperand(previousToken) && IsNextCharRightOperand(nextLexeme) && !InsideConcat)
             {
                 // Return is operator
@@ -975,28 +970,6 @@ namespace VisiBoole.ParsingEngine
 
             // Return not operator
             return false;
-        }
-
-        /// <summary>
-        /// Gets the next character that is not a space or a newline character.
-        /// </summary>
-        /// <param name="line">Line</param>
-        /// <param name="index">Index in line</param>
-        /// <returns>Next character that is not a space or a newline character</returns>
-        private char GetNextChar(string line, int index)
-        {
-            // For each character after the provided index to the end of the line
-            for (int i = index + 1; i < line.Length; i++)
-            {
-                // If the current character is not a space or newline character
-                if (line[i] != ' ' && line[i] != '\n')
-                {
-                    // Return current character
-                    return line[i];
-                }
-            }
-            // Return null character if no non-empty character remains
-            return '\0';
         }
 
         #endregion
@@ -1229,33 +1202,57 @@ namespace VisiBoole.ParsingEngine
             }
 
             // Get whether the new token is an operator
-            bool isNewTokenOperator = IsNewTokenOperator(newToken, lastToken, nextLexeme, statementType);
+            bool isNewTokenOperator = IsNewTokenOperator(newToken, lastToken, nextLexeme);
 
             // If is a space or newline that isn't an operator
-            if ((newToken.Type == TokenType.Space || newToken.Type == TokenType.NewLine) && !isNewTokenOperator)
+            if (newToken.Type == TokenType.Space || newToken.Type == TokenType.NewLine)
             {
-                // Return valid syntax
-                return true;
+                if (!isNewTokenOperator)
+                {
+                    // Return valid syntax
+                    return true;
+                }
+                else
+                {
+                    // Get whether the whitespace is being used as an operator in a header or instantiation statements
+                    bool isInvalidOperator = !InsideConcat && (statementType == StatementType.Header || statementType == StatementType.Instantiation);
+
+                    if (isInvalidOperator)
+                    {
+                        string statementTypeText = statementType == StatementType.Header ? "header" : "instantiation";
+                        string errorString = $"{lastToken.Text}{newToken.Text}{nextLexeme}";
+                        // Add invalid whitespace error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"'{errorString}' can not be used in {statementTypeText} statements.");
+                    }
+
+                    return !isInvalidOperator;
+                }
             }
 
             // If new token is a variable
             if (newToken.Type == TokenType.Variable)
             {
-                // If statement type is header and the current execution is not inside module parentheses
-                if (statementType == StatementType.Header && !InsideModule)
+                if (statementType == StatementType.Header || statementType == StatementType.Instantiation)
                 {
-                    // Add misplaced variable error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"All variables in module header statements must be inside module parentheses.");
-                    // Return invalid syntax
-                    return false;
-                }
-                // If statement type is instantiation and the current execution is not inside module parentheses
-                else if (statementType == StatementType.Instantiation && !InsideModule)
-                {
-                    // Add misplaced variable error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"All variables in instantiation statements must be inside instantiation parentheses.");
-                    // Return invalid syntax
-                    return false;
+                    if (!InsideModule)
+                    {
+                        string statementTypeText = statementType == StatementType.Header ? "header" : "instantiation";
+                        // Add misplaced variable error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"{newToken.Text} must be used in the {statementTypeText} parentheses.");
+                        // Return invalid syntax
+                        return false;
+                    }
+                    else if (IsNextCharRightOperand(nextLexeme))
+                    {
+                        // Get statement type and error strings
+                        string statementTypeText = statementType == StatementType.Header ? "header" : "instantiation";
+                        string errorString = $"{newToken.Text}{nextLexeme}";
+
+                        // Add misplaced variable error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"'{errorString}' can not be used in {statementTypeText} statements.");
+                        // Return invalid syntax
+                        return false;
+                    }
                 }
             }
             // If new token is a constant
@@ -1263,47 +1260,59 @@ namespace VisiBoole.ParsingEngine
             {
                 // Get whether the constant has a size specification
                 bool containsBitCount = char.IsDigit(newToken.Text[0]) && newToken.Text.Contains('\'');
-                // If constant is inside a concatenation operator and doesn't have a size specification
-                if (InsideConcat && !containsBitCount)
+
+                // If constant is in header or instantiation statement
+                if (statementType == StatementType.Header)
                 {
                     // Add invalid constant error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"Constants in concatenations must include a size specification.");
+                    ErrorLog.Add(CurrentLineNumber, $"Constants are not allowed in header statements.");
                     // Return invalid syntax
                     return false;
                 }
-                // If constant is inside module parentheses
-                else if (InsideModule)
+                else if (statementType == StatementType.Instantiation)
                 {
-                    // If current statement type is header
-                    if (statementType == StatementType.Header)
+                    if (!InsideModule)
                     {
-                        // Add invalid constant error to error log
-                        ErrorLog.Add(CurrentLineNumber, $"Constants are not allowed in header statements.");
+                        // Add misplaced variable error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"All constants in instantiation statements must be inside instantiation parentheses.");
                         // Return invalid syntax
                         return false;
                     }
-                    // If previous tokens list contains any colon
-                    else if (previousTokens.Any(t => t.Type == TokenType.Colon))
+                    else if (IsNextCharRightOperand(nextLexeme))
                     {
-                        // Add invalid constant error to error log
-                        ErrorLog.Add(CurrentLineNumber, $"Constants are not allowed as outputs in instantiation statements.");
+                        // Get error string
+                        string errorString = $"{newToken.Text}{nextLexeme}";
+
+                        // Add error to error log
+                        ErrorLog.Add(CurrentLineNumber, $"'{errorString}' can not be used in instantiation statements.");
                         // Return invalid syntax
                         return false;
                     }
-                    // If constant doesn't include a size specification
-                    else if (!containsBitCount)
+                    else
                     {
-                        // Add invalid constant error to error log
-                        ErrorLog.Add(CurrentLineNumber, $"Constants in instantiation statements must include a size specification.");
-                        // Return invalid syntax
-                        return false;
+                        // If previous tokens list contains any colon
+                        if (previousTokens.Any(t => t.Type == TokenType.Colon))
+                        {
+                            // Add invalid constant error to error log
+                            ErrorLog.Add(CurrentLineNumber, $"Constants are not allowed as outputs in instantiation statements.");
+                            // Return invalid syntax
+                            return false;
+                        }
+                        // If constant doesn't include a size specification
+                        else if (!containsBitCount)
+                        {
+                            // Add invalid constant error to error log
+                            ErrorLog.Add(CurrentLineNumber, $"Constants in instantiation statements must include a size specification.");
+                            // Return invalid syntax
+                            return false;
+                        }
                     }
                 }
-                // If statement type is instantiation and the current execution is not inside module parentheses
-                else if (statementType == StatementType.Instantiation && !InsideModule)
+                // If constant is inside a concatenation operator and doesn't have a size specification
+                else if (InsideConcat && !containsBitCount)
                 {
-                    // Add misplaced variable error to error log
-                    ErrorLog.Add(CurrentLineNumber, $"All variables in instantiation statements must be inside instantiation parentheses.");
+                    // Add invalid constant error to error log
+                    ErrorLog.Add(CurrentLineNumber, $"Constants in concatenations must include a size specification.");
                     // Return invalid syntax
                     return false;
                 }
@@ -1706,17 +1715,29 @@ namespace VisiBoole.ParsingEngine
                         }
                     }
 
-                    // If current lexeme is not empty
-                    if (currentLexeme.Length > 0)
+                    if (currentChar == ']')
                     {
+                        // Add ] to lexeme
+                        currentLexeme.Append(currentChar);
                         // Add current lexeme to lexeme list
                         lexemes.Add(currentLexeme.ToString());
                         // Clear current lexeme
                         currentLexeme.Clear();
                     }
+                    else
+                    {
+                        // If current lexeme is not empty
+                        if (currentLexeme.Length > 0)
+                        {
+                            // Add current lexeme to lexeme list
+                            lexemes.Add(currentLexeme.ToString());
+                            // Clear current lexeme
+                            currentLexeme.Clear();
+                        }
 
-                    // Add seperator character to lexeme list
-                    lexemes.Add(currentCharString);
+                        // Add seperator character to lexeme list
+                        lexemes.Add(currentCharString);
+                    }
                 }
                 // If current character is an appending character
                 else
@@ -1902,8 +1923,11 @@ namespace VisiBoole.ParsingEngine
             {
                 // Get the current lexeme
                 string currentLexeme = lexemes[i];
+                // Get whether to ignore whitespace
+                bool readWhitespace = statementType == StatementType.Header || statementType == StatementType.Instantiation
+                    || currentLexeme == "~" || currentLexeme == "*";
                 // Get next lexeme
-                string nextLexeme = GetNextLexeme(lexemes, i, currentLexeme != "~" && currentLexeme != "*");
+                string nextLexeme = GetNextLexeme(lexemes, i, !readWhitespace);
 
                 // Get token type of current lexeme
                 TokenType? tokenType = GetTokenType(currentLexeme, nextLexeme);
