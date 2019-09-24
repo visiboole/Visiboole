@@ -1853,15 +1853,15 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="lexemes">Lexeme list</param>
         /// <param name="index">Index of current lexeme</param>
-        /// <param name="skipEmpty">Indicates whether an empty lexeme should be skipped</param>
+        /// <param name="readWhitespace">Indicates whether to read an empty lexeme</param>
         /// <returns>Next non-empty lexeme</returns>
-        private string GetNextLexeme(List<string> lexemes, int index, bool skipEmpty)
+        private string GetNextLexeme(List<string> lexemes, int index, bool readWhitespace)
         {
             for (int i = index + 1; i < lexemes.Count; i++)
             {
                 string lexeme = lexemes[i];
 
-                if (!skipEmpty)
+                if (readWhitespace)
                 {
                     return lexeme;
                 }
@@ -1924,8 +1924,9 @@ namespace VisiBoole.ParsingEngine
                 // Get the current lexeme
                 string currentLexeme = lexemes[i];
                 // Get whether to read whitespace
-                bool readWhitespace = currentLexeme == "~" || currentLexeme == "*" || currentLexeme == ":"
-                    || statementType == StatementType.Header || statementType == StatementType.Instantiation;
+                bool readWhitespace = currentLexeme == "~" || currentLexeme == "*"
+                    || ((statementType == StatementType.Header || statementType == StatementType.Instantiation)
+                    && currentLexeme != ":");
                 // Get next lexeme
                 string nextLexeme = GetNextLexeme(lexemes, i, readWhitespace);
 
