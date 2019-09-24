@@ -39,30 +39,30 @@ namespace VisiBoole.ParsingEngine
 	public class Parser : Lexer
 	{
         /// <summary>
-        /// Class that contains the statement text and type.
+        /// Class that contains information about the text of the design.
         /// </summary>
         private class SourceCode
         {
             /// <summary>
-            /// Text of the statement.
+            /// Text of the source code.
             /// </summary>
             public string Text { get; private set; }
 
             /// <summary>
-            /// Type of the statement.
+            /// Type of the source code.
             /// </summary>
             public StatementType Type { get; private set; }
 
             /// <summary>
             /// Constructs a source code element with the specified text and type.
             /// </summary>
-            /// <param name="text">Text of statement</param>
-            /// <param name="type">Type of statement</param>
+            /// <param name="text">Text of the source code.</param>
+            /// <param name="type">Type of the source code.</param>
             public SourceCode(string text, StatementType type)
             {
-                // Save text of statement
+                // Save text of the source code.
                 Text = text;
-                // Save type of statement
+                // Save type of the source code
                 Type = type;
             }
         }
@@ -143,6 +143,11 @@ namespace VisiBoole.ParsingEngine
         /// Regex for identifying equal to operations.
         /// </summary>
         private static Regex EqualToRegex = new Regex($@"{AnyTypePattern}\s*==\s*{AnyTypePattern}", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Regex for identifying implied and operations.
+        /// </summary>
+        private static Regex ImpliedAndRegex = new Regex("((?<Left>})(?<Right>{))|((?<Left>(?<!%)[a-zA-Z])(?<Right>{))|((?<Left>])(?<Right>{))|((?<Left>])(?<Right>[a-zA-Z]))|((?<Left>})(?<Right>[a-zA-Z]))", RegexOptions.Compiled);
 
         /// <summary>
         /// Regex for determining whether expansion is required.
@@ -315,7 +320,7 @@ namespace VisiBoole.ParsingEngine
             }
 
             // Evaluate all expressions
-            Design.Database.EvaluateExpressions();
+            Design.Database.EvaluateExpressions(false);
             // If unable to run all instantiations
             if (!Design.TryRunInstantiations(false))
             {
@@ -368,7 +373,7 @@ namespace VisiBoole.ParsingEngine
             if (!isUpdate)
             {
                 // Evaluate all expressions
-                Design.Database.EvaluateExpressions();
+                Design.Database.EvaluateExpressions(false);
             }
             // If unable to run all instantiations
             if (!Design.TryRunInstantiations(false))
@@ -525,7 +530,7 @@ namespace VisiBoole.ParsingEngine
             // Clear design header
             Design.Database.Header = null;
             // Start line number counter
-            CurrentLineNumber = 1;
+            CurrentLineNumber = 0;
             // Line number of the header
             int headerLineNumber = -1;
             // Indicates whether a non header or library statement has been found
@@ -534,6 +539,8 @@ namespace VisiBoole.ParsingEngine
             // For each statement in the statement text list
             foreach (string statement in statementText)
             {
+                // Increment line number counter
+                CurrentLineNumber++;
                 // Get statement type
                 StatementType? type = string.IsNullOrWhiteSpace(statement) ? StatementType.Empty : GetStatementType(statement);
 
@@ -610,9 +617,6 @@ namespace VisiBoole.ParsingEngine
                     // Add statement and its type to the list of source code
                     sourceCode.Add(new SourceCode(statement, (StatementType)type));
                 }
-
-                // Increment line number counter
-                CurrentLineNumber += statement.Count(c => c == '\n') + 1;
             }
 
             // If not valid
@@ -676,7 +680,7 @@ namespace VisiBoole.ParsingEngine
                 }
 
                 // If current execution is valid and not empty
-                if (valid && expandedText.Length != 0 && source.Type != StatementType.Comment && source.Type != StatementType.Library)
+                if (expandedText.Length != 0 && source.Type != StatementType.Comment && source.Type != StatementType.Library)
                 {
                     // Remove current source code
                     sourceCode.RemoveAt(i);
@@ -720,7 +724,7 @@ namespace VisiBoole.ParsingEngine
                 string inputCheck = Design.Database.Header.VerifyInputs();
                 if (inputCheck != null)
                 {
-                    ErrorLog.Add(headerLineNumber, $"Header input {inputCheck} must be used in an assignment expression, as an alternate clock, or an input in an instantiation statement.");
+                    ErrorLog.Add(headerLineNumber, $"Header input '{inputCheck}' must be used in an assignment expression, as an alternate clock, or an input in an instantiation statement.");
                     // Set valid to false
                     valid = false;
                 }
@@ -729,7 +733,7 @@ namespace VisiBoole.ParsingEngine
                     string outputCheck = Design.Database.Header.VerifyOutputs();
                     if (outputCheck != null)
                     {
-                        ErrorLog.Add(headerLineNumber, $"Header output {outputCheck} must recieve a value from an assignment expression or an instantiation statement.");
+                        ErrorLog.Add(headerLineNumber, $"Header output '{outputCheck}' must recieve a value from an assignment expression or an instantiation statement.");
                         // Set valid to false
                         valid = false;
                     }
@@ -1271,6 +1275,11 @@ namespace VisiBoole.ParsingEngine
             // Get whether the source needs to be expanded
             bool needsExpansion = ExpansionRegex.IsMatch(source) || source.Contains(':');
 
+            if (needsExpansion)
+            {
+                source = ImpliedAndRegex.Replace(source, "${Left} ${Right}");
+            }
+
             if (needsExpansion && source.Contains("="))
             {
                 if (source.Contains("+") || source.Contains("-"))
@@ -1285,7 +1294,12 @@ namespace VisiBoole.ParsingEngine
                         for (int i = equalToOperations.Count - 1; i >= 0; i--)
                         {
                             var equalToOperation = equalToOperations[i];
-                            source = string.Concat(source.Substring(0, equalToOperation.Index), ExpandHorizontally(equalToOperation.Value, sourceCode.Type), source.Substring(equalToOperation.Index + equalToOperation.Length));
+                            string equalToExpansion = ExpandHorizontally(equalToOperation.Value, sourceCode.Type);
+                            if (equalToExpansion == null)
+                            {
+                                return null;
+                            }
+                            source = string.Concat(source.Substring(0, equalToOperation.Index), equalToExpansion, source.Substring(equalToOperation.Index + equalToOperation.Length));
                         }
                     }
 
@@ -1313,7 +1327,7 @@ namespace VisiBoole.ParsingEngine
                     string backText = ExpandHorizontally(restOfText, sourceCode.Type);
                     if (backText == null)
                     {
-                        return backText;
+                        return null;
                     }
                     // Combine front text with the expanded form of the rest of the text
                     source = $"{frontText}{backText}";

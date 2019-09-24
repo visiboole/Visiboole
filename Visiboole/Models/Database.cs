@@ -429,14 +429,14 @@ namespace VisiBoole.ParsingEngine
         /// </summary>
         /// <param name="variables">Variables to set</param>
         /// <param name="binary">Values to set</param>
-        public void SetValues(IEnumerable<string> variables, string binary)
+        public void SetValues(IEnumerable<string> variables, string binary, bool tickAltClocks = true)
         {
             int i = -1;
             foreach (var variable in variables)
             {
                 if (GetValue(variable) != char.GetNumericValue(binary[++i]))
                 {
-                    SetValue(variable, binary[i] == '1');
+                    SetValue(variable, binary[i] == '1', tickAltClocks);
                 }
             }
         }
@@ -461,11 +461,11 @@ namespace VisiBoole.ParsingEngine
             }
         }
 
-        public void EvaluateExpressions()
+        public void EvaluateExpressions(bool tickAltClocks = true)
         {
             foreach (var expression in Expressions.Values)
             {
-                expression.Evaluate();
+                expression.Evaluate(tickAltClocks);
             }
         }
 
