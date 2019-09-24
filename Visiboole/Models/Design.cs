@@ -178,7 +178,7 @@ namespace VisiBoole.Models
                     if (lookingForModule)
                     {
                         string trimmedLine = nextLine.Trim();
-                        if (trimmedLine.Length > 0)
+                        if (trimmedLine.Length > 0 && !Parser.CommentStmtRegex.IsMatch(trimmedLine))
                         {
                             if (nextLine[nextLine.Length - 1] != ';')
                             {
