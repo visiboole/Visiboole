@@ -469,20 +469,28 @@ namespace VisiBoole.ParsingEngine
                 // If vector is explicit
                 if (leftBound != -1)
                 {
-                    // If left bound is least significant bit
-                    if (leftBound < rightBound)
+                    if (rightBound != -1)
                     {
-                        // Flips bounds so left bound is most significant bit
-                        leftBound = leftBound + rightBound;
-                        rightBound = leftBound - rightBound;
-                        leftBound = leftBound - rightBound;
-                    }
+                        // If left bound is least significant bit
+                        if (leftBound < rightBound)
+                        {
+                            // Flips bounds so left bound is most significant bit
+                            leftBound = leftBound + rightBound;
+                            rightBound = leftBound - rightBound;
+                            leftBound = leftBound - rightBound;
+                        }
 
-                    // For each bit in the vector bounds
-                    for (int i = leftBound; i >= rightBound; i--)
+                        // For each bit in the vector bounds
+                        for (int i = leftBound; i >= rightBound; i--)
+                        {
+                            // Add/update vector namespace
+                            Design.Database.UpdateNamespace(name, i);
+                        }
+                    }
+                    else
                     {
                         // Add/update vector namespace
-                        Design.Database.UpdateNamespace(name, i);
+                        Design.Database.UpdateNamespace(name, leftBound);
                     }
                 }
             }
